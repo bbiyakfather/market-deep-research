@@ -94,7 +94,7 @@ def update(work) -> dict:
     mpath = manifest_path(work)
     prev = json.loads(mpath.read_text(encoding="utf-8")) if mpath.exists() else {}
     man = {
-        "run_id": prev.get("run_id") or work.name,
+        "run_id": prev.get("run_id") or work.resolve().name,  # work='.' 전달 시 빈 run_id 방지
         "created_at": prev.get("created_at") or _now_iso(),
         "tool_versions": {"python": sys.version.split()[0], "fitz": _fitz_version()},
         "files": [_entry(work, p, cat) for p, cat in scan_files(work)],

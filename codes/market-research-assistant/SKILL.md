@@ -106,7 +106,7 @@ w=S.work_dir('<주제>', create=True); S.subdirs(w, create=True); print(w)"
 
 ## [1] 병렬 조사 (조사원 팬아웃)
 
-- **모델·실행**: 조사원 = **sonnet 서브에이전트**, background 병렬. 재검증·종합은 메인 세션(팀리드).
+- **모델·실행**: 조사원 = **sonnet 서브에이전트**, background 병렬. 재검증·종합은 메인 세션(팀리드). 팀리드가 메인 세션이 아닌 컨텍스트(서브 세션/백그라운드 잡)면 **이름 없는(anonymous) 서브에이전트**로 팬아웃한다(named 팬아웃은 거부될 수 있음).
 - **파일 충돌 방지**: 각 조사원은 **자기 전용 `_research/<agent명>/` 폴더에만** 쓴다. `_sources/`·`_captures/`·`facts.jsonl`·`manifest.json`은 **팀리드 전용**(조사원 접근 금지).
 - **브리프**: 팀리드는 `references/agent-briefs.md §1` 골격에 담당범위·조사유형변형(§3)·확정된 `entity_id`를 채워 각 조사원에 넣는다. **철칙(§4)은 전문 그대로** 포함(축약 금지 — 원문 지시 방어).
 - **도구**(조사원 브리프에 명시): 검색 `python <SKILL>/scripts/search.py "쿼리" --n 10 --type …`(+내장 WebSearch 병행), 수집 `python <SKILL>/scripts/fetch.py <URL> --out _research/<agent>/raw/`. source-ladder 폴백은 `references/source-ladder.md`, 추출·locator는 `references/extract-recipes.md`.

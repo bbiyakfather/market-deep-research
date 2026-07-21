@@ -54,7 +54,7 @@ audit/
   failed_sources.md        # 실패 소스 URL + 사유코드(source-ladder §3)
   verify_log.md            # 검증 이력 (verify_events 전개: 누가·언제·reread·match/mismatch)
   raw_agent_output/        # 조사원 원자료 (_research/<agent>/ 복사; 무수정 보존)
-  manifest.json            # source/capture/report/PDF SHA-256 (manifest.py)
+  manifest.json            # 작업폴더 루트 manifest.json의 **사본** (원본은 <WORK>/manifest.json — manifest.py가 루트에 기록)
 ```
 
 - `discarded.md`·`failed_sources.md`는 고객용에서 빠진 것들의 **집합소**다. 폐기 사유를 명시해 "왜 안 썼는지"를 감사 가능하게 한다.

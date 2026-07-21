@@ -1,2 +1,3 @@
 __pycache__/
 *.pyc
+codes/market-research-assistant/tests/e2e_mini/research_*/
