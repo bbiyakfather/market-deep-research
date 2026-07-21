@@ -1,0 +1,33 @@
+Iberdrola has commissioned the largest plant producing green hydrogen for industrial use in Europe. The industrial plant, located in Puertollano (Spain) and in operation since 2022, consists of a 100 MW photovoltaic solar plant, a lithium-ion battery system with a storage capacity of around 20 MWh, and one of the world’s largest electrolytic hydrogen production systems with a capacity of 20 MW, all powered by 100% renewable sources. We spoke to the operator and conducted an interesting interview about the significance of hydrogen in Spain.
+eFUEL-TODAY: The project in Puertollano is still quite new. Can you give us an overview of the most important details of this facility?
+Iberdrola has commissioned Europe’s largest green hydrogen plant for industrial use. The facility in Puertollano (Ciudad Real) is located on the premises of our partner Fertiberia and will contribute to the decarbonization of the fertilizer industry. The complex consists of a 100 MW photovoltaic plant, a lithium-ion battery system with a storage capacity of 20 MWh, and one of the world’s largest hydrogen production plants using electrolysis (20 MW), all powered by 100% renewable sources.
+The electrolyzer is of the PEM type and consists of 16 “stacks” each with 1.25 MW, manufactured by the Norwegian company NEL ASA. The plant has a production capacity of 3,000 tons of green H2 per year. It has 11 storage tanks with a capacity of 7 tons each, ensuring several days’ supply for the customer. The hydrogen is stored at a pressure of 60 bar. With an investment of 150 million euros, the initiative has created 1,000 jobs during its construction phase and will avoid emissions of 48,000 tCO2 per year.
+eFUEL-TODAY: We are familiar with the approaches for a sustainable energy supply within Germany. What approach is Spain taking to establish its energy infrastructure in a renewable way and what is the target date to become fully climate neutral?
+The “National Integrated Energy and Climate Plan 2021-2030 (PNIEC)” aims to reduce greenhouse gas (GHG) emissions by 23% compared to 1990. This reduction target means that one of every three tons of greenhouse gases currently emitted will be eliminated. These efforts are in line with the more ambitious goals at the European level by 2030 and with the Paris Agreement. Targets include:
+- 42% renewable energy in final energy consumption
+- 39.6% improvement in energy efficiency (EE)
+- 39% reduction in GHG emissions compared to 2005 in diffuse sectors (-60% ETS sectors)
+- 15% interconnection – improvement of interconnection with France (up to 8,000 MW) and with Portugal (up to 3,000 MW)
+- Installation of 59 GW of renewable energy and 6 GW of storage capacity
+- Increase the share of renewable energy in the generation mix to 74% by 2030 (~253 TWh)
+- Multi-year auction calendar for new renewable energy projects
+- Promotion of self-consumption, promotion of electric vehicles, obligation to sell/consume modern biofuels…
+In parallel, a green H2 roadmap is being developed with the following targets:
+- 4 GW of installed capacity of electrolyzers
+- 25% of H2 consumption in industry
+- 100-150 FCEV buses
+- 100-150 publicly accessible hydrogen generators
+- 5,000-7,500 light and heavy-duty FCEV commercial vehicles
+- 2 commercial train lines powered by H2
+- avoidance of 4,6 mt co2
+eFUEL-TODAY: From the perspective of Iberdrola, what role will sustainably produced chemical energy carriers, such as hydrogen or e-fuels, play in the energy supply of Spain, the EU, or the world compared to the direct use of electric power?
+Iberdrola, the world’s second-largest electricity company by market capitalization, promotes the electrification of the economy and reaches all sectors where the direct use of electricity is efficient and competitive. However, there are some so-called “hard-to-abate” sectors, such as the chemical and refinery industry, that use high temperatures in their production processes or require heavy mobility, which require other alternatives. In this sense, green hydrogen is one of the most efficient solutions to help the most polluting industrial sectors to transition their processes and become more sustainable. For Iberdrola, which has already developed several projects to decarbonize industry and heavy transport and to develop its value chain, this is a significant growth vector. We have a mature project portfolio of 2,400 MW by 2025 and expect to reach 3,000 MW and produce 350,000 tonnes of green hydrogen per year by 2030.
+As a reference, Spain has a national target of 4 GW by 2030, while Germany has a higher target of 10 GW. Originally, the EU wanted to achieve 40 GW, but after the release of the RePower EU plan, this goal was multiplied to reach 10 million tons of local production of green H2 and 10 million tons of imports.
+eFUEL-TODAY: The advantages of hydrogen are clear, but significant conversions of both vehicles and fueling infrastructure would be necessary for the use of this energy carrier in road transport. What role do synthetic fuels or e-fuels play in Spain in this context, and is it planned that a portion of hydrogen production will also be processed into e-fuels for use in road transport?
+Iberdrola is currently not involved in projects related to e-fuels. Within Spain, Iberdrola primarily supports the development of H2 corridors.
+eFUEL-TODAY: The hydrogen project in Puertollano is already of considerable size. Are there any further projects of this kind planned by Iberdrola in the near future that could have a significant impact on sustainable energy supply in Spain?
+The Puertollano project is part of an alliance with Fertiberia, which plans to develop a total of 830 MW of electrolyzers in four phases by 2027 to supply them with green hydrogen at two of their locations (Puertollano and Palos de la Frontera).
+On the other hand, Iberdrola has announced an alliance with bp to develop green H2 projects in Spain and Portugal. The first project being developed by the two companies is the installation of a 25 MW electrolyzer at the bp refinery in Castellón with a COD of 2025 (COD = Commercial Operation Date).
+Additionally, the company is working with Finsa-Foresa on a green methanol project in Galicia. The first part involves the installation of a 5 MW electrolyzer to produce nearly 3,000 tons of green methanol per year, using biogenic CO2 from a biomass boiler. The COD is also set for 2025.
+More about the company and the hydrogen plant can be found at iberdrola.com
+Image Sources: © iberdrola.com

@@ -1,0 +1,109 @@
+Electrolysers
+Tracking Electrolysers
+Electrolysers are a critical technology for the production of low-emissions hydrogen from renewable or nuclear electricity. Electrolysis capacity for dedicated hydrogen production has been growing in the past few years, reaching an installed capacity of 1.4 GW at the end of 2023, almost double the one at the end of 2022. In parallel, electrolyser manufacturing capacity has also doubled since 2022, reaching 25 GW per year by the end of 2023. The realisation of all the projects in the pipeline could lead to an installed electrolyser capacity of 230-520 GW by 2030, although the majority of the projects is still at early stages of development and only around 20 GW have at least taken a final investment decision (FID).
+Electrolysis capacity is growing from a low base and requires a significant acceleration to get on track with the Net Zero Emissions by 2050 (NZE) Scenario, which requires installed electrolysis capacity to reach 560 GW by 2030.
+Progress is spread across different continents, from China, which leads on installed capacity, to the European Union, which have adopted important policies, and other regions like India and the Middle East moving forward with a small number of large-scale projects
+Progress is spread across different continents, from China, which leads on installed capacity, to the European Union, which have adopted important policies, and other regions like India and the Middle East moving forward with a small number of large-scale projects
+Countries and regions making notable progress to advance electrolysers include:
+- China, which leads both in terms of installed electrolysers capacity, with a cumulated capacity of 0.8 GW in 2023 and more than 9 GW that have taken FID or started construction, and manufacturing capacity for electrolysers, accounting for 60% of global capacity today.
+- The European Union almost quadrupled the capacity that reached final investment decision, with more than 2 GW reaching this milestone between September 2023 and August 2024. In April 2024 the European Union awarded EUR 721 million (USD 740 million) to seven renewable hydrogen projects in the first auction of the European Hydrogen Bank.
+- India launched two tenders for electrolysers manufacturing capacity, as part of the SIGHT program. More than 20 bids in each of the two tenders have been submitted, for around 3 GW/yr of total capacity, including both Indian and foreign companies. In August 2024, the 1.3 GW AM Green Ammonia project took FID, with the country taking the first step into large-scale projects development.
+- The Middle East hosts the largest project to have reached FID, the NEOM plant in Saudi Arabia, which construction is advancing and around half of the 2.2 GW of electrolysers have already been delivered by the supplier thyssenkrupp nucera. Another large-scale plant, the ACME Group ammonia production facility in Oman, has taken FID for the first phase of the project to produce 100 kt ammonia per year (about 320 MW of electrolysis), with the second phase planned to reach 1.2 Mt ammonia production per year (3.5 GW of electrolysis). 
+Global installed electrolyser capacity reached 1.4 GW at the end of 2023, almost double the one at the end of 2022
+Global installed electrolyser capacity reached 1.4 GW at the end of 2023, almost double the one at the end of 2022
+Total installed electrolysis capacity by technology in the Net Zero Emissions by 2050 Scenario, 2020-2030
+| Year | Alkaline (MW) | PEM (MW) | Other/unknown (MW) | Total (MW) | 
+|---|---|---|---|---|
+| 2020 | 200 | 110 | 20 | 330 | 
+| 2021 | 370 | 150 | 50 | 570 | 
+| 2022 | 400 | 240 | 60 | 700 | 
+| 2023 | 840 | 300 | 250 | 1390 | 
+| … | ||||
+| 2030 – NZE | - | - | - | 560 000 | 
+Electrolysers are already widely used in the chlor-alkali industry to produce chlorine and sodium hydroxide, with installed capacity having reached more than 20 GW. However, the pace of deployment of electrolysers for dedicated hydrogen production only started to accelerate in the early 2020s. There was significant growth in annual capacity additions in 2023, with almost 700 MW of electrolysis capacity becoming operational.
+This meant a doubling of total installed capacity compared to the previous year. More than 80% of the additions were in China, which leads in new installations and also in scale of new projects: two of them, in the hundreds of MW scale, accounted for more than half of the capacity added globally in 2023.
+In addition, there is a large pipeline of announced projects, that has been growing over the last 5 years. If all the announced projects are realised, global electrolysis capacity could reach 230 GW by 2030 (520 GW by including also projects at early stages of development). Europe accounts for more than one-quarter of the announced capacity by 2030, followed by Latin America and Africa with 17% each, and Australia with about 15%. But uncertainty on the development of these projects persists, with the main barriers being uncertainty of future demand, lack of clarity on regulation and certification, lack of infrastructure to deliver hydrogen to the final consumers and, in the case of emerging economies, very limited access to low-cost finance. Only around 20 GW of the total announced capacity has taken final investment decision or started construction.
+To get on track with the NZE Scenario, in which 560 GW of electrolysers are installed globally by 2030, announced projects need to advance development towards securing investment and starting construction.
+Manufacturers have already started to expand their production capacity based on the expectation of future demand growth
+Manufacturers have already started to expand their production capacity based on the expectation of future demand growth
+Announced electrolyser manufacturing capacity by region and manufacturing capacity needed in the Net Zero Scenario, 2021-2030
+OpenGlobal electrolyser manufacturing capacity reached 25 GW per year in 2023, based on the nominal facility size from company announcements, almost double compared to 2022. China accounts for 60% of global manufacturing capacity, and it is expected to maintain this share in the short term. Based on an estimated output of 2.5 GW in 2023 (including deployments related to chlor-alkali applications), this manufacturing capacity is currently underutilised. Manufacturers have started to expand their production capacity based on current market growth (with an increasing number of large-scale projects announced), expectations of future demand growth, and because large manufacturing facilities represent a long-term decision.
+Based on company announcements, the global manufacturing capacity for electrolysers could reach more than 165 GW per year by 2030, a two-third increase compared to the capacity in the pipeline at the end of 2022. Europe and China could lead, with around half of this capacity together. Although total announcements are close to the capacity needed in the NZE Scenario, only 30% has reached FID, and another 30% has been announced without a target year for starting operations. This indicates a degree of uncertainty for future manufacturing capacity deployment, which could be strongly influenced by each country’s supportive policy framework.
+Alkaline and PEM technologies are commercially available, while SOEC and anion exchange membrane technologies are maturing
+Alkaline and PEM technologies are commercially available, while SOEC and anion exchange membrane technologies are maturing
+Alkaline and PEM (proton exchange membrane) electrolysers are already commercially available. Alkaline electrolysers are a more mature technology with a long history of deployment in the chlor-alkali industry. However, for the dedicated production of hydrogen, both technologies are at the same technology readiness level (TRL9) since they require policy support and improvements to stay competitive with traditional hydrogen production technologies based on unabated fossil fuels.
+Solid Oxyde Electrolysis (SOEC) is quickly approaching commercialisation. In April 2023, a 2.6 MW SOEC electrolyser was installed in a Neste refinery in the Netherlands, becoming the biggest at that time. Just few weeks later, the record was broken with a 4 MW SOEC system installed in a NASA research centre in California. Bloom Energy increased its SOEC manufacturing capacity in 2022 with a new high-volume line in Newark, moving towards GW-scale operations in the United States. Topsoe is advancing construction of an industrial-scale 500 MW/yr manufacturing facility in Denmark, expected to be online in 2025.
+Anion exchange membrane (AEM) electrolysers are at earlier stages of development: they are produced and commercialised, but still at very small scale. Alchemr has a readily available AEM electrolyser at the kilowatt scale, and Enapter aims to produce them at scale from 2023 thanks to a new factory being built in Germany.
+Technology readiness levels of electrolyser technologies
+11
+Market
+10
+Market uptake
+PEM
+ALK
+9
+SOEC
+8
+Demonstration
+AEM
+7
+6
+Large prototype
+Seawater
+5
+4
+Waste
+water
+Small prototype
+3
+2
+1
+Capital cost reduction remains critical for electrolyser deployment, while system efficiency and critical minerals intensity reduction have improved
+Electrolyser capital costs are difficult to compare across systems as there is often a lack of information about the system’s scope or key parameters. However, cost reductions for the alkaline technology have generally been moderate over recent decades, while PEM technology has shown significant cost reductions, although it still remains around 20% more expensive than alkaline systems. These cost reductions have mostly been realised through R&D in the absence of significant market penetration. CAPEX requirements for an installed electrolyser system are currently in the range of USD 2 000-2 450/kWe for alkaline and PEM technologies respectively (and can reach around USD 750-1 300/kWe for Chinese alkaline).
+Electrolysers for dedicated hydrogen production have traditionally been built in small volumes for niche markets, but the anticipated increase in production volumes and associated growth in factory size are expected to reduce investment costs for all electrolyser technologies through economies of scale and automation. Optimisation of electrolyser supply chains is also expected to generate cost reductions.
+Tracking the evolution of electrolyser efficiencies is similarly complicated, as efficiency not only depends on the system design, but its value varies based and on the scope considered and on the reporting standards. Alkaline and PEM electrolysers have comparable efficiency and – depending on design – can operate flexibly to allow direct coupling with variable renewable electricity sources. SOEC systems have reached higher electrical efficiency (84% achieved by Sunfire on a low heating value basis, although this is not directly comparable with other technologies, given the additional heat input needed in SOEC systems) and can be a promising solution where waste-heat is available, such as in industrial hubs, given their operation requires temperatures higher than 650 °C. In the past few years, new electrolyser designs have reported very high efficiencies, such as Hysata’s capillary technology (80% efficiency on a low heating value basis).
+Innovation in critical materials intensity reduction is also progressing. For example, in 2023 start-up Bspkl raised capital to commercialise a catalyst coated membrane (CCM) with 25 times less iridium and platinum compared to traditional PEM designs. Clean Power Hydrogen (CPH2) has developed a membrane-free electrolyser that uses no platinum-group metals (PGM) and, at the same time, can increase the lifetime of the system In February 2024, Toshiba partnered with Bekaert to commercialise Toshiba’s technology that reduces iridium use by 90%. 
+For more information
+Governments have significantly raised their ambitions to deploy electrolysis capacity
+Governments have significantly raised their ambitions to deploy electrolysis capacity
+An increasing number of governments are establishing targets for the deployment of low-emissions hydrogen production capacity to signal their long-term vision for hydrogen technologies. This is creating some momentum in the industrial sector, particularly for projects aiming to deploy electrolysis capacity. The sum of all national targets for the deployment of electrolysis capacity has reached around 185-360 GW, about 10% increase from 2023.  
+Several governments have begun to implement policies in the form of grants, loans, tax breaks and carbon contracts for difference (CCfDs) to support first- movers, with several significant announcements over the past few years:
+- European Union: the European Commission approved funding for four waves of hydrogen-related Important Projects of Common European Interest, for a combined EUR 18.9 billion (USD 19.5 billion) and an expected additional amount of EUR 10 billion (USD 10.3 billion) of private investment leveraged. In March 2023, the EU Hydrogen Bank was launched, with the aim of providing a fixed premium to renewable hydrogen, both produced inside the EU and imported. The first auction has awarded EUR 720 million (USD 740 million) to seven projects out of more than 130 bids. The second auction was launched in December 2024 with total funds of up to EUR 1.2 billion (USD 1.3 billion).
+- Germany: in 2021 Germany launched the H2Global initiative, which uses a mechanism analogous to the CCfD approach, compensating the difference between supply and demand prices with grant funding from the German government. The pilot auction for EUR 900 million (USD 930 million) was launched in December 2022, with the results announced in July 2024 and a second auction is ongoing. Total funding from Germany is EUR 4.4 billion (USD 4.6 billion) with the Netherlands announcing EUR 300 million (USD 310 million) more and Australia and Canada each announcing another EUR 200 million (USD 205 million). Germany also allocated EUR 350 million (USD 360 million) to electrolysis under the “auction as a service” model of the EU Hydrogen Bank.
+- United Kingdom: in 2021 the United Kingdom presented a business model for low-carbon hydrogen, based on similar approach to CCfDs, that went through public consultation in 2022. Winners of the first Hydrogen Allocation Round were announced in December 2023 with total support of GBP 2 billion (USD 2.5 billion) of OPEX support over 15 years for 11 projects totalling 125 MW of electrolysis. Between July 2022 and January 2023, the government opened the first Electrolytic Allocation Round and pre-selected projects, with the aim to support at least 250 MW of capacity. The second allocation round followed and was closed in April 2024, to support up to 875 MW. An updated version of the Low Carbon Hydrogen Standard was published in December 2023.
+- The Netherlands: EUR 1 billion (USD 1.1 billion) allocated to electrolysis in the 2024 budget, to support at least 200 MW of capacity. Up to 80% of the CAPEX can be subsidised, plus a variable premium for 5-10 years.
+- Canada: approved the production and manufacturing tax credit of CAD 5.7 billion (USD 4.2 billion) for the 2023-2028 period (for electrolysis projects but also natural gas with CCUS production), with the total incentive to 2035 expected to be CAD 17.7 billion (USD 13 billion).
+- India: in January 2023 the National Green Hydrogen Mission was approved, with the aim of producing 5 Mt of renewable hydrogen by 2030. As part of that, the Strategic Interventions for Green Hydrogen Transition (SIGHT) programme is a major financial measure to promote domestic manufacturing of electrolysers and the production of renewable hydrogen.
+View all hydrogen electrolysis policies
+Investment in electrolyser deployment continues to grow, more than doubling from the previous year
+Investment in electrolyser deployment continues to grow, more than doubling from the previous year
+Investments in electrolyser projects continue to grow, driven by the whole projects pipeline and policy support. Several projects are under construction and expected to be online in 2024, the majority of which in China, and capital has already been committed. We estimate that investments in 2023 have exceeded USD 2 billion globally, more than tripling compared to the previous year’s spending. Much of this relies on government funding, support that continues to underpin project viability. However, it is still too early to see the full impact of recent major hydrogen policies reflected in projects investments.
+We would like to thank the following external experts for their valuable inputs:
+We would like to thank the following external experts for their valuable inputs:
+- Tim Cholibois, Enapter,
+- Leif Christian Kröger, thyssenkrupp nucera
+- Agustín Rodríguez Riccio, Topsoe
+- Alan Tan, HyGreen Energy
+- Hergen Thore Wolf, Sunfire 
+Recommendations
+- 
+                    The large-scale deployment of electrolysers for the dedicated production of hydrogen depends on the development of large-scale projects that can allow manufacturers to secure orders to scale up manufacturing capacity and benefit from economies of scale and learning by doing. Stimulating demand can prompt investment in these areas, but without further policy action, this process will not happen at the necessary pace to meet climate goals. Providing tailor-made support to selected, shovel-ready flagship projects, as well as clear and internationally agreed standards on hydrogen emission intensity, can mobilise the necessary investment and kick-start the scaling up of low-emissions hydrogen. This will also help manufacturers to gain clearer visibility of the demand for electrolysers and move towards firm investment decisions for mass-manufacturing in industrial scale facilities, which can significantly reduce the production cost of electrolysers. 
+- 
+                    Innovation in electrolyser technologies will be critical to ensure that this technology plays its role in the transition to a net zero energy system. Despite some electrolyser designs already being commercial (alkaline and PEM), they cannot compete with traditional hydrogen production technologies without policy support. Supporting the already strong innovation activity in the sector will help achieve higher efficiencies, enhanced resistance against degradation and decreased material needs. These would significantly decrease both the cost of manufacturing electrolysers and the cost of producing hydrogen. In addition, supporting those technologies that are not yet commercially available (SOEC and AEM) will help them to reach commercialisation faster. Having a larger portfolio of commercial technologies would decrease demand for critical materials and increase competence among the developers, which in turn can enhance innovation activity and accelerate technology development. 
+- 
+                    The private sector and governments should work together to make sure that supply chains for electrolysers are able to respond to a large increase in demand, in a short period of time and in geographically distributed areas. Making sure that supply chains are resilient and can respond to this challenge requires them to have the ability to scale up and diversify. Early engagement with governments can help to identify potential bottlenecks as well as regulatory and supportive actions that can overcome those barriers. Diversification of the upstream supply chain and co-operation with partners can help secure the supply of critical components and prevent long lead times. 
+Programmes and partnerships
+Authors and contributors
+            Lead authors
+                                         
+    Francesco Pavan
+                                
+            Contributors
+                                         
+    Jose M Bermudez
+                                                     
+    Amalia Pizarro
+                                                     
+    Uwe Remme
+                                                     
+    Herib Blanco

@@ -1,0 +1,950 @@
+Title: 가스공사, 제주서 국내 최초 1MW PEM 수전해 시스템 실증
+
+URL Source: https://www.newsis.com/view/NISX20251202_0003424584
+
+Published Time: 2025-12-02T09:22:00+09:00
+
+Markdown Content:
+[![Image 3](https://menu.mt.co.kr/news/banner/image/2020/20200703160528.jpg)](https://ads.mtgroup.kr/RealMedia/ads/click_lx.ads/newsis_pc/news/L14/1316792478/x96/moneytoday/Newsis_PC_PV/Newsis_PC_PV.html/496d4130486d706664536b41416b7a6a)
+
+[![Image 4](https://img1.newsis.com/n_www/images/ci/2024/logo2024.png)](https://www.newsis.com/)
+
+[![Image 5](https://image.newsis.com/new_www/homepage/wi_icon/dr_08.png)](https://www.weather.go.kr/)
+
+2026.07.21 (화)
+
+[**서울 24.7℃**](https://www.weather.go.kr/)
+
+*   [K-Artprice](https://kartprice.net/)
+*   [프라임뉴시스](https://prime.newsis.com/)
+*   [위클리뉴시스](https://weekly.newsis.com/)
+
+*   [![Image 6: 페이스북](https://img1.newsis.com/n_www/images/ico_face.png)](https://www.facebook.com/newsis.news?sk=wall)
+*   [![Image 7: 트위터](https://img1.newsis.com/n_www/images/ico_twi2.png)](https://twitter.com/newsis)
+*   [![Image 8: 인스타그램](https://img1.newsis.com/n_www/images/ico_ins.png)](https://www.instagram.com/new_s_is/)
+*   [![Image 9: 유튜브](https://img1.newsis.com/n_www/images/ico_utu.png)](https://www.youtube.com/@NewsisTV)
+*   [![Image 10: 네이버](https://img1.newsis.com/n_www/images/ico_naver.png)](https://media.naver.com/press/003)
+*   [![Image 11: RSS](https://img1.newsis.com/n_www/images/ico_wifi.png)](https://www.newsis.com/RSS/)
+*   [![Image 12: 모바일앱스토어](https://img1.newsis.com/n_www/images/ico_phone.png)](https://mobile.newsis.com/)
+
+![Image 13: 검색하기 버튼](https://img1.newsis.com/n_www/images/ico_search.png)
+*   [실시간](https://www.newsis.com/realnews)
+*   [정치](https://www.newsis.com/politic/?cid=10300)
+*   [국제](https://www.newsis.com/world/?cid=10100)
+*   [경제](https://www.newsis.com/economy/?cid=10400)
+*   [금융](https://www.newsis.com/money/?cid=15000)
+*   [산업](https://www.newsis.com/business/?cid=13000)
+*   [IT·바이오](https://www.newsis.com/health/?cid=13100)
+*   [사회](https://www.newsis.com/society/?cid=10200)
+*   [수도권](https://www.newsis.com/metro/?cid=14000)
+*   [지방](https://www.newsis.com/region/?cid=10800)
+*   [문화](https://www.newsis.com/culture/?cid=10700)
+*   [스포츠](https://www.newsis.com/sports/?cid=10500)
+*   [연예](https://www.newsis.com/entertainment/?cid=10600)
+*   [![Image 14: N샷](https://img1.newsis.com/n_www/images/nshot.png)](https://star.newsis.com/)
+*   [광장](https://www.newsis.com/people/?cid=16000)
+*   [포토](https://www.newsis.com/photo/?cid=photo)
+*   [TV뉴시스](https://www.newsis.com/video/?cid=19000)
+*   [제휴 콘텐츠](https://www.newsis.com/alliance)
+*   [제보](javascript:intro_popup('news_offer', '');)
+
+*   [1시간 전 > [단독]알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858)
+*   [**-30292초 전 >** [속보]'장윤기 사건' 직권남용 혐의…형사과장 구속영장 기각](https://www.newsis.com/view/NISX20260721_0003717508)
+*   [**-28150초 전 >** 이란 내무장관, '중재국' 파키스탄 방문해 육군원수와 총리 만나](https://www.newsis.com/view/NISX20260721_0003717691)
+*   [**-24074초 전 >** 이란, 또 쿠웨이트 발전소·해수담수화시설 공격…시설 피해(1보)](https://www.newsis.com/view/NISX20260721_0003717672)
+*   [**-14166초 전 >** [속보]與 주도 '종합특검 연장법' 국무회의 의결](https://www.newsis.com/view/NISX20260721_0003717436)
+*   [**-11793초 전 >** [속보]법원, 22일 오세훈 '여론조사비 대납' 1심 선고 중계 허가](https://www.newsis.com/view/NISX20260721_0003717457)
+*   [**-8339초 전 >** 세 살 딸 살해 6년 은폐, 아동수당까지 타낸 엄마…징역 13년](https://www.newsis.com/view/NISX20260721_0003717290)
+*   [**-7779초 전 >** [속보]국회 문체위, 축구협회 청문회 30일 개최 의결](https://www.newsis.com/view/NISX20260721_0003717277)
+*   [**-7751초 전 >** 美 국무부, 전 세계 미국인에 중동 경보…"여행·경유 재고"](https://www.newsis.com/view/NISX20260721_0003717200)
+*   [**-7250초 전 >** [속보]코스닥, 3.70포인트(0.49%) 오른 753.34 마감](https://www.newsis.com/view/NISX20260721_0003717219)
+*   [**-7211초 전 >** [속보]코스피, 231.68포인트(3.56%) 오른 6747.95 마감](https://www.newsis.com/view/NISX20260721_0003717218)
+*   [**-7108초 전 >** [속보]원·달러 환율, 5.0원 내린 1473.4원 마감](https://www.newsis.com/view/NISX20260721_0003717255)
+*   [**-6951초 전 >** "트럼프, '10일 휴전' 검토…이스라엘과 이란 공습재개도 대비"(종합)](https://www.newsis.com/view/NISX20260721_0003716939)
+*   [**-6426초 전 >** [속보]내란·김건희·순직해병 2차 특검 연장 법안 與 주도 국회 본회의 통과](https://www.newsis.com/view/NISX20260721_0003717174)
+*   [**-6382초 전 >** [속보]내란·김건희·순직해병 2차 특검 연장 법안 필버 표결 종결](https://www.newsis.com/view/NISX20260721_0003717171)
+*   [**-5341초 전 >** 12·12 군사반란부터 간첩조작까지…167명 '정부포상' 취소](https://www.newsis.com/view/NISX20260721_0003716521)
+*   [**-4990초 전 >** 인천쿠팡센터 화재 잔불 정리…소방 대응 1단계로 낮춰](https://www.newsis.com/view/NISX20260721_0003717135)
+*   [**-2084초 전 >** [속보]조국혁신당 "본회의 절차 참여"…野필버 종결 수순](https://www.newsis.com/view/NISX20260721_0003717018)
+*   [7분 전 > [속보]바둑 신진서, 최종국서 AI 카타고 제압…2승1패 '역전승'](https://www.newsis.com/view/NISX20260721_0003716846)
+*   [50분 전 > [속보]코스피 급등세에 매수 사이드카 발동](https://www.newsis.com/view/NISX20260721_0003716869)
+*   [1시간 전 > [단독]알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858)
+*   [**-30292초 전 >** [속보]'장윤기 사건' 직권남용 혐의…형사과장 구속영장 기각](https://www.newsis.com/view/NISX20260721_0003717508)
+*   [**-28150초 전 >** 이란 내무장관, '중재국' 파키스탄 방문해 육군원수와 총리 만나](https://www.newsis.com/view/NISX20260721_0003717691)
+*   [**-24074초 전 >** 이란, 또 쿠웨이트 발전소·해수담수화시설 공격…시설 피해(1보)](https://www.newsis.com/view/NISX20260721_0003717672)
+*   [**-14166초 전 >** [속보]與 주도 '종합특검 연장법' 국무회의 의결](https://www.newsis.com/view/NISX20260721_0003717436)
+*   [**-11793초 전 >** [속보]법원, 22일 오세훈 '여론조사비 대납' 1심 선고 중계 허가](https://www.newsis.com/view/NISX20260721_0003717457)
+*   [**-8339초 전 >** 세 살 딸 살해 6년 은폐, 아동수당까지 타낸 엄마…징역 13년](https://www.newsis.com/view/NISX20260721_0003717290)
+*   [**-7779초 전 >** [속보]국회 문체위, 축구협회 청문회 30일 개최 의결](https://www.newsis.com/view/NISX20260721_0003717277)
+*   [**-7751초 전 >** 美 국무부, 전 세계 미국인에 중동 경보…"여행·경유 재고"](https://www.newsis.com/view/NISX20260721_0003717200)
+*   [**-7250초 전 >** [속보]코스닥, 3.70포인트(0.49%) 오른 753.34 마감](https://www.newsis.com/view/NISX20260721_0003717219)
+*   [**-7211초 전 >** [속보]코스피, 231.68포인트(3.56%) 오른 6747.95 마감](https://www.newsis.com/view/NISX20260721_0003717218)
+*   [**-7108초 전 >** [속보]원·달러 환율, 5.0원 내린 1473.4원 마감](https://www.newsis.com/view/NISX20260721_0003717255)
+*   [**-6951초 전 >** "트럼프, '10일 휴전' 검토…이스라엘과 이란 공습재개도 대비"(종합)](https://www.newsis.com/view/NISX20260721_0003716939)
+*   [**-6426초 전 >** [속보]내란·김건희·순직해병 2차 특검 연장 법안 與 주도 국회 본회의 통과](https://www.newsis.com/view/NISX20260721_0003717174)
+*   [**-6382초 전 >** [속보]내란·김건희·순직해병 2차 특검 연장 법안 필버 표결 종결](https://www.newsis.com/view/NISX20260721_0003717171)
+*   [**-5341초 전 >** 12·12 군사반란부터 간첩조작까지…167명 '정부포상' 취소](https://www.newsis.com/view/NISX20260721_0003716521)
+*   [**-4990초 전 >** 인천쿠팡센터 화재 잔불 정리…소방 대응 1단계로 낮춰](https://www.newsis.com/view/NISX20260721_0003717135)
+*   [**-2084초 전 >** [속보]조국혁신당 "본회의 절차 참여"…野필버 종결 수순](https://www.newsis.com/view/NISX20260721_0003717018)
+*   [7분 전 > [속보]바둑 신진서, 최종국서 AI 카타고 제압…2승1패 '역전승'](https://www.newsis.com/view/NISX20260721_0003716846)
+*   [50분 전 > [속보]코스피 급등세에 매수 사이드카 발동](https://www.newsis.com/view/NISX20260721_0003716869)
+*   [1시간 전 > [단독]알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858)
+
+[![Image 15: 속보뉴스 더보기](https://img1.newsis.com/n_www/images/ci/2024/btn_more01.png)](https://www.newsis.com/people/sokbo/?cid=16000)
+
+[![Image 16: 기자채널 바로가기](https://img1.newsis.com/n_www/images/btn_channel.png)](https://www.newsis.com/journalism)
+
+![Image 17: 검색하기](https://img1.newsis.com/n_www/images/btn_search.png)
+
+[![Image 18: newsis](https://img1.newsis.com/n_www/images/ci/2024/logo2024_2.png)](https://www.newsis.com/)
+
+*   [![Image 19: 페이스북](https://img1.newsis.com/n_www/images/ico_face.png)](https://www.facebook.com/newsis.news?sk=wall)
+*   [![Image 20: 트위터](https://img1.newsis.com/n_www/images/ico_twi2.png)](https://twitter.com/newsis)
+*   [![Image 21: 유튜브](https://img1.newsis.com/n_www/images/ico_utu.png)](https://www.youtube.com/@NewsisTV)
+
+![Image 22: 검색리스트 보기](https://img1.newsis.com/n_www/images/arrow_down.png)![Image 23: 검색하기](https://img1.newsis.com/n_www/images/ico_search2.png)
+
+[경제](https://www.newsis.com/economy/?cid=10400)
+
+*   [경제최신](https://www.newsis.com/economy/list?cid=10400&scid=10401)
+*   [경제정책](https://www.newsis.com/economy/list?cid=10400&scid=10440)
+*   [국제경제](https://www.newsis.com/economy/list?cid=10400&scid=10410)
+*   [건설부동산](https://www.newsis.com/economy/list?cid=10400&scid=10405)
+
+# 가스공사, 제주서 국내 최초 1MW PEM 수전해 시스템 실증
+
+등록 2025.12.02 09:22:00
+
+*   [구글에서 선호하는 매체로 추가](https://www.google.com/preferences/source?q=newsis.com)
+*   [![Image 24: 이메일 보내기](https://img1.newsis.com/n_www/images/icon_email.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+*   [![Image 25: 프린터](https://img1.newsis.com/n_www/images/icon_print.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+*   [![Image 26: PDF](https://img1.newsis.com/n_www/images/icon_pdf.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+*   작게
+*   크게
+
+## 5000시간 실증 운전으로 13t 수소 공급
+
+![Image 27: [세종=뉴시스]한국가스공사는 지난해 국내 최초로 제주도에서 1메가와트(MW) PEM 수전해 시스템을 활용해 그린수소 생산에 성공한 데 이어 5000시간에 이르는 실증 운전을 통해 지금까지 총 13t의 수소를 공급했다.(사진=가스공사 제공)](https://img1.newsis.com/2025/12/02/NISI20251202_0002007616_web.jpg?rnd=20251202092102)
+[세종=뉴시스]한국가스공사는 지난해 국내 최초로 제주도에서 1메가와트(MW) PEM 수전해 시스템을 활용해 그린수소 생산에 성공한 데 이어 5000시간에 이르는 실증 운전을 통해 지금까지 총 13t의 수소를 공급했다.(사진=가스공사 제공)
+
+ [세종=뉴시스]김동현 기자 = 한국가스공사는 지난해 국내 최초로 제주도에서 1메가와트(MW) PEM 수전해 시스템을 활용해 그린수소 생산에 성공한 데 이어 5000시간에 이르는 실증 운전을 통해 지금까지 총 13t의 수소를 공급했다고 2일 밝혔다.
+
+ PEM(Polymer Elctrolyte Membrane)은 고분자 전해질 막을 활용해 수소를 생산함으로써 부하 대응이 빠르고 장치 소형화가 가능한 차세대 수전해 방식으로 주목받고 있다.
+
+ 가스공사는 2020년 당시 산업통상자원부가 지원하고 제주에너지공사가 주관하는 '그린수소 생산 및 저장 시스템 기술개발 사업' 컨소시엄에 참여해 제주 행원풍력발전단지에 1MW급 고압 PEM 수전해 시스템을 구축했다. 
+
+ 이후 지난해 7월부터 실증 운전으로 생산된 수소를 제주 함덕 그린수소 충전소에 공급했고 지속적으로 설비 가동률을 높여 총 5000시간에 이르는 운전 시간을 확보하고 현재까지 누적 수소 생산량 13t을 달성했다. 
+
+ 가스공사 관계자는 "이번 연구를 통해 확보한 MW급 PEM 수전해 시스템 운영 기술을 한층 고도화해 정부 에너지 정책에 부합하는 국내 청정수소 생태계 활성화에 힘쓰겠다"고 말했다.
+
+![Image 28: [세종=뉴시스]가스공사 전경이다.(사진=한국가스공사 제공) *재판매 및 DB 금지](https://img1.newsis.com/2023/11/27/NISI20231127_0001422452_web.jpg?rnd=20231127154117)
+[세종=뉴시스]가스공사 전경이다.(사진=한국가스공사 제공) *재판매 및 DB 금지
+
+ ◎공감언론 뉴시스 oj1001@newsis.com 
+
+Copyright © NEWSIS.COM, 무단 전재 및 재배포 금지
+
+[![Image 29](https://img1.newsis.com/h_www/common/20210818_view_banner_kartprice.jpg)](https://kartprice.net/)
+
+[![Image 30: 다음 구독베너](https://img1.newsis.com/n_www/images/ci/2024/kakao_banner_view_909px.jpg)](https://v.daum.net/channel/21/home)
+
+[![Image 31: 네이버 구독베너](https://img1.newsis.com/h_www/common/20210818_view_banner_naver.jpg)](https://media.naver.com/channel/promotion.nhn?oid=003)
+
+많이 본 사진
+
+[![Image 32](https://img1.newsis.com/2026/07/21/NISI20260721_0001446123_web.jpg?rnd=20260721081054)](https://www.newsis.com/view/NISI20260721_0002190965)
+
+[![Image 33](https://img1.newsis.com/2026/07/21/NISI20260721_0001446122_web.jpg?rnd=20260721080037)](https://www.newsis.com/view/NISI20260721_0002190959)
+
+[![Image 34](https://img1.newsis.com/2026/07/21/NISI20260721_0021371616_web.jpg?rnd=20260721092749)](https://www.newsis.com/view/NISI20260721_0021371616)
+
+[![Image 35](https://img1.newsis.com/2026/07/20/NISI20260720_0001445648_web.jpg?rnd=20260721083859)](https://www.newsis.com/view/NISI20260721_0002191014)
+
+[![Image 36](https://img1.newsis.com/2026/07/21/NISI20260721_0021371697_web.jpg?rnd=20260721101947)](https://www.newsis.com/view/NISI20260721_0021371697)
+
+[스페인 도착해 월드컵 들어 올리는 에르난데스](https://www.newsis.com/view/NISI20260721_0002190965)
+
+['금의환향' 선수단 기다리는 스페인 축구 팬들](https://www.newsis.com/view/NISI20260721_0002190959)
+
+[쿠팡 물류센터 잔불 진화작업하는 소방대원들](https://www.newsis.com/view/NISI20260721_0021371616)
+
+[경찰과 충돌한 인도 바퀴벌레당 지지자들](https://www.newsis.com/view/NISI20260721_0002191014)
+
+[검경, '장윤기 수사 의혹' 국수본 압수수색](https://www.newsis.com/view/NISI20260721_0021371697)
+
+[![Image 37: N샷](https://img1.newsis.com/n_www/images/nshot.png)](https://star.newsis.com/)
+
+[![Image 38](https://img1.newsis.com/2026/07/16/NISI20260716_0021366928_web.jpg?rnd=20260716151205) 리센느 야호](https://star.newsis.com/pic/N20260716_0000001122)
+
+[![Image 39](https://img1.newsis.com/2026/07/16/NISI20260716_0021366934_web.jpg?rnd=20260716151226) 리센느 원이 '미모꽃 활짝'](https://star.newsis.com/pic/N20260716_0000001123)
+
+[![Image 40](https://img1.newsis.com/2026/07/16/NISI20260716_0021366935_web.jpg?rnd=20260716151247) 미나미, 갸루 말고 청순](https://star.newsis.com/pic/N20260716_0000001124)
+
+[![Image 41](https://img1.newsis.com/2026/07/13/NISI20260713_0021362036_web.jpg?rnd=20260713114511) 빌런이 된 최수영](https://star.newsis.com/pic/N20260713_0000001121)
+
+[![Image 42](https://img1.newsis.com/2026/07/13/NISI20260713_0021362072_web.jpg?rnd=20260713114445) 돌아온 오케이마담](https://star.newsis.com/pic/N20260713_0000001120)
+
+[![Image 43](https://img1.newsis.com/2026/07/07/NISI20260707_0021353393_web.jpg?rnd=20260708143337) 미모의 김민하](https://star.newsis.com/pic/N20260708_0000001119)
+
+[![Image 44](https://img1.newsis.com/2026/07/16/NISI20260716_0021366928_web.jpg?rnd=20260716151205)](https://star.newsis.com/pic/N20260716_0000001122)
+
+[![Image 45](https://img1.newsis.com/2026/07/16/NISI20260716_0021366934_web.jpg?rnd=20260716151226)](https://star.newsis.com/pic/N20260716_0000001123)
+
+[![Image 46](https://img1.newsis.com/2026/07/16/NISI20260716_0021366935_web.jpg?rnd=20260716151247)](https://star.newsis.com/pic/N20260716_0000001124)
+
+[![Image 47](https://img1.newsis.com/2026/07/13/NISI20260713_0021362036_web.jpg?rnd=20260713114511)](https://star.newsis.com/pic/N20260713_0000001121)
+
+[![Image 48](https://img1.newsis.com/2026/07/13/NISI20260713_0021362072_web.jpg?rnd=20260713114445)](https://star.newsis.com/pic/N20260713_0000001120)
+
+[![Image 49](https://img1.newsis.com/2026/07/07/NISI20260707_0021353393_web.jpg?rnd=20260708143337)](https://star.newsis.com/pic/N20260708_0000001119)
+
+뉴시스Pic
+
+[![Image 50](https://img1.newsis.com/2026/07/21/NISI20260721_0021371896_web.jpg?rnd=20260721110803)](https://www.newsis.com/view/NISX20260721_0003716894)
+
+['장마소강' 제주는 폭염](https://www.newsis.com/view/NISX20260721_0003716894)
+
+[![Image 51](https://img1.newsis.com/2026/07/21/NISI20260721_0021371915_web.jpg?rnd=20260721111750)](https://www.newsis.com/view/NISX20260721_0003717204)
+
+[이재명 대통령 "속도감 있는 공급대책·실수요자 지원책 마련하겠다"](https://www.newsis.com/view/NISX20260721_0003717204)
+
+[![Image 52](https://img1.newsis.com/2026/07/21/NISI20260721_0021372174_web.jpg?rnd=20260721144628)](https://www.newsis.com/view/NISX20260721_0003717221)
+
+['구속 기로' 올다르크, 태극기·성조기 배지 달고 영장심사 출석](https://www.newsis.com/view/NISX20260721_0003717221)
+
+[![Image 53](https://img1.newsis.com/2026/07/21/NISI20260721_0021372225_web.jpg?rnd=20260721150002)](https://www.newsis.com/view/NISX20260721_0003717173)
+
+[바둑 신진서 9단, AI 카타고와 대결서 역전승](https://www.newsis.com/view/NISX20260721_0003717173)
+
+[![Image 54](https://img1.newsis.com/2026/07/21/NISI20260721_0021371896_web.jpg?rnd=20260721110803)](https://www.newsis.com/view/NISX20260721_0003716894)
+
+['장마소강' 제주는 폭염](https://www.newsis.com/view/NISX20260721_0003716894)
+
+[![Image 55](https://img1.newsis.com/2026/07/21/NISI20260721_0021371915_web.jpg?rnd=20260721111750)](https://www.newsis.com/view/NISX20260721_0003717204)
+
+[이재명 대통령 "속도감 있는 공급대책·실수요자 지원책 마련하겠다"](https://www.newsis.com/view/NISX20260721_0003717204)
+
+[![Image 56](https://img1.newsis.com/2026/07/21/NISI20260721_0021372174_web.jpg?rnd=20260721144628)](https://www.newsis.com/view/NISX20260721_0003717221)
+
+['구속 기로' 올다르크, 태극기·성조기 배지 달고 영장심사 출석](https://www.newsis.com/view/NISX20260721_0003717221)
+
+[![Image 57](https://img1.newsis.com/2026/07/21/NISI20260721_0021372225_web.jpg?rnd=20260721150002)](https://www.newsis.com/view/NISX20260721_0003717173)
+
+[바둑 신진서 9단, AI 카타고와 대결서 역전승](https://www.newsis.com/view/NISX20260721_0003717173)
+
+[![Image 58](https://img1.newsis.com/2026/07/21/NISI20260721_0021371896_web.jpg?rnd=20260721110803)](https://www.newsis.com/view/NISX20260721_0003716894)
+
+['장마소강' 제주는 폭염](https://www.newsis.com/view/NISX20260721_0003716894)
+
+*   1
+*   2
+*   3
+*   4
+
+그래픽뉴스
+
+[전국 시·군마다 농촌특화지구…농지 규제도 완화](https://www.newsis.com/photo/graview/?id=NISI20260720_0002190615&cid=photo)
+
+[![Image 59: 그래픽뉴스](https://img1.newsis.com/2026/07/20/NISI20260720_0002190615_web.jpg?rnd=20260720165122)](https://www.newsis.com/photo/graview/?id=NISI20260720_0002190615&cid=photo)
+
+이시간 핫뉴스
+
+[![Image 60](https://img1.newsis.com/2025/11/05/NISI20251105_0001984678_web.jpg)](https://www.newsis.com/view/NISX20260721_0003717625)
+
+[![Image 61](https://img1.newsis.com/2026/07/21/NISI20260721_0002191648_web.jpg)](https://www.newsis.com/view/NISX20260721_0003717060)
+
+[![Image 62](https://img1.newsis.com/2026/07/20/NISI20260720_0002190578_web.jpg)](https://www.newsis.com/view/NISX20260720_0003715344)
+
+[![Image 63](https://img1.newsis.com/2026/07/21/NISI20260721_0002191560_web.jpg)](https://www.newsis.com/view/NISX20260721_0003716965)
+
+[![Image 64](https://img1.newsis.com/2026/03/19/NISI20260319_0021214109_web.jpg)](https://www.newsis.com/view/NISX20260721_0003717290)
+
+[장윤정 모친, '투자사기 혐의' 검찰 구속송치](https://www.newsis.com/view/NISX20260721_0003717625)
+
+["웃을 일 아냐"…상견레 중 정색했던 빽가, 문원과 재대면](https://www.newsis.com/view/NISX20260721_0003717060)
+
+[박신양, 20년 투병 고백…"짧은 대화도 힘들어"](https://www.newsis.com/view/NISX20260720_0003715344)
+
+['앞트임 복원 시술' 강예원, 확 달라진 모습 '깜짝'](https://www.newsis.com/view/NISX20260721_0003716965)
+
+[3살 딸 살해 후 6년간 은폐한 母, 아동수당까지 받았다](https://www.newsis.com/view/NISX20260721_0003717290)
+
+[![Image 65](https://img1.newsis.com/h_www/searea/2026/07/21/NISX20260721_0003717704_20260721_220121_54988.jpg)](https://www.newsis.com/view/NISX20260721_0003717704)
+
+오늘의 헤드라인
+
+["61시간 걸린 쿠팡물류센터 진화 수백대 로봇 폭발 우려 등에 발목](https://www.newsis.com/view/NISX20260721_0003717704)
+
+[인천 쿠팡 물류센터 화재 당시 강한 복사열로 방화셔터가 녹아내리고 방화구획이 제 기능을 하지 못하면서 소방당국이 진화에 큰 어려움을 겪은 것으로 나타났다. 인천소방본부는 21일 서면 브리핑을 통해 대량의 적치물과 강한 복사열, 높은 층고, 리튬배터리 사용 물류 로봇, 건물 붕괴 위험 등을 주요 소방활동 장애 요인으로 꼽았다. 소방당국은 "물류창고](https://www.newsis.com/view/NISX20260721_0003717704)
+
+Previous
+
+*   [![Image 66](https://img1.newsis.com/h_www/sport/2026/07/21/NISX20260721_0003716708_20260721_151218_14267.jpg)](https://www.newsis.com/view/NISX20260721_0003716708) 스포츠
+
+[로드리 패스 성공 '720회' 숫자로 본 무적함대 우승](https://www.newsis.com/view/NISX20260721_0003716708)  
+*   [![Image 67](https://img1.newsis.com/h_www/entertainment/2026/07/21/NISX20260721_0003717157_20260721_155421_35729.jpg)](https://www.newsis.com/view/NISX20260721_0003717157) 연예
+
+['10월 결혼' KCM 아내 딸과 구분 안가는 투샷](https://www.newsis.com/view/NISX20260721_0003717157)  
+*   [![Image 68](https://img1.newsis.com/h_www/politics/2026/07/21/NISX20260721_0003717366_20260721_190645_96887.jpg)](https://www.newsis.com/view/NISX20260721_0003717366) 정치
+
+[李 "성과급 배분, 노동쟁의 대상 아니다"](https://www.newsis.com/view/NISX20260721_0003717366)  
+*   [![Image 69](https://img1.newsis.com/h_www/international/2026/07/21/NISX20260721_0003717672_20260721_201707_96708.jpg)](https://www.newsis.com/view/NISX20260721_0003717672) 국제
+
+[이란, 쿠웨이트 발전소·해수담수화시설 공격](https://www.newsis.com/view/NISX20260721_0003717672)  
+*   [![Image 70](https://img1.newsis.com/h_www/economy/2026/07/21/NISX20260721_0003716458_20260721_160452_93163.jpg)](https://www.newsis.com/view/NISX20260721_0003716458) 경제
+
+[삼성벨트 따라 돈 몰린다…천안도 반세권?](https://www.newsis.com/view/NISX20260721_0003716458)  
+*   [![Image 71](https://img1.newsis.com/h_www/banking/2026/07/21/NISX20260721_0003717339_20260721_192757_30920.jpg)](https://www.newsis.com/view/NISX20260721_0003717339) 금융
+
+[코스피, 6700선 탈환…삼전·닉스 쌍끌이](https://www.newsis.com/view/NISX20260721_0003717339)  
+*   [![Image 72](https://img1.newsis.com/h_www/industry/2026/07/21/NISX20260721_0003717020_20260721_143230_12118.jpg)](https://www.newsis.com/view/NISX20260721_0003717020) 산업
+
+[관람객 650만 시대…K푸드 격전지로 떠오른 국중박](https://www.newsis.com/view/NISX20260721_0003717020)  
+*   [![Image 73](https://img1.newsis.com/h_www/health/2026/07/21/NISX20260721_0003716702_20260721_172136_84481.jpg)](https://www.newsis.com/view/NISX20260721_0003716702) IT·바이오
+
+[인간한계 넘은 신진서, AI 꺾은 세가지 비결](https://www.newsis.com/view/NISX20260721_0003716702)  
+*   [![Image 74](https://img1.newsis.com/h_www/society/2026/07/21/NISX20260721_0003717573_20260721_201627_63000.jpg)](https://www.newsis.com/view/NISX20260721_0003717573) 사회
+
+[유병호, 수첩에 "尹 반대세력 쓸어버려야"](https://www.newsis.com/view/NISX20260721_0003717573)  
+*   [![Image 75](https://img1.newsis.com/h_www/culture/2026/07/21/NISX20260721_0003717029_20260721_171858_92441.jpg)](https://www.newsis.com/view/NISX20260721_0003717029) 문화
+
+['X'자 눈의 진짜 의미, 카우스가 직접 답했다](https://www.newsis.com/view/NISX20260721_0003717029)  
+*   [![Image 76](https://img1.newsis.com/h_www/sport/2026/07/21/NISX20260721_0003716708_20260721_151218_14267.jpg)](https://www.newsis.com/view/NISX20260721_0003716708) 스포츠
+
+[로드리 패스 성공 '720회' 숫자로 본 무적함대 우승](https://www.newsis.com/view/NISX20260721_0003716708)  
+*   [![Image 77](https://img1.newsis.com/h_www/entertainment/2026/07/21/NISX20260721_0003717157_20260721_155421_35729.jpg)](https://www.newsis.com/view/NISX20260721_0003717157) 연예
+
+['10월 결혼' KCM 아내 딸과 구분 안가는 투샷](https://www.newsis.com/view/NISX20260721_0003717157)  
+*   [![Image 78](https://img1.newsis.com/h_www/politics/2026/07/21/NISX20260721_0003717366_20260721_190645_96887.jpg)](https://www.newsis.com/view/NISX20260721_0003717366) 정치
+
+[李 "성과급 배분, 노동쟁의 대상 아니다"](https://www.newsis.com/view/NISX20260721_0003717366)  
+*   [![Image 79](https://img1.newsis.com/h_www/international/2026/07/21/NISX20260721_0003717672_20260721_201707_96708.jpg)](https://www.newsis.com/view/NISX20260721_0003717672) 국제
+
+[이란, 쿠웨이트 발전소·해수담수화시설 공격](https://www.newsis.com/view/NISX20260721_0003717672)  
+*   [![Image 80](https://img1.newsis.com/h_www/economy/2026/07/21/NISX20260721_0003716458_20260721_160452_93163.jpg)](https://www.newsis.com/view/NISX20260721_0003716458) 경제
+
+[삼성벨트 따라 돈 몰린다…천안도 반세권?](https://www.newsis.com/view/NISX20260721_0003716458)  
+*   [![Image 81](https://img1.newsis.com/h_www/banking/2026/07/21/NISX20260721_0003717339_20260721_192757_30920.jpg)](https://www.newsis.com/view/NISX20260721_0003717339) 금융
+
+[코스피, 6700선 탈환…삼전·닉스 쌍끌이](https://www.newsis.com/view/NISX20260721_0003717339)  
+*   [![Image 82](https://img1.newsis.com/h_www/industry/2026/07/21/NISX20260721_0003717020_20260721_143230_12118.jpg)](https://www.newsis.com/view/NISX20260721_0003717020) 산업
+
+[관람객 650만 시대…K푸드 격전지로 떠오른 국중박](https://www.newsis.com/view/NISX20260721_0003717020)  
+*   [![Image 83](https://img1.newsis.com/h_www/health/2026/07/21/NISX20260721_0003716702_20260721_172136_84481.jpg)](https://www.newsis.com/view/NISX20260721_0003716702) IT·바이오
+
+[인간한계 넘은 신진서, AI 꺾은 세가지 비결](https://www.newsis.com/view/NISX20260721_0003716702)  
+*   [![Image 84](https://img1.newsis.com/h_www/society/2026/07/21/NISX20260721_0003717573_20260721_201627_63000.jpg)](https://www.newsis.com/view/NISX20260721_0003717573) 사회
+
+[유병호, 수첩에 "尹 반대세력 쓸어버려야"](https://www.newsis.com/view/NISX20260721_0003717573)  
+*   [![Image 85](https://img1.newsis.com/h_www/culture/2026/07/21/NISX20260721_0003717029_20260721_171858_92441.jpg)](https://www.newsis.com/view/NISX20260721_0003717029) 문화
+
+['X'자 눈의 진짜 의미, 카우스가 직접 답했다](https://www.newsis.com/view/NISX20260721_0003717029)  
+*   [![Image 86](https://img1.newsis.com/h_www/sport/2026/07/21/NISX20260721_0003716708_20260721_151218_14267.jpg)](https://www.newsis.com/view/NISX20260721_0003716708) 스포츠
+
+[로드리 패스 성공 '720회' 숫자로 본 무적함대 우승](https://www.newsis.com/view/NISX20260721_0003716708)  
+*   [![Image 87](https://img1.newsis.com/h_www/entertainment/2026/07/21/NISX20260721_0003717157_20260721_155421_35729.jpg)](https://www.newsis.com/view/NISX20260721_0003717157) 연예
+
+['10월 결혼' KCM 아내 딸과 구분 안가는 투샷](https://www.newsis.com/view/NISX20260721_0003717157)  
+
+Next
+
+많이 본 기사
+
+[종합](https://www.newsis.com/view/NISX20251202_0003424584#section1)
+
+[정치](https://www.newsis.com/view/NISX20251202_0003424584#section2)
+
+[국제](https://www.newsis.com/view/NISX20251202_0003424584#section3)
+
+[경제](https://www.newsis.com/view/NISX20251202_0003424584#section4)
+
+[금융](https://www.newsis.com/view/NISX20251202_0003424584#section5)
+
+[산업](https://www.newsis.com/view/NISX20251202_0003424584#section6)
+
+[IT·바이오](https://www.newsis.com/view/NISX20251202_0003424584#section7)
+
+[사회](https://www.newsis.com/view/NISX20251202_0003424584#section8)
+
+[수도권](https://www.newsis.com/view/NISX20251202_0003424584#section9)
+
+[지방](https://www.newsis.com/view/NISX20251202_0003424584#section10)
+
+[문화](https://www.newsis.com/view/NISX20251202_0003424584#section11)
+
+[스포츠](https://www.newsis.com/view/NISX20251202_0003424584#section12)
+
+[연예](https://www.newsis.com/view/NISX20251202_0003424584#section13)
+
+[![Image 88](https://img1.newsis.com/2025/11/05/NISI20251105_0001984678_web.jpg?rnd=20251105114540)](https://www.newsis.com/view/NISX20260721_0003717625)
+
+['수천만원 투자사기 혐의' 장윤정 모친 구속 송치](https://www.newsis.com/view/NISX20260721_0003717625)
+
+[빽가, 신지 남편 문원에 당부 "부탁한다…진짜다"](https://www.newsis.com/view/NISX20260721_0003717060)
+
+[![Image 89](https://img1.newsis.com/2026/07/21/NISI20260721_0002191648_web.jpg?rnd=20260721142110)](https://www.newsis.com/view/NISX20260721_0003717060)
+
+[![Image 90](https://img1.newsis.com/2026/07/21/NISI20260721_0002191560_thm.jpg?rnd=20260721135718)](https://www.newsis.com/view/NISX20260721_0003716965)
+
+['11억 빚 고백' 강예원, 확 달라진 분위기](https://www.newsis.com/view/NISX20260721_0003716965)
+
+[유이 "'꿀벅지' 수식어 상처…합성사진도 돌아다녀"](https://www.newsis.com/view/NISX20260721_0003716328)
+
+[![Image 91](https://img1.newsis.com/2026/07/21/NISI20260721_0002191211_thm.jpg?rnd=20260721094831)](https://www.newsis.com/view/NISX20260721_0003716328)
+
+[![Image 92](https://img1.newsis.com/2026/05/20/NISI20260520_0021289844_thm.jpg?rnd=20260520130447)](https://www.newsis.com/view/NISX20260721_0003717150)
+
+[李 "영업익 배분 쟁의대상 아냐" 발언에…삼성전자 노조 "노사 교섭 관행 고려해야"](https://www.newsis.com/view/NISX20260721_0003717150)
+
+[다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238)
+
+[![Image 93](https://img1.newsis.com/2026/07/21/NISI20260721_0002191053_thm.jpg?rnd=20260721085204)](https://www.newsis.com/view/NISX20260721_0003716238)
+
+[알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858)
+
+[선미 "박진영, 꼴 보기 싫어"](https://www.newsis.com/view/NISX20260721_0003716538)
+
+[![Image 94](https://img1.newsis.com/2025/11/26/NISI20251126_0021075369_web.jpg?rnd=20251126092440)](https://www.newsis.com/view/NISX20260721_0003716414)
+
+[공무원 초과근무 '하루 4시간 상한' 폐지…일한만큼 보상](https://www.newsis.com/view/NISX20260721_0003716414)
+
+[이 대통령 "영업이익 비율 배분 문제 노동쟁의 대상 아니라 생각"](https://www.newsis.com/view/NISX20260721_0003716867)
+
+[![Image 95](https://img1.newsis.com/2026/07/21/NISI20260721_0021371915_web.jpg?rnd=20260721111750)](https://www.newsis.com/view/NISX20260721_0003716867)
+
+[![Image 96](https://img1.newsis.com/2026/07/21/NISI20260721_0021371855_thm.jpg?rnd=20260721105749)](https://www.newsis.com/view/NISX20260721_0003716709)
+
+[이 대통령 "레버리지ETF 보완책 신속·충실하게 만들어야…너무 오래 걸려"](https://www.newsis.com/view/NISX20260721_0003716709)
+
+[조국혁신당 "본회의 절차 참여"…野필버 종결 수순](https://www.newsis.com/view/NISX20260721_0003717018)
+
+[![Image 97](https://img1.newsis.com/2020/12/11/NISI20201211_0000654239_thm.jpg?rnd=20201211094147)](https://www.newsis.com/view/NISX20260721_0003717018)
+
+[![Image 98](https://img1.newsis.com/2020/12/11/NISI20201211_0000654239_thm.jpg?rnd=20201211094147)](https://www.newsis.com/view/NISX20260721_0003716847)
+
+[이 대통령 "영업이익 비율 배분 노동쟁의 대상 아니라 생각"](https://www.newsis.com/view/NISX20260721_0003716847)
+
+[국힘, 李 '근저당 설정'에 "국민은 상상도 못 할 거래…'더불어근저당'"](https://www.newsis.com/view/NISX20260721_0003717137)
+
+[![Image 99](https://img1.newsis.com/2026/07/21/NISI20260721_0021371915_thm.jpg?rnd=20260721111750)](https://www.newsis.com/view/NISX20260721_0003717137)
+
+[與, 전대후보 기탁금 인하…대표 8000만원 최고위원 3000만원](https://www.newsis.com/view/NISX20260721_0003716850)
+
+[이 대통령 "호남 반도체 투자·영업이익 배분, 노동쟁의 대상 아냐"(종합)](https://www.newsis.com/view/NISX20260721_0003717366)
+
+[![Image 100](https://img1.newsis.com/2026/07/17/NISI20260717_0001437263_web.jpg?rnd=20260717104256)](https://www.newsis.com/view/NISX20260721_0003716939)
+
+["트럼프, '10일 휴전' 검토…이스라엘과 이란 공습재개도 대비"(종합)](https://www.newsis.com/view/NISX20260721_0003716939)
+
+[홍해 봉쇄시 세계 원유공급 7% 감소…"한국 수입 33% 차질"](https://www.newsis.com/view/NISX20260721_0003716471)
+
+[![Image 101](https://img1.newsis.com/2026/05/08/NISI20260508_0021276227_web.jpg?rnd=20260508104349)](https://www.newsis.com/view/NISX20260721_0003716471)
+
+[![Image 102](https://img1.newsis.com/2026/07/09/NISI20260709_0002182450_thm.jpg?rnd=20260709141441)](https://www.newsis.com/view/NISX20260721_0003716617)
+
+[미군 "이란 추가 공습 완료…호르무즈 상선 공격 저지"(종합)](https://www.newsis.com/view/NISX20260721_0003716617)
+
+[中 AI '키미 K3' 쇼크…월가 "메모리 반도체엔 오히려 호재"](https://www.newsis.com/view/NISX20260721_0003716509)
+
+[![Image 103](https://img1.newsis.com/2026/07/19/NISI20260719_0002189790_thm.jpg?rnd=20260719171845)](https://www.newsis.com/view/NISX20260721_0003716509)
+
+[![Image 104](https://img1.newsis.com/2026/03/02/NISI20260302_0001070317_thm.jpg?rnd=20260303130821)](https://www.newsis.com/view/NISX20260721_0003717200)
+
+[美 국무부, 전 세계 미국인에 중동 경보…"여행·경유 재고"](https://www.newsis.com/view/NISX20260721_0003717200)
+
+[이란, 또 쿠웨이트 발전소·해수담수화시설 공격…시설 피해(1보)](https://www.newsis.com/view/NISX20260721_0003717672)
+
+[![Image 105](https://img1.newsis.com/2026/03/25/NISI20260325_0001129840_thm.jpg?rnd=20260721201349)](https://www.newsis.com/view/NISX20260721_0003717672)
+
+[대만 증시, 기술주 급반등에 4.2% 치솟아…사상 최대 상승폭](https://www.newsis.com/view/NISX20260721_0003717448)
+
+[월드컵 우승 자축하다 분수 무너져…스페인 13세 소년 사망](https://www.newsis.com/view/NISX20260721_0003716899)
+
+[![Image 106](https://img1.newsis.com/2026/07/21/NISI20260721_0002191053_web.jpg?rnd=20260721085204)](https://www.newsis.com/view/NISX20260721_0003716238)
+
+[다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238)
+
+[홍해 봉쇄시 세계 원유공급 7% 감소…"한국 수입 33% 차질"](https://www.newsis.com/view/NISX20260721_0003716471)
+
+[![Image 107](https://img1.newsis.com/2026/05/08/NISI20260508_0021276227_web.jpg?rnd=20260508104349)](https://www.newsis.com/view/NISX20260721_0003716471)
+
+[![Image 108](https://img1.newsis.com/2026/07/19/NISI20260719_0002189790_thm.jpg?rnd=20260719171845)](https://www.newsis.com/view/NISX20260721_0003716509)
+
+[中 AI '키미 K3' 쇼크…월가 "메모리 반도체엔 오히려 호재"](https://www.newsis.com/view/NISX20260721_0003716509)
+
+[국평 10억원대 '의왕역 SK VIEW' 특공 경쟁률 5.6대 1](https://www.newsis.com/view/NISX20260721_0003716523)
+
+[![Image 109](https://img1.newsis.com/2026/07/16/NISI20260716_0002188626_thm.jpg?rnd=20260716143436)](https://www.newsis.com/view/NISX20260721_0003716523)
+
+[![Image 110](https://img1.newsis.com/2015/08/13/NISI20150813_0005776817_thm.jpg?rnd=20260421202128)](https://www.newsis.com/view/NISX20260721_0003717448)
+
+[대만 증시, 기술주 급반등에 4.2% 치솟아…사상 최대 상승폭](https://www.newsis.com/view/NISX20260721_0003717448)
+
+["중국 AI 막아야 하나"…오픈AI·앤트로픽 vs 백악관, AI규제 놓고 충돌](https://www.newsis.com/view/NISX20260721_0003717111)
+
+[![Image 111](https://img1.newsis.com/2025/12/31/NISI20251231_0002030917_thm.jpg?rnd=20251231114548)](https://www.newsis.com/view/NISX20260721_0003717111)
+
+[노동계, 李 '영업이익 배분' 발언 반발…"'노란봉투법' 축소 안 돼"(종합)](https://www.newsis.com/view/NISX20260721_0003717496)
+
+["삼성벨트 따라 돈 몰린다"…천안까지 번지는 '반세권'](https://www.newsis.com/view/NISX20260721_0003716458)
+
+[![Image 112](https://img1.newsis.com/2020/12/11/NISI20201211_0000654239_web.jpg?rnd=20201211094147)](https://www.newsis.com/view/NISX20260721_0003716869)
+
+[코스피 급등세에 매수 사이드카 발동](https://www.newsis.com/view/NISX20260721_0003716869)
+
+[코오롱티슈진 "TG-C, 기대 못미쳐 송구…절반의 성공"](https://www.newsis.com/view/NISX20260721_0003716745)
+
+[![Image 113](https://img1.newsis.com/2026/07/21/NISI20260721_0002191316_web.jpg?rnd=20260721103602)](https://www.newsis.com/view/NISX20260721_0003716745)
+
+[![Image 114](https://img1.newsis.com/2026/07/21/NISI20260721_0021371855_thm.jpg?rnd=20260721105749)](https://www.newsis.com/view/NISX20260721_0003716709)
+
+[이 대통령 "레버리지ETF 보완책 신속·충실하게 만들어야…너무 오래 걸려"](https://www.newsis.com/view/NISX20260721_0003716709)
+
+[코스피, 반도체 수출 호조에 6700선 탈환…삼전·닉스 쌍끌이](https://www.newsis.com/view/NISX20260721_0003717339)
+
+[![Image 115](https://img1.newsis.com/2026/07/21/NISI20260721_0021372431_thm.jpg?rnd=20260721155749)](https://www.newsis.com/view/NISX20260721_0003717339)
+
+[![Image 116](https://img1.newsis.com/2026/07/21/NISI20260721_0021371598_thm.jpg?rnd=20260721092235)](https://www.newsis.com/view/NISX20260721_0003716725)
+
+[미국 멀쩡한데 코스피 -28%…주요국 하락 1위 왜?](https://www.newsis.com/view/NISX20260721_0003716725)
+
+[원·달러 환율, 5.0원 내린 1473.4원 마감](https://www.newsis.com/view/NISX20260721_0003717255)
+
+[![Image 117](https://img1.newsis.com/2020/12/11/NISI20201211_0000654239_thm.jpg?rnd=20201211094147)](https://www.newsis.com/view/NISX20260721_0003717255)
+
+[어제는 上, 오늘은 下…천국·지옥 오간 삼천당제약](https://www.newsis.com/view/NISX20260721_0003717049)
+
+[코스피, 231.68포인트(3.56%) 오른 6747.95 마감](https://www.newsis.com/view/NISX20260721_0003717218)
+
+[![Image 118](https://img1.newsis.com/2026/05/20/NISI20260520_0021289844_web.jpg?rnd=20260520130447)](https://www.newsis.com/view/NISX20260721_0003717150)
+
+[李 "영업익 배분 쟁의대상 아냐" 발언에…삼성전자 노조 "노사 교섭 관행 고려해야"](https://www.newsis.com/view/NISX20260721_0003717150)
+
+['재계 맞수' 삼성전자·현대차 로봇 패권 정면승부…"격화하는 미래 먹거리 대전"](https://www.newsis.com/view/NISX20260721_0003716609)
+
+[![Image 119](https://img1.newsis.com/2026/07/06/NISI20260706_0021351199_web.jpg?rnd=20260706115330)](https://www.newsis.com/view/NISX20260721_0003716609)
+
+[![Image 120](https://img1.newsis.com/2026/07/07/NISI20260707_0021352930_thm.jpg?rnd=20260707100605)](https://www.newsis.com/view/NISX20260721_0003716673)
+
+[이재용 삼성의 '로봇' 출사표…"AI 반도체·배터리 등 초격차 역량 총집결"](https://www.newsis.com/view/NISX20260721_0003716673)
+
+[홈플러스 회생절차 다시 진행…법원, 폐지 결정 취소](https://www.newsis.com/view/NISX20260721_0003716793)
+
+[![Image 121](https://img1.newsis.com/2026/07/20/NISI20260720_0021370852_thm.jpg?rnd=20260720142048)](https://www.newsis.com/view/NISX20260721_0003716793)
+
+[![Image 122](https://img1.newsis.com/2020/12/11/NISI20201211_0000654239_thm.jpg?rnd=20201211094147)](https://www.newsis.com/view/NISX20260721_0003716664)
+
+[법원, 홈플러스 회생절차 폐지 취소…회생계획안 가결기간 연장](https://www.newsis.com/view/NISX20260721_0003716664)
+
+[쿠팡 화재에 입점 셀러들 '발 동동'…로켓그로스 재고 손실 보상 기준은](https://www.newsis.com/view/NISX20260721_0003717108)
+
+[![Image 123](https://img1.newsis.com/2026/07/21/NISI20260721_0021371615_thm.jpg?rnd=20260721092749)](https://www.newsis.com/view/NISX20260721_0003717108)
+
+[노동계, 李 '영업이익 배분' 발언 반발…"'노란봉투법' 축소 안 돼"(종합)](https://www.newsis.com/view/NISX20260721_0003717496)
+
+[산업장관 "기업의 사회적 책임 강화…시슐랭 가이드 운영"](https://www.newsis.com/view/NISX20260721_0003716836)
+
+[![Image 124](https://img1.newsis.com/2026/07/21/NISI20260721_0002191316_web.jpg?rnd=20260721103602)](https://www.newsis.com/view/NISX20260721_0003716745)
+
+[코오롱티슈진 "TG-C, 기대 못미쳐 송구…절반의 성공"](https://www.newsis.com/view/NISX20260721_0003716745)
+
+["승률 99% 끝까지 지켰다"…신진서, 최강 바둑 AI '카타고' 꺾은 세가지 비결](https://www.newsis.com/view/NISX20260721_0003716702)
+
+[![Image 125](https://img1.newsis.com/2026/07/21/NISI20260721_0021372304_web.jpg?rnd=20260721151844)](https://www.newsis.com/view/NISX20260721_0003716702)
+
+[![Image 126](https://img1.newsis.com/2026/07/21/NISI20260721_0002191663_thm.jpg?rnd=20260721142643)](https://www.newsis.com/view/NISX20260721_0003717078)
+
+["애플카드 게 섰거라"…삼성전자, 美서 '갤럭시 카드' 공식 출시](https://www.newsis.com/view/NISX20260721_0003717078)
+
+["통신 안테나 세우고 바로 튼다"…무선국 설치 절차 간소화](https://www.newsis.com/view/NISX20260721_0003716431)
+
+[![Image 127](https://img1.newsis.com/2023/07/10/NISI20230710_0019951799_thm.jpg?rnd=20230710131246)](https://www.newsis.com/view/NISX20260721_0003716431)
+
+[![Image 128](https://img1.newsis.com/2026/07/21/NISI20260721_0002191425_thm.jpg?rnd=20260721112047)](https://www.newsis.com/view/NISX20260721_0003716779)
+
+[주가 반년 만에 53% 급등…'피 한방울로 암 진단'하는 이 회사](https://www.newsis.com/view/NISX20260721_0003716779)
+
+[장마철 빗길에 '꽈당'…고령층 위협 낙상 주의보](https://www.newsis.com/view/NISX20260721_0003716628)
+
+[![Image 129](https://img1.newsis.com/2026/07/20/NISI20260720_0021370264_thm.jpg?rnd=20260720093730)](https://www.newsis.com/view/NISX20260721_0003716628)
+
+["중증 우울증, '이 치료' 이후 극단선택 위험 낮춰"](https://www.newsis.com/view/NISX20260721_0003716968)
+
+[딥페이크 막고 AI 분쟁 조정…방미통위, AI 시대 '미디어 법안' 속도](https://www.newsis.com/view/NISX20260721_0003716596)
+
+[![Image 130](https://img1.newsis.com/2025/11/05/NISI20251105_0001984678_web.jpg?rnd=20251105114540)](https://www.newsis.com/view/NISX20260721_0003717625)
+
+['수천만원 투자사기 혐의' 장윤정 모친 구속 송치](https://www.newsis.com/view/NISX20260721_0003717625)
+
+[다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238)
+
+[![Image 131](https://img1.newsis.com/2026/07/21/NISI20260721_0002191053_web.jpg?rnd=20260721085204)](https://www.newsis.com/view/NISX20260721_0003716238)
+
+[![Image 132](https://img1.newsis.com/2026/07/21/NISI20260721_0002191475_thm.gif?rnd=20260721120651)](https://www.newsis.com/view/NISX20260721_0003716858)
+
+[알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858)
+
+[공무원 초과근무 '하루 4시간 상한' 폐지…일한만큼 보상](https://www.newsis.com/view/NISX20260721_0003716414)
+
+[![Image 133](https://img1.newsis.com/2025/11/26/NISI20251126_0021075369_thm.jpg?rnd=20251126092440)](https://www.newsis.com/view/NISX20260721_0003716414)
+
+[![Image 134](https://img1.newsis.com/2024/11/15/NISI20241115_0020597088_thm.jpg?rnd=20241115140137)](https://www.newsis.com/view/NISX20260721_0003717089)
+
+["'공갈·협박' 구제역, 쯔양에 8000만원 배상"…1심보다 500만원↑](https://www.newsis.com/view/NISX20260721_0003717089)
+
+[이 대통령 "영업이익 비율 배분 문제 노동쟁의 대상 아니라 생각"](https://www.newsis.com/view/NISX20260721_0003716867)
+
+[![Image 135](https://img1.newsis.com/2026/07/21/NISI20260721_0021371915_thm.jpg?rnd=20260721111750)](https://www.newsis.com/view/NISX20260721_0003716867)
+
+[인천쿠팡센터 화재 잔불 정리…소방 대응 1단계로 낮춰](https://www.newsis.com/view/NISX20260721_0003717135)
+
+[이 대통령 "호남 반도체 투자·영업이익 배분, 노동쟁의 대상 아냐"(종합)](https://www.newsis.com/view/NISX20260721_0003717366)
+
+[![Image 136](https://img1.newsis.com/2026/03/19/NISI20260319_0021214109_web.jpg?rnd=20260319105217)](https://www.newsis.com/view/NISX20260721_0003717290)
+
+[세 살 딸 살해 6년 은폐, 아동수당까지 타낸 엄마…징역 13년](https://www.newsis.com/view/NISX20260721_0003717290)
+
+[인천쿠팡센터 화재 잔불 정리…소방 대응 1단계로 낮춰](https://www.newsis.com/view/NISX20260721_0003717135)
+
+[![Image 137](https://img1.newsis.com/2026/07/21/NISI20260721_0021371610_web.jpg?rnd=20260721092749)](https://www.newsis.com/view/NISX20260721_0003717135)
+
+[![Image 138](https://img1.newsis.com/2026/07/21/NISI20260721_0021371613_thm.jpg?rnd=20260721092749)](https://www.newsis.com/view/NISX20260721_0003716901)
+
+[화재 쿠팡물류센터, 올해 자체점검 25건 지적…임차 전에도 큰 불(종합)](https://www.newsis.com/view/NISX20260721_0003716901)
+
+[이승로 성북구청장 "서울시, 자치구와 재개발·재건축 협력해야"](https://www.newsis.com/view/NISX20260716_0003713071)
+
+[![Image 139](https://img1.newsis.com/2026/07/20/NISI20260720_0002190871_thm.jpg?rnd=20260720175653)](https://www.newsis.com/view/NISX20260716_0003713071)
+
+[![Image 140](https://img1.newsis.com/2026/07/21/NISI20260721_0021371615_thm.jpg?rnd=20260721092749)](https://www.newsis.com/view/NISX20260721_0003717108)
+
+[쿠팡 화재에 입점 셀러들 '발 동동'…로켓그로스 재고 손실 보상 기준은](https://www.newsis.com/view/NISX20260721_0003717108)
+
+[인천 쿠팡센터 본격 잔불 정리, 국가소방동원령 일부 해제](https://www.newsis.com/view/NISX20260721_0003716556)
+
+[![Image 141](https://img1.newsis.com/2026/07/21/NISI20260721_0021371616_thm.jpg?rnd=20260721092749)](https://www.newsis.com/view/NISX20260721_0003716556)
+
+[주민들 "쿠팡 화재 불은 꺼졌지만 건물 붕괴 불안"](https://www.newsis.com/view/NISX20260721_0003717466)
+
+[소방청, '쿠팡 물류센터 화재' 원인 규명 합동조사단 운영](https://www.newsis.com/view/NISX20260721_0003716692)
+
+[![Image 142](https://img1.newsis.com/2026/07/21/NISI20260721_0002191475_web.gif?rnd=20260721120651)](https://www.newsis.com/view/NISX20260721_0003716858)
+
+[알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858)
+
+['장마소강' 제주는 폭염](https://www.newsis.com/view/NISX20260721_0003716894)
+
+[![Image 143](https://img1.newsis.com/2026/07/21/NISI20260721_0021371896_web.jpg?rnd=20260721110803)](https://www.newsis.com/view/NISX20260721_0003716894)
+
+[![Image 144](https://img1.newsis.com/2026/07/21/NISI20260721_0002191319_thm.jpg?rnd=20260721103739)](https://www.newsis.com/view/NISX20260721_0003716629)
+
+[장윤기 사건 전 형사과장 "수사 과정서 윗선 부당한 지시 없었다"](https://www.newsis.com/view/NISX20260721_0003716629)
+
+[800조 전남광주 반도체 팹 총력지원…지원단 역할 '주목'](https://www.newsis.com/view/NISX20260721_0003716959)
+
+[![Image 145](https://img1.newsis.com/2026/07/09/NISI20260709_0021356531_thm.jpg?rnd=20260709101807)](https://www.newsis.com/view/NISX20260721_0003716959)
+
+[![Image 146](https://img1.newsis.com/2026/07/21/NISI20260721_0002191319_thm.jpg?rnd=20260721103739)](https://www.newsis.com/view/NISX20260721_0003716648)
+
+[장윤기 사건 전 형사과장 영장심사…"윗선 부당 지시 없었다"](https://www.newsis.com/view/NISX20260721_0003716648)
+
+[내달 6~9일 여수 '섬의 날' 리센느 뜬다…홍보대사 위촉](https://www.newsis.com/view/NISX20260721_0003716376)
+
+[![Image 147](https://img1.newsis.com/2026/07/07/NISI20260707_0002180589_thm.jpg?rnd=20260707222321)](https://www.newsis.com/view/NISX20260721_0003716376)
+
+[장윤기 사건 형사과장 "국수본, 성범죄·살인 병합수사 세 차례 막아"(종합)](https://www.newsis.com/view/NISX20260721_0003717037)
+
+[주민들 "쿠팡 화재 불은 꺼졌지만 건물 붕괴 불안"](https://www.newsis.com/view/NISX20260721_0003717466)
+
+[![Image 148](https://img1.newsis.com/2026/07/21/NISI20260721_0002191360_web.jpg?rnd=20260721105338)](https://www.newsis.com/view/NISX20260721_0003717029)
+
+["피규어 작가로만 보지 말아달라"…카우스의 진짜 얼굴](https://www.newsis.com/view/NISX20260721_0003717029)
+
+[하정우 "AI, 인간 고통 줄이는 방향으로 설계해야…불교 철학과 맞닿아"](https://www.newsis.com/view/NISX20260721_0003717398)
+
+[![Image 149](https://img1.newsis.com/2026/07/21/NISI20260721_0021372212_web.jpg?rnd=20260721145909)](https://www.newsis.com/view/NISX20260721_0003717398)
+
+[![Image 150](https://img1.newsis.com/2026/06/04/NISI20260604_0002152920_thm.jpg?rnd=20260604144900)](https://www.newsis.com/view/NISX20260721_0003716206)
+
+[극한호우 속 문화유산 보호…하회마을 '침수계측장비' 설치](https://www.newsis.com/view/NISX20260721_0003716206)
+
+[내달 6~9일 여수 '섬의 날' 리센느 뜬다…홍보대사 위촉](https://www.newsis.com/view/NISX20260721_0003716376)
+
+[![Image 151](https://img1.newsis.com/2026/07/07/NISI20260707_0002180589_thm.jpg?rnd=20260707222321)](https://www.newsis.com/view/NISX20260721_0003716376)
+
+[![Image 152](https://img1.newsis.com/2026/07/21/NISI20260721_0002191830_thm.jpg?rnd=20260721154912)](https://www.newsis.com/view/NISX20260721_0003717311)
+
+[문자에서 회화·조각·홀로그램까지…안상수 '한글도깨비'](https://www.newsis.com/view/NISX20260721_0003717311)
+
+[카우스(KAWS) 서울 상륙… '친구, 그리고 이웃' 신작 공개](https://www.newsis.com/view/NISX20260721_0003716833)
+
+[![Image 153](https://img1.newsis.com/2026/07/21/NISI20260721_0002191465_thm.jpg?rnd=20260721114929)](https://www.newsis.com/view/NISX20260721_0003716833)
+
+[티파니 영, '유미'와 사랑에 빠지다](https://www.newsis.com/view/NISX20260721_0003717548)
+
+[예술의전당, 8월 국제음악제…케빈 첸·코베키나 무대 올라](https://www.newsis.com/view/NISX20260721_0003717074)
+
+[![Image 154](https://img1.newsis.com/2026/07/19/NISI20260719_0002189770_web.jpg?rnd=20260719163240)](https://www.newsis.com/view/NISX20260721_0003716500)
+
+[인간의 승리…바둑 신진서, AI 카타고에 2승1패 '역전승'](https://www.newsis.com/view/NISX20260721_0003716500)
+
+[설종진 키움 감독 "박준현의 장점은 속구…안우진처럼 승부해야"](https://www.newsis.com/view/NISX20260721_0003717376)
+
+[![Image 155](https://img1.newsis.com/2026/07/21/NISI20260721_0002191921_web.jpg?rnd=20260721164213)](https://www.newsis.com/view/NISX20260721_0003717376)
+
+[![Image 156](https://img1.newsis.com/2020/12/11/NISI20201211_0000654239_thm.jpg?rnd=20201211094147)](https://www.newsis.com/view/NISX20260721_0003716846)
+
+[바둑 신진서, 최종국서 AI 카타고 제압…2승1패 '역전승'](https://www.newsis.com/view/NISX20260721_0003716846)
+
+[페덱 이어 부상 대체 외인까지 MLB 경력자…우승 꿈꾸는 삼성 '광폭 행보'](https://www.newsis.com/view/NISX20260721_0003717009)
+
+[![Image 157](https://img1.newsis.com/2026/07/18/NISI20260718_0002189477_thm.jpg?rnd=20260718200537)](https://www.newsis.com/view/NISX20260721_0003717009)
+
+[![Image 158](https://img1.newsis.com/2026/07/21/NISI20260721_0002192030_thm.jpg?rnd=20260721182704)](https://www.newsis.com/view/NISX20260721_0003717604)
+
+[성공적 데뷔전 치른 삼성 '우승 청부사' 페덱…"원정 ABS 적응은 숙제"](https://www.newsis.com/view/NISX20260721_0003717604)
+
+[SSG 부상 대체 외인 타자 마드리스, 선수 등록 마무리…롯데전서 '첫 선'](https://www.newsis.com/view/NISX20260721_0003716625)
+
+[![Image 159](https://img1.newsis.com/2026/07/21/NISI20260721_0002191411_thm.jpg?rnd=20260721111614)](https://www.newsis.com/view/NISX20260721_0003716625)
+
+["승률 99% 끝까지 지켰다"…신진서, 최강 바둑 AI '카타고' 꺾은 세가지 비결](https://www.newsis.com/view/NISX20260721_0003716702)
+
+[박진만 삼성 감독 "페덱·보스 빠르게 합류…5선발은 오늘·내일 보고 결정"](https://www.newsis.com/view/NISX20260721_0003717546)
+
+[![Image 160](https://img1.newsis.com/2025/11/05/NISI20251105_0001984678_web.jpg?rnd=20251105114540)](https://www.newsis.com/view/NISX20260721_0003717625)
+
+['수천만원 투자사기 혐의' 장윤정 모친 구속 송치](https://www.newsis.com/view/NISX20260721_0003717625)
+
+[빽가, 신지 남편 문원에 당부 "부탁한다…진짜다"](https://www.newsis.com/view/NISX20260721_0003717060)
+
+[![Image 161](https://img1.newsis.com/2026/07/21/NISI20260721_0002191648_web.jpg?rnd=20260721142110)](https://www.newsis.com/view/NISX20260721_0003717060)
+
+[![Image 162](https://img1.newsis.com/2026/07/21/NISI20260721_0002191560_thm.jpg?rnd=20260721135718)](https://www.newsis.com/view/NISX20260721_0003716965)
+
+['11억 빚 고백' 강예원, 확 달라진 분위기](https://www.newsis.com/view/NISX20260721_0003716965)
+
+[유이 "'꿀벅지' 수식어 상처…합성사진도 돌아다녀"](https://www.newsis.com/view/NISX20260721_0003716328)
+
+[![Image 163](https://img1.newsis.com/2026/07/21/NISI20260721_0002191211_thm.jpg?rnd=20260721094831)](https://www.newsis.com/view/NISX20260721_0003716328)
+
+[![Image 164](https://img1.newsis.com/2026/07/21/NISI20260721_0002191283_thm.jpg?rnd=20260721102321)](https://www.newsis.com/view/NISX20260721_0003716538)
+
+[선미 "박진영, 꼴 보기 싫어"](https://www.newsis.com/view/NISX20260721_0003716538)
+
+[이승우 "손흥민 내가 군면제 시켰다"](https://www.newsis.com/view/NISX20260721_0003716600)
+
+[![Image 165](https://img1.newsis.com/2026/07/21/NISI20260721_0002191318_thm.jpg?rnd=20260721103714)](https://www.newsis.com/view/NISX20260721_0003716600)
+
+[타일러, 81만 유튜브 돌연 종료 왜?](https://www.newsis.com/view/NISX20260721_0003716587)
+
+[이동진 '호프' 별점 4점 줬다가 악플…"나홍진과 친분 없다"](https://www.newsis.com/view/NISX20260721_0003716740)
+
+뉴시스 기획특집
+
+[![Image 166](https://img1.newsis.com/h_www/special/2026/07/19/p_ST20260719_0000001921.png?rnd=20260719095245)](https://www.newsis.com/special_ar?s_id=ST20260719_0000001921)
+
+[유네스코 세계유산위](https://www.newsis.com/special_ar?s_id=ST20260719_0000001921)
+
+[![Image 167](https://img1.newsis.com/h_www/special/2026/07/18/p_ST20260718_0000001920.png?rnd=20260718160620)](https://www.newsis.com/special_ar?s_id=ST20260718_0000001920)
+
+[소상공인의 여름](https://www.newsis.com/special_ar?s_id=ST20260718_0000001920)
+
+[![Image 168](https://img1.newsis.com/h_www/special/2026/07/17/p_ST20260717_0000001919.jpg?rnd=20260719062858)](https://www.newsis.com/special_ar?s_id=ST20260717_0000001919)
+
+[부동산 새판 짜기](https://www.newsis.com/special_ar?s_id=ST20260717_0000001919)
+
+[![Image 169](https://img1.newsis.com/h_www/special/2026/07/17/p_ST20260717_0000001918.jpg?rnd=20260717170359)](https://www.newsis.com/special_ar?s_id=ST20260717_0000001918)
+
+[다시 나는 K방산](https://www.newsis.com/special_ar?s_id=ST20260717_0000001918)
+
+[![Image 170](https://img1.newsis.com/h_www/special/2026/07/17/p_ST20260717_0000001917.jpg?rnd=20260719083308)](https://www.newsis.com/special_ar?s_id=ST20260717_0000001917)
+
+[변동성이 덮친 증시](https://www.newsis.com/special_ar?s_id=ST20260717_0000001917)
+
+[![Image 171](https://img1.newsis.com/h_www/advertise/2023/03/29/AD_20230329_002138_1680044814.jpg)](https://www.doosanenerbility.com/kr)
+
+[![Image 172](https://img1.newsis.com/h_www/advertise/2019/10/22/AD_20191022_001440_1769658785.jpg)](https://www.nonghyup.com/)
+
+[![Image 173: 구독](https://img1.newsis.com/h_www/banner/20220125_naverch_banner_300.jpg)](https://media.naver.com/channel/promotion.nhn?oid=003)
+
+많이 본 기사
+
+*   [![Image 174](https://img1.newsis.com/2025/11/05/NISI20251105_0001984678_web.jpg?rnd=20251105114540)](https://www.newsis.com/view/NISX20260721_0003717625) [**1**'수천만원 투자사기 혐의' 장윤정 모친 구속 송치](https://www.newsis.com/view/NISX20260721_0003717625) 
+*   [**2**빽가, 신지 남편 문원에 당부 "부탁한다…진짜다"](https://www.newsis.com/view/NISX20260721_0003717060) 
+*   [**3**'11억 빚 고백' 강예원, 확 달라진 분위기](https://www.newsis.com/view/NISX20260721_0003716965) 
+*   [**4**유이 "'꿀벅지' 수식어 상처…합성사진도 돌아다녀"](https://www.newsis.com/view/NISX20260721_0003716328) 
+*   [**5**李 "영업익 배분 쟁의대상 아냐" 발언에…삼성전자 노조 "노사 교섭 관행 고려해야"](https://www.newsis.com/view/NISX20260721_0003717150) 
+*   [**6**다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238) 
+*   [**7**[단독]알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858) 
+
+*   [![Image 175](https://img1.newsis.com/2026/07/21/NISI20260721_0002191053_thm.jpg?rnd=20260721085204)](https://www.newsis.com/view/NISX20260721_0003716238) [**1**다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238) 
+*   [**2**홍해 봉쇄시 세계 원유공급 7% 감소…"한국 수입 33% 차질"](https://www.newsis.com/view/NISX20260721_0003716471) 
+*   [**3**中 AI '키미 K3' 쇼크…월가 "메모리 반도체엔 오히려 호재"](https://www.newsis.com/view/NISX20260721_0003716509) 
+*   [**4**국평 10억원대 '의왕역 SK VIEW' 특공 경쟁률 5.6대 1](https://www.newsis.com/view/NISX20260721_0003716523) 
+*   [**5** 대만 증시, 기술주 급반등에 4.2% 치솟아…사상 최대 상승폭](https://www.newsis.com/view/NISX20260721_0003717448) 
+*   [**6**"중국 AI 막아야 하나"…오픈AI·앤트로픽 vs 백악관, AI규제 놓고 충돌](https://www.newsis.com/view/NISX20260721_0003717111) 
+*   [**7**노동계, 李 '영업이익 배분' 발언 반발…"'노란봉투법' 축소 안 돼"(종합)](https://www.newsis.com/view/NISX20260721_0003717496) 
+
+*   [![Image 176](https://img1.newsis.com/2025/11/05/NISI20251105_0001984678_web.jpg?rnd=20251105114540)](https://www.newsis.com/view/NISX20260721_0003717625) [**1**'수천만원 투자사기 혐의' 장윤정 모친 구속 송치](https://www.newsis.com/view/NISX20260721_0003717625) 
+*   [**2**빽가, 신지 남편 문원에 당부 "부탁한다…진짜다"](https://www.newsis.com/view/NISX20260721_0003717060) 
+*   [**3**'11억 빚 고백' 강예원, 확 달라진 분위기](https://www.newsis.com/view/NISX20260721_0003716965) 
+*   [**4**유이 "'꿀벅지' 수식어 상처…합성사진도 돌아다녀"](https://www.newsis.com/view/NISX20260721_0003716328) 
+*   [**5**李 "영업익 배분 쟁의대상 아냐" 발언에…삼성전자 노조 "노사 교섭 관행 고려해야"](https://www.newsis.com/view/NISX20260721_0003717150) 
+*   [**6**다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238) 
+*   [**7**[단독]알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858) 
+
+*   [![Image 177](https://img1.newsis.com/2026/07/21/NISI20260721_0002191053_thm.jpg?rnd=20260721085204)](https://www.newsis.com/view/NISX20260721_0003716238) [**1**다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238) 
+*   [**2**홍해 봉쇄시 세계 원유공급 7% 감소…"한국 수입 33% 차질"](https://www.newsis.com/view/NISX20260721_0003716471) 
+*   [**3**中 AI '키미 K3' 쇼크…월가 "메모리 반도체엔 오히려 호재"](https://www.newsis.com/view/NISX20260721_0003716509) 
+*   [**4**국평 10억원대 '의왕역 SK VIEW' 특공 경쟁률 5.6대 1](https://www.newsis.com/view/NISX20260721_0003716523) 
+*   [**5** 대만 증시, 기술주 급반등에 4.2% 치솟아…사상 최대 상승폭](https://www.newsis.com/view/NISX20260721_0003717448) 
+*   [**6**"중국 AI 막아야 하나"…오픈AI·앤트로픽 vs 백악관, AI규제 놓고 충돌](https://www.newsis.com/view/NISX20260721_0003717111) 
+*   [**7**노동계, 李 '영업이익 배분' 발언 반발…"'노란봉투법' 축소 안 돼"(종합)](https://www.newsis.com/view/NISX20260721_0003717496) 
+
+*   [![Image 178](https://img1.newsis.com/2025/11/05/NISI20251105_0001984678_web.jpg?rnd=20251105114540)](https://www.newsis.com/view/NISX20260721_0003717625) [**1**'수천만원 투자사기 혐의' 장윤정 모친 구속 송치](https://www.newsis.com/view/NISX20260721_0003717625) 
+*   [**2**빽가, 신지 남편 문원에 당부 "부탁한다…진짜다"](https://www.newsis.com/view/NISX20260721_0003717060) 
+*   [**3**'11억 빚 고백' 강예원, 확 달라진 분위기](https://www.newsis.com/view/NISX20260721_0003716965) 
+*   [**4**유이 "'꿀벅지' 수식어 상처…합성사진도 돌아다녀"](https://www.newsis.com/view/NISX20260721_0003716328) 
+*   [**5**李 "영업익 배분 쟁의대상 아냐" 발언에…삼성전자 노조 "노사 교섭 관행 고려해야"](https://www.newsis.com/view/NISX20260721_0003717150) 
+*   [**6**다자녀 주말 고속도로 통행료 깎아준다…2명 10%·3명 20%](https://www.newsis.com/view/NISX20260721_0003716238) 
+*   [**7**[단독]알몸살해 정재환 체포 당시 장면 입수…바닥 뒹굴며 저항](https://www.newsis.com/view/NISX20260721_0003716858) 
+
+*   경제
+*   종합
+
+[기자수첩](https://www.newsis.com/people/section/?cid=16000&scid=11000)
+
+[![Image 179](https://img1.newsis.com/2026/07/20/NISI20260720_0002190575_thm.jpg?rnd=20260720144436)](https://www.newsis.com/view/NISX20260720_0003715396)
+
+[잡음 또 잡음…경찰 최대 과제 '신뢰 회복'](https://www.newsis.com/view/NISX20260720_0003715396)
+
+[![Image 180](https://img1.newsis.com/2020/03/25/NISI20200325_0000501044_thm.jpg?rnd=20200325172758)](https://www.newsis.com/view/NISX20260716_0003711320)
+
+[청약이 그림의 떡이 된 이유](https://www.newsis.com/view/NISX20260716_0003711320)
+
+[피플](https://www.newsis.com/people/section/?cid=16000&scid=10900)
+
+[![Image 181](https://img1.newsis.com/2026/07/20/NISI20260720_0002190871_thm.jpg?rnd=20260720175653)](https://www.newsis.com/view/NISX20260716_0003713071)
+
+[이승로 성북구청장 "서울시, 자치구와 재개발·재건축 협력해야"](https://www.newsis.com/view/NISX20260716_0003713071)
+
+[![Image 182](https://img1.newsis.com/2026/07/20/NISI20260720_0002190279_thm.jpg?rnd=20260720105113)](https://www.newsis.com/view/NISX20260720_0003714924)
+
+[장준용 동래구청장 "윗돌 빼 아랫돌 고이기"…북항 돔구장 반대](https://www.newsis.com/view/NISX20260720_0003714924)
+
+[![Image 183: 세상에 이런일이](https://img1.newsis.com/h_www/common/20230523_img_se.png)](https://www.newsis.com/people/sec/?cid=16000&sscid=10232)
+
+[![Image 184](https://img1.newsis.com/2026/07/21/NISI20260721_0002192023_thm.jpg?rnd=20260721181343)](https://www.newsis.com/view/NISX20260721_0003717626)
+
+["방탄 내세웠는데"…테슬라 사이버트럭, 美 10중 연쇄추돌에 '두 동강'](https://www.newsis.com/view/NISX20260721_0003717626)
+
+*   [· "밖에서는 천사, 집에선 폭군"…자폐 아들 두고 외도·폭행 일삼은 남편](https://www.newsis.com/view/NISX20260721_0003716139)
+*   [· 월드컵 우승 자축하다 분수 무너져…스페인 13세 소년 사망](https://www.newsis.com/view/NISX20260721_0003716899)
+*   [· "하룻밤에 세 번 찾아왔다"…결정사에서 만난 男 스토킹에 집까지 판 여성](https://www.newsis.com/view/NISX20260721_0003716358)
+*   [· "수학은 됐고 애들 쉬는시간 늘려달라"…美 학부모들, 한국하곤 다르네](https://www.newsis.com/view/NISX20260721_0003716258)
+
+*   [![Image 185](https://img1.newsis.com/n_www/images/ico_wifi.png)](https://www.newsis.com/RSS/)
+*   [![Image 186](https://img1.newsis.com/n_www/images/ico_phone.png)](https://mobile.newsis.com/)
+
+**뉴스**
+
+*   [실시간](https://www.newsis.com/realnews)
+*   [정치](https://www.newsis.com/politic/?cid=10300)
+*   [국제](https://www.newsis.com/world/?cid=10100)
+*   [경제](https://www.newsis.com/economy/?cid=10400)
+*   [금융](https://www.newsis.com/money/?cid=15000)
+*   [산업](https://www.newsis.com/business/?cid=13000)
+*   [사회](https://www.newsis.com/society/?cid=10200)
+*   [수도권](https://www.newsis.com/metro/?cid=14000)
+*   [지방](https://www.newsis.com/region/?cid=10800)
+*   [문화](https://www.newsis.com/culture/?cid=10700)
+*   [IT·바이오](https://www.newsis.com/health/?cid=13100)
+*   [스포츠](https://www.newsis.com/sports/?cid=10500)
+*   [연예](https://www.newsis.com/entertainment/?cid=10600)
+*   [포토](https://www.newsis.com/photo/?cid=photo)
+*   [TV뉴시스](https://www.newsis.com/video/?cid=19000)
+
+**광장**
+
+*   [기자수첩](https://www.newsis.com/people/section/?cid=16000&scid=11000)
+*   [스토리칼럼](https://www.newsis.com/people/?cid=16000)
+*   [아트클럽](https://www.newsis.com/people/sec/?cid=16000&sscid=10720)
+*   [기고](https://www.newsis.com/people/section/?cid=16000&scid=11000&sscid=11011)
+*   [인터뷰](https://www.newsis.com/people/section/?cid=16000&scid=10900&sscid=10905)
+*   [기획특집](https://www.newsis.com/people/special/?cid=16000)
+*   [섹션코너](https://www.newsis.com/people/sec/?cid=16000)
+*   [데일리뉴시스](https://www.newsis.com/people/top/?cid=16000)
+*   [인사](https://www.newsis.com/people/section/?cid=16000&scid=10900&sscid=10902)
+*   [부고](https://www.newsis.com/people/section/?cid=16000&scid=10900&sscid=10904)
+*   [동정](https://www.newsis.com/people/section/?cid=16000&scid=10900&sscid=10903)
+
+**포토**
+
+*   [국내사진](https://www.newsis.com/photo/list/?cid=photo&ptype=1)
+*   [해외사진](https://www.newsis.com/photo/list/?cid=photo&ptype=2)
+*   [그래픽](https://www.newsis.com/photo/gralist/?cid=photo)
+
+**패밀리사이트**
+
+*   [K-Artprice](https://kartprice.net/)
+*   [프라임뉴시스](https://prime.newsis.com/)
+*   [위클리뉴시스](https://weekly.newsis.com/)
+
+**제휴사**
+
+*   [AP통신](https://www.ap.org/)
+*   [新華通訊](http://www.xinhuanet.com/)
+
+**모바일앱서비스**
+
+*   [Android](https://play.google.com/store/apps/details?id=kr.co.softcast.newsis.activitys&feature=search_result)
+*   [IOS](https://apps.apple.com/kr/app/id384045534)
+
+**뉴시스 구독**
+
+*   [네이버 채널](https://media.naver.com/channel/promotion?oid=003)
+*   [다음 언론사픽](https://v.daum.net/channel/21/home)
+*   [유튜브](https://www.youtube.com/channel/UCAKGKvxlNWuWn1wGXZnr01Q)
+*   [페이스북](https://www.facebook.com/newsis.news)
+*   [X (트위터)](https://twitter.com/newsis)
+*   [인스타그램](https://www.instagram.com/new_s_is/)
+*   [스레드](https://www.threads.net/@new_s_is)
+
+*   [![Image 187](https://img1.newsis.com/h_www/advertise/2016/11/13/AD_20161113_000356_1479016452.jpg)](http://www.skhynix.com/kor/index.jsp)
+*   [![Image 188](https://img1.newsis.com/h_www/advertise/2016/11/13/AD_20161113_000356_1492654493.jpg)](http://www.samsung.com/)
+*   [![Image 189](https://img1.newsis.com/h_www/advertise/2016/11/13/AD_20161113_000356_1479016530.jpg)](http://www.lg.co.kr/index/index.dev)
+*   [![Image 190](https://img1.newsis.com/h_www/advertise/2016/11/07/AD_20161107_000322_1735868088.jpg)](http://www.hanafn.com/)
+
+![Image 191: newsis](https://img1.newsis.com/n_www/images/ci/2024/logo_footer.png)
+
+*   [회사소개](javascript:intro_popup('', '');)
+*   [광고 · 제휴 문의](javascript:intro_popup('ad_question', '');)
+*   [제휴사 안내](javascript:intro_popup('coalition', '');)
+*   [콘텐츠 판매](javascript:intro_popup('sale_content', '');)
+*   [저작권 규약](javascript:intro_popup('copyright', '');)
+*   [고충처리](javascript:intro_popup('grievance', '');)
+*   [기사제보](javascript:intro_popup('news_offer', '');)
+*   [이용약관](javascript:intro_popup('policy', '1');)
+*   [개인정보 · 청소년보호정책](javascript:intro_popup('policy', '2');)
+*   [**개인정보처리방침**](javascript:intro_popup('policy', '3');)
+*   [알립니다](https://www.newsis.com/intro)
+
+대표이사 : 염영남 주소 : 서울 중구 퇴계로 173 남산스퀘어빌딩 (구 극동빌딩) 12층 사업자등록번호 : 102-81-36588
+
+발행인 : 염영남 편집인 : 염영남 고충처리인 : 김경원 통신판매업신고 : 서울중구 0398호 문의 02-721-7400 webmaster@newsis.com
+
+뉴시스의 모든 콘텐츠는 저작권법의 보호를 받는 바, 무단 전재ㆍ복사ㆍ배포를 금합니다. Copyright © NEWSIS.COM All rights reserved.
+
+**99+**![Image 192: 좋아요](https://img1.newsis.com/n_www/images/img_like.png)
+
+*   [![Image 193: 페이스북](https://img1.newsis.com/n_www/images/icon_social_facebook2.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+*   [![Image 194: 트위터](https://img1.newsis.com/n_www/images/icon_social_twitter3.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+*   [![Image 195: 카카오톡](https://img1.newsis.com/n_www/images/icon_social_kakao2.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+*   [![Image 196: 네이버 블로그](https://img1.newsis.com/n_www/images/icon_social_naver2.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+*   [![Image 197: 댓글](https://img1.newsis.com/n_www/images/icon_social_reply2.png)](https://www.newsis.com/view/NISX20251202_0003424584?id=NISX20251202_0003424584&reply)
+*   [![Image 198: 홈페이지 상단이동](https://img1.newsis.com/n_www/images/icon_top.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+
+[![Image 199](https://img1.newsis.com/n_www/images/btn_up.png)](https://www.newsis.com/view/NISX20251202_0003424584#)
+
+![Image 200](https://cm.g.doubleclick.net/pixel?google_nid=dable&google_cm)![Image 201](https://cm-exchange.toast.com/pixel?cm_mid=1440080439&cm_muid=85258784.1784640811486&toast_push)![Image 202](https://cs.gssprt.jp/yie/ld/cs?dspid=dable&uid=85258784.1784640811486)![Image 203](https://act.ds.kakao.com/match?d=111&uid=85258784.1784640811486)![Image 204](https://dable-api.scupio.com/dable/v1/exc/?did=85258784.1784640811486)![Image 205](https://ib.adnxs.com/setuid?entity=563&code=85258784.1784640811486)![Image 206](https://astg.widerplanet.com/delivery/wpp.php?wpg=dable_rtb&wpi=85258784.1784640811486)

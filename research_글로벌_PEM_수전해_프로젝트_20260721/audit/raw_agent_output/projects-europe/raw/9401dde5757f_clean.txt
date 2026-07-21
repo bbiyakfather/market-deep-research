@@ -1,0 +1,621 @@
+CORDIS provides links to public deliverables and publications of HORIZON projects.
+Links to deliverables and publications from FP7 projects, as well as links to some specific result types such as dataset and software, are dynamically retrieved from OpenAIRE .
+Deliverables
+The project data will be collected according to one or more specific templates depending on the technology TRL etc to be made available by the FCH2 JU in a dedicated platformtool accessible online and passwordprotected
+Annual data reporting for 2022 (opens in new window)The project data will be collected according to one or more specific templates depending on the technology TRL etc to be made available by the FCH2 JU in a dedicated platformtool accessible online and passwordprotected
+Annual data reporting for 2023 (opens in new window)The project data will be collected according to one or more specific template(s) depending on the technology, TRL, etc.) to be made available by the FCH2 JU in a dedicated platform/tool accessible on-line and password-protected.
+HYG will design, build, and test (full functional) the integrated electrolyser and fuel cell containers and storage in-house before shipping them to Raggovida. KES will support the task by specifying the interconnecting IT hardware for the plant.
+Site ready (opens in new window)VK will be responsible for the preparation of the site in Raggovidda. The site will necessarily be located in an area hardly accessible in wintertime, and major construction works will need to be scheduled for summer; VK will build a hall to house the full system, so that work may proceed also in winter. VK will also procure all necessary legal authorisations for the site, and provide suitable heating, internet connection, water supply (extending a previously dug one), and electrical connections to both grid and wind farm. HYG and KES will train VK’s personnel in basic maintenance, safety procedures and general principles of their plant, so that they may promptly intervene in case of minor issues requiring manual intervention on the plant.
+Components installed, qualified and verified (opens in new window)VK will lead the operations for installation and connection of the system, with support from HYG and KES. HYG will be responsible for shipping the components to the site, with VK assisting in complying with customs regulations regarding temporary introduction of the equipment. Tecnalia will monitor the installation process and will evaluate changes to their system design, if the need arises. HYG and KES will qualify and verify their components after installation according to their protocols.
+Tecnalia will develop protocols for demonstration to test the control algorithm developed by US and SINTEF for the energy-storage use case. These protocols shall ensure that all relevant aspects of the control algorithms shall be tested during demonstration. Furthermore, Tecnalia will perform a risk analysis for each set of controllers in terms of plant reliability and safety. SINTEF and US will modify their control algorithms according to Tecnalia’s input if necessary. HYG, VK and KES will support the planning phase by quality-checking the protocols before their application in the field.
+Engineering study: electrolysers towards MAWP 2023 targets (opens in new window)SINTEF will identify the key challenges to be solved to reach the targets for hydrogen production from renewable electricity set by the FCH JU and its successor in Horizon Europe Drawing on their experience before and during Haeolus SINTEF will evaluate and rank solutions to these challenges with the support of the industrial expertise of HYG SINTEF will include in the study the published state of the art of the electrolyser industry in Europe and worldwide
+Six conferences contributions and three journal articles (submitted and not rejected) (opens in new window)UBFC US SINTEF and Tecnalia will publish the results of their research activities in international reputable highimpact peerreviewed openaccess journals These partners will also present their results in international toplevel conferences with particular attention to the more industryoriented and to workshops organised by IPHE
+Diagnostics and prognostics experience report (opens in new window)After the initial deployment, the diagnostic and prognostic module will be continually assessed and fine-tuned with the data produced during the demonstration phase.
+Energy analysis of the Raggovidda integrated system (opens in new window)Tecnalia will define the overall layout of the plant and, by means of mathematical modelling, the sizing of the components, detailing the high-level system characteristics that will allow the flexible operation of the plant with multiple control strategies during demonstration, also factoring in the wind farm characteristics and the targeted application scenarios.
+Field demonstration results with fuel-production strategy (opens in new window)US will be responsible for enacting and following up the demonstration of the plant in fuel-production configuration by means of KES' remote control and monitoring software. US will report any safety-related event to JRC’s HIAD.
+Valorisation plan for hydrogen and by-products (opens in new window)SINTEF will chart valorisation opportunities for the hydrogen, oxygen and heat produced by the plant. VK will contribute their local contact network and knowledge of the local economy. SINTEF will contact local authorities and businesses to assess their interest and capability to exploit hydrogen, oxygen and heat and, when appropriate, supporting them in drafting applications for funding of hydrogen demonstration activities with Norwegian or European funding agencies.
+Protocols for demonstration of fuel-production strategy (opens in new window)Tecnalia will develop protocols for demonstration to test the control algorithm developed by US and SINTEF for the fuel-production use case. These protocols shall ensure that all relevant aspects of the control algorithms shall be tested during demonstration. Furthermore, Tecnalia will perform a risk analysis for each set of controllers in terms of plant reliability and safety. SINTEF and US will modify their control algorithms according to Tecnalia’s input if necessary. HYG, VK and KES will support the planning phase by quality-checking the protocols before their application in the field.
+Three academic seminars for master and PhD students (opens in new window)UBFC and US will organise seminars about the project at target master students classes and PhD schools in different countries
+Impact of wind-hydrogen plants on energy systems and RCS (opens in new window)SINTEF, US and Tecnalia will produce and analyse the potential impact of the Haeolus concept on the European and international energy systems, especially in regard to the penetration of wind power into the energy mix. The report will also consider the implications on regulations, codes and standards in energy systems and wind farms, with the support of HYG and of contacts established in the IPHE.
+Environmental performance analysis (opens in new window)Tecnalia will evaluate the environmental impact of the hydrogen plant in the actual deployment and in the case studies identified in task 5.2. The evaluation will include field experience from VK and data gathered by KES. Tecnalia will conduct a Life-Cycle Assessment with a gate-to-gate perspective.
+Field demonstration results with mini-grid strategy (opens in new window)US will be responsible for enacting and following up the demonstration of the plant in mini-grid configuration by means of KES' remote control and monitoring software. US will report any safety-related event to JRC’s HIAD.
+Protocols for demonstration of mini-grid strategy (opens in new window)Tecnalia will develop protocols for demonstration to test the control algorithm developed by US and SINTEF for the mini-grid use case. These protocols shall ensure that all relevant aspects of the control algorithms shall be tested during demonstration. Furthermore, Tecnalia will perform a risk analysis for each set of controllers in terms of plant reliability and safety. SINTEF and US will modify their control algorithms according to Tecnalia’s input if necessary. HYG, VK and KES will support the planning phase by quality-checking the protocols before their application in the field.
+Business case analysis for hydrogen in european wind farms (opens in new window)SINTEF will prepare a report for the business case of hydrogen generation within wind farms, detailing and quantifying the opportunities for wind farm operators, the economic advantages and challenges of the technology, and the market outlook depending on the future development of hydrogen technology and wind power penetration, with particular focus on grid balancing services. The analysis will focus on the more relevant markets for wind power in Europe, e.g. Norway, Germany, Spain and Denmark. KES will contribute specifically on the impact of remote control and monitoring on the business model. VK, HYG and Tecnalia will contribute their specific knowledge of their home wind power markets.
+Factory acceptance test (opens in new window)HYG will demonstrate the control algorithms programmed by SINTEF and US in their laboratory for a limited time span; this demonstration may lead to modifications to the algorithms by SINTEF and US. KES will be responsible for data management and ensuring the relevance of the laboratory demonstration to field operations.
+Control performance report (opens in new window)SINTEF will evaluate the performance of control systems for each use case as the data is produced from the demonstration. SINTEF and US will test the control system by appropriate methods, such as for example simulations or X-in-the-loop methods. With these methods, the controlled plant will be tested even in operating conditions not present at the demonstration site, e.g. hydrogen demand, distribution of hydrogen with pipeline, usage of plant waste heat, etc. SINTEF will assess the performance of the control systems, in particular their applicability to other sites (offshore, warmer climates, etc.) and, with the support of US, will suggest improvements to the control algorithms and guidelines for future work; if possible, these will be tested within Haeolus.
+Techno-economic analysis of wind-hydrogen integration (opens in new window)Tecnalia will evaluate the applicability of the design in other conditions, and suggest modifications for similar plants in different kinds of wind farms (e.g. offshore, single-turbine, large farms, etc.), considering at least three case studies from actual wind farms. SINTEF will support the task in the socio-economic evaluation of such plants, their profitability and their potential for job creation and effect on local and national economies. SINTEF shall also report on the applicable regulations, codes and standards for such applications for all case studies identified by Tecnalia.
+Field demonstration results with energy-storage strategy (opens in new window)US will be responsible for enacting and following up the demonstration of the plant in energy-storage configuration by means of KES' remote control and monitoring software. US will report any safety-related event to JRC’s HIAD.
+UBFC will arrange a visit to the plant during demonstration for interested parties including politicians industry nongovernmental organisations with the logistic support of VK
+Project presented at international industrial fair (opens in new window)UBFC, with the support of HYG, will organise a presence at a relevant fair (e.g. the Hanover Fair) towards the end of the project, to showcase its results to an industrial and decision-making audience.
+Real-time demonstration data available on the Web site (opens in new window)Through the Web site KES will visualise the operation of the plant based on realtime data during the demonstration phase
+Web site online, presence in selected social networks (opens in new window)KES will set up a Web site for the project. The Web site will feature project description and progress, contact information, public deliverables, open-access journal articles, presentations and relevant news items for the field of wind-hydrogen systems. KES will also establish a presence on relevant social media, such as LinkedIn, Twitter, YouTube, and add content regularly through the project.
+UBFC will organise a workshop during the early stages of the project, directed at both research and industry, to disseminate the early results in system design and establish connections with other initiatives. The workshop will preferably be organised in connection with a relevant international scientific conference.
+Control system for mini-grid use case (opens in new window)US will develop high-level control algorithms for the integrated wind-hydrogen system for the use case of mini-grid.
+Control system for energy-storage use case (opens in new window)US will develop high-level control algorithms for the integrated wind-hydrogen system for the use case of energy storage.
+Control system for fuel-production use case (opens in new window)US will develop high-level control algorithms for the integrated wind-hydrogen system for the use case of fuel production.
+Student internship on-site (opens in new window)UBFC and US will organise one internship onsite for a doctoral or master student
+Diagnostics and prognostics for the wind-hydrogen plant (opens in new window)UBFC will develop relevant diagnostic and prognostic systems to assess the current state and maintenance requirements of all critical components (electrolyser, compressor, …), to feed the controller and to anticipate maintenance requirements of all critical components so that the system may be operated for months without supervision in person.
+Dynamic model for hydrogen production and storage plants (opens in new window)US will develop a library of static and dynamic process models of the system components. The model will include actual constraints, such as working ranges of components, capacity limits of power the lines, dynamic output of wind turbines, dynamics and ramping rates. SINTEF will integrate the resulting model library into a fully integrated system, and support US to ensure that the model library is the best trade-off between accuracy, computational performance and complexity for the purpose of control synthesis and analysis.
+Publications
+																											Author(s):
+														
+														Muhammad Bakr Abdelghany, Muhammad Shehzad, Valerio Mariani, Luigi Glielmo
+														
+																																								Published in:
+														
+														World Hydrogen Energy Conference, 2022
+																																								Publisher:
+														
+														WHEC2020
+														
+																																						
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														Next Generation Electrolysers Conference, 2020
+																																								Publisher:
+														
+														Next Generation Electrolysers Conference
+														
+																																								DOI:
+														
+														10.5281/zenodo.4316974
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														Hydrogen Production in the Arctic seminar, Issue 26/10/2022, 2022
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.7318643
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														2022
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.7318642
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														2021
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.4542919
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														2019
+																																								Publisher:
+														
+														Fuel Cells & Hydrogen Joint Undertaking
+														
+																																								DOI:
+														
+														10.5281/zenodo.3553686
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														2019
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.3339180
+																									
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														Hydrogensone Arktis, 2020
+																																								Publisher:
+														
+														Troms & Finnmark County Council
+														
+																																								DOI:
+														
+														10.5281/zenodo.3675350
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														Issue 25/10/2022, 2022
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.7318621
+																									
+																											Author(s):
+														
+														Muhammad Bakr Abdelghany, M. F Shehzad, Davide Liuzza, Valerio Mariani, Luigi Glielmo
+														
+																																								Published in:
+														
+														59th IEEE Conference on Decision and Control, 2020
+																																								Publisher:
+														
+														59th IEEE Conference on Decision and Control
+														
+																																								DOI:
+														
+														10.5281/zenodo.4420338
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														2021
+																																								Publisher:
+														
+														Haeolus project
+														
+																																								DOI:
+														
+														10.5281/zenodo.5052781
+																									
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														Nordic Hydrogen & Fuel Cell Conference, 2018
+																																								Publisher:
+														
+														Nordic Hydrogen & Fuel Cell Conference
+														
+																																								DOI:
+														
+														10.5281/zenodo.1460454
+																									
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														IEA HIA Task 38 5th Plenary Meeting, 2018
+																																								Publisher:
+														
+														IEA HIA Task 38
+														
+																																						
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														Input meeting for Svalbard's future energy supply, 2018
+																																								Publisher:
+														
+														Norway's Ministry for Oil and Energy
+														
+																																								DOI:
+														
+														10.5281/zenodo.1482894
+																									
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														Workshop on Power-to-X Demonstrations, 2018
+																																								Publisher:
+														
+														IEA HIA Task 38
+														
+																																								DOI:
+														
+														10.5281/zenodo.1493992
+																									
+																											Author(s):
+														
+														Roche, Robin
+														
+																																								Published in:
+														
+														Journées du GdR SEEDS-JCGE, 2019
+																																								Publisher:
+														
+														CNRS
+														
+																																								DOI:
+														
+														10.5281/zenodo.3241265
+																									
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														Hydrogen i Vinden, 2019
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.2605260
+																									
+																											Author(s):
+														
+														Vibeke S. Nørstebø, Miguel Muñoz Ortiz, Gerardo A. Perez-Valdes
+														
+																																								Published in:
+														
+														30th European Conference on Operational Research (EURO2019), 2019
+																																								Publisher:
+														
+														UCD
+														
+																																								DOI:
+														
+														10.5281/zenodo.3669909
+																									
+																											Author(s):
+														
+														Christian Bue
+														
+																																								Published in:
+														
+														Hydrogen i Vinden, 2019
+																																								Publisher:
+														
+														Varanger Kraft
+														
+																																								DOI:
+														
+														10.5281/zenodo.2607649
+																									
+																											Author(s):
+														
+														Steffen Møller-Holst
+														
+																																								Published in:
+														
+														Hydrogen i Vinden, 2019
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.2605540
+																									
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														2019
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.3465528
+																									
+																											Author(s):
+														
+														Federico Zenith
+														
+																																								Published in:
+														
+														Microgrids Summer School, 2019
+																																								Publisher:
+														
+														FCLAB
+														
+																																								DOI:
+														
+														10.5281/zenodo.3267293
+																									
+																											Author(s):
+														
+														Muhammad Faisal Shehzad, Muhammad Bakr Abdelghany, Davide Liuzza, Luigi Glielmo
+														
+																																								Published in:
+														
+														2019 18th European Control Conference (ECC), 2019, Page(s) 1896-1901, ISBN 978-3-907144-00-8
+																																								Publisher:
+														
+														IEEE
+														
+																																								DOI:
+														
+														10.23919/ecc.2019.8795937
+																									
+																											Author(s):
+														
+														Raffaele Petrone, Robin Roche
+														
+																																								Published in:
+														
+														European Control Conference 2019, 2019
+																																								Publisher:
+														
+														IEEE
+														
+																																								DOI:
+														
+														10.5281/zenodo.4507353
+																									
+																											Author(s):
+														
+														Maider Santos-Mugica
+														
+																																								Published in:
+														
+														International Summit on the Operational Analysis of Wind Farms, 2020
+																																								Publisher:
+														
+														International Summit on the Operational Analysis of Wind Farms
+														
+																																								DOI:
+														
+														10.5281/zenodo.4288932
+																									
+																											Author(s):
+														
+														Nørstebø, Vibeke Stærkebye; Muñoz Ortiz, Miguel; Perez-Valdes, Gerardo A.
+														
+																																								Published in:
+														
+														30th European Conference on Operational Research, Issue 23-26/06/2019, 2019
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.3669908
+																									
+																											Author(s):
+														
+														Meiling Yue, Zhongliang Li, Robin Roche, Samir Jemei, Noureddine Zerhouni
+														
+																																								Published in:
+														
+														2020 Prognostics and Health Management Conference (PHM-Besançon), 2020, Page(s) 122-127, ISBN 978-1-7281-5675-0
+																																								Publisher:
+														
+														IEEE
+														
+																																								DOI:
+														
+														10.1109/phm-besancon49106.2020.00026
+																									
+																											Author(s):
+														
+														Federico Zenith; Martin Nord Flote; Maider Santos-Mugica; Corey Scott Duncan; Valerio Mariani; Claudio Marcantonini
+														
+																																								Published in:
+														
+														2023
+																																								Publisher:
+														
+														ZSW-BW
+														
+																																								DOI:
+														
+														10.5281/zenodo.8389349
+																									
+																											Author(s):
+														
+														Zenith, Federico
+														
+																																								Published in:
+														
+														2022
+																																								Publisher:
+														
+														Alaska Center for Energy and Power
+														
+																																								DOI:
+														
+														10.5281/zenodo.6468199
+																									
+																											Author(s):
+														
+														Muhammad Bakr Abdelghany; Valerio Mariani; Davide Liuzza; Oreste Riccardo Natale; Luigi Glielmo
+														
+																																								Published in:
+														
+														IEEE Transactions on Automation Science and Engineering, 2024, ISSN 1545-5955
+																																								Publisher:
+														
+														Institute of Electrical and Electronics Engineers
+														
+																																								DOI:
+														
+														10.1109/tase.2023.3292029
+																									
+																											Author(s):
+														
+														Yue, Meiling; Lambert, Hugo; Pahon, Elodie; Roche, Robin; Jemeï, Samir; Hissel, Daniel
+														
+																																								Published in:
+														
+														Renewable and Sustainable Energy Reviews, 2021, ISSN 1364-0321
+																																								Publisher:
+														
+														Elsevier BV
+														
+																																								DOI:
+														
+														10.1016/j.rser.2021.111180
+																									
+																											Author(s):
+														
+														Muhammad Bakr Abdelghany, Muhammad Faisal Shehzad, Valerio Mariani, Davide Liuzza, Luigi Glielmo
+														
+																																								Published in:
+														
+														International Journal of Hydrogen Energy, Issue 47, 2022, Page(s) 32202-32222, ISSN 0360-3199
+																																								Publisher:
+														
+														Pergamon Press Ltd.
+														
+																																								DOI:
+														
+														10.1016/j.ijhydene.2022.07.136
+																									
+																											Author(s):
+														
+														Yue, Meiling; Li, Zhongliang; Roche, Robin; Jemeï, Samir; Zerhouni, Noureddine
+														
+																																								Published in:
+														
+														Control Engineering Practice, Issue 118, 2022, Page(s) 104959, ISSN 0967-0661
+																																								Publisher:
+														
+														Pergamon Press Ltd.
+														
+																																								DOI:
+														
+														10.1016/j.conengprac.2021.104959
+																									
+																											Author(s):
+														
+														Muhammad Faisal Shehzad, Muhammad Bakr Abdelghany, Davide Liuzza, Valerio Mariani, Luigi Glielmo
+														
+																																								Published in:
+														
+														Inventions, Issue 4/4, 2019, Page(s) 57, ISSN 2411-5134
+																																								Publisher:
+														
+														MDPI
+														
+																																								DOI:
+														
+														10.3390/inventions4040057
+																									
+																											Author(s):
+														
+														Muhammad Bakr Abdelghany; Muhammad Faisal Shehzad; Davide Liuzza; Valerio Mariani; Luigi Glielmo
+														
+																																								Published in:
+														
+														International Journal of Hydrogen Energy, Issue 57, 2021, Page(s) 29297-29313, ISSN 0360-3199
+																																								Publisher:
+														
+														Pergamon Press Ltd.
+														
+																																								DOI:
+														
+														10.1016/j.ijhydene.2021.01.064
+																									
+																											Author(s):
+														
+														Federico Zenith; Luigi Glielmo; Valerio Mariani
+														
+																																								Published in:
+														
+														energies, Issue 15, 2022, Page(s) 6307, ISSN 1996-1073
+																																								Publisher:
+														
+														Multidisciplinary Digital Publishing Institute (MDPI)
+														
+																																								DOI:
+														
+														10.3390/en15176307
+																									
+																											Author(s):
+														
+														Muhammad Bakr Abdelghany; Valerio Mariani; Davide Liuzza; Luigi Glielmo
+														
+																																								Published in:
+														
+														International Journal of Hydrogen Energy, 2024, ISSN 0360-3199
+																																								Publisher:
+														
+														Pergamon Press Ltd.
+														
+																																								DOI:
+														
+														10.1016/j.ijhydene.2023.08.056
+																									
+																											Author(s):
+														
+														Federico Zenith; Martin Nord Flote; Maider Santos-Mugica; Corey Scott Duncan; Valerio Mariani; Claudio Marcantonini
+														
+																																								Published in:
+														
+														International Journal of Hydrogen Energy, Issue 47, 2022, Page(s) 35541-35552, ISSN 0360-3199
+																																								Publisher:
+														
+														Pergamon Press Ltd.
+														
+																																								DOI:
+														
+														10.1016/j.ijhydene.2022.08.152
+																									
+																											Author(s):
+														
+														Andrenacci, Sara; Choi, Yejung; Raka, Yash; Talic, Belma; Colmenares-Rausseo, Luis
+														
+																																								Published in:
+														
+														2022
+																																								Publisher:
+														
+														SINTEF
+														
+																																								DOI:
+														
+														10.5281/zenodo.7144913
+																									
+Searching for OpenAIRE data...
+There was an error trying to search data from OpenAIRE
+No results available
