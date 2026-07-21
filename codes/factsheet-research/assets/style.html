@@ -1,0 +1,234 @@
+<!-- factsheet-research 고객용 PDF 스타일 (GitHub 마크다운 룩 · Malgun Gothic · A4).
+     사용법: render_pdf.py 가 pandoc 에 `-H assets/style.html` (include-in-header)로 주입.
+     완전 self-contained — 웹폰트·외부 리소스·임포트 규칙 없이 로컬 시스템 폰트명만 지정. -->
+<style>
+  :root {
+    --fg: #24292f;          /* 본문 */
+    --muted: #57606a;       /* 보조 텍스트 */
+    --border: #d0d7de;      /* 표·구분선 */
+    --link: #0969da;        /* 링크 */
+    --bg-subtle: #f6f8fa;   /* 코드·박스 배경 */
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    color: var(--fg);
+    /* 한글=Malgun Gothic, 라틴=Segoe UI, 코드=D2Coding — 모두 로컬 폰트명 지정만 */
+    font-family: "Malgun Gothic", "맑은 고딕", "Segoe UI",
+                 "Apple SD Gothic Neo", system-ui, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    margin: 0;
+    word-break: keep-all;      /* 한글은 어절 단위로 줄바꿈 */
+    overflow-wrap: anywhere;   /* 긴 URL·식별자는 강제 개행 */
+  }
+
+  /* 화면 미리보기(브라우저)용 — PDF 렌더에는 @page 여백이 적용됨 */
+  @media screen {
+    body { max-width: 900px; margin: 0 auto; padding: 24px 28px; }
+  }
+
+  /* --- 제목 계층 (GitHub) --- */
+  h1, h2, h3, h4, h5, h6 { margin: 1.4em 0 0.6em; font-weight: 700; line-height: 1.3; }
+  h1 { font-size: 1.8em;  padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+  h2 { font-size: 1.45em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.2em; }
+  h4 { font-size: 1.05em; }
+  h5 { font-size: 0.95em; }
+  h6 { font-size: 0.9em; color: var(--muted); }
+  h1:first-child, h2:first-child { margin-top: 0; }
+
+  /* --- 본문 요소 --- */
+  p { margin: 0 0 0.8em; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul, ol { margin: 0 0 0.8em; padding-left: 1.6em; }
+  li { margin: 0.15em 0; }
+  li > ul, li > ol { margin: 0.15em 0; }
+  hr { height: 1px; border: 0; background: var(--border); margin: 1.6em 0; }
+  img { max-width: 100%; height: auto; }
+  strong { font-weight: 700; }
+  sup { font-size: 0.75em; }
+
+  /* --- 코드 --- */
+  code, kbd, pre, samp {
+    font-family: "D2Coding", "Consolas", "Courier New", monospace;
+  }
+  code {
+    font-size: 0.88em;
+    background: var(--bg-subtle);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--bg-subtle);
+    padding: 12px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    line-height: 1.45;
+    margin: 0 0 0.9em;
+  }
+  pre code { background: transparent; padding: 0; font-size: 0.86em; }
+
+  /* --- 인용 --- */
+  blockquote {
+    margin: 0 0 0.9em;
+    padding: 0.2em 1em;
+    color: var(--muted);
+    border-left: 4px solid var(--border);
+  }
+  blockquote > :first-child { margin-top: 0; }
+  blockquote > :last-child { margin-bottom: 0; }
+
+  /* --- 표 (GitHub 기본) --- */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 1em;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--bg-subtle); font-weight: 700; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+
+  /* ===================================================================
+     factsheet 전용 클래스
+     (pandoc fenced_divs `::: {.x}` / bracketed_spans `[..]{.x}` 로 부착)
+     =================================================================== */
+
+  /* 근거표 — 사실 | 수치 | 출처 | 등급 | 증빙 5열.
+     `<table class="facts-table">` 또는 `<div class="facts-table"><table>` 모두 지원 */
+  .facts-table { font-size: 0.9em; }
+  .facts-table th { background: #eaeef2; white-space: nowrap; }
+
+  /* 4차원 등급 배지 (authority/independence/directness/recency 각 A~D) */
+  .grade-a, .grade-b, .grade-c, .grade-d {
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0.05em 0.5em;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .grade-a { background: #dafbe1; color: #1a7f37; border: 1px solid #aceebb; }  /* 최상 */
+  .grade-b { background: #ddf4ff; color: #0550ae; border: 1px solid #b6e3ff; }  /* 양호 */
+  .grade-c { background: #fff8c5; color: #7d4e00; border: 1px solid #f5e6a8; }  /* 주의 */
+  .grade-d { background: #ffebe9; color: #cf222e; border: 1px solid #ffcecb; }  /* 취약 */
+
+  /* 본문 F태그 인라인 — (F001) 시각화 */
+  .ftag {
+    font-family: "D2Coding", "Consolas", monospace;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #0550ae;
+    background: #ddf4ff;
+    padding: 0.05em 0.35em;
+    border-radius: 4px;
+    white-space: nowrap;
+    vertical-align: baseline;
+  }
+
+  /* 주의점 박스 — ⚠ */
+  .caution {
+    position: relative;
+    margin: 0 0 1em;
+    padding: 10px 14px 10px 38px;
+    background: #fff8c5;
+    border: 1px solid #f5e6a8;
+    border-left: 4px solid #d4a72c;
+    border-radius: 6px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .caution::before {
+    content: "⚠";
+    position: absolute;
+    left: 13px;
+    top: 9px;
+    font-size: 1.1em;
+    color: #9a6700;
+  }
+  .caution > :first-child { margin-top: 0; }
+  .caution > :last-child { margin-bottom: 0; }
+
+  /* 증빙 박스 — source_capture 이미지 + 캡션(수치↔원문 매핑) */
+  .evidence-box {
+    margin: 1em 0;
+    padding: 12px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .evidence-box img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 4px;
+  }
+  .evidence-box figcaption,
+  .evidence-box .caption {
+    margin-top: 8px;
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+
+  /* 한눈에 요약표 — 진한 헤더로 강조 (facts-table 과 구분) */
+  .summary-table table,
+  table.summary-table { border: 2px solid #24292f; }
+  .summary-table th {
+    background: #24292f;
+    color: #fff;
+    border-color: #24292f;
+    white-space: nowrap;
+  }
+
+  /* 인사이트 블록 — 사실/추론 구분 */
+  .insight {
+    margin: 1em 0;
+    padding: 12px 16px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--link);
+    border-radius: 6px;
+  }
+  .insight > :first-child { margin-top: 0; }
+  .insight > :last-child { margin-bottom: 0; }
+  .insight-fact, .insight-inference {
+    display: inline-block;
+    margin-right: 4px;
+    padding: 0.05em 0.5em;
+    border-radius: 10px;
+    font-size: 0.78em;
+    font-weight: 700;
+    vertical-align: baseline;
+  }
+  .insight-fact { background: #dafbe1; color: #1a7f37; }       /* 사실 */
+  .insight-inference { background: #fff8c5; color: #7d4e00; }  /* 추론 */
+
+  /* --- A4 인쇄 --- */
+  @page { size: A4; margin: 18mm 18mm; }
+  @media print {
+    body { max-width: none; margin: 0; padding: 0; font-size: 10pt; }
+    h1, h2, h3, h4, h5, h6 { break-after: avoid; page-break-after: avoid; }
+    thead { display: table-header-group; }   /* 표가 페이지를 넘으면 헤더 반복 */
+    tr, img, pre, blockquote,
+    .evidence-box, .caution, .insight {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+</style>

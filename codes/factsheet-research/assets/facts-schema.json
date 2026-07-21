@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://factsheet-research/assets/facts-schema.json",
+  "title": "factsheet-research facts.jsonl record",
+  "description": "facts.jsonl 각 라인은 kind로 판별되는 fact 또는 evidence. 이 파일이 facts_db.py 검증의 단일 진실원천이다.",
+  "oneOf": [
+    { "$ref": "#/$defs/fact" },
+    { "$ref": "#/$defs/evidence" }
+  ],
+  "$defs": {
+    "grade_letter": { "enum": ["A", "B", "C", "D"] },
+
+    "grade": {
+      "type": "object",
+      "description": "4차원 등급(각 A~D). evidence.grade=출처별 필수, fact.grade=팀리드 채택 대표등급.",
+      "properties": {
+        "authority": { "$ref": "#/$defs/grade_letter" },
+        "independence": { "$ref": "#/$defs/grade_letter" },
+        "directness": { "$ref": "#/$defs/grade_letter" },
+        "recency": { "$ref": "#/$defs/grade_letter" }
+      },
+      "required": ["authority", "independence", "directness", "recency"]
+    },
+
+    "verify_event": {
+      "type": "object",
+      "description": "누적 검증 이벤트. confirmed 전이는 action=reread·result=match·by=lead 이벤트 존재를 요구.",
+      "properties": {
+        "at": { "type": "string" },
+        "by": { "type": "string" },
+        "action": { "type": "string" },
+        "evidence_id": { "type": ["string", "null"] },
+        "source_url": { "type": ["string", "null"] },
+        "result": { "type": ["string", "null"] },
+        "note": { "type": ["string", "null"] }
+      },
+      "required": ["at", "by", "action"]
+    },
+
+    "fact": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "fact" },
+        "claim_key": { "type": "string" },
+        "id": { "type": "string", "pattern": "^F[0-9]{3,}$" },
+        "claim": { "type": "string" },
+        "context": {
+          "type": "object",
+          "properties": {
+            "metric": { "type": "string" },
+            "entity": { "type": "string" },
+            "entity_id": { "type": ["string", "null"] },
+            "geography": { "type": "string" },
+            "period": { "type": "string" },
+            "as_of": { "type": ["string", "null"] },
+            "basis": { "type": "string" },
+            "scenario": { "type": ["string", "null"] },
+            "definition": { "type": ["string", "null"] }
+          },
+          "required": ["metric", "entity", "geography", "period", "basis"]
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "raw": { "type": "string" },
+            "unit": { "type": ["string", "null"] },
+            "decimal": { "type": ["string", "null"] }
+          },
+          "required": ["raw"]
+        },
+        "grade": { "$ref": "#/$defs/grade" },
+        "status": { "enum": ["pending", "confirmed", "disputed", "superseded", "discarded"] },
+        "verified_by": { "type": ["string", "null"] },
+        "verify_events": { "type": "array", "items": { "$ref": "#/$defs/verify_event" } },
+        "evidence_ids": { "type": "array", "items": { "type": "string" } },
+        "discard_reason": { "type": ["string", "null"] }
+      },
+      "required": ["kind", "claim_key", "id", "claim", "context", "value", "grade", "status"]
+    },
+
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "evidence" },
+        "id": { "type": "string", "pattern": "^E[0-9]{3,}$" },
+        "fact_id": { "type": "string" },
+        "type": { "enum": ["text_quote", "table_cell", "chart", "api_response", "negative_search", "calculation"] },
+        "source_url": { "type": "string" },
+        "archived_url": { "type": ["string", "null"] },
+        "local": { "type": ["string", "null"] },
+        "sha256": { "type": ["string", "null"] },
+        "accessed_at": { "type": "string" },
+        "http_status": { "type": ["integer", "null"] },
+        "locator": { "type": "object" },
+        "verbatim": { "type": ["string", "null"] },
+        "source_role": { "enum": ["원출처", "재인용", "보도자료"] },
+        "grade": { "$ref": "#/$defs/grade" },
+        "capture": { "type": ["string", "null"] }
+      },
+      "required": ["kind", "id", "fact_id", "type", "source_url", "accessed_at", "locator", "source_role", "grade"],
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "text_quote" } } },
+          "then": {
+            "required": ["verbatim", "sha256"],
+            "properties": {
+              "verbatim": { "type": "string", "minLength": 1 },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "locator": { "anyOf": [{ "required": ["page"] }, { "required": ["selector"] }] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "table_cell" } } },
+          "then": {
+            "required": ["sha256"],
+            "properties": {
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "locator": { "required": ["page", "row", "col"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "api_response" } } },
+          "then": {
+            "required": ["sha256"],
+            "properties": {
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "locator": { "required": ["endpoint", "params", "json_path", "response_sha256"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "chart" } } },
+          "then": {
+            "required": ["sha256"],
+            "properties": {
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "locator": { "required": ["page", "series", "point"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "negative_search" } } },
+          "then": { "properties": { "locator": { "required": ["query", "scope", "as_of"] } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "calculation" } } },
+          "then": { "properties": { "locator": { "required": ["formula", "inputs"] } } }
+        }
+      ]
+    }
+  }
+}
