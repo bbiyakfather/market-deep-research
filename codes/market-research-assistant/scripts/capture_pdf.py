@@ -129,14 +129,18 @@ def _write_meta(out: Path, evidence: str, meta: dict) -> None:
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def _save_capture(page, pi, rects, union, pdf_path, needle, evidence, out, zoom, n):
-    """하이라이트 annot 추가 → 중심 크롭 PNG 저장 + 메타. status=ok."""
+def _save_capture(page, pi, rects, union, pdf_path, needle, evidence, out, zoom, n,
+                  pad: float = 90):
+    """하이라이트 annot 추가 → 문맥 크롭 PNG 저장 + 메타. status=ok.
+
+    파편 크롭 방지: 가로는 **페이지 전폭**, 세로는 pad(기본 90pt)만큼 주변 문맥을
+    포함한다. 숫자만 잘린 조각은 사용자가 "그 수치가 그 주장의 값"인지 캡처만으로
+    판단할 수 없어 증빙 가치가 떨어진다 — 주변 문장·표 헤더·제목이 함께 보여야 한다."""
     out.mkdir(parents=True, exist_ok=True)
     annot = page.add_highlight_annot(rects)  # word별 quad 하이라이트
     annot.update()
-    pad = 24
-    clip = fitz.Rect(union.x0 - pad, union.y0 - pad,
-                     union.x1 + pad, union.y1 + pad) & page.rect
+    clip = fitz.Rect(page.rect.x0, union.y0 - pad,
+                     page.rect.x1, union.y1 + pad) & page.rect
     pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=clip)
     png = out / f"{evidence}.png"
     pix.save(png)  # doc 저장 아님 → 원본 PDF(_sources) 불변, sha256은 원본 그대로
@@ -145,7 +149,7 @@ def _save_capture(page, pi, rects, union, pdf_path, needle, evidence, out, zoom,
         "pdf_path": str(Path(pdf_path).resolve()), "page": pi,
         "rect": [round(v, 2) for v in (union.x0, union.y0, union.x1, union.y1)],
         "clip": [round(v, 2) for v in (clip.x0, clip.y0, clip.x1, clip.y1)],
-        "needle": needle, "match_count": n,
+        "needle": needle, "match_count": n, "pad": pad,
         "sha256_pdf": _sha256_file(pdf_path),
         "capture_png": str(png.resolve()), "created_at": _now(),
     }
@@ -183,8 +187,10 @@ def _fail_not_found(pdf_path, needle, evidence, out):
 
 
 def capture(pdf_path, needle: str, evidence: str, out_dir="_captures",
-            page_no: int | None = None, zoom: float = 2.0) -> dict:
-    """PDF에서 needle을 찾아 캡처. 상태 dict 반환(성공/실패 위장 없음)."""
+            page_no: int | None = None, zoom: float = 2.0, pad: float = 90) -> dict:
+    """PDF에서 needle을 찾아 캡처. 상태 dict 반환(성공/실패 위장 없음).
+
+    pad = 매칭 주변 세로 문맥(pt). 표가 크거나 문단이 길면 120~150으로 키운다."""
     _safe_id(evidence)
     if not needle or not _normalize(needle, strip_comma=True):
         raise ValueError("needle이 비었거나 숫자/문자가 없다")
@@ -209,7 +215,7 @@ def capture(pdf_path, needle: str, evidence: str, out_dir="_captures",
             if res:
                 rects, union = res[0]  # 첫 매치(오귀속 최종판단은 육안확인 몫)
                 return _save_capture(page, pi, rects, union, pdf_path, needle,
-                                     evidence, out, zoom, len(res))
+                                     evidence, out, zoom, len(res), pad=pad)
         if not any_text:
             first = page_list[0]
             return _save_fallback(doc[first], first, pdf_path, needle,
@@ -259,6 +265,8 @@ def _selfcheck() -> int:
         assert m["status"] == "ok", m
         assert (out / "E001.png").is_file(), "E001.png 없음"
         assert (out / "E001.json").is_file(), "E001.json 없음"
+        # 문맥 크롭: 가로 전폭(파편 크롭 방지) — doc1 폭 440pt
+        assert m["clip"][2] - m["clip"][0] >= 430, ("전폭 크롭 아님", m["clip"])
 
         # ② 표기변형: 문서엔 "300, 900"(공백), 검색은 "300,900"(공백없음) → 성공
         assert m["match_count"] == 1, ("표기변형 매치 수", m)
@@ -320,6 +328,8 @@ def main(argv=None) -> int:
     p.add_argument("--evidence", help="evidence ID(파일명이 됨, 예: E001)")
     p.add_argument("--out", default="_captures", help="캡처 저장 폴더(기본 _captures/)")
     p.add_argument("--page", type=int, default=None, help="특정 페이지만 검색(0-기반)")
+    p.add_argument("--pad", type=float, default=90,
+                   help="매칭 주변 세로 문맥(pt, 기본 90). 표·긴 문단은 120~150 권장")
     p.add_argument("--selfcheck", action="store_true", help="내부 자기검증")
     args = p.parse_args(argv)
 
@@ -330,7 +340,7 @@ def main(argv=None) -> int:
 
     try:
         meta = capture(args.pdf, args.needle, args.evidence,
-                       out_dir=args.out, page_no=args.page)
+                       out_dir=args.out, page_no=args.page, pad=args.pad)
     except (ValueError, FileNotFoundError, RuntimeError) as e:
         print(json.dumps({"status": "error", "reason": str(e)}, ensure_ascii=False))
         return 2

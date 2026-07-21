@@ -209,26 +209,39 @@ def _max_ids(records: list[dict]) -> tuple[int, int]:
     return fmax, emax
 
 
-def ingest(work, input_records: list[dict]) -> dict:
+def ingest(work, input_records: list[dict], dry_run: bool = False) -> dict:
     """G1 등재: 조사원 temp 스키마(agent-briefs.md §2)를 정식 스키마로 치환.
 
     temp-fact  {tid, evidence_tids, proposed_grade, ...} → {id, evidence_ids, grade, ...}
     temp-evid  {tid, fact_tid, proposed_grade, ...}       → {id, fact_id, grade, ...}
 
     run 단위 전역 순번 단일 채번(tid→F%03d/E%03d, 참조 재매핑) + proposed_grade→grade 승격
-    + claim_key 생성 + status=pending → 정식 스키마 검증 → 원자적 append."""
+    + claim_key 생성 + status=pending → 정식 스키마 검증 → 원자적 append.
+
+    dry_run=True면 채번·검증까지만 하고 **facts.jsonl에 쓰지 않으며**, 첫 위반에서
+    멈추지 않고 **모든 위반을 수집해 보고**한다(violations 리스트). 용도 두 가지 —
+    조사원의 제출 전 자가검증(위반 0 확인 후 제출), 팀리드의 G1 등재 전 스캔(전 위반을
+    한 번에 파악해 재요청을 1회로 끝냄). 한 라인 위반이 파일 전체 등재를 막으므로,
+    제출/등재 전에 전건을 보는 것이 재요청 왕복보다 훨씬 싸다."""
     fpath = facts_path(work)
     existing = load(fpath) if fpath.exists() else []
     fmax, emax = _max_ids(existing)
     schema = load_schema()
+    violations: list[str] = []
 
     # 1차: temp id(tid) 채번(fact→F, evidence→E). 참조는 2차에서 이 표로 재매핑.
     remap: dict[tuple[str, str], str] = {}
-    for rec in input_records:
+    for i, rec in enumerate(input_records, 1):
         kind, tid = rec.get("kind"), rec.get("tid")
         if kind not in ("fact", "evidence"):
+            if dry_run:
+                violations.append(f"라인{i}: kind가 'fact'|'evidence' 아님: {kind!r}")
+                continue
             raise FactError(f"kind가 'fact'|'evidence' 아님: {kind!r}")
         if not tid:
+            if dry_run:
+                violations.append(f"라인{i}: tid(임시 ID) 없음")
+                continue
             raise FactError(f"temp 라인에 tid(임시 ID) 없음: {rec}")
         if kind == "fact":
             fmax += 1
@@ -241,6 +254,8 @@ def ingest(work, input_records: list[dict]) -> dict:
     out = []
     for rec in input_records:
         r = json.loads(json.dumps(rec, ensure_ascii=False))
+        if dry_run and (r.get("kind"), r.get("tid")) not in remap:
+            continue  # 1차에서 이미 위반으로 수집된 라인
         if r["kind"] == "fact":
             rr = {
                 "kind": "fact",
@@ -264,15 +279,22 @@ def ingest(work, input_records: list[dict]) -> dict:
             rr["grade"] = r.get("proposed_grade", {})  # 출처별 등급(필수) — 팀리드가 G2 확정
         errs = validate_record(rr, schema)
         if errs:
+            if dry_run:
+                violations.append(f"{r['kind']} {r.get('tid')}: {'; '.join(errs)}")
+                continue
             raise FactError(f"스키마 위반({r['kind']} {r.get('tid')}): {'; '.join(errs)}")
         out.append(rr)
 
-    save_atomic(fpath, existing + out)
+    if not dry_run:
+        save_atomic(fpath, existing + out)
     return {
-        "added": len(out),
+        "added": 0 if dry_run else len(out),
+        "valid": len(out),
         "facts": sum(1 for r in out if r["kind"] == "fact"),
         "evidence": sum(1 for r in out if r["kind"] == "evidence"),
-        "total": len(existing) + len(out),
+        "total": len(existing) + (0 if dry_run else len(out)),
+        "dry_run": dry_run,
+        "violations": violations,
     }
 
 
@@ -575,8 +597,22 @@ def _selfcheck() -> int:
              "source_url": "https://x", "accessed_at": "t", "locator": {"page": 1},
              "verbatim": "원문", "sha256": sha, "source_role": "원출처", "proposed_grade": pg},
         ]
+        # dry-run: 검증·채번 결과만 반환, 파일 미생성, 위반 0
+        r0 = ingest(wd, inp, dry_run=True)
+        assert r0["dry_run"] and r0["added"] == 0 and r0["valid"] == 2, r0
+        assert r0["violations"] == [], r0
+        assert not facts_path(wd).exists(), "dry-run인데 facts.jsonl 생성됨"
+        # dry-run은 첫 위반에서 멈추지 않고 전 위반을 수집한다(예외 없이 보고)
+        bad_inp = [
+            {"kind": "fact", "claim": "tid 없음"},                      # 1차 위반
+            {"kind": "evidence", "tid": "TEX", "fact_tid": "TF001",     # 2차 위반(필수필드 다수 누락)
+             "source_url": "https://x", "proposed_grade": pg},
+        ]
+        rb = ingest(wd, bad_inp, dry_run=True)
+        assert len(rb["violations"]) == 2 and rb["valid"] == 0, rb
+        assert not facts_path(wd).exists(), "위반 dry-run인데 파일 생성됨"
         r1 = ingest(wd, inp)
-        assert r1 == {"added": 2, "facts": 1, "evidence": 1, "total": 2}, r1
+        assert (r1["added"], r1["facts"], r1["evidence"], r1["total"]) == (2, 1, 1, 2), r1
         recs2 = load(facts_path(wd))
         f_rec = next(r for r in recs2 if r["kind"] == "fact")
         e_rec = next(r for r in recs2 if r["kind"] == "evidence")
@@ -657,6 +693,8 @@ def main(argv=None) -> int:
     sp = sub.add_parser("ingest", help="G1 등재(스키마검증·채번·재매핑)")
     sp.add_argument("work_dir")
     sp.add_argument("input_jsonl")
+    sp.add_argument("--dry-run", action="store_true",
+                    help="검증·채번만 하고 쓰지 않음(조사원 제출 전 자가검증용)")
 
     sp = sub.add_parser("add-event", help="fact에 verify_event 추가")
     sp.add_argument("work_dir")
@@ -692,8 +730,10 @@ def main(argv=None) -> int:
 
     try:
         if args.cmd == "ingest":
-            res = ingest(args.work_dir, load(args.input_jsonl))
+            res = ingest(args.work_dir, load(args.input_jsonl), dry_run=args.dry_run)
             print(json.dumps(res, ensure_ascii=False, indent=2))
+            if res.get("violations"):
+                return 1  # dry-run 위반 有 → 제출/등재 불가 신호
         elif args.cmd == "add-event":
             ev = {"at": args.at or _now_iso(), "by": args.by, "action": args.action,
                   "evidence_id": args.evidence_id, "source_url": args.source_url,

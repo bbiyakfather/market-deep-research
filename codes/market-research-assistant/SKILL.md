@@ -36,13 +36,13 @@ description: >-
 | skill_paths | `skill_paths.py --preflight [--json]` | 필수 의존성 하나라도 없으면 **exit 1** |
 | search | `search.py "쿼리" [--n 10] [--type web\|news\|academic\|filing] [--json] [--no-cache]` | 결과 有=0 / 無=1 / **미지원 --type=2** |
 | fetch | `fetch.py <URL> [--out _sources/] [--keywords k1,k2] [--max-bytes N] [--timeout S] [--json]` | ok·partial_ogp=0 / 그 외=2 |
-| facts_db | `facts_db.py ingest <WORK> <input.jsonl>` | 스키마위반·중복ID·tid누락 시 exit 1 |
+| facts_db | `facts_db.py ingest <WORK> <input.jsonl> [--dry-run]` | 스키마위반·중복ID·tid누락 시 exit 1. `--dry-run`=쓰지 않고 **전 위반 수집** 보고(위반 有=exit 1) — 조사원 자가검증·팀리드 사전스캔용 |
 | facts_db | `facts_db.py add-event <WORK> <fact_id> --action reread --result match [--by lead] [--evidence-id E..] [--source-url ..] [--note ..]` | — |
 | facts_db | `facts_db.py set-status <WORK> <fact_id> {pending\|confirmed\|disputed\|superseded\|discarded} [--by lead] [--note ..] [--discard-reason ..]` | 전이 위반 시 exit 1 |
 | facts_db | `facts_db.py set-capture <WORK> <evidence_id> <capture_path>` | 파일부재·_reconstructed 경로 시 exit 1 |
 | facts_db | `facts_db.py diff <old.jsonl> <new.jsonl>` | 값변동/정의변동/추가/삭제 리포트 |
 | manifest | `manifest.py update <WORK>` · `manifest.py verify <WORK>` | verify: 변경 有 시 **exit 1**(G3 재실행 트리거) |
-| capture_pdf | `capture_pdf.py --pdf <path> --needle "300,900" --evidence E001 [--out _captures/] [--page N]` | ok=0 / not_found·fallback_page=1 / error=2 |
+| capture_pdf | `capture_pdf.py --pdf <path> --needle "300,900" --evidence E001 [--out _captures/] [--page N] [--pad 90]` | ok=0 / not_found·fallback_page=1 / error=2. 기본 크롭=가로 전폭+세로 ±pad(문맥 포함) |
 | capture_web | `capture_web.py --text <파일\|문자열> --evidence E012 [--out _reconstructed/] [--source-url URL]` | 재구성물(증빙 **불인정**), `_captures/` 경로 거부 |
 | verify_facts | `verify_facts.py --report report.md --facts facts.jsonl [--work .] [--strict] [--convert-on] [--json]` | violation 1건이라도 있으면 **exit 1** |
 | render_pdf | `render_pdf.py --md report.md [--style <SKILL>/assets/style.html] [--out report.pdf]` | 실패 시 exit 2 |
@@ -65,17 +65,21 @@ w=S.work_dir('<주제>', create=True); S.subdirs(w, create=True); print(w)"
   _research/<agent>/  조사원 원자료 보존 (에이전트별 전용, 무수정)
   _captures/        source_capture — 증빙 인정 (E<ID>.png)
   _reconstructed/   재구성 발췌 — 증빙 불인정 (내부용)
+  _media/           대표이미지·개요도 — 참고 삽화 (증빙 아님, 출처 캡션 필수)
   audit/            내부 audit 번들
   facts.jsonl  manifest.json  report.md  report.pdf
 ```
+
+`<WORK>`의 **부모(조사 실행 루트)** 에는 여러 조사가 공유하는 `ref/`(엄선한 A급 원문 리포트 보존, `report-format.md §3b`)를 둔다.
 
 이후 팀리드는 `<WORK>`를 cwd로 두고 작업한다.
 
 ## 오케스트레이션 파이프라인 (게이트 G0~G5)
 
 ```
-[G0] preflight + 요구사항 확정 ── skill_paths.py --preflight(누락 시 중단),
-      조사유형·범위·조사종료기준·환산옵션(기본 OFF)·출력형식·목차 승인.
+[G0] preflight + 조사계획 확정 ── skill_paths.py --preflight(누락 시 중단),
+      AskUserQuestion으로 조사유형·범위·조사종료기준·환산옵션(기본 OFF)·출력형식 확정,
+      보고서 목차 초안(장별 핵심질문·필요수치·담당) 선제안·승인 + 기준출처(anchor) 합의.
       기관/기업 조사면 entity-identity 게이트(entity_id 확정) 선행.
 [1]  병렬 조사 ────────── 조사원 sonnet 서브에이전트 팬아웃(background),
       에이전트별 _research/<agent>/ 전용 폴더, agent-briefs 브리프, 반환=temp JSONL.
@@ -95,12 +99,14 @@ w=S.work_dir('<주제>', create=True); S.subdirs(w, create=True); print(w)"
 
 ---
 
-## G0 — preflight + 요구사항 확정
+## G0 — preflight + 조사계획 확정
 
 1. **의존성 점검**: `python <SKILL>/scripts/skill_paths.py --preflight`. 필수(python·fitz·curl_cffi·trafilatura·playwright·pandoc·chrome) 중 하나라도 `ABSENT`면 **exit 1** — 진행하지 말고 누락 목록을 사용자에게 보고하고 설치를 안내한다(yt_dlp는 optional, 경고만).
-2. **요구사항 승인**(사용자 확인 필수): 조사유형 · 범위 · **조사 종료 기준**(예: 핵심 수치 N건 확인 또는 1차출처 소진) · **환산옵션(기본 OFF)** · 출력형식 · 목차.
-3. **기관/기업 조사면 entity-identity 게이트 선행**: 조사원 팬아웃 **전에** 각 대상의 `context.entity_id`(사업자등록번호 > 법인등록번호 > 정식법인명+주소, 해외는 LEI/CIK/DUNS)를 확정한다. 미확정 대상은 조사하지 않는다. 규범은 `references/entity-identity.md`.
-4. **작업폴더 생성**: 위 「작업폴더 규약」 스니펫으로 `<WORK>` + 하위폴더를 만들고 cwd를 `<WORK>`로 옮긴다.
+2. **요구사항 확정 — AskUserQuestion 도구 사용**(필수): 조사유형 · 범위 · **조사 종료 기준**(예: 핵심 수치 N건 확인 또는 1차출처 소진) · **환산옵션(기본 OFF)** · 출력형식을 **선택지 형태(권장안 명시)** 로 묻는다. 모호함을 안고 팬아웃하면 조사원 토큰 전체가 헛돌기 때문에, 가장 싼 지점(G0)에서 모호함을 제거한다.
+3. **목차 선제안**: "하나의 보고서를 쓴다"는 계획으로, 팬아웃 **전에** 목차 초안(각 장 = 핵심 질문 + 필요 수치 + 담당 조사원)을 사용자에게 제안·승인받는다. 이 목차가 조사원 분담과 보고서 구조의 단일 기준이다.
+4. **기준출처(anchor source) 합의**: 기관마다 수치가 갈리는 지표(시장규모·설치용량 등)는 대표 기준 출처(예: 수소 분야 IEA)를 사용자와 합의해 목차에 명시한다. 타 출처는 병기(disputed)하되 본문 대표 서술은 기준출처를 따른다.
+5. **기관/기업 조사면 entity-identity 게이트 선행**: 조사원 팬아웃 **전에** 각 대상의 `context.entity_id`(사업자등록번호 > 법인등록번호 > 정식법인명+주소, 해외는 LEI/CIK/DUNS)를 확정한다. 미확정 대상은 조사하지 않는다. 규범은 `references/entity-identity.md`.
+6. **작업폴더 생성**: 위 「작업폴더 규약」 스니펫으로 `<WORK>` + 하위폴더를 만들고 cwd를 `<WORK>`로 옮긴다.
 
 → 상세: `references/verification-gates.md §G0`, `references/entity-identity.md`.
 
@@ -108,7 +114,8 @@ w=S.work_dir('<주제>', create=True); S.subdirs(w, create=True); print(w)"
 
 - **모델·실행**: 조사원 = **sonnet 서브에이전트**, background 병렬. 재검증·종합은 메인 세션(팀리드). 팀리드가 메인 세션이 아닌 컨텍스트(서브 세션/백그라운드 잡)면 **이름 없는(anonymous) 서브에이전트**로 팬아웃한다(named 팬아웃은 거부될 수 있음).
 - **파일 충돌 방지**: 각 조사원은 **자기 전용 `_research/<agent명>/` 폴더에만** 쓴다. `_sources/`·`_captures/`·`facts.jsonl`·`manifest.json`은 **팀리드 전용**(조사원 접근 금지).
-- **브리프**: 팀리드는 `references/agent-briefs.md §1` 골격에 담당범위·조사유형변형(§3)·확정된 `entity_id`를 채워 각 조사원에 넣는다. **철칙(§4)은 전문 그대로** 포함(축약 금지 — 원문 지시 방어).
+- **브리프**: 팀리드는 `references/agent-briefs.md §1` 골격에 담당범위·조사유형변형(§3)·확정된 `entity_id`를 채워 각 조사원에 넣는다. **철칙(§4)은 전문 그대로** 포함(축약 금지 — 원문 지시 방어). **스키마 하드룰(§2)** — source_role enum 3종 그대로·locator null 금지·verbatim 원문 그대로 — 도 브리프에 명시한다(실전에서 가장 많이 깨진 지점).
+- **제출 전 자가검증**: 조사원은 `python <SKILL>/scripts/facts_db.py ingest _research/<agent> _research/<agent>/output.jsonl --dry-run`으로 **위반 0을 확인한 뒤에만 제출**한다(한 라인 위반이 파일 전체 등재를 막는다).
 - **도구**(조사원 브리프에 명시): 검색 `python <SKILL>/scripts/search.py "쿼리" --n 10 --type …`(+내장 WebSearch 병행), 수집 `python <SKILL>/scripts/fetch.py <URL> --out _research/<agent>/raw/`. source-ladder 폴백은 `references/source-ladder.md`, 추출·locator는 `references/extract-recipes.md`.
 - **반환**: `_research/<agent>/output.jsonl`(temp 스키마 — `tid`/`fact_tid`/`evidence_tids`/`proposed_grade`, **정식 F/E ID·확정 grade 아님**) + `insights.md`(`## 인사이트` [사실]/[추론] 구분·근거 TF-ID, `## 요약` 건수·등급분포·폐기 리드).
 
@@ -119,7 +126,7 @@ w=S.work_dir('<주제>', create=True); S.subdirs(w, create=True); print(w)"
 1. **join**: 전 조사원의 완료/timeout/부분실패를 처리한다. timeout·부분실패 에이전트가 낸 분까지는 살리되, 무엇이 누락됐는지 기록한다.
 2. **raw 보존**: `_research/<agent>/` 산출물을 무수정 보존(audit 대상).
 3. **등재**: `python <SKILL>/scripts/facts_db.py ingest . _research/<agent>/output.jsonl`(에이전트별로). ingest가 temp ID(TF/TE)를 **run 단위 전역 순번으로 채번**(F###/E###)하고 참조를 재매핑하며, `proposed_grade`→`grade` 승격·`claim_key` 생성·`status=pending` 설정 후 **정식 스키마 검증**(`assets/facts-schema.json`)을 통과한 것만 원자적 append한다. 중복 ID·tid 누락·스키마 위반은 거부(exit 1).
-4. **거부 처리**: 스키마 위반 라인은 해당 조사원에 **제한적 재요청**(그 라인만). 반복 실패는 폐기.
+4. **거부 처리**: 본등재(ingest)는 첫 위반에서 멈춘다. 위반이 나오면 같은 파일을 `--dry-run`으로 다시 돌려 **전 위반 목록을 일괄 확보**(dry-run은 멈추지 않고 전건 수집)한 뒤, 조사원에 **제한적 재요청 1회**로 끝낸다. 반복 실패는 폐기.
 5. **무출처 폐기**: 근거(evidence) 없는 주장은 즉시 `discarded` — `set-status . <fact_id> discarded --discard-reason "무출처"` 후 `audit/discarded.md`에 사유 기록.
 6. 등재 초기 status: 근거 있으나 미재검증 = `pending`, 상충 = `disputed`(note 필수), 시계열 갱신 = `superseded`(note 필수).
 
@@ -143,9 +150,9 @@ w=S.work_dir('<주제>', create=True); S.subdirs(w, create=True); print(w)"
 
 confirmed 전건에 **source_capture**를 만든다(핵심 수치는 필수).
 
-- **로컬/다운로드 PDF**: `python <SKILL>/scripts/capture_pdf.py --pdf _sources/<file>.pdf --needle "<정확한 숫자>" --evidence <E..> --out _captures/`. `--needle`은 **정확 숫자**(부분문자열 금지 — `300`으로 `3000`을 잡지 않도록). ok면 `_captures/<E..>.png` 생성(exit 0), `not_found`/`fallback_page`(스캔 PDF)면 exit 1 — 성공 파일명을 만들지 않으므로 **대체출처 or 미확인 유지**로 처리.
+- **로컬/다운로드 PDF**: `python <SKILL>/scripts/capture_pdf.py --pdf _sources/<file>.pdf --needle "<정확한 숫자>" --evidence <E..> --out _captures/`. `--needle`은 **정확 숫자**(부분문자열 금지 — `300`으로 `3000`을 잡지 않도록). ok면 `_captures/<E..>.png` 생성(exit 0), `not_found`/`fallback_page`(스캔 PDF)면 exit 1 — 성공 파일명을 만들지 않으므로 **대체출처 or 미확인 유지**로 처리. 기본 크롭은 **가로 전폭 + 세로 ±90pt 문맥 포함**(`--pad`로 조정) — 숫자만 잘린 **파편 크롭은 증빙 가치가 없다**(주변 문장·표 헤더가 보여야 함).
 - **접근 가능한 웹**: playwright MCP로 **실화면 스크린샷**(재구성 아님) + 메타 결박(최종 URL·시각·viewport·locator). 로그인/CAPTCHA/paywall 뒤 화면은 촬영하지 않는다(우회 금지).
-- **캡처 결박**: 생성한 캡처 경로를 해당 evidence의 `capture` 필드에 기록한다 — `python <SKILL>/scripts/facts_db.py set-capture . <E..> _captures/<E..>.png`. 파일이 실재해야 하고 `_reconstructed/` 경로는 거부되며(증빙 불인정), 스키마 재검증 후 원자적으로 재작성된다(위반 시 exit 1). 오귀속 여부는 `references/evidence-capture.md §5` 체크리스트로 육안 확인.
+- **캡처 결박**: 생성한 캡처 경로를 해당 evidence의 `capture` 필드에 기록한다 — `python <SKILL>/scripts/facts_db.py set-capture . <E..> _captures/<E..>.png`. 파일이 실재해야 하고 `_reconstructed/` 경로는 거부되며(증빙 불인정), 스키마 재검증 후 원자적으로 재작성된다(위반 시 exit 1). 오귀속 여부는 `references/evidence-capture.md §6` 체크리스트로 육안 확인.
 
 - **재구성 발췌 금지선**: `capture_web.py`(insert_htmlbox)는 **증빙 불인정**(`_reconstructed/`, 워터마크). 내부 audit 참고용일 뿐 고객 보고서·증빙표에 싣지 않으며 confirmed 근거가 될 수 없다.
 
@@ -155,7 +162,7 @@ confirmed 전건에 **source_capture**를 만든다(핵심 수치는 필수).
 
 `references/report-format.md` 양식으로 **두 산출물을 동시** 생성한다.
 
-- **고객용 `report.md`** — 섹션마다 3중 구조: ① 서술 본문(배경→메커니즘→수치→의의→⚠주의점, 수치엔 `(Fxxx)` 태그) ② 근거표(사실|수치|출처링크|4차원 등급|증빙) ③ source_capture + 캡션(수치↔원문 위치 매핑). 말미: 한눈에 요약표 / 조사팀 인사이트([사실]/[추론]·근거 F-ID) / 한계와 반론(개수 고정 없음, 근거 있을 때만). **폐기목록·실패 URL·미확인 의혹은 넣지 않는다.**
+- **고객용 `report.md`** — 섹션마다 3중 구조: ① 서술 본문(배경→메커니즘→수치→의의→⚠주의점, 수치엔 `(Fxxx)` 태그) ② 근거표(사실|수치|출처링크|4차원 등급|증빙) ③ source_capture + 캡션(수치↔원문 위치 매핑, 문맥 크롭) ④(선택) 대표 이미지·개요도(`_media/`, 출처 캡션 필수, F태그 없음 — `evidence-capture.md §5`). 말미: 한눈에 요약표 / 조사팀 인사이트([사실]/[추론]·근거 F-ID) / 한계와 반론(개수 고정 없음, 근거 있을 때만). **폐기목록·실패 URL·미확인 의혹은 넣지 않는다.**
   - 렌더 문법(render_pdf가 `gfm+fenced_divs+bracketed_spans`로 파싱): 주의박스 `::: {.caution}`, 증빙박스 `::: {.evidence-box}`, 강조 태그 `[300조 원]{.ftag}`. 캡처는 상대경로 `![캡션](_captures/E001.png)`.
 - **내부 audit/ 번들** — `facts_all`(전수표), `discarded.md`(폐기+사유), `failed_sources.md`(실패 URL+사유코드), `verify_log.md`(verify_events 전개), `raw_agent_output/`(_research 복사), `manifest.json`.
 
@@ -191,6 +198,7 @@ report.md·캡처·원본이 모두 최종 상태일 때:
 1. `python <SKILL>/scripts/manifest.py update .`(report.pdf 포함) → `python <SKILL>/scripts/manifest.py verify .` — **변경 0**(exit 0). 예상치 못한 변경이 있으면 G3로 복귀.
 2. PDF 재검사: 본문 `(Fxxx)` 태그 수 · 출처 링크 · 캡처 이미지 수가 대장/근거표와 일치하는지 확인.
 3. 통과하면 고객용 `report.pdf`와 내부 `audit/`를 최종 산출물로 확정한다.
+4. **ref/ 보존**: 이번 조사에서 발견한 A급 원문 리포트(기준출처로 재사용할 것)를 엄선해 조사 실행 루트의 `ref/`에 사본 저장하고 `ref/README.md` 색인을 갱신한다(`report-format.md §3b`).
 
 → 상세: `references/verification-gates.md §G5`.
 

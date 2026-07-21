@@ -84,6 +84,7 @@ _SUBDIRS = {
     "research": "_research",          # 에이전트 원자료 보존
     "captures": "_captures",          # source_capture (증빙 인정)
     "reconstructed": "_reconstructed",  # 내부 재구성 발췌 (증빙 불인정)
+    "media": "_media",                # 대표이미지·개요도 (참고 삽화 — 증빙 아님, 출처 캡션 필수)
     "audit": "audit",                 # 내부 audit 번들
 }
 
