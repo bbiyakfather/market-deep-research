@@ -1,0 +1,12 @@
+{
+  "_note": "SearXNG 공개 인스턴스 로테이션 대상. 자체 호스팅하지 않는다(공개 인스턴스만). 공개 인스턴스는 언제든 JSON API를 막거나 다운될 수 있으므로, search.py는 인스턴스별 헬스체크 후 실패 시 지수 백오프로 잠시 제외하고 다음으로 넘어간다. 목록은 https://searx.space 의 가용 인스턴스에서 선별했으며 완전성/영속성을 보장하지 않는다.",
+  "instances": [
+    { "url": "https://searx.be", "note": "장기 운영, 간헐적 JSON 허용" },
+    { "url": "https://searx.tiekoetter.com", "note": "독일, 안정적" },
+    { "url": "https://priv.au", "note": "프라이버시 중심, 빠름" },
+    { "url": "https://baresearch.org", "note": "JSON API 허용 이력" },
+    { "url": "https://search.inetol.net", "note": "스페인, 응답 빠름" },
+    { "url": "https://opnxng.com", "note": "싱가포르, 아시아 지연 낮음" },
+    { "url": "https://search.rhscz.eu", "note": "체코" }
+  ]
+}

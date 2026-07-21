@@ -142,6 +142,30 @@ def _find_chrome():
     return None
 
 
+def find_pandoc():
+    """pandoc 실행파일 탐색: PATH → 표준 설치경로 → winget Packages 폴백.
+
+    winget 설치 직후엔 기존 셸 PATH에 반영되지 않아 which만으로는 오탐(absent)
+    한다 — render_pdf가 실제로 찾아 쓰는 경로와 preflight 판정을 일치시킨다.
+    """
+    p = shutil.which("pandoc")
+    if p:
+        return p
+    candidates = []
+    for base in (os.environ.get("LOCALAPPDATA"), os.environ.get("ProgramFiles")):
+        if base:
+            candidates.append(os.path.join(base, "Pandoc", "pandoc.exe"))
+    localapp = os.environ.get("LOCALAPPDATA")
+    if localapp:
+        candidates.extend(
+            str(c) for c in sorted(Path(localapp).glob(
+                "Microsoft/WinGet/Packages/JohnMacFarlane.Pandoc_*/pandoc-*/pandoc.exe")))
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return None
+
+
 def check_dependencies() -> dict:
     """의존성별 present/detail/required 매핑.
 
@@ -154,7 +178,7 @@ def check_dependencies() -> dict:
     for name in ("fitz", "curl_cffi", "trafilatura", "playwright"):
         ok, detail = _module_present(name)
         result[name] = {"present": ok, "required": True, "detail": detail}
-    pandoc = shutil.which("pandoc")
+    pandoc = find_pandoc()
     result["pandoc"] = {"present": bool(pandoc), "required": True,
                         "detail": pandoc or "not found"}
     chrome = _find_chrome()

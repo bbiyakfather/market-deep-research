@@ -1,0 +1,17 @@
+{
+  "_note": "search.py의 --type 백엔드 매핑(types)과 조사유형별 1차출처 도메인 화이트리스트(domains). types에 없는 --type은 search.py가 명시적으로 실패(exit 2)한다. domains는 조사원이 '1차출처인지' 판단하는 참고 화이트리스트이며(검색을 제한하지 않음), 조사유형 키와 --type 키를 함께 담는다. 유료 API(firecrawl/tavily) 백엔드는 어디에도 없다.",
+  "types": {
+    "web":      { "backends": ["ddg", "searxng", "wikipedia"] },
+    "news":     { "backends": ["ddg", "searxng"] },
+    "academic": { "backends": ["arxiv"] },
+    "filing":   { "backends": ["sec_edgar"] }
+  },
+  "domains": {
+    "technology": ["arxiv.org", "patents.google.com", "kipris.or.kr", "wipo.int", "ieee.org", "nature.com", "science.org"],
+    "industry":   ["kosis.kr", "data.go.kr", "dart.fss.or.kr", "kita.net", "oecd.org", "worldbank.org"],
+    "entity":     ["dart.fss.or.kr", "opendart.fss.or.kr", "sec.gov", "nps.or.kr"],
+    "market":     ["sec.gov", "dart.fss.or.kr", "kosis.kr", "oecd.org", "imf.org", "worldbank.org"],
+    "academic":   ["arxiv.org", "doi.org", "ncbi.nlm.nih.gov"],
+    "filing":     ["sec.gov", "dart.fss.or.kr"]
+  }
+}
