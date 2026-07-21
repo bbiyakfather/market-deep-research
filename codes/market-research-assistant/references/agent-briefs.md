@@ -40,9 +40,9 @@ research_<주제>_<날짜>/
 [전용 작업폴더]  _research/{agent명}/   ← 여기에만 파일을 쓴다
 
 [도구]
-- 검색: `python -m scripts.search "쿼리" --n 10 --type web|news|academic|filing`
+- 검색: `python <SKILL>/scripts/search.py "쿼리" --n 10 --type web|news|academic|filing`
   (+ 내장 WebSearch 병행. "검색 결과는 완전하지 않다"를 전제로 복수 쿼리)
-- 수집: `python -m scripts.fetch <URL> --out _research/{agent명}/raw/`
+- 수집: `python <SKILL>/scripts/fetch.py <URL> --out _research/{agent명}/raw/`
   (본문 1,000자+키워드 확보 실패 시 source-ladder 폴백. 그래도 실패면 폐기)
 
 [반드시 지킬 철칙]  ← §4 전문을 그대로 포함

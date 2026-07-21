@@ -342,6 +342,33 @@ def set_status(work, fact_id: str, new_status: str, **kw) -> dict:
     return fact
 
 
+def set_capture(work, evidence_id: str, capture_path: str) -> dict:
+    """G2: capture_pdf가 만든 캡처 경로를 evidence.capture에 결박.
+    파일 실재 확인 + _reconstructed(재구성 발췌=증빙 불인정) 경로 거부 + 스키마 재검증."""
+    work = Path(work)
+    fpath = facts_path(work)
+    recs = load(fpath)
+    ev = next((r for r in recs if r.get("kind") == "evidence" and r.get("id") == evidence_id), None)
+    if ev is None:
+        raise FactError(f"evidence 없음: {evidence_id}")
+    cap = Path(capture_path)
+    fs = cap if cap.is_absolute() else work / cap
+    if "_reconstructed" in fs.parts:  # 재구성 발췌는 증빙 불인정
+        raise FactError(f"_reconstructed 경로는 증빙 불인정(source_capture만 인정): {capture_path}")
+    if not fs.is_file():
+        raise FactError(f"capture 파일 부재: {capture_path}")
+    # 작업폴더 내부면 상대 posix로 저장(local/manifest 규약과 일치)
+    try:
+        ev["capture"] = fs.resolve().relative_to(work.resolve()).as_posix()
+    except ValueError:
+        ev["capture"] = cap.as_posix()
+    errs = validate_record(ev, load_schema())
+    if errs:
+        raise FactError(f"스키마 위반({evidence_id}): {'; '.join(errs)}")
+    save_atomic(fpath, recs)
+    return ev
+
+
 # --- claim_key diff (값 변동 / 정의 변동) ---------------------------------
 def _facts_by_key(records: list[dict]) -> dict[str, dict]:
     out: dict[str, dict] = {}
@@ -585,6 +612,37 @@ def _selfcheck() -> int:
         except FactError as e:
             assert "grade" in str(e), e
 
+    # set_capture: 정상 결박 / 없는 evidence / _reconstructed 거부 / 파일 부재
+    with tempfile.TemporaryDirectory() as td:
+        wd = Path(td)
+        (wd / "_captures").mkdir()
+        (wd / "_reconstructed").mkdir()
+        (wd / "_captures" / "E001.png").write_bytes(b"png")
+        (wd / "_reconstructed" / "E001.png").write_bytes(b"png")
+        save_atomic(facts_path(wd), [valid_fact("F001", evidence_ids=["E001"]), valid_ev("E001")])
+        # ① 정상 결박(작업폴더 상대 posix 저장)
+        ev = set_capture(wd, "E001", "_captures/E001.png")
+        assert ev["capture"] == "_captures/E001.png", ev["capture"]
+        assert load(facts_path(wd))[1]["capture"] == "_captures/E001.png"
+        # ② 없는 evidence 거부
+        try:
+            set_capture(wd, "E999", "_captures/E001.png")
+            raise AssertionError("없는 evidence 통과")
+        except FactError as e:
+            assert "evidence 없음" in str(e), e
+        # ③ _reconstructed 경로 거부(증빙 불인정)
+        try:
+            set_capture(wd, "E001", "_reconstructed/E001.png")
+            raise AssertionError("_reconstructed 경로 통과")
+        except FactError as e:
+            assert "_reconstructed" in str(e), e
+        # 파일 부재 거부
+        try:
+            set_capture(wd, "E001", "_captures/none.png")
+            raise AssertionError("파일 부재 통과")
+        except FactError as e:
+            assert "부재" in str(e), e
+
     print("SELFCHECK OK")
     return 0
 
@@ -619,6 +677,11 @@ def main(argv=None) -> int:
     sp.add_argument("--note", default=None)
     sp.add_argument("--discard-reason", default=None)
 
+    sp = sub.add_parser("set-capture", help="evidence.capture 결박(파일 실재·_reconstructed 거부)")
+    sp.add_argument("work_dir")
+    sp.add_argument("evidence_id")
+    sp.add_argument("capture_path")
+
     sp = sub.add_parser("diff", help="claim_key 기준 값/정의 변동 대조")
     sp.add_argument("old_jsonl")
     sp.add_argument("new_jsonl")
@@ -641,6 +704,9 @@ def main(argv=None) -> int:
             f = set_status(args.work_dir, args.fact_id, args.status, by=args.by,
                            note=args.note, discard_reason=args.discard_reason)
             print(f"{f['id']} → {f['status']}")
+        elif args.cmd == "set-capture":
+            ev = set_capture(args.work_dir, args.evidence_id, args.capture_path)
+            print(f"{ev['id']} capture ← {ev['capture']}")
         elif args.cmd == "diff":
             rep = diff(load(args.old_jsonl), load(args.new_jsonl))
             print(json.dumps(rep, ensure_ascii=False, indent=2))

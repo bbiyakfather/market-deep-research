@@ -28,6 +28,11 @@
 """
 from __future__ import annotations
 
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))  # `-m` 패키지 실행 호환
+
 import skill_paths  # noqa: F401  ── import 시 UTF-8 콘솔 부트스트랩(반드시 최상단)
 import fetch         # ── 보안경계/HTTP 계층 재사용(_validate_url·_follow·_guarded_get 등)
 

@@ -8,7 +8,7 @@
 
 ## 1. search.py — 검색 계층
 
-호출: `python -m scripts.search "쿼리" [--n 10] [--type web|news|academic|filing]`
+호출: `python <SKILL>/scripts/search.py "쿼리" [--n 10] [--type web|news|academic|filing]`
 
 계층(위에서부터, 실패 시 다음으로):
 
@@ -31,7 +31,7 @@
 
 ## 2. fetch.py — 수집/추출 폴백 사다리
 
-호출: `python -m scripts.fetch <URL> [--out _research/<agent>/raw/]`
+호출: `python <SKILL>/scripts/fetch.py <URL> [--out _research/<agent>/raw/]`
 
 **보안 경계를 먼저 통과**(§4)한 뒤에만 아래 사다리를 탄다:
 
