@@ -1,0 +1,24 @@
+{
+  "kind": "source_capture",
+  "status": "ok",
+  "evidence": "E058",
+  "pdf_path": "F:\\Claude\\projects\\market-deep-research\\.claude\\worktrees\\pem-electrolysis-research\\research_글로벌_PEM_수전해_프로젝트_20260721\\_sources\\hydrogen_council_insights2024.pdf",
+  "page": 16,
+  "rect": [
+    317.14,
+    211.55,
+    386.61,
+    226.55
+  ],
+  "clip": [
+    293.14,
+    187.55,
+    410.61,
+    250.55
+  ],
+  "needle": "1,750 MW",
+  "match_count": 1,
+  "sha256_pdf": "9befdd80bb39bb20b3591830f4488caa30044ed9b2937facb3454af66b615587",
+  "capture_png": "F:\\Claude\\projects\\market-deep-research\\.claude\\worktrees\\pem-electrolysis-research\\research_글로벌_PEM_수전해_프로젝트_20260721\\_captures\\E058.png",
+  "created_at": "2026-07-21T23:06:35+09:00"
+}

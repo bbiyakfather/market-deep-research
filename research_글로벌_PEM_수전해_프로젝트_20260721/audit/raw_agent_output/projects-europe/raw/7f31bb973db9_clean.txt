@@ -1,0 +1,31 @@
+The Haeolus project will install two electrolysers with a combined capacity of 2 MW in the remote region of Varanger, Norway, inside the Raggovidda wind farm, whose growth is limited by grid bottlenecks.
+The electrolysers will be one alkaline and one PEM-based, to demonstrate both technologies and their synergies. They will be integrated with the wind farm, hydrogen storage and a smaller fuel cell for re-electrification.
+To maximise relevance to wind farms across the EU and the world, the plant will be operated in multiple emulated configurations (energy storage, mini-grid, fuel production).
+Like many large wind farms, especially offshore, Raggovidda is difficult to access, in particular in winter: Haeolus will therefore deploy a remote monitoring and control system allowing the system to operate without personnel on site.
+Maintenance requirements will be minimised by a specially developed diagnostic and prognostic system for the electrolysers and BoP systems.
+The containerised electrolysers are standard models carried by project partner NEL and their recently acquired subsidiary Proton OnSite. The integrated system will be housed in a specially erected hall to protect it from the Arctic winter and allow year-round access.
+The integrated system of electrolysers, fuel cells, and wind farm will be designed for flexibility in demonstration, to allow emulating different operating modes and grid services.
+Haeolus answers the AWP's challenge with the widest possible project scope, with both main electrolyser technologies represented on the site, operation modes not limited to the site's particular needs but extended to all major use cases, and several in-depth analyses (released as public reports) on the business case of electrolysers in wind farms, their impact on energy systems and the environment, and their applicability in a wide range of conditions.
+Topic:
+FCH-02-4-2017: Highly flexible electrolysers balancing the energy output inside the fence of a wind park
+Coordinator:
+SINTEF (Norway)
+Other participating organisations:
+| Communeauté d'universités et établissements | FR | 
+| Hydrogenics Europe | BE | 
+| Tecnalia | ES | 
+| Uni. del Sannio | IT | 
+| Varanger Kraftwind | NO | 
+| KES Knowledge Environment Security | IT | 
+- Reference
+- 779469
+- Project duration
+- 1 Jan 2018 - 31 Dec 2021
+- Project locations
+- 7034 Trondheim, Norway
+- Overall budget
+- €6 921 220
+- EU contribution
+- €4 997 74072.2% of the overall budget
+- Project website
+- https://cordis.europa.eu/project/rcn/213052/factsheet/en

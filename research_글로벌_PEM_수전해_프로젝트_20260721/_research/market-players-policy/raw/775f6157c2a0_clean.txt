@@ -1,0 +1,7 @@
+The Inflation Reduction Act (IRA) of 2022 provides a production credit for each kilogram of qualified clean hydrogen produced by a taxpayer at a qualified clean hydrogen production facility.
+The credit amount is dependent on the emissions intensity of the hydrogen production process and the taxpayer's compliance with prevailing wage and apprenticeship requirements during the qualified clean hydrogen production facility's construction, alteration, and repair.
+How to claim the credit
+Obtain (a) the required verification report, and (b) if you are either petitioning for or using a provisional emissions rate, a copy of the documentation obtained from the Department of Energy providing an emissions value. Then attach a copy of the documentation to Form 7210, Clean Hydrogen Production Credit PDF or Form 3468, Investment Credit PDF. elective payment and transfer of credit may be available to certain applicable entities. A pre-filling registration is required for elective payments and transfers.
+News releases
+- IR-2024-102, Treasury, IRS issue guidance on the credit for the production of clean hydrogen and the election to treat clean hydrogen production facilities as energy property April 10, 2024
+- IR-2023-248, Treasury, IRS issue guidance on the tax credit for the production of clean hydrogen Dec 22, 2023

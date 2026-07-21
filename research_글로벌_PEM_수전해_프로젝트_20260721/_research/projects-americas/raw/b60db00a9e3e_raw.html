@@ -1,0 +1,446 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<!-- begin spin_special_output(head_start) -->
+<script type="text/javascript" src="js/jquery.js" wd_script_id="jquery.js" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ=="></script>
+<style type="text/css" wd_script_id="search_form_style" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ==">
+		.wd_search_form .wd_input_datepicker {
+			margin-right: 2px;
+		}
+		.wd_search_type_checkbox {
+			margin-left: 20px;
+		}
+		</style>
+<script type="text/javascript" src="js/jquery-webdriver.js" wd_script_id="jquery-webdriver.js" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ=="></script>
+<script type="text/javascript" src="js/webdriver.js" wd_script_id="webdriver.js" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ=="></script>
+<script type="text/javascript" wd_script_id="search_form_script" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ==">
+			function wd_toggle_search_form(link, advanced) {
+				var $ = webDriver.jQuery;
+				var $container = $(link).closest(".wd_search_form_container");
+				var basic_form = $container.find(".wd_search_form_basic");
+				var basic_query = basic_form.find('input[name="query"]');
+				var advanced_form = $container.find(".wd_search_form_advanced");
+				var advanced_query = advanced_form.find('input[name="query"]');
+
+				if (advanced) {
+					advanced_query.val(basic_query.val());
+					advanced_form.show();
+					basic_form.hide();
+				} else {
+					basic_query.val(advanced_query.val());
+					basic_form.show();
+					advanced_form.hide();
+				}
+			}
+
+			function wd_toggle_search_type_checkboxes(radio) {
+				var $ = webDriver.jQuery;
+				var $radio = $(radio);
+				var all = $radio.val() == "All" ? $radio.is(":checked") : !$radio.is(":checked");
+				var $checkboxes = $radio.closest(".wd_form_field").find(".wd_search_type_checkbox");
+				$checkboxes.find('input[type="checkbox"]').prop("disabled", all);
+				$checkboxes.toggle(!all);
+			}
+
+			webDriver.jQuery(function ($) {
+				$('.wd_search_type_radio input[type="radio"]').each(function() {wd_toggle_search_type_checkboxes(this);});
+			});
+		</script>
+<style type="text/css" wd_script_id="template_list_inline_style" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ==">
+						ul.wd_layout-inline {
+							display: inline-block;
+							list-style: none;
+							padding: 0;
+							margin: 0;
+						}
+						ul.wd_layout-inline li {
+							display: inline-block;
+							padding: 0;
+							margin: 0 0 0 1em;
+						}
+					</style>
+<script type="text/javascript" src="js/wd_resize.js" wd_script_id="wd_resize.js" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ=="></script>
+<script type="text/javascript" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ==">webDriver.push_jQuery();</script>
+<script type="text/javascript" wd_script_id="view_printable_script" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ==">
+	function view_printable() {
+		var loc = window.location;
+		var sep = (loc.search == "") ? "?" : "&";
+		var url = loc.protocol+"//"+loc.host+loc.pathname+loc.search+sep+"printable"+loc.hash;
+		window.open(url, "_blank", "");
+	}
+</script>
+<script type="text/javascript" wd_script_id="format_news_script" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ==">
+(function($) {
+	webDriver.formatNews = function() {
+		var $news = $(this);
+		var print_url = $news.attr("wd_print_url");
+		$news.find("table").each(function() {
+			var $table = $(this);
+			var $parent = $table.parent();
+			if ($parent.innerWidth() < $table.outerWidth()) {
+				if ($parent.hasClass("wd_news_table")) {
+					$parent.find(".fullscreen-button").show();
+				} else {
+					var $btn = $("<button>View News Release Full Screen</button>")
+						.addClass("fullscreen-button")
+						.on("click", function() {
+							if (print_url)
+								window.open(print_url, "_blank", "");
+							else
+								view_printable();
+						})
+					;
+
+					var $div = $("<div></div>)")
+						.addClass("wd_news_table")
+						.css("overflow-x", "auto")
+						.append($btn)
+					;
+
+					$table.replaceWith($div);
+					$div.append($table);
+				}
+			} else {
+				if ($parent.hasClass("wd_news_table"))
+					$parent.find(".fullscreen-button").hide();
+			}
+		});
+	}
+})(webDriver.jQuery);
+</script>
+<script type="text/javascript" nonce="NjAxMzlhNjNhMWI5MDM5NDQ0ODc3MmRlNGYwN2I1MTdjNjEzZDk5MQ==">webDriver.pop_jQuery();</script>
+
+<!-- end spin_special_output(head_start) -->
+
+ 	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Florida Power & Light Company announces completion of clean hydrogen hub</title>
+	
+ <meta name="keywords" content="" />
+ <meta name="description" content="" />
+ <meta name="twitter:card" content="summary" />
+ <meta name="twitter:title" content="Florida Power &amp; Light Company announces completion of clean hydrogen hub " />
+ <meta name="twitter:description" content="FPL has successfully finished constructing its pilot clean hydrogen facility in Okeechobee County, Florida. The Cavendish NextGen Hydrogen Hub represents a significant pilot initiative aimed at providing FPL with valuable insights into clean fuels and their potential advantages for customers." />
+ <meta name="twitter:image" content="https://newsroom.nexteraenergy.com/image/NextEra+socialpost.jpg" />
+ <meta property="og:site_name" content="NextEra Energy Newsroom" />
+ <meta property="og:url" content="https://newsroom.nexteraenergy.com/Florida-Power-Light-Company-announces-completion-of-clean-hydrogen-hub" />
+ <meta property="og:title" content="Florida Power &amp; Light Company announces completion of clean hydrogen hub " />
+ <meta property="og:description" content="FPL has successfully finished constructing its pilot clean hydrogen facility in Okeechobee County, Florida. The Cavendish NextGen Hydrogen Hub represents a significant pilot initiative aimed at providing FPL with valuable insights into clean fuels and their potential advantages for customers." />
+ <meta name="image" property="og:image" content="https://newsroom.nexteraenergy.com/image/NextEra+Facebook.jpg" />
+
+	<link rel="icon" type="image/png" sizes="16x16" href="images/faviconV2.png">
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+	<link href="thirdparty/font-awesome/css/font-awesome.min.css" type="text/css" rel="stylesheet" wd_script_id="font-awesome.min.css">
+	<link href="thirdparty/font-awesome/css/all.min.css" type="text/css" rel="stylesheet">
+	<script type="text/javascript" src="thirdparty/font-awesome/v4-shims.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+	<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+
+	<!-- <link rel="stylesheet" type="text/css" href="css/template.css"> -->
+	<link href="css/client.css" rel="stylesheet">
+
+
+	<link rel="stylesheet" type="text/css" href="css/footer.css">
+	<link rel="stylesheet" type="text/css" href="css/wdcontent.css">
+	<link rel="alternate" href="https://newsroom.nexteraenergy.com/news-releases?pagetemplate=rss" type="application/rss+xml" title="NextEra Energy Newsroom">
+	
+<!-- begin spin_special_output(head_end) -->
+<link rel="canonical" href="https://newsroom.nexteraenergy.com/Florida-Power-Light-Company-announces-completion-of-clean-hydrogen-hub?l=12" />
+<!-- end spin_special_output(head_end) -->
+</head>
+
+<body class="wd_pageid_20295 wd_item_page wd_item_123964">
+
+<header id="header">
+	<nav class="navbar navbar-expand-md bg-light py-0">
+		<div class="container justify-content-md-end">
+		<a class="navbar-brand" href="https://www.nexteraenergy.com/" tabindex="0"><img class="wd_logo" src="images/nextera_logo.png" alt="NextEra Logo"></a> <a class="wd_home-link" href="https://newsroom.nexteraenergy.com/" tabindex="0"> Newsroom</a>
+		<button class="navbar-toggler align-items-end" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarSupportedContent">
+			
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+<li class="nav-item  active"><a href="https://newsroom.nexteraenergy.com/news-releases" target="_self" class="nav-link " >News Releases</a></li>
+
+
+<li class="nav-item "><a href="https://newsroom.nexteraenergy.com/featured-stories" target="_self" class="nav-link " >Featured Stories</a></li>
+
+
+<li class="nav-item "><a href="https://newsroom.nexteraenergy.com/in-the-news" target="_self" class="nav-link " >In the News</a></li>
+
+
+<li class="nav-item "><a href="https://newsroom.nexteraenergy.com/digital-library" target="_self" class="nav-link " >Digital Library</a></li>
+
+</ul>
+			<div class="wd_search-icon"><a><img src="images/search_dark.svg" alt="Click to open search"></a></div>
+		</div>
+		</div>
+	</nav>
+		<div id="wd_search-container" class="container-fluid wd_gray-background">
+			<div class="container wd_search-wrapper">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="wd_close"><a><img src="images/close_dark.svg" alt="Click to close search"></a></div>	
+						<div class="wd_search_form_container"><form name="basic_search" method="get" action="https://newsroom.nexteraenergy.com/index.php?s=20322" class="wd_search_form wd_search_form_basic"><input type="hidden" name="s" value="search_results" /><input type="text" name="query" value="" size="32" placeholder="Enter Keyword" title="Enter Keyword" /> <input type="submit" name="submit" value="Search"></form>
+</div>					</div>
+				</div>
+			</div>
+		</div>
+</header>
+
+<main>
+	
+	
+	
+			<section class="container-fluid wd_gray-background wd_detail-header">
+		<div class="container">
+ 			<!-- <div class="row">
+				<div class="col-sm-12 breadcrumb wd_back-to">
+								<a href="https://newsroom.nexteraenergy.com/news-releases" class="nav">< Back to News Releases</a>
+												</div>
+			</div> -->
+			<div class="row">
+				<!-- <div class="col-md-7 wd_detail-wrap"> -->
+				<div class="col-md-12 wd_detail-wrap wd_featured-styling">
+										<h1 id="wd_detail-title" class="page_header"></h1>
+					<div id="wd_sub_heads" class="wd_subheadlines"></div>
+					<div id="wd_detail-date" class="wd_date"></div>
+				</div>
+				<!-- <div class="col-md-5 wd_image-wrap"> -->
+				<div class="col-md-12 wd_image-wrap pb-5 wd_featured-image">
+					<div id="wd_detail-img"></div>
+				</div>
+				<div class="wd_blue-line"></div>
+			</div>
+		</div>
+		<div class="row wd_white-background"></div>
+	</section>
+	<section class="container wd_content-wrapper">
+		<div class="row">
+			<div class="col-md-12 wd_content">
+				<div id="wd_printable_content" class="fr-view">
+<div class="wd_newsfeed_releases-detail">
+<div class="wd_to-move wd_hidden">
+	<div class="wd_title wd_language_left">Florida Power & Light Company announces completion of clean hydrogen hub </div>
+	
+	<ul class="wd_layout-inline wd_category_link_list"><li class="wd_category_link"><a href="https://newsroom.nexteraenergy.com/news-releases?category=771">NextEra Energy</a></li><li class="wd_category_link"><a href="https://newsroom.nexteraenergy.com/news-releases?category=773">Florida Power & Light Company</a></li><li class="wd_category_link"><a href="https://newsroom.nexteraenergy.com/news-releases?category=783">News Release</a></li></ul>
+	<div class="wd_date">Feb 8, 2024</div>
+</div>
+<div class="wd_left-column">
+	
+	
+			<div class="wd_captioned_image" style="float: left;  margin: 10px 10px 10px 0px; width: 150px;">
+				<div class="wd_image"><img src="/image/cavendish_primary_1440x650.jpeg" alt="Drone Picture of Cavendish Hydrogen Hub" border="0"/></div>
+				
+			</div>
+		
+	
+			
+		
+	
+	<style type="text/css">
+
+					div.PRN_ImbeddedAssetReference{
+						display: none;
+					}
+					div[id^="prni_dvprne"]{
+						display: none;
+					}
+				</style>
+
+	<div class="wd_body wd_news_body fr-view" wd_resize="formatNews" wd_print_url="https://newsroom.nexteraenergy.com/Florida-Power-Light-Company-announces-completion-of-clean-hydrogen-hub?printable=1"><p><strong>Florida Power &amp; Light Company announces completion of clean hydrogen hub&nbsp;</strong></p>
+
+<ul>
+	<li><em>The FPL Cavendish NextGen Hydrogen Hub is the first clean hydrogen plant of its kind in the Sunshine State.</em></li>
+	<li><em>This pilot project draws from local solar power to produce clean hydrogen.</em></li>
+	<li><em>Blending 5% hydrogen with natural gas will allow the company to learn more about clean hydrogen and explore ways to provide low-cost, clean energy to FPL&rsquo;s customers.</em></li>
+</ul>
+
+<p><strong>The topline: </strong>Florida Power &amp; Light Company announced it completed its pilot clean hydrogen facility located in Okeechobee County, Fla.</p>
+
+<p><strong>Why it matters:</strong> The Cavendish NextGen Hydrogen Hub is an important pilot project that will allow FPL to learn more about clean fuels and their potential benefits to customers.</p>
+
+<p><strong>A word from FPL President and CEO Armando Pimentel: </strong>&ldquo;Today marks another important step forward as we further our commitment to fostering a clean and cost-effective energy future that benefits our customers and Florida.&rdquo;</p>
+
+<p><strong>The details:</strong> The hydrogen hub draws solar power from a nearby FPL site. A portion of clean energy flows directly to the energy grid, while the rest powers hydrogen production equipment called electrolyzers. The hydrogen is then compressed, stored and blended with natural gas. For this project, a 5% blend of hydrogen will be tested in one of the three natural gas combustion turbines on site.</p>
+
+<p align="center">###</p>
+
+<p><strong>Florida Power &amp; Light Company</strong><br />
+As America&rsquo;s largest electric utility, Florida Power &amp; Light Company serves more customers and sells more power than any other utility, providing clean, affordable, reliable electricity to approximately 5.9 million accounts, or more than 12 million people. FPL operates one of the most fuel efficient and cleanest power generation fleets in the U.S. and in 2022 won the ReliabilityOne&reg;&nbsp;National Reliability Award for the seventh time in the last eight years. The company was also recognized by Escalent in 2022 as one of the most trusted U.S. electric utilities for the ninth consecutive year. FPL is a subsidiary of Juno Beach, Florida-based NextEra Energy, Inc. (NYSE: NEE), a clean energy company widely recognized for its efforts in sustainability, corporate responsibility, ethics and compliance, and diversity. NextEra Energy is ranked No. 1 in the electric and gas utilities industry in Fortune&rsquo;s 2023 list of &ldquo;World&rsquo;s Most Admired Companies&rdquo; and recognized on Fortune&rsquo;s 2021 list of companies that &ldquo;Change the World.&rdquo; NextEra Energy is also the parent company of NextEra Energy Resources, LLC, which, together with its affiliated entities, is the world&rsquo;s largest generator of renewable energy from the wind and sun and a world leader in battery storage. For more information about NextEra Energy companies, visit these websites:&nbsp;<a href="http://www.nexteraenergy.com/">www.NextEraEnergy.com</a>,&nbsp;<a href="http://www.fpl.com/">www.FPL.com</a>,&nbsp;<a href="http://www.nexteraenergyresources.com/">www.NextEraEnergyResources.com</a>.</p>
+
+<p>&nbsp;</p>
+</div>
+	
+	
+	
+	
+</div>
+
+<div class="wd_right-column">
+
+ 
+			
+			<div class="wd_related_content_wrapper">
+				<div class="wd_related_content_title">Related Content</div>
+				<div class="wd_items">
+				
+	        		<div class="wd_item wd_pageid_20295 wd_related_newsfeed_releases">
+					<div class="wd_source">News Releases</div>
+		        	   	
+			                <div class="wd_thumbnail"><img src="/image/FPL+Cavendish+H-Hub400x250.png"/></div>
+			            
+
+						
+		                	<div class="wd_date">Oct 11, 2023</div>
+						
+		                <div class="wd_title">
+							<a href="https://newsroom.nexteraenergy.com/Floridas-first-of-its-kind-clean-hydrogen-project-reaches-historic-milestone">Florida’s first-of-its-kind clean hydrogen project reaches historic milestone  </a>
+						</div>
+	                	<div class="wd_summary"><p>FPL is proud to announce that the first-of-its-kind clean hydrogen pilot project in Florida reached a significant construction milestone this month – the production of hydrogen.</p></div>
+	        		</div>
+					
+				
+	        		<div class="wd_item wd_pageid_34137 wd_related_stories">
+					<div class="wd_source">Featured Stories</div>
+		        	   	
+			                <div class="wd_thumbnail"><img src="/image/StevanyCole400x250.jpg"/></div>
+			            
+
+						
+		                	<div class="wd_date">Feb 1, 2024</div>
+						
+		                <div class="wd_title">
+							<a href="https://newsroom.nexteraenergy.com/The-lesson-this-FPL-engineer-and-mother-of-three-is-teaching-her-children">The lesson this FPL engineer and mother of three is teaching her children  </a>
+						</div>
+	                	<div class="wd_summary"><p>Whether she’s picking up trash with her three boys at the beach or creating more resilient, cost-effective energy grid for FPL customers at work, Cole is committed to building a cleaner world for future generations.</p></div>
+	        		</div>
+					
+				
+				</div>
+			</div>
+				
+			
+<div class="wd_related-featurebox">&nbsp;</div>
+</div>
+
+
+<!-- ITEMDATE: 2024-02-08 13:00:00 EST -->
+
+</div>
+</div>			</div>
+		</div>
+	</section>
+	
+	
+	
+	
+	
+	</main>
+
+<footer>
+	<div class="container-fluid copyright">
+		<div class="row">
+			<div class="col-md-1"></div>
+			<div class="col-md-10">
+				<ul class="socialbar">
+					<li><a href="https://www.facebook.com/nexteraenergy/" target="_blank"><i class="fa fa-facebook-square"></i></a></li>
+					<li><a href="https://twitter.com/nexteraenergy" target="_blank"><i class="fa fa-twitter"></i></a></li>
+					<li><a href="https://www.youtube.com/channel/UCbM4Y9uPpWcrSS9AiqWTbZA" target="_blank"><i class="fa-brands fa-youtube"></i></a></li>
+					<li><a href="https://www.linkedin.com/company/nextera-energy-inc/" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+				</ul>
+				<ul class="social-links text-center">
+					<li><a href="https://www.nexteraenergy.com/company.html" target="_blank">Our Company</a></li>
+					<li><a href="https://www.nexteraenergy.com/legal-notice.html" target="_blank">Terms &amp; Conditions</a></li>
+					<li><a href="https://www.nexteraenergy.com/privacy-policy.html" target="_blank">Privacy Policy</a></li>
+					<li><a href="https://www.nexteraenergy.com/safety-policy.html" target="_blank">Safety Policy</a></li>
+				</ul>
+			</div>
+			<div class="col-md-1"></div>
+		</div>
+		<div class="row">
+			<div class="col-md-1"></div>
+			<div class="col-md-10 text-center">
+				<p class="wd_small">Copyright © 2026 NextEra Energy, Inc. All rights reserved.</p>
+				<!-- <p class="wd_bbb"><a href="http://www.bbb.org/south-east-florida/business-reviews/electric-companies/florida-power-and-light-company-in-miami-fl-4917#sealclick" target="_blank"><img src="images/logo-bbb-accredited.svg" alt="better business bureau logo"></a></p> -->
+			</div>
+			<div class="col-md-1"></div>
+		</div>
+	</div> 
+</footer>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+
+	<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+
+	<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+
+	<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script>
+		//Latest JS needs to be scoped appropriately  
+		var $j11 = jQuery.noConflict();
+		console.log("Version: "+$j11.fn.jquery);
+	</script>
+	<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+	<script type="text/javascript">
+        $j11(document).on('ready', function () {
+			$j11(".slick-carousel").slick({
+				infinite: true,
+				arrows: true,
+				prevArrow: '<button type="button" class="slick-prev"></button>',
+				nextArrow: '<button type="button" class="slick-next"></button>',
+				slidesToShow: 3,
+				slidesToScroll: 3,
+				responsive: [{
+					breakpoint: 960,
+					settings: {
+						slidesToShow: 2,
+						slidesToScroll: 2,
+						infinite: true
+					}
+				}]
+			});
+        });
+  	</script>
+
+	<script src="js/wd_scripts.js"></script>
+
+
+<!-- begin spin_special_output(body_end) -->
+<script wd_script_id="piwik_tracking_code"></script>
+<!-- Piwik Tracking Code -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+
+  _paq.push(["setCustomVariable", 1, "Content Type", "News Releases Feed", "page"]);
+
+  _paq.push(["setCustomVariable", 3, "Navigation Page", "News Releases", "page"]);
+
+  _paq.push(["trackPageView"]);
+  _paq.push(["enableLinkTracking"]);
+  (function() {
+    var u="//stats.drivetheweb.com/";
+    _paq.push(["setTrackerUrl", u+"piwik.php"]);
+    _paq.push(["setSiteId", 6854]);
+    var d=document, g=d.createElement("script"), s=d.getElementsByTagName("script")[0];
+    g.type="text/javascript"; g.async=true; g.defer=true; g.src=u+"piwik.js"; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript>
+	<img src="https://stats.drivetheweb.com/piwik.php?idsite=6854&rec=1" style="border:0" alt="" />
+</noscript>
+<!-- End Piwik Tracking Code -->
+		
+<!-- end spin_special_output(body_end) -->
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ea9a195b32ea2f',t:'MTc4NDY0MTA2Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

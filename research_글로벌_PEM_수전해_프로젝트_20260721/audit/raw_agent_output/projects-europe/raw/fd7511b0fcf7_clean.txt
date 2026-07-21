@@ -1,0 +1,39 @@
+Air Liquide Normand’Hy
+One of the world's largest electrolyzers
+At the heart of the Port-Jérôme industrial basin in Normandy, Air Liquide is building one of the world's largest PEM electrolyzers. With a capacity of 200 MW, this large-scale facility aims to produce renewable and low-carbon hydrogen on a large scale, to accelerate the energy transition in industry and mobility.
+The Air Liquide Normand'Hy project in brief
+- 
+          Air Liquide received support from the French government as part of the French Plan de Relance (Recovery Plan)(1) and France 2030(2). 
+- 
+          Signature of an agreement with TotalEnergies to supply its Gonfreville refinery with renewable, low-carbon hydrogen. 
+- 
+          Inauguration of the Air Liquide and Siemens Energy Gigafactory, enabling the mass production of electrolyzer components. 
+- 
+          Air Liquide invested in the hydrogen supply chain to support the acceleration of low-carbon mobility on the Seine Axis (area from Le Havre to Paris), and signed a contract with HysetCo. 
+- 
+          Earthworks and creation of wetland compensation areas. 
+- 
+          Civil engineering works (first pile). 
+- 
+          Staggered (sequential) arrival of electrolysis modules (12 in total). 
+With a capacity of 200 MW, the Air Liquide Normand'Hy electrolyzer is one of the world's largest under construction using PEM (Proton Exchange Membrane) technology. It is the cornerstone of the project to decarbonize the Normandy industrial basin, which Air Liquide is leading alongside major industrial players present in this territory. It will avoid the emission of up to 250,000 tonnes of CO₂ per year. Located in the Port-Jérôme industrial zone, this strategic project aims to:
+- Supply industrial players in the basin with renewable, low-carbon hydrogen for three-quarters of its production capacity, such as the TotalEnergies refinery, in order to contribute to the decarbonization of their industrial activities
+- Develop low-carbon mobility on the Seine Axis (France) for one-quarter of its production capacity. Air Liquide has notably signed a contract to supply renewable hydrogen to HysetCo's vehicle fleet
+This ambitious electrolyzer project represents an investment of more than €400 million for the Group. In parallel, to continue building a low-carbon hydrogen ecosystem in the Normandy industrial basin, Air Liquide has decided to invest €50 million in a new hydrogen packaging and delivery supply chain to refueling stations along the Seine Axis, to help decarbonize mobility.
+- 
+    200 MW capacity Equivalent to the average annual electricity consumption of more than 235,000 French households. 
+- 
+    Up to 250,000 tonnes of CO₂ avoided per year 
+- 
+    Up to 28,000 tonnes of hydrogen produced per year 
+- 
+    More than €450 M invested by the Group for the entire project 
+How a PEM electrolyzer works
+The proton exchange membrane (PEM) electrolyzer uses electricity to split water molecules into hydrogen and oxygen by means of electrolysis. This technological process occurs in an electrolyzer made up of individual PEM cells that are stacked one on top of the other. Within each cell, a proton-conducting polymer membrane physically separates the hydrogen and oxygen. When the electric current is turned on, the water molecules dissociate: the protons cross the membrane and are transformed into hydrogen gas, while the oxygen is removed separately. Discover how this technology works in video.
+Funding
+Who supports the Air Liquide Normand'hy project?
+The Air Liquide Normand'Hy electrolyzer project received has been funded by the French State as part of the France Relance plan (Recovery Plan)(1) and France 2030(2).
+The “Axe Seine” hydrogen packaging site project has received support from the European Union and the Normandy Region to carry out technical and economic feasibility studies.
+Discover more
+1. A French government program launched to revive the French economy, focusing on the ecological transition, business competitiveness and social cohesion
+2. An investment plan aimed at transforming key sectors of the French economy through innovation
