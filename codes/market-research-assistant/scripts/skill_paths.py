@@ -1,4 +1,4 @@
-"""skill_paths.py — factsheet-research 스킬 공통 경로/부트스트랩 모듈.
+"""skill_paths.py — market-research-assistant 스킬 공통 경로/부트스트랩 모듈.
 
 모든 스크립트는 이 모듈을 **최상단**에서 import 한다. import 시점에 UTF-8 콘솔
 부트스트랩이 1회 실행되므로(단일 지점), 한글 출력이 깨지지 않는다.
@@ -35,7 +35,7 @@ _bootstrap_utf8()
 
 # --- 경로 해석 ------------------------------------------------------------
 def skill_root() -> Path:
-    """스킬 루트(factsheet-research/) 절대경로. 이 파일은 scripts/ 아래에 있어
+    """스킬 루트(market-research-assistant/) 절대경로. 이 파일은 scripts/ 아래에 있어
     어느 작업폴더에서 실행하든 안정적으로 루트를 가리킨다."""
     return Path(__file__).resolve().parent.parent
 
@@ -214,7 +214,7 @@ def _selfcheck() -> int:
 def main(argv=None) -> int:
     import argparse
     p = argparse.ArgumentParser(prog="skill_paths",
-                                description="factsheet-research 공통 경로/preflight")
+                                description="market-research-assistant 공통 경로/preflight")
     g = p.add_mutually_exclusive_group()
     g.add_argument("--preflight", action="store_true",
                    help="의존성 점검(필수 하나라도 누락 시 exit 1)")

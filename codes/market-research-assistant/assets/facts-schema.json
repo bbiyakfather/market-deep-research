@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://factsheet-research/assets/facts-schema.json",
-  "title": "factsheet-research facts.jsonl record",
+  "$id": "https://market-research-assistant/assets/facts-schema.json",
+  "title": "market-research-assistant facts.jsonl record",
   "description": "facts.jsonl 각 라인은 kind로 판별되는 fact 또는 evidence. 이 파일이 facts_db.py 검증의 단일 진실원천이다.",
   "oneOf": [
     { "$ref": "#/$defs/fact" },

@@ -399,11 +399,13 @@ def _selfcheck() -> int:
         f.update(over)
         return f
 
+    sha = "a" * 64  # 유효한 SHA-256 형식(^[0-9a-f]{64}$)
+
     def valid_ev(eid="E001", **over):
         e = {
             "kind": "evidence", "id": eid, "fact_id": "F001", "type": "table_cell",
             "source_url": "https://example.com/x.pdf", "archived_url": None,
-            "local": "_sources/x.pdf", "sha256": "abc", "accessed_at": "2025-01-01T00:00:00+09:00",
+            "local": "_sources/x.pdf", "sha256": sha, "accessed_at": "2025-01-01T00:00:00+09:00",
             "http_status": 200, "locator": {"page": 12, "row": 3, "col": 2},
             "verbatim": None, "source_role": "원출처",
             "grade": {"authority": "A", "independence": "C", "directness": "A", "recency": "A"},
@@ -447,6 +449,9 @@ def _selfcheck() -> int:
                    ("api_response", {"endpoint": "/x", "params": {}, "json_path": "$.a", "response_sha256": "h"})):
         bad = valid_ev(type=t, locator=loc, verbatim="원문", sha256=None)
         assert any("sha256" in e for e in validate_record(bad, schema)), (t, validate_record(bad, schema))
+    # sha256 형식 위반(64-hex 아님)도 거부
+    bad = valid_ev(type="table_cell", sha256="notahash")
+    assert any("pattern 위반" in e for e in validate_record(bad, schema)), validate_record(bad, schema)
     # negative_search/calculation은 sha256 선택(해시 대상 파일이 없음)
     ok = valid_ev(type="negative_search", locator={"query": "q", "scope": "s", "as_of": "2025"}, sha256=None)
     assert validate_record(ok, schema) == [], validate_record(ok, schema)
@@ -541,7 +546,7 @@ def _selfcheck() -> int:
              "evidence_tids": ["TE001"], "proposed_grade": pg, "note": "IR 확인"},
             {"kind": "evidence", "tid": "TE001", "fact_tid": "TF001", "type": "text_quote",
              "source_url": "https://x", "accessed_at": "t", "locator": {"page": 1},
-             "verbatim": "원문", "sha256": "abc123", "source_role": "원출처", "proposed_grade": pg},
+             "verbatim": "원문", "sha256": sha, "source_role": "원출처", "proposed_grade": pg},
         ]
         r1 = ingest(wd, inp)
         assert r1 == {"added": 2, "facts": 1, "evidence": 1, "total": 2}, r1

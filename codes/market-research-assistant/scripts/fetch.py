@@ -1,4 +1,4 @@
-"""fetch.py — factsheet-research 자체 fetch/extract (유료 API 무의존).
+"""fetch.py — market-research-assistant 자체 fetch/extract (유료 API 무의존).
 
 핵심 설계 3(plan-v2) 구현: 보안경계 + 폴백 사다리 + 원본/정제본 이중 보존.
 

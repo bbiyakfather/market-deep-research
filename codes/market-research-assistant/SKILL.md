@@ -1,5 +1,5 @@
 ---
-name: factsheet-research
+name: market-research-assistant
 description: >-
   기술사업화 기관용 증빙형(fact + evidence) 시장조사 보고서를 생성한다. 기술동향·산업동향·
   기관/기업 실사·시장조사 요청에 사용한다. 트리거 예: "OO 기술동향 조사해줘", "OO기업 실사해줘",
@@ -9,7 +9,7 @@ description: >-
   보고서가 필요 없는 일반 질문에는 트리거하지 않는다.
 ---
 
-# factsheet-research — 증빙형 시장조사 보고서 스킬
+# market-research-assistant — 증빙형 시장조사 보고서 스킬
 
 > **한 줄**: 조사마다 수치가 달라지는 문제를 [조사내용 → 출처 → 증빙] 증거구조 + 사실대장 +
 > 검증게이트로 제거하고, 고객용 팩트시트 PDF와 내부 audit 번들을 분리 산출한다.
