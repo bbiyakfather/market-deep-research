@@ -26,9 +26,11 @@ def _now() -> str:
 
 
 def _pandoc_html(md_path: Path, html_out: Path, resource_dir: Path) -> None:
+    # title 은 문서 자체 H1 을 쓰도록 비워 둔다(하드코딩 제목이 표지에 찍히는 것 방지).
+    # pandoc 은 빈 title 에 경고만 내고 정상 산출한다.
     cmd = ["pandoc", str(md_path), "-f", "gfm", "-t", "html5", "--standalone",
            "--embed-resources", f"--resource-path={resource_dir}",
-           f"--include-in-header={STYLE}", "--metadata", "title=factsheet",
+           f"--include-in-header={STYLE}", "--metadata", "title=",
            "-o", str(html_out)]
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:
@@ -39,12 +41,22 @@ def _chrome_pdf(html_path: Path, pdf_out: Path) -> None:
     chrome = _find_chrome()
     if not chrome:
         raise RuntimeError("Chrome 미발견 — G0 preflight 확인")
+    # 렌더 전 기존 PDF 삭제: 잠긴(뷰어가 연) 파일에 Chrome 이 덮어쓰기 실패해도 옛 파일이
+    # size≠0 로 남아 '성공'으로 오검증되던 false positive 차단. 잠김이면 명시적 에러로 노출.
+    try:
+        pdf_out.unlink()
+    except FileNotFoundError:
+        pass
+    except PermissionError as e:
+        raise RuntimeError(f"기존 PDF 잠김 — 뷰어 닫고 재시도: {pdf_out} ({e})")
     cmd = [chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
            "--no-pdf-header-footer", f"--print-to-pdf={pdf_out}",
            html_path.resolve().as_uri()]                  # file:// 퍼센트인코딩(한글경로)
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    # encoding 명시: 한글 Windows(cp949) 기본 디코딩이 Chrome stderr 바이트에서 죽어
+    # 에러 메시지를 못 읽던 문제 차단(errors=replace 로 렌더 실패 원인은 항상 노출).
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if not pdf_out.exists() or pdf_out.stat().st_size == 0:
-        raise RuntimeError(f"Chrome PDF 실패(size 0): {r.stderr[-400:]}")
+        raise RuntimeError(f"Chrome PDF 실패(생성 안 됨): {r.stderr[-400:]}")
 
 
 def render(md_path: Path | str, pdf_out: Path | str | None = None,
@@ -67,6 +79,9 @@ def demo() -> None:
                       "| 매출 | 300.9조원 | A |\n\n> ⚠ 주의: 예시 데이터.\n", encoding="utf-8")
         r = render(md, Path(td) / "out.pdf")
         assert r["ok"] and r["size"] > 1000, r
+        # 덮어쓰기(unlink 후 재생성) 경로도 정상 — 잠기지 않은 파일은 그대로 갱신
+        r_again = render(md, Path(td) / "out.pdf")
+        assert r_again["ok"] and r_again["size"] > 1000, r_again
         # 한글 파일명 경로도 렌더되는지
         kd = Path(td) / "한글폴더"; kd.mkdir()
         md2 = kd / "보고서.md"; md2.write_text("# 한글\n\n내용 300조원(F001).\n", encoding="utf-8")

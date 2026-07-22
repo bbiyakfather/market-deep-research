@@ -6,7 +6,8 @@
   3. 모든 (Fxxx) 가 대장 존재 + status∈{confirmed} + 값 의미 대조(태그 앞 숫자 ↔ 대장 value)
   4. confirmed 인데 본문 미사용 사실(유실 점검)
   5. evidence 필수필드 누락 0, text_quote 는 verbatim 필수
-  6. source_capture 실재(risk=high 핵심수치 필수)
+  6. source_capture 실재(본문에 쓰인 confirmed '핵심수치' 전건 필수 — risk 태깅 무관)
+  7. 본문 대표 이미지(증빙캡처·차트·도식) 존재 + 생성했으나 미결박 캡처 표면화
 
 부록 경계 마커: '<!-- FACTSHEET:APPENDIX -->' 또는 '## 부록' 이후는 부록.
 
@@ -107,15 +108,25 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
                     failures.append(f"[증거필드] {eid} '{k}' 누락")
             if e.get("type") == "text_quote" and not e.get("verbatim"):
                 failures.append(f"[verbatim] {eid} text_quote 인데 verbatim 없음")
-        if f.get("risk") == "high":
-            caps = [evidence.get(e, {}).get("capture") for e in f.get("evidence_ids", [])]
+        # G2 증빙: 본문에 쓰인 confirmed '핵심수치'(수치값 보유)는 source_capture 필수.
+        # risk=high 태깅 여부와 무관하게 강제 — [Bx] 반박게이트 미실행 시 캡처 0 통과되던 구멍 차단.
+        is_core_num = bool(_digits((f.get("value") or {}).get("raw", "")))
+        if f["id"] in used and (is_core_num or f.get("risk") == "high"):
+            caps = [(evidence.get(e) or {}).get("capture") for e in f.get("evidence_ids", [])]
             caps = [c for c in caps if c]
             if not caps:
-                failures.append(f"[증빙] high-risk {f['id']} source_capture 없음")
-            else:
-                for c in caps:
-                    if not (wp.root / c).exists() and not Path(c).exists():
-                        failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {c}")
+                failures.append(f"[증빙] 핵심수치 {f['id']} source_capture 없음")
+            elif not any((wp.root / c).exists() or Path(c).exists() for c in caps):
+                failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
+
+    # 7. 대표 이미지(도판) 게이트: 증빙형 보고서는 본문에 이미지가 있어야 한다.
+    if not re.search(r"!\[[^\]]*\]\([^)]+\)|<img\b|<figure\b", body, re.I):
+        failures.append("[도판] 본문 대표 이미지 0장(증빙캡처·차트·도식 누락)")
+    # 생성해 두고 본문에 안 실은 캡처 표면화(완료 시 캡처 0 재발 방지)
+    for e in evidence.values():
+        cap = e.get("capture")
+        if cap and (wp.root / cap).exists() and Path(cap).name not in body:
+            warnings.append(f"[미결박캡처] {cap} 생성됐으나 본문 미참조")
 
     if conversion:
         for f in facts.values():
@@ -152,14 +163,19 @@ def demo() -> None:
                      "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
                      "risk": "normal", "status": "pending"})
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
-                         "source_url": "https://dart.fss.or.kr", "sha256": "h"})
+                         "source_url": "https://dart.fss.or.kr", "sha256": "h",
+                         "capture": "_captures/f001.jpg"})   # 핵심수치 증빙 결박
         db.add_verify_event("F001", "lead", "reread")
         db.set_status("F001", "confirmed")
 
         wp = WorkPaths(wd)
-        good = "삼성전자 2024년 매출은 300.9조원(F001) 입니다.\n"
+        (wp.root / "_captures").mkdir(parents=True, exist_ok=True)
+        (wp.root / "_captures" / "f001.jpg").write_bytes(b"\xff\xd8\xff")  # 더미 캡처 파일
+        # 정상 = 핵심수치에 캡처 결박 + 본문에 대표 이미지 존재
+        good = ("삼성전자 2024년 매출은 300.9조원(F001) 입니다.\n\n"
+                "![매출 증빙](_captures/f001.jpg)\n")
         (wp.root / "good.md").write_text(good, encoding="utf-8")
-        assert verify(wp.root / "good.md", wd)["ok"], "정상 보고서가 FAIL"
+        assert verify(wp.root / "good.md", wd)["ok"], verify(wp.root / "good.md", wd)
 
         bad_untag = "시장 규모는 45조원으로 성장했다.\n"          # 무태그
         (wp.root / "u.md").write_text(bad_untag, encoding="utf-8")
@@ -174,6 +190,27 @@ def demo() -> None:
         appx = good + "\n## 부록\n- F001 전수표 999조원(F001)\n"
         (wp.root / "a.md").write_text(appx, encoding="utf-8")
         assert verify(wp.root / "a.md", wd)["ok"], "부록이 본문검사 오염"
+
+        # 핵심수치인데 캡처 없음 → 증빙게이트 FAIL (risk=normal 이어도 강제)
+        db.add_fact({"claim": "신규 용량 4GW",
+                     "context": {"metric": "capacity", "entity": "글로벌", "geography": "GL", "period": "2025"},
+                     "value": {"raw": "4", "unit": "GW"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
+                     "risk": "normal", "status": "pending"})
+        db.add_evidence({"fact_id": "F002", "type": "text_quote", "verbatim": "surpass 4 GW",
+                         "source_url": "https://iea.org", "sha256": "h2"})   # capture 없음
+        db.add_verify_event("F002", "lead", "reread")
+        db.set_status("F002", "confirmed")
+        nocap = "신규 용량은 4GW(F002) 이다.\n\n![](_captures/f001.jpg)\n"
+        (wp.root / "nc.md").write_text(nocap, encoding="utf-8")
+        r2 = verify(wp.root / "nc.md", wd)
+        assert not r2["ok"] and any("증빙" in x for x in r2["failures"]), r2
+
+        # 대표 이미지 0장 → 도판게이트 FAIL
+        noimg = "삼성전자 2024년 매출은 300.9조원(F001) 입니다.\n"
+        (wp.root / "ni.md").write_text(noimg, encoding="utf-8")
+        r3 = verify(wp.root / "ni.md", wd)
+        assert not r3["ok"] and any("도판" in x for x in r3["failures"]), r3
     print(f"[{_now()}] verify_facts demo OK")
 
 
