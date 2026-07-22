@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "factsheet-research facts + evidence schema (v3)",
+  "title": "market-deep-research facts + evidence schema (v3)",
   "description": "facts_db.py 의 검증 기준. 외부 jsonschema 라이브러리 없이 required/enum/const 를 직접 읽어 경량 검증한다.",
   "enums": {
     "grade": ["A", "B", "C", "D"],

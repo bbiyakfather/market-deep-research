@@ -24,7 +24,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 # --- 스킬 루트 ---------------------------------------------------------------
-SKILL_ROOT = Path(__file__).resolve().parent.parent          # .../factsheet-research/
+SKILL_ROOT = Path(__file__).resolve().parent.parent          # .../market-deep-research/
 REFERENCES = SKILL_ROOT / "references"
 ASSETS = SKILL_ROOT / "assets"
 SCRIPTS = SKILL_ROOT / "scripts"
@@ -103,7 +103,7 @@ def _stamp() -> str:
 
 def demo() -> None:
     """self-check: 경로 해석이 스킬 루트를 정확히 가리키고, 작업폴더 구조가 생성되는지."""
-    assert SKILL_ROOT.name == "factsheet-research", SKILL_ROOT
+    assert SKILL_ROOT.name == "market-deep-research", SKILL_ROOT
     assert (SKILL_ROOT / "scripts" / "skill_paths.py").exists()
 
     assert slugify("삼성전자 2024 매출 / 시장:규모?") == "삼성전자_2024_매출_시장규모"

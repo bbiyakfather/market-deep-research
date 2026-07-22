@@ -60,7 +60,7 @@ def _ascii_ca() -> str | None:
     for base in (os.environ.get("ProgramData", r"C:\ProgramData"),
                  (os.environ.get("SystemDrive", "C:") + "\\")):
         try:
-            dst = Path(base) / "factsheet-research" / "cacert.pem"
+            dst = Path(base) / "market-deep-research" / "cacert.pem"
             dst.parent.mkdir(parents=True, exist_ok=True)
             if not dst.exists() or dst.stat().st_size != Path(ca).stat().st_size:
                 shutil.copyfile(ca, dst)

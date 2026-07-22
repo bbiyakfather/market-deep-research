@@ -1,9 +1,9 @@
-"""install.py — 개발본을 설치본(~/.claude/skills/factsheet-research/)으로 해시검증 복사.
+"""install.py — 개발본을 설치본(~/.claude/skills/market-deep-research/)으로 해시검증 복사.
 
 SKILL.md · references/ · scripts/ · assets/ 를 복사하고 각 파일 SHA-256 을 원본과 대조.
 __pycache__ · *.pyc · 작업폴더(research_*) 는 제외.
 
-CLI: python install.py            # 기본 대상 ~/.claude/skills/factsheet-research
+CLI: python install.py            # 기본 대상 ~/.claude/skills/market-deep-research
      python install.py --target <dir>
      python install.py --dry-run
 """
@@ -16,7 +16,7 @@ from pathlib import Path
 
 from skill_paths import SKILL_ROOT
 
-DEFAULT_TARGET = Path.home() / ".claude" / "skills" / "factsheet-research"
+DEFAULT_TARGET = Path.home() / ".claude" / "skills" / "market-deep-research"
 INCLUDE = ["SKILL.md", "references", "scripts", "assets"]
 EXCLUDE_DIRS = {"__pycache__"}
 EXCLUDE_SUFFIX = {".pyc", ".tmp"}

@@ -1,5 +1,5 @@
 ---
-name: factsheet-research
+name: market-deep-research
 description: >-
   증빙형(evidence-based) 시장조사 보고서 생성 오케스트레이터. 팀리드(메인 세션)가 병렬
   조사 서브에이전트를 지휘하고, 보고서 진입 전 모든 사실을 원문 재열람으로 전건 재검증하며,
@@ -10,7 +10,7 @@ description: >-
   비교·실태·실적·딜 조사". 제외 — 단순 사실확인·한두 출처 요약(WebSearch 직접).
 ---
 
-# factsheet-research — 증빙형 시장조사 보고서
+# market-deep-research — 증빙형 시장조사 보고서
 
 내비온(기술사업화 기관)의 반복 업무(기술동향·산업동향·기관/기업 실사·시장조사)를 위한
 스킬. **AI 확률적 답변으로 조사마다 수치가 달라지는 문제**를, `fact + evidence[]` 증거모델
