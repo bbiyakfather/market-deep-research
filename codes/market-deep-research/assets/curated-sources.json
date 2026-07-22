@@ -1,0 +1,33 @@
+{
+  "_comment": "조사유형별 1차출처 도메인 + --type 백엔드 매핑. search.py 는 여기 정의된 --type 만 지원(미지원은 명시적 실패). Phase0 공식 무료 API 색인 겸용.",
+  "_updated": "2026-07-22",
+
+  "type_backends": {
+    "web":      {"backend": "ddg+searx", "note": "일반 웹"},
+    "news":     {"backend": "ddg+searx", "hint": "after: 연산자 권장"},
+    "academic": {"backend": "arxiv", "api": "http://export.arxiv.org/api/query"},
+    "filing":   {"backend": "sec_edgar", "api": "https://efts.sec.gov/LATEST/search-index?q="}
+  },
+
+  "phase0_apis": {
+    "_comment": "generic fetch 전에 우선 시도하는 공식/무료 엔드포인트(R5). 실패 시 사다리로 폴백.",
+    "arxiv":     {"pattern": "arxiv.org", "api": "http://export.arxiv.org/api/query"},
+    "sec_edgar": {"pattern": "sec.gov",   "api": "https://efts.sec.gov/LATEST/search-index"},
+    "wikipedia": {"pattern": "wikipedia.org", "api": "https://{lang}.wikipedia.org/w/api.php"},
+    "wayback":   {"pattern": "*", "api": "http://archive.org/wayback/available?url="}
+  },
+
+  "mcp_phase0": {
+    "_comment": "세션에 붙어있으면 오케스트레이터가 Phase0 1차소스로 기회적 사용(무료). 없으면 무시.",
+    "opendart": "DART 공시·재무(기업 실사)",
+    "kosis": "국가통계포털(산업동향·시장규모)",
+    "kipris": "특허(기술동향)",
+    "kakaomap": "장소·주소(entity-identity 보조)"
+  },
+
+  "curated_domains": {
+    "기술동향": ["arxiv.org", "ieee.org", "*.edu", "patents.google.com", "kipris.or.kr"],
+    "산업동향": ["kosis.kr", "dart.fss.or.kr", "oecd.org", "iea.org", "statista.com"],
+    "기관기업실사": ["dart.fss.or.kr", "sec.gov", "opencorporates.com", "*.go.kr"]
+  }
+}
