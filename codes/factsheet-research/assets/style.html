@@ -1,0 +1,45 @@
+<style>
+/* factsheet-research 고객용 보고서 스타일 — GitHub markdown + Malgun Gothic + A4.
+   pandoc --include-in-header 로 <head> 에 주입된다. 오프라인 렌더(네트워크 접근 없음). */
+@page { size: A4; margin: 18mm 16mm; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: "Malgun Gothic", "맑은 고딕", -apple-system, sans-serif;
+  font-size: 10.5pt; line-height: 1.6; color: #24292f; max-width: 100%;
+}
+h1 { font-size: 20pt; border-bottom: 2px solid #d0d7de; padding-bottom: .3em; }
+h2 { font-size: 15pt; border-bottom: 1px solid #d8dee4; padding-bottom: .25em; margin-top: 1.4em; }
+h3 { font-size: 12.5pt; }
+a { color: #0969da; text-decoration: none; word-break: break-all; }
+code, pre { font-family: Consolas, "D2Coding", monospace; background: #f6f8fa; border-radius: 4px; }
+code { padding: .1em .3em; font-size: 90%; }
+pre { padding: 10px; overflow-x: auto; }
+
+/* 표: 근거표(사실|수치|맥락|출처|등급|증빙) */
+table { border-collapse: collapse; width: 100%; margin: .8em 0; font-size: 9.5pt; }
+th, td { border: 1px solid #d0d7de; padding: 6px 8px; text-align: left; vertical-align: top; }
+th { background: #f6f8fa; font-weight: 600; }
+tr:nth-child(even) td { background: #fafbfc; }
+
+/* 증빙 캡처 박스(수치 ↔ 원문 매핑) */
+.evidence-box { border: 1px solid #d0d7de; border-radius: 6px; padding: 8px; margin: 10px 0; background: #fff; }
+.evidence-box img { max-width: 100%; border: 1px solid #eaecef; border-radius: 4px; }
+.evidence-box .cap { font-size: 8.5pt; color: #57606a; margin-top: 4px; }
+
+/* 신뢰수준 배지(표지·검증요약) + 핵심수치 카드(Executive) */
+.badge { display: inline-block; font-size: 8.5pt; padding: 1px 7px; border-radius: 10px; border: 1px solid; }
+.badge.a { color: #1a7f37; border-color: #1a7f37; background: #eafbe7; }
+.badge.b { color: #9a6700; border-color: #9a6700; background: #fff8c5; }
+.badge.cd { color: #cf222e; border-color: #cf222e; background: #ffebe9; }
+.kpi-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.kpi { flex: 1 1 150px; border: 1px solid #d0d7de; border-radius: 8px; padding: 10px 12px; }
+.kpi .n { font-size: 16pt; font-weight: 700; color: #0969da; }
+.kpi .l { font-size: 9pt; color: #57606a; }
+
+/* 주의/한계/상충 콜아웃 */
+blockquote { border-left: 4px solid #d0a215; background: #fffbe6; margin: .8em 0; padding: 6px 12px; color: #4d3800; }
+.warn { border-left-color: #cf222e; background: #ffebe9; color: #82071e; }
+
+/* 각 부(챕터) 페이지 시작 힌트(선택) */
+h2.section-break { page-break-before: always; }
+</style>
