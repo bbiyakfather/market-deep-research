@@ -105,6 +105,9 @@ description: >-
 - 고객용 `report.md`: **11부 표준목차**(표지→Executive→개요→테마별 본론→시장수치→플레이어→
   검증요약→상충→상태변화→한계·반론→요약·인사이트→부록). 조사유형별 변형은 `report-format.md`.
 - 내부 `audit/`: facts 전수·폐기목록+사유·실패소스·검증이력·raw·세션 저널.
+- **세부주제별 대표 이미지(도판)**: `harvest_images.py` 로 ① 소스 PDF 도판 크롭(출처 자동
+  일치·최우선) ② 확보 페이지 이미지 ③ 이미지 검색(openverse·commons) 순 수확 → 팀리드
+  육안 선별(Read) → `[그림]` 캡션+출처 결박(`references/image-research.md`). `_images/` 저장.
 
 ### [G3] verify_facts + manifest (실패 0)
 - `scripts/verify_facts.py`: 본문/생성부록 분리 파싱 · 무태그 숫자·통화·비율·표셀 탐지(태그
@@ -137,5 +140,6 @@ description: >-
 | `references/extract-recipes.md` | 증거유형별 추출·PDF fitz·특수소스 recipe |
 | `references/evidence-capture.md` | source_capture vs reconstructed_excerpt·메타 결박 |
 | `references/report-format.md` | 고객 11부 목차·유형변형·내부 audit 양식 |
+| `references/image-research.md` | 세부주제 대표 이미지(도판) 수확·선별·라이선스 |
 | `references/verification-gates.md` | G0~G5 상세·4차원 등급·claim-graph·환산 |
 | `references/entity-identity.md` | 기관·기업 동일성 확인 게이트 |

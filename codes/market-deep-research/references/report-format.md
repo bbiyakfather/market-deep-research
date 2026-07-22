@@ -37,3 +37,4 @@ verify_facts.py 가 이 마커 이후를 부록으로 보고 '본문 사용'에�
 ## 렌더
 `render_pdf.py`(pandoc gfm→html --embed-resources + style.html → HeadlessChrome, 오프라인·한글경로).
 증빙 이미지는 `_captures/` 상대경로로 참조 → pandoc 이 data URI 내장.
+대표 이미지(도판)는 `_images/` 상대경로 + `[그림]` 캡션·출처 병기(`image-research.md` 규율).
