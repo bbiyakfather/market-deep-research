@@ -1,0 +1,33 @@
+{
+  "_comment": "팀리드 판정 Wave 2 (2026-07-23)",
+  "discards": {},
+  "corrections": {
+    "W2-2-toss-v2-mcp#8": {
+      "statement": "토스페이먼츠 개발자센터는 AI 도구용 자원으로 LLM Quick Reference, MCP 서버, llms.txt(https://docs.tosspayments.com/llms.txt)를 제공하며, 문서 URL 끝에 .md를 붙이면 markdown 원본을 받을 수 있고 Cursor·VS Code는 딥링크로 MCP 원클릭 설치를 지원한다.",
+      "note": "자연어 예시 문구는 재열람에서 직접 확인 못함 → 확인된 범위(자원 3종·.md 팁·딥링크)로 축소"
+    },
+    "W2-3-project-gaps#10": {
+      "statement": "개인정보보호위원회가 2024-07-19 공개한 「인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서」는 AI 개발을 위해 웹에 공개된 개인정보를 수집·처리할 때의 법적 기준을 다루는 공식 안내서다(크롤링 실습 시 개인정보 유의 참고자료).",
+      "note": "재열람 확인 범위(제목·게시일·주제)로 축소. 커먼크롤 등 세부 열거는 원문 재확인 안 되어 제거"
+    }
+  },
+  "lead_reread_confirms": [
+    "W2-1-cursor-figma-latest#0", "W2-1-cursor-figma-latest#1", "W2-1-cursor-figma-latest#2",
+    "W2-1-cursor-figma-latest#3", "W2-1-cursor-figma-latest#4", "W2-1-cursor-figma-latest#5",
+    "W2-1-cursor-figma-latest#9", "W2-1-cursor-figma-latest#10", "W2-1-cursor-figma-latest#11",
+    "W2-2-toss-v2-mcp#0", "W2-2-toss-v2-mcp#2", "W2-2-toss-v2-mcp#3", "W2-2-toss-v2-mcp#4",
+    "W2-2-toss-v2-mcp#5", "W2-2-toss-v2-mcp#7", "W2-2-toss-v2-mcp#8", "W2-2-toss-v2-mcp#10",
+    "W2-3-project-gaps#0", "W2-3-project-gaps#1", "W2-3-project-gaps#2", "W2-3-project-gaps#3",
+    "W2-3-project-gaps#4", "W2-3-project-gaps#5", "W2-3-project-gaps#8", "W2-3-project-gaps#9",
+    "W2-3-project-gaps#10", "W2-3-project-gaps#11"
+  ],
+  "notes": {
+    "W2-1-cursor-figma-latest#9": "재열람 확인: Professional 3,000 / Organization 3,500 / Enterprise 4,250 credits/월(Full seat)",
+    "W2-1-cursor-figma-latest#10": "negative 확인 — AI credits 문서에 MCP 언급 전무(재열람). Figma Make는 30~100+ credits 소모로 목록에 존재",
+    "W2-2-toss-v2-mcp#5": "재열람 확인: 'v2는 아직 모바일 SDK를 지원하지 않아요' — RN/Flutter는 v1 필요",
+    "W2-2-toss-v2-mcp#10": "재열람 확인: requestBillingAuth→authKey→빌링키 발급→승인 API, 스케줄링 자체 구현 필요, 테스트 인증번호 000000",
+    "W2-3-project-gaps#1": "velog 글은 loadPaymentWidget 패턴 = v1 계열 SDK. 리소스 소개 시 'v1 기반, v2와 다름' 주의 표기",
+    "W2-3-project-gaps#2": "재열람 확인: nextjs/saas-starter 활성(16k stars), Stripe Checkout+Customer Portal 포함",
+    "W2-3-project-gaps#8": "재열람 확인: auth-ui 저장소 2025-10-23 아카이브 + 2024-02-07부터 유지보수 중단 공지 — 가이드에서 비추천 처리"
+  }
+}

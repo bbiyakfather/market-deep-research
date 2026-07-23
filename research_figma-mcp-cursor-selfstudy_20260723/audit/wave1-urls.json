@@ -1,0 +1,337 @@
+{
+ "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/": [
+  "A1-figma-mcp#0",
+  "A1-figma-mcp#8",
+  "A1-figma-mcp#8",
+  "A1-figma-mcp:res"
+ ],
+ "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/": [
+  "A1-figma-mcp#1",
+  "A1-figma-mcp#7",
+  "A1-figma-mcp#9",
+  "A1-figma-mcp#14",
+  "A1-figma-mcp:res",
+  "A6-resources#9",
+  "A6-resources:res"
+ ],
+ "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/": [
+  "A1-figma-mcp#2",
+  "A1-figma-mcp#3",
+  "A1-figma-mcp#6",
+  "A1-figma-mcp#6",
+  "A1-figma-mcp:res"
+ ],
+ "https://www.figma.com/pricing/": [
+  "A1-figma-mcp#3",
+  "A1-figma-mcp#5",
+  "A1-figma-mcp:res"
+ ],
+ "https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server": [
+  "A1-figma-mcp#4"
+ ],
+ "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs": [
+  "A1-figma-mcp#4",
+  "A1-figma-mcp#14",
+  "A1-figma-mcp:res"
+ ],
+ "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server": [
+  "A1-figma-mcp#7",
+  "A1-figma-mcp:res",
+  "A6-resources#8",
+  "A6-resources:res"
+ ],
+ "https://github.com/GLips/Figma-Context-MCP": [
+  "A1-figma-mcp#10",
+  "A1-figma-mcp#11",
+  "A1-figma-mcp:res"
+ ],
+ "https://developers.figma.com/docs/rest-api/rate-limits/": [
+  "A1-figma-mcp#11"
+ ],
+ "https://github.com/figma/mcp-server-guide": [
+  "A1-figma-mcp#12",
+  "A1-figma-mcp:res"
+ ],
+ "https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/": [
+  "A1-figma-mcp#13"
+ ],
+ "https://developers.figma.com/docs/figma-mcp-server/": [
+  "A1-figma-mcp:res"
+ ],
+ "https://litmers.com/blog/%ED%94%BC%EA%B7%B8%EB%A7%88-mcp-%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80-%EA%B5%AC%ED%98%84-%ED%81%B4%EB%A1%9C%EB%93%9C-%EC%BD%94%EB%93%9C-%EC%97%B0%EB%8F%99-%ED%9B%84%EA%B8%B0": [
+  "A1-figma-mcp:res"
+ ],
+ "https://cursor.com/help/getting-started/install": [
+  "A2-cursor#0",
+  "A2-cursor#1",
+  "A2-cursor#2",
+  "A2-cursor#2",
+  "A2-cursor#3"
+ ],
+ "https://cursor.com/ko": [
+  "A2-cursor#3"
+ ],
+ "https://cursor.com/docs/tab/overview": [
+  "A2-cursor#4"
+ ],
+ "https://cursor.com/docs/inline-edit/overview": [
+  "A2-cursor#5"
+ ],
+ "https://cursor.com/help/ai-features/ask-mode": [
+  "A2-cursor#6",
+  "A2-cursor#6"
+ ],
+ "https://cursor.com/docs/agent/overview": [
+  "A2-cursor#7"
+ ],
+ "https://cursor.com/help/ai-features/agent": [
+  "A2-cursor#7",
+  "A2-cursor#7"
+ ],
+ "https://cursor.com/docs/rules": [
+  "A2-cursor#8",
+  "A2-cursor#9",
+  "A2-cursor#9",
+  "A2-cursor#10",
+  "A2-cursor:res"
+ ],
+ "https://cursor.com/docs/mcp": [
+  "A2-cursor#11",
+  "A2-cursor#12",
+  "A2-cursor#12",
+  "A2-cursor:res"
+ ],
+ "https://cursor.com/pricing": [
+  "A2-cursor#13",
+  "A2-cursor#13",
+  "A2-cursor#13",
+  "A2-cursor#14",
+  "A2-cursor:res"
+ ],
+ "https://cursor.com/docs/account/pricing": [
+  "A2-cursor#14",
+  "A2-cursor#14"
+ ],
+ "https://www.inflearn.com/en/course/we-can-cusor-ai": [
+  "A2-cursor:res"
+ ],
+ "https://www.youtube.com/watch?v=he0gEZ5wg0Q": [
+  "A2-cursor:res"
+ ],
+ "https://www.youtube.com/watch?v=_oEhh8666pA": [
+  "A2-cursor:res"
+ ],
+ "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs": [
+  "A3-supabase#0",
+  "A3-supabase#3",
+  "A3-supabase:res"
+ ],
+ "https://supabase.com/docs/guides/database/tables": [
+  "A3-supabase#1",
+  "A3-supabase#2",
+  "A3-supabase:res"
+ ],
+ "https://supabase.com/docs/guides/auth": [
+  "A3-supabase#4",
+  "A3-supabase:res"
+ ],
+ "https://supabase.com/docs/guides/auth/social-login/auth-google": [
+  "A3-supabase#5",
+  "A3-supabase:res"
+ ],
+ "https://supabase.com/docs/guides/auth/quickstarts/nextjs": [
+  "A3-supabase#6",
+  "A3-supabase:res"
+ ],
+ "https://supabase.com/docs/guides/auth/quickstarts/react-native": [
+  "A3-supabase#7",
+  "A3-supabase:res"
+ ],
+ "https://supabase.com/pricing": [
+  "A3-supabase#8"
+ ],
+ "https://supabase.com/docs/guides/getting-started/mcp": [
+  "A3-supabase#9",
+  "A3-supabase:res"
+ ],
+ "https://supabase.com/blog/mcp-server": [
+  "A3-supabase#10"
+ ],
+ "https://supabase.com/docs/guides/database/postgres/row-level-security": [
+  "A3-supabase#11",
+  "A3-supabase:res"
+ ],
+ "https://www.youtube.com/watch?v=wa9-d63velk": [
+  "A3-supabase:res"
+ ],
+ "https://triki.net/prgm/11626": [
+  "A3-supabase:res"
+ ],
+ "https://n8n.io/pricing/": [
+  "A4-n8n#0",
+  "A4-n8n#1",
+  "A4-n8n#2",
+  "A4-n8n:res"
+ ],
+ "https://docs.n8n.io/deploy/host-n8n/install-options/install-with-docker.md": [
+  "A4-n8n#3"
+ ],
+ "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/": [
+  "A4-n8n#4",
+  "A4-n8n:res"
+ ],
+ "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.html/": [
+  "A4-n8n#5",
+  "A4-n8n:res"
+ ],
+ "https://n8n.io/workflows/14996-aggregate-multi-source-job-boards-to-supabase-and-google-sheets/": [
+  "A4-n8n#6",
+  "A4-n8n:res"
+ ],
+ "https://github.com/enescingoz/awesome-n8n-templates": [
+  "A4-n8n#7"
+ ],
+ "https://developers.google.com/search/docs/crawling-indexing/robots/intro": [
+  "A4-n8n#8",
+  "A4-n8n:res"
+ ],
+ "https://www.edpb.europa.eu/system/files/2026-07/edpb_guidelines_2020603_webscraping_v1_en_0.pdf": [
+  "A4-n8n#9",
+  "A4-n8n:res"
+ ],
+ "https://n8n-docs.infograb.net/courses/level-two/chapter-2/": [
+  "A4-n8n#10",
+  "A4-n8n:res"
+ ],
+ "https://docs.n8n.io/deploy/host-n8n/install-options/install-with-docker": [
+  "A4-n8n:res"
+ ],
+ "https://www.jiniai.biz/2025/03/20/n8n%EC%97%90%EC%84%9C-http-%EC%9A%94%EC%B2%AD-%EB%85%B8%EB%93%9C-%ED%99%9C%EC%9A%A9%ED%95%98%EA%B8%B0/": [
+  "A4-n8n:res"
+ ],
+ "https://www.youtube.com/watch?v=LR2vONAVEYk": [
+  "A4-n8n:res"
+ ],
+ "https://docs.tosspayments.com/guides/v2/get-started/environment": [
+  "A5-tosspayments#0",
+  "A5-tosspayments#0",
+  "A5-tosspayments#2",
+  "A5-tosspayments#3",
+  "A5-tosspayments#4",
+  "A5-tosspayments#4",
+  "A5-tosspayments#6",
+  "A5-tosspayments#14",
+  "A5-tosspayments:res"
+ ],
+ "https://docs.tosspayments.com/blog/how-to-test-toss-payments": [
+  "A5-tosspayments#1",
+  "A5-tosspayments#1",
+  "A5-tosspayments#1",
+  "A5-tosspayments:res"
+ ],
+ "https://docs.tosspayments.com/resources/faq": [
+  "A5-tosspayments#2",
+  "A5-tosspayments#3"
+ ],
+ "https://docs.tosspayments.com/guides/v2/billing": [
+  "A5-tosspayments#5",
+  "A5-tosspayments#5",
+  "A5-tosspayments#13",
+  "A5-tosspayments:res"
+ ],
+ "https://docs.tosspayments.com/guides/v2/payment-widget": [
+  "A5-tosspayments#7",
+  "A5-tosspayments#7",
+  "A5-tosspayments#8",
+  "A5-tosspayments#8",
+  "A5-tosspayments:res"
+ ],
+ "https://docs.tosspayments.com/guides/v2/get-started": [
+  "A5-tosspayments#9",
+  "A5-tosspayments:res"
+ ],
+ "https://github.com/tosspayments/payment-widget-sample": [
+  "A5-tosspayments#10"
+ ],
+ "https://github.com/tosspayments/tosspayments-sample": [
+  "A5-tosspayments#11",
+  "A5-tosspayments:res",
+  "A6-resources#11",
+  "A6-resources:res"
+ ],
+ "https://www.tosspayments.com/blog/articles/paytech-4": [
+  "A5-tosspayments#12",
+  "A5-tosspayments:res"
+ ],
+ "https://docs.tosspayments.com/blog/react-use-effect": [
+  "A5-tosspayments:res"
+ ],
+ "https://www.youtube.com/watch?v=lpfO2mebYQk": [
+  "A5-tosspayments:res"
+ ],
+ "https://www.youtube.com/watch?v=5DiSLv-n6l0": [
+  "A5-tosspayments:res"
+ ],
+ "https://nomadcoders.co/airbnb-clone": [
+  "A6-resources#0",
+  "A6-resources:res"
+ ],
+ "https://nomadcoders.co/carrot-market": [
+  "A6-resources#1",
+  "A6-resources:res"
+ ],
+ "https://nomadcoders.co/nextjs-for-beginners": [
+  "A6-resources#2",
+  "A6-resources:res"
+ ],
+ "https://nomadcoders.co/javascript-for-beginners": [
+  "A6-resources#3",
+  "A6-resources:res"
+ ],
+ "https://www.inflearn.com/course/%EC%9A%94%EC%A6%98%EC%97%94-supabase-%EB%8C%80%EC%84%B8%EC%A7%80-nextjs-%ED%81%B4%EB%A1%A0%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8": [
+  "A6-resources#4",
+  "A6-resources:res"
+ ],
+ "https://www.inflearn.com/course/%EC%9B%B9%EA%B0%9C%EB%B0%9C-%EA%B8%B0%EC%B4%88-html-css": [
+  "A6-resources#5",
+  "A6-resources:res"
+ ],
+ "https://www.notjust.dev/blog/netflix-clone": [
+  "A6-resources#6",
+  "A6-resources:res"
+ ],
+ "https://github.com/Lordhacker756/Netflix": [
+  "A6-resources#7",
+  "A6-resources:res"
+ ],
+ "https://docs.tosspayments.com/guides/payment-widget/integration": [
+  "A6-resources#10",
+  "A6-resources:res"
+ ],
+ "https://brunch.co.kr/@zitopd/8": [
+  "A6-resources#12",
+  "A6-resources:res"
+ ],
+ "https://www.mobiinside.co.kr/2025/06/25/mcp/": [
+  "A6-resources#13"
+ ],
+ "https://www.builder.io/blog/figma-to-cursor-for-designers": [
+  "A6-resources#14",
+  "A6-resources:res"
+ ],
+ "https://www.udemy.com/course/mastering-nextjsbuild-an-airbnb-clone-from-scratch-2024/": [
+  "A6-resources:res"
+ ],
+ "https://github.com/SashenJayathilaka/Airbnb-Build": [
+  "A6-resources:res"
+ ],
+ "https://www.inflearn.com/course/flutter-netflix-clone-app": [
+  "A6-resources:res"
+ ],
+ "https://github.com/calebnance/expo-netflix": [
+  "A6-resources:res"
+ ],
+ "https://docs.expo.dev/develop/authentication/": [
+  "A6-resources:res"
+ ]
+}

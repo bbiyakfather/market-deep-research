@@ -1,0 +1,36 @@
+Custom stores, custom tools, and auto-review for the Cursor SDK
+We've shipped a batch of new functionality across the TypeScript and Python SDKs. You can now choose how agent and run metadata is persisted, expose your own functions to the agent as tools, route local tool calls through auto-review, and nest subagents to any depth. This release also brings a set of reliability, performance, and platform fixes that make local and cloud SDK agents easier to run in production scripts, CI, and custom integrations.
+Custom tools
+You can now hand the local agent your own tools by passing function definitions through local.customTools, on Agent.create() or per send(). The SDK exposes them to the agent through a built-in MCP server called custom-user-tools, so the model calls your code through the same path and the same permission gate as any other MCP tool.
+Before this, exposing a custom capability meant standing up your own stdio or remote HTTP MCP server and wiring it into the agent. Now a function definition is enough. Custom tools are also visible to every subagent of a parent agent, so a tool you define once is available throughout the whole run.
+Auto-review
+By default, a local SDK agent runs tool calls without asking for approval, since there's no human in the loop in a headless run. Set local.autoReview to route those calls through auto-review instead. A classifier decides which calls run automatically and which to hold back, rather than bypassing review entirely.
+You steer that classifier with natural-language instructions in permissions.json. The autoRun.allow_instructions field describes call shapes to lean toward allowing, and autoRun.block_instructions describes the ones to hold for review. For example, you can allow read-only inspections of build artifacts while always pausing on destructive operations like deletes.
+{
+  "autoRun": {
+    "allow_instructions": [
+      "Read-only inspections of build artifacts under ./dist are fine."
+    ],
+    "block_instructions": [
+      "Always pause delete operations so I get a chance to review them."
+    ]
+  }
+}JSONL and custom stores
+Both SDKs persist agent and run metadata so you can resume an agent after a process restart. Until now, that store was SQLite. You can now opt into a JSONL store instead, which writes a plain, append-only file you can read, diff, and check into version control. Both SqliteLocalAgentStore and JsonlLocalAgentStore are exported directly.
+If neither default fits your setup, implement the public LocalAgentStore interface and pass it through local.store. Build an in-memory store for ephemeral CI runs, or back persistence with Postgres when you want agent state to live next to the rest of your application data. The Python SDK exposes host, JSONL, and composed JSONL stores through the bridge.
+Nested subagents
+Subagents can now spawn their own subagents, and so on. A reviewer subagent can delegate to a test-writer, which can delegate further, with each level keeping its own prompt and model. There's nothing to turn on; a subagent session registers the executor it needs to call Task, so nesting works automatically for any agent that defines subagents.
+Reliability, performance, and platform improvements
+This release also includes a batch of quality-of-life fixes across both SDKs.
+- Run correlation: Every send()now carries a platform-generatedrequestId, exposed onRunandRunResultand persisted across the in-memory, SQLite, and JSONL stores. Tie a script or CI run to backend logs, analytics, and support threads without inferring it fromagentId.
+- Reliable wait()on local runs: Local runs no longer resolvewait()before the terminal result is written. Hydration keeps refreshing until the run reaches a final state, so automation reads a complete result.
+- Safe checkpoints on dispose: Disposing a local agent no longer removes checkpoint data when a root reference is missing but checkpoint blobs still exist. The agent directory is only cleared when there's genuinely nothing left to keep.
+- Cloud streaming over HTTP/1.1: Cloud agent sessions now stream correctly on HTTP/1.1 transports used by some proxies, older Node fetch stacks, and certain CI images. HTTP/2 behavior is unchanged.
+- Lighter import: Importing @cursor/sdkno longer eagerly loads the full local agent stack. Cloud-only and type-only consumers skip the local runtime cost until the first local call, with no API change. The first local call pays a one-time import, then stays cached.
+- Self-contained TypeScript types: Published .d.tsfiles no longer reference unpublished workspace packages. This fixesTS2305andTS2307errors underskipLibCheck: falseand silentanyon stream types likeTurnEndedUpdate.
+- Bundled ripgrep: Local shell runs use the bundled platform rgbinary without modifying your globalPATH. On Windows, prepending ripgrep no longer clobbers thePathvariable.
+- Composer 2 routes to Composer 2.5: SDK clients still pinning retired composer-2slugs are routed to Composer 2.5 automatically, keeping fast variants intact, so older scripts keep running.
+- Workspace-scoped list_runs:Client,AsyncClient, andAgent.list_runstake an optionalcwd, and the bridge falls back to its launch workspace. This fixes spurious "agent not found" results when the bridge runs as a subprocess.
+- Clearer not-found errors: Looking up an agent that isn't in the resolved workspace returns a clear not-found error instead of an opaque internal error.
+- 0.1.6 release and analytics: cursor-sdk0.1.6 documents the Buildkite release path and labels SDK usage assdk-python-for clearer analytics.
+Run npm install @cursor/sdk or pip install cursor-sdk to upgrade. Scripts pinning composer-2 move to Composer 2.5 automatically, and requestId is a safe addition to your run metadata schema. See the TypeScript and Python docs for full details.

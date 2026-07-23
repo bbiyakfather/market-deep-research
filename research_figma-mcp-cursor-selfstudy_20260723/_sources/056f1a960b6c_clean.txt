@@ -1,0 +1,115 @@
+Rate Limits
+Important: As of November 17, 2025 the updated rate limits are in effect. Read more in the announcement here.
+Note: Figma reserves the right to change rate limits. Changes may affect specific endpoints, tiers, or plans.
+Figma applies rate limits to requests to the Figma REST API to provide a consistent and reliable experience for users. Requests to the Figma REST API are limited based on three factors:
+- The seat type of the user
+- The rate limit tier of the endpoint
+- The location and plan of the resource that the user is requesting
+For example, if you use a personal access token to get the content of a file in a Starter plan, requests to that file are limited to up to 6 per month even if you have a Full seat in a different plan.
+Rate limit tiers are determined based on a number of factors, including the infrastructure and cost required to support the endpoint.
+Rate limits apply to both OAuth apps, plan access tokens, and personal access tokens.
+- 
+For OAuth apps, rate limits are tracked on a per-user, per-plan, per-app basis. This means that a user gets a unique rate limit budget for each app they’re using. A user’s usage of app A won’t affect their usage of app B. For example, Jasmine uses two apps, Figlet and Twigma. Figlet and Twigma both make requests to GET file metadata, a Tier 2 endpoint. Figlet frequently refreshes data so she sometimes gets rate-limited. However, because Twigma and Figlet use separate OAuth apps, Jasmine is able to use Twigma normally. Since rate limits are only applied per app, Figlet’s frequent rate-limiting issue doesn’t impact Twigma.David is on the same plan as Jasmine. David sometimes uses Twigma so much that his usage is rate-limited. However, because David and Jasmine have separate Figma user accounts, David’s rate-limited usage of Twigma doesn’t impact Jasmine’s usage. 
+- 
+For plan access tokens, rate limits are tracked on a per-token, per-plan basis. The usage of each token is tracked separately. 
+- 
+For personal access tokens, rate limits are tracked on a per-user, per-plan basis, where the user is whoever generated the token. For example, Mei builds a script for her team that uses GET images, a Tier 1 endpoint. To run the script, Mei uses a personal access token to authenticate with the REST API. When multiple people on her team are running the script at the same time, occasionally the script gets rate-limited. Because the requests are being made with Mei’s personal access token, the requests all count toward the same limit.noteNote: Keep in mind that personal access tokens are for your whole account, not tied to specific plans in your project. This means that even though you may have a Full seat in an enterprise, enterprise-level rate limits are only applied to files residing in that plan. If you also have projects in a Starter plan, for example, requests to those files have the Starter plan rate limits applied. 
+The following table describes rate limits by API tier, seat, and plan. Rate limits are per-minute unless otherwise specified.
+| API endpoints | Seat | Starter | Professional | Organization | Enterprise | 
+|---|---|---|---|---|---|
+| Tier 1 
+ | View, Collab | Up to 6/month | Up to 6/month | Up to 6/month | Up to 6/month | 
+| Dev, Full | 10/min | 15/min | 20/min | ||
+| Tier 2 | View, Collab | Up to 5/min | Up to 5/min | Up to 5/min | Up to 5/min | 
+| Dev, Full | 25/min | 50/min | 100/min | ||
+| Tier 3 | View, Collab | Up to 10/min | Up to 10/min | Up to 10/min | Up to 10/min | 
+| Dev, Full | 50/min | 100/min | 150/min | 
+For View and Collab seats, requests are limited up to the given amount. Depending on traffic and demand, the actual limit may be lower. For example, a user with a View seat who tries to query a Tier 1 endpoint might only be able to make 2 requests in a month to get a file when traffic and demand to the REST API are high.
+How rate limiting works
+For managing rate limits, Figma uses a leaky bucket algorithm. When the REST API is unable to fulfill requests due to the bucket being full or your rate limit being exceeded, the endpoint returns a 429 error.
+429 errors
+429 errors have the following fields:
+"Retry-After": Integer
+"X-Figma-Plan-Tier": String enum
+"X-Figma-Rate-Limit-Type": String enum
+"X-Figma-Upgrade-Link": String
+The following table describes the fields in the error.
+| Field | Type | Description | 
+|---|---|---|
+| Retry-After | Integer | In seconds, how long before you should retry sending the request. | 
+| X-Figma-Plan-Tier | String enum | The current plan tier of the resource the user is requesting. The value will be one of the following strings: 
+ | 
+| X-Figma-Rate-Limit-Type | String enum | The type of rate limit the user is encountering, based on their seat type. The value will be one of the following: 
+ | 
+| X-Figma-Upgrade-Link | String | A link to either the /pricingor/settingspages depending on the plan/seat of the user. | 
+What if my app is hitting rate limits?
+If you see your app makes requests that are getting rate-limited:
+- Review the rate limit table and check the tier of the rate-limited endpoint. Also check the X-Figma-Rate-Limit-Typevalue in the429error returned when the endpoint is rate-limited. The table, endpoint tier, and rate limit type will help you identify why a given user is encountering rate limits.
+- Batch requests whenever possible. For example, suppose you have an app that downloads images from a Figma file. Instead of sending individual requests for each image, you’d want to send a single request that includes a list of all the node ids you want to download as images.
+- Cache results. Rather than sending frequent requests, such as a new requests whenever a part of an app’s UI is navigated to, instead cache the data from an earlier request. Then, either refresh the data when requested (such as when a user explicitly wants to refresh data in the app UI), or on a periodic basis that fits the rate limits.
+- Make sure your app is correctly handling rate-limited requests. Make sure your app gracefully retries user requests after the Retry-Aftervalue in the429error.
+Handling rate-limited requests
+When a request has been rate-limited, the endpoint you’re querying will start to return 429 errors. The 429 error describes why the request has been rate-limited.
+The error includes a Retry-After value, which you can use to resend a request after the given period.
+The error also includes a X-Figma-Upgrade-Link value, which includes a URL you can surface to users of your app. This is helpful when the demand they have for requests exceeds their current seat and plan. For example, a user with a Viewer seat on a Pro plan who wants to frequently query files may benefit from having a Full seat instead so they’re no longer limited to a maximum of 6 requests monthly to that endpoint.
+Example: Schedule and resend
+Depending on the implementation of your application, you can build logic to retry the request after the period returned in the error.
+The following example demonstrates one way you could handle retrying the request.
+const TOKEN = // <ACCESS_TOKEN>
+const FILE_KEY = // <FILE_KEY>
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function exampleRetryAfter429(url, opts = {}, { maxRetries = 5 } = {}) {
+  let attempts = 0;
+  while (true) {
+    const res = await fetch(url, {
+      ...opts,
+      headers: { ...(opts.headers || {}), Authorization: `Bearer ${TOKEN}` },
+    });
+    if (res.status !== 429) return res;
+    if (attempts++ >= maxRetries) {
+      throw new Error(`429 Too Many Requests after ${attempts} attempts`);
+    }
+    const retryAfterSec = Number(res.headers.get("retry-after")) || 1; // integer seconds
+    await sleep(retryAfterSec * 1000);
+  }
+}
+(async () => {
+  const url = `https://api.figma.com/v1/files/${encodeURIComponent(FILE_KEY)}`;
+  const res = await exampleRetryAfter429(url, { method: "GET" }, { maxRetries: 6 });
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  console.log(JSON.stringify(await res.json(), null, 2));
+})().catch((err) => {
+  console.error(err.message || String(err));
+  process.exit(1);
+});
+In the example, we handle the 429 error and capture the Retry-After value.
+We also set an arbitrary number of retry attempts, 6 in the case of this example. In a practical implementation, you might prefer an approach like a backoff.
+When we get the Retry-After value, we set a timer. When the timer expires, we then attempt to send the request again. In this way, we’re able to retry the request without manual intervention while also respecting the rate limit.
+Note: The example only demonstrates handling and retrying 429 errors. The code doesn’t demonstrate a complete solution for sending requests and handling all errors.
+Example: Surface errors to a user
+For OAuth apps, depending on the way your application is built, you may want to surface errors to your users. For example, if a user is rate-limited because of the plan they’re on, you may want to surface the documentation URL that’s provided by the error.
+The following example demonstrates a simple way to handle a 429 error and return the URL from X-Figma-Upgrade-Link to the requester.
+const express = require("express");
+const app = express();
+const TOKEN = // <ACCESS_TOKEN>
+app.get("/api/file/:key", async (req, res) => {
+  const key = req.params.key;
+  const r = await fetch(`https://api.figma.com/v1/files/${encodeURIComponent(key)}`, {
+    headers: { Authorization: `Bearer ${TOKEN}` },
+  });
+  if (r.status === 429) {
+    const upgradeUrl = r.headers.get("x-figma-upgrade-link") || null;
+    const retryAfterSec = Number(r.headers.get("retry-after")) || null;
+    return res.status(429).json({ error: "rate_limited", upgradeUrl, retryAfterSec });
+  }
+  if (!r.ok) {
+    return res.status(r.status).send(await r.text());
+  }
+  res.json(await r.json());
+});
+app.listen(3000, () => {});
+For this example, let’s imagine we have a client where a user wants to get the data from a Figma file, and a server that handles making the requests and returning the responses to the user.
+In the example, we send a GET request. Let’s assume the file key is a value provided by the user via the client. We then handle any 429 error by extracting the URL from x-figma-upgrade-link and sending that back to the client.
+In the client, we’d then catch the incoming URL and surface it to the user. You might use an error message like: We can't get that file right now. If you need to access files more frequently, you may need to upgrade your seat. See: <URL>
+The exact method and message you use to surface the URL to your users in a client will depend on the implementation and what information you want to share with the user.
+Note: The example only demonstrates returning the URL from X-Figma-Upgrade-Link. The code doesn’t demonstrate comprehensive error handling or how you’d surface the URL in the client.

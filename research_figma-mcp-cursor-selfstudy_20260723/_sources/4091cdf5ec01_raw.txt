@@ -1,0 +1,193 @@
+Title: NextJS 무료 강의: 앱 라우터로 웹사이트 만들기 (16,000명 수강 중)
+
+URL Source: https://nomadcoders.co/nextjs-for-beginners
+
+Markdown Content:
+[![Image 1](https://nomadcoders.co/m.svg)![Image 2](https://nomadcoders.co/m.svg)](https://nomadcoders.co/)
+
+## Next JS 무료 강의
+
+[](https://nomadcoders.co/nextjs-for-beginners#)
+
+중급 무료 1.6만 명 수강중
+
+동영상
+
+32
+
+개
+
+강의 분량
+4 시간
+
+레벨
+중급
+
+학습 효과
+
+### 실전형 코딩을 시작하세요
+
+##### 왜 직접 만들며 배워야.진짜 지식이 될까요?
+
+![Image 3](https://nomadcoders.co/freeCourse01.svg)
+
+우리는 그동안
+
+딱딱한 이론과 문법 중심의
+
+한국식 코딩을 배워왔어요.
+
+![Image 4](https://nomadcoders.co/freeCourse02.svg)
+
+이렇게 배운 지식은
+
+현업에서 바로 활용하기 어려워요.
+
+![Image 5](https://nomadcoders.co/freeCourse03.svg)
+
+하지만 존재하는 서비스와 기능을
+
+따라 만들면서 배우면,
+
+온전히 나의 기술로 습득할 수 있어요.
+
+직접 한땀 한땀 코딩하며 성장할 수 있는,
+
+실전형 코딩으로 빠르게 시작하세요!
+
+#클론코딩#현업중심#자기주도학습
+
+강의 내용
+
+### 배우고, 직접 구현합니다
+
+다음과 같은 패키지를 사용합니다.
+
+{
+
+"이름":"Next JS 시작하기",
+
+"섹션":"무엇을 사용하나요??",
+
+"패키지": [
+
+"ReactJS"
+
+"NextJS"
+
+]
+
+}
+
+![Image 6](https://nomadcoders.co/logos/react.png)ReactJS
+
+![Image 7](https://nomadcoders.co/logos/nodeJS.png)NodeJS
+
+![Image 8](https://nomadcoders.co/logos/next.svg)NextJS
+
+로드맵
+
+### 이 정도 수준인 분들 드루와요
+
+### 초급 이상의 JS, ReactJS 에 대한 이해도가 있는 분들이 수강하실 수 있습니다.
+
+### 수강생 후기
+
+조아요 조아요~ CSS 조아요~ 조아요 조아요~ 니코쌤이 조아요~
+
+설명이 이해가 너무 잘 됩니다. 감사합니다! 빨리 뭔가 만들고 싶네요!
+
+양질의 강의 감사합니다!
+
+설명 진짜 잘하시네 이해가 쏙쏙 됨
+
+덕분에 너무너무 재밌게 공부중이에요! 감사합니다!
+
+[![Image 9](https://d1telmomo28umc.cloudfront.net/media/public/avatars/cococ-1663147765.jpg)](https://nomadcoders.co/users/cococ)
+[cococ](https://nomadcoders.co/users/cococ)
+
+★★★★★
+
+난 니꼬의 티칭의 이 맥락, 흐름, 플로우가 너무 좋아
+
+Next JS 관련 좋은 강의 해주셔서 정말 감사합니다
+
+니꼬쌤 최고야
+
+진짜 대박인거같아요..설명대박..
+
+역시.. 1타 강사 니꼬쌤.. 덕분에 너무 클리어해졌어요! 👍👍👍
+
+와 강의력 미쳤다!
+
+이번 next 기초강의로 진짜 몰랐던 부분을 많이 알게 되서 좋네요! 공식문서를 볼때는 그냥 잘 몰랐는데 그냥 뭔지도 모르고 쓰고있던 부분도 많이 있다는걸 알게됐고, 어떤 개념이 이래서 쓰이는 거구나를 알게 되어서 좋았습니다. 언제나 좋은 강의 감사드립니다.
+
+Nico is a really great teacher!
+
+코더 생활 4년이지만,, 니코쌤은 초반 이후로 한번도 안봤는데 Nextjs 강의를 듣는 순간.. 그리고 Introduction 부터 하나씩 설명해주는 퀄리티와 이해도에 깜짝 놀랐습니다. 정말 감사합니다.
+
+역시 믿고보는 니코쌤 ㅎㅎ 강의 너무 좋습니다. 중요한 개념들 잘 설명해주셔서 감사합니다 ㅎㅎ
+
+이런 강의가 무료라니 깜짝 놀랍니다. 너무 감사합니다.
+
+[![Image 10](https://d1telmomo28umc.cloudfront.net/media/public/avatars/sugar-1615703007.jpg)](https://nomadcoders.co/users/sugar)
+[sugar](https://nomadcoders.co/users/sugar)
+
+★★★★★
+
+Thank you for the great lecture! I'm also looking forward to the newly renewed Carrot Market!
+
+next.js를 처음 접해보는데 강의가 좋아서 금방 친해질 수 있을 것 같아요! 감사합니다 ㅎㅎ 배포주소 : next-movies-rho-dun.vercel.app
+
+와 너무나도 간편하게 만들어진것 같아요. 너무나도 신기합니다.
+
+제 코드 챌린지 완성 했어요 그런데 providers 응답을 처리 하는 과정에서 응답이 오브젝트랑 어레이가 섞여서 에러가 좀 있어요 원래는 어떻게 하는 것인지 알고 싶네요. 그래도 React도 제대로는 모르는 사람도 이해할 수 있게 잘 가르쳐 주셔서 감사합니다. useEffect가 뭔지 몰랐어요. 이참에 React도 제대로 배우려고요. https://nextjsmovies-seoha....더 보기
+
+후기 더 보기 (60 개)↓
+
+### 결과적으로, 이 수업 이후 ...
+
+### 최고의 React 프레임워크인 Next.js를 배운다.서버 컴포넌트와 클라이언트 컴포넌트의 차이점을 이해하고 얼마나 혁신적인지 알아본다.새로운 앱 라우터를 사용하여 동적 페이지를 구축하게 된다.
+
+## 2024 UPDATE NEWS!
+
+*   Next.js 최신 버전으로 업그레이드! NextJS 14 강의가 업데이트 되었습니다 ;) 
+*   믿고 기다리는 수강생분들께 이 모든 업데이트! 무료로 제공해드립니다.
+*   노마드코더 강의는 일회성 강의가 아닙니다. 꾸준히 관리되고 업데이트 된다구요. 
+*   노마진코더의 수강생 찐 사랑은 계속 됩니다 💜
+
+## NextJS 입문은 노마드 코더에서~! ❤
+
+*   총 강의수: 32개 (4시간)
+*   NextJS 기초. 입문 단계의 강의 입니다. 
+*   Next.js를 처음부터 배워 프로덕션에 바로 사용할 수 있고 SEO 친화적인 풀스택 웹사이트를 구축하세요.
+*   최신 버전의 Next.js가 어떻게 React 프레임워크 중 최고의 개발자 경험을 제공하는지 알아보세요.
+*   기본적인 ReactJS 이해도가 있는 분들이 수강할 수 있습니다.
+
+## 이 강의 이후. NextJS 를 더 공부하고 싶다면?
+
+*   현 NextJS 기초 이론 강의를 마치신 후. [캐럿마켓 클론코딩](https://nomadcoders.co/carrot-market)을 수강하시면 됩니다.
+*   캐럿마켓 클론코딩 강의에서는...
+> *   NextJS를 사용하여 풀스택 서버리스 애플리케이션을 구축하는 방법에 대해 배웁니다.
+>     *   NextJS의 Static Regeneration, Server Side Rendering, Incremental Static Regeneration 을 배웁니다.
+>     *   NextJS로 Stateless severless authentication 을 구축합니다.
+>     *   Prisma 를 사용하여 PlanetScale의 Serverless SQL Database 와 작업합니다.
+>     *   라이브 스트리밍 및 이미지 호스팅을 위해 Cloudflare를 사용합니다.
+>     *   TailwindCSS v3 를 사용하여 UI를 빌드합니다.
+>     *   Suspense, SSR Streaming 및 React Server Components와 같은 최신 React 18 기능을 사용하게 됩니다!
+
+### 상세 커리큘럼
+
+동영상 32 개
+
+총 4 시간
+
+전체 열기
+
+해당 강의는 무료 입니다!
+
+지금 바로 시작 해보세요!
+
+[무료 수강하기](https://nomadcoders.co/nextjs-for-beginners/enroll)
+
+무료 수강하기

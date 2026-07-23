@@ -1,0 +1,431 @@
+{
+ "axis": "W2-1-cursor-figma-latest",
+ "facts": [
+  {
+   "statement": "Cursor 공식문서 기준 MCP 서버 등록·관리는 'Settings' 메뉴가 아니라 'Customize' 페이지에서 이루어지며, 마켓플레이스 항목은 'Add to Cursor' 버튼으로 원클릭 설치·OAuth 인증한다.",
+   "risk": "normal",
+   "value": "Customize 페이지",
+   "primary_source": "cursor.com/docs/mcp",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "title": "Model Context Protocol (MCP) | Cursor Docs",
+     "quote": "Install and manage MCP servers from the Customize page",
+     "locator": "What is MCP?",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    },
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "title": "Model Context Protocol (MCP) | Cursor Docs",
+     "quote": "Browse the Customize page for official plugins / Click 'Add to Cursor' on a marketplace entry to install it and authenticate with OAuth.",
+     "locator": "Installing MCP servers > One-click installation",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Cursor의 mcp.json은 프로젝트 범위(.cursor/mcp.json)와 전역 범위(~/.cursor/mcp.json) 두 곳에 둘 수 있고, mcpServers 객체 아래 stdio(command/args/env) 또는 remote(url/headers) 방식으로 서버를 정의한다.",
+   "risk": "normal",
+   "primary_source": "cursor.com/docs/mcp",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "title": "Model Context Protocol (MCP) | Cursor Docs",
+     "quote": "Create .cursor/mcp.json in your project for project-specific tools. / Create ~/.cursor/mcp.json in your home directory for tools available everywhere.",
+     "locator": "Installing MCP servers > Using mcp.json",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    },
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "title": "Model Context Protocol (MCP) | Cursor Docs",
+     "quote": "{\"mcpServers\": {\"server-name\": {\"command\": \"npx\", \"args\": [\"-y\", \"mcp-server\"], \"env\": {\"API_KEY\": \"value\"}}}}",
+     "locator": "Installing MCP servers > Using mcp.json (Node.js example)",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Figma 공식 가이드(Cursor and Figma: Set up the MCP server)는 Cursor 내 연결 경로를 'Cursor Settings > Tools & MCP > Installed MCP Servers > Connect'로 안내하는데, 이는 Cursor 자체 최신 공식문서가 쓰는 'Customize' 페이지 명칭과 다르다 — 두 공식 소스 간 UI 명칭 시점 불일치 가능성이 있어 원문 그대로 병기함.",
+   "risk": "normal",
+   "counter": "Cursor 공식 changelog(2026-06-22, v3.9 'Customize Cursor')가 '플러그인·스킬·MCP를 한 곳에 모은 새 Customize 페이지' 출시를 알리고 있어, Figma 문서의 'Tools & MCP' 표기가 그 이전 UI 스냅샷을 반영했을 가능성이 높음을 교차 확인함.",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+     "title": "Cursor and Figma: Set up the MCP server",
+     "quote": "After the installation process, open the command palette again and search for Cursor Settings. Select Tools & MCP. Under Installed MCP Servers, click Connect to go through the authentication process.",
+     "locator": "Set up the remote Figma MCP server",
+     "observed_at": "2026-07-23",
+     "publisher": "Figma",
+     "source_role": "원출처"
+    },
+    {
+     "url": "https://cursor.com/changelog/customize",
+     "title": "Customize Cursor · Cursor",
+     "quote": "Plugins, skills, and MCPs let you customize Cursor for your workflows. The new Customize page brings them into one place.",
+     "locator": "Customize Cursor (Jun 22, 2026, v3.9)",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Cursor 설치 절차(공식 Help 문서)는 Windows에서 'Run the installer and follow the prompts', Mac에서 'Drag Cursor into your Applications folder'로 안내되며, cursor.com/download에서 OS별 다운로드 버튼을 클릭하는 방식이다. Wave1에서 403이던 docs.cursor.com/get-started/installation은 이번 재시도에서 308 리다이렉트로 cursor.com/docs(문서 홈)로 이동했고, 별도의 전용 'Installation' 페이지는 존재하지 않는다(Quickstart 페이지에 설치 안내가 통합됨).",
+   "risk": "normal",
+   "value": "Windows: 설치 프로그램 실행 / Mac: Applications 폴더로 드래그",
+   "primary_source": "cursor.com/help/getting-started/install",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "title": "Download and install Cursor | Cursor Docs",
+     "quote": "Go to cursor.com/download / Click the download button for your operating system / Open the downloaded file / Windows: Run the installer and follow the prompts / Mac: Drag Cursor into your Applications folder / Open Cursor from your applications menu or desktop / Sign in with your Cursor account when prompted",
+     "locator": "Download and install Cursor > How do I install Cursor?",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    },
+    {
+     "url": "https://docs.cursor.com/get-started/installation",
+     "title": "(308 Redirect target: cursor.com/docs)",
+     "quote": "REDIRECT DETECTED: 308 Permanent Redirect, Original URL: https://docs.cursor.com/get-started/installation, Redirect URL: https://cursor.com/docs",
+     "locator": "HTTP redirect response",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Cursor Quickstart 공식문서의 설치 관련 시스템 요구사항은 macOS 'macOS 12 (Monterey) and later'(Apple Silicon/Intel 지원, .dmg 네이티브 설치), Windows 'Windows 10 and later'(.exe 네이티브 설치)이다.",
+   "risk": "normal",
+   "primary_source": "cursor.com/docs/get-started/quickstart",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/get-started/quickstart",
+     "title": "Quickstart | Cursor Docs",
+     "quote": "macOS 12 (Monterey) and later / Native installer (.dmg) / Apple Silicon and Intel support",
+     "locator": "Install Cursor and sign in > macOS",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    },
+    {
+     "url": "https://cursor.com/docs/get-started/quickstart",
+     "title": "Quickstart | Cursor Docs",
+     "quote": "Windows 10 and later / Native installer (.exe)",
+     "locator": "Install Cursor and sign in > Windows",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Cursor changelog 2026-01-08 'New CLI Features and Improved CLI Performance'에서 '/mcp enable', '/mcp disable' 커맨드가 추가되어 MCP 서버를 즉석에서 켜고 끌 수 있게 됐다 — 기능 변경이며 요금 변경 언급은 없다.",
+   "risk": "normal",
+   "primary_source": "cursor.com/changelog/cli-jan-08-2026",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/cli-jan-08-2026",
+     "title": "New CLI Features and Improved CLI Performance · Cursor",
+     "quote": "Added /mcp enable, /mcp disable commands to manage MCP servers. Enable and disable MCP servers on the fly with /mcp enable and /mcp disable commands. MCP server names with spaces are now supported in all /mcp commands.",
+     "locator": "changelog entry, Jan 8, 2026",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Cursor changelog 2026-03-03(v2.6) 'MCP Apps and Team Marketplaces for Plugins'에서 MCP Apps 기능이 도입되어 Amplitude 차트, Figma 다이어그램, tldraw 화이트보드 같은 대화형 UI를 Cursor 안에서 직접 띄울 수 있게 됐다 — 기능 변경이며 요금 변경 언급은 없다.",
+   "risk": "normal",
+   "primary_source": "cursor.com/changelog/2-6",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/2-6",
+     "title": "MCP Apps and Team Marketplaces for Plugins · Cursor",
+     "quote": "MCP Apps support interactive user interfaces like charts from Amplitude, diagrams from Figma, and whiteboards from tldraw directly inside Cursor.",
+     "locator": "changelog entry, Mar 3, 2026",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Cursor changelog 2026-06-04 'Custom stores, custom tools, and auto-review for the Cursor SDK'에서 로컬 에이전트에 커스텀 툴을 연결(local.customTools)하고 승인 절차를 자동화(local.autoReview)하는 SDK 기능이 추가됐다 — SDK 대상 기능 변경이며 가격 변경 언급은 없다.",
+   "risk": "normal",
+   "primary_source": "cursor.com/changelog/sdk-updates-jun-2026",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/sdk-updates-jun-2026",
+     "title": "Custom stores, custom tools, and auto-review for the Cursor SDK · Cursor",
+     "quote": "You can now hand the local agent your own tools by passing function definitions through local.customTools / Set local.autoReview to route those calls through auto-review instead. A classifier decides which calls run automatically",
+     "locator": "changelog entry, Jun 4, 2026",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Cursor changelog 2026-06-22(v3.9) 'Customize Cursor'에서 플러그인·스킬·MCP·서브에이전트·규칙·커맨드·훅을 사용자/팀/워크스페이스 단위로 한 곳에서 관리하는 신규 'Customize' 페이지가 출시됐다 — UI 통합 개편이며 요금 변경 언급은 없다.",
+   "risk": "normal",
+   "primary_source": "cursor.com/changelog/customize",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/customize",
+     "title": "Customize Cursor · Cursor",
+     "quote": "You can now add and manage plugins, skills, MCPs, subagents, rules, commands, and hooks at the user, team, or workspace level, and even bring your own custom MCPs.",
+     "locator": "changelog entry, Jun 22, 2026 (v3.9)",
+     "observed_at": "2026-07-23",
+     "publisher": "Cursor",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Figma AI credits는 요금제·시트 종류별로 월간 배정량이 다르며(Full seat 기준), Professional 3,000/월, Organization 3,500/월, Enterprise 4,250/월, Starter 500/월이고 Dev·Collab·View 시트는 모든 플랜에서 공통 500/월이다.",
+   "risk": "high",
+   "value": "Professional 3,000 / Organization 3,500 / Enterprise 4,250 / Starter 500 (credits per month, Full seat)",
+   "primary_source": "help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work",
+   "counter": "2026-03-18 크레딧 한도 강제 적용(enforcement) 발표 전후로 수치가 달라졌는지 별도 검색했으나, forum.figma.com 공지 및 3자 요약(pricingsaas.com 등)에서도 Professional 3,000/월 수치가 동일하게 확인되어 상충 없음.",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work",
+     "title": "How AI credits work – Figma Learn - Help Center",
+     "quote": "Professional plan (Full seats): 3,000 credits per month / Organization plan (Full seats): 3,500 credits per month / Enterprise plan (Full seats): 4,250 credits per month / Starter plan (Full seats): 500 credits per month / Dev, Collab, View seats: 500 credits per month",
+     "locator": "How AI credits work > AI credits by plan",
+     "observed_at": "2026-07-23",
+     "publisher": "Figma",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Figma MCP 서버(도구 호출) 자체가 AI credits를 소모하는지는 공식문서에서 명시적으로 확인되지 않는다 — help.figma.com의 'credits를 소모하는 기능 전체 목록'(Figma Make, AI search, Rename layers, FigJam AI 기능들, 이미지 편집 기능들 등)에 MCP·Dev Mode·코드생성 관련 항목이 없어 간접적으로는 '소모하지 않는다'는 쪽으로 기울지만, developers.figma.com/help.figma.com 어디에도 'MCP 호출은 credits를 소모하지 않는다'는 직접 문장은 없다. 유일하게 확인되는 관련 문구는 MCP의 '캔버스에 쓰기' 기능이 현재 베타 기간 무료이며 향후 별도의 사용량 기반 유료 기능이 될 것이라는 내용으로, 이는 AI credits 시스템과 명시적으로 연결되지 않는다. → 확인 불가로 기록.",
+   "risk": "high",
+   "value": "확인 불가 (간접 근거만 존재, 명시적 1차 문장 없음)",
+   "primary_source": "help.figma.com/hc/en-us/articles/33459875669015 및 developers.figma.com/docs/figma-mcp-server",
+   "counter": "3자 요약(웹서치 스니펫)은 'MCP 서버로 동작할 때는 Figma AI credits를 소모하지 않는다'고 단정적으로 서술하나, 해당 문장이 인용하는 1차 출처(help.figma.com, developers.figma.com)를 직접 열람한 결과 그런 명시적 문장은 확인되지 않아 3자 요약을 fact로 채택하지 않고 '확인 불가'로 하향함.",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work",
+     "title": "How AI credits work – Figma Learn - Help Center",
+     "quote": "Figma Make, AI search, Rename layers, Summarize stickies, Cluster stickies, Update visual, Generate templates and diagrams, Remove background, Vectorize image, Boost image resolution, Erase object, Isolate object, Expand image, Make image, Edit image, Add interactions, Generate Figma files in ChatGPT for Figma Slides",
+     "locator": "How AI credits work > (credit 소모 기능 목록)",
+     "observed_at": "2026-07-23",
+     "publisher": "Figma",
+     "source_role": "원출처"
+    },
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/",
+     "title": "Introduction | Figma MCP Server Developer Docs",
+     "quote": "We're quickly improving how Figma supports AI agents. This will eventually be a usage-based paid feature, but is currently available for free during the beta period.",
+     "locator": "Let your agent write directly to the canvas in Figma Design and FigJam",
+     "observed_at": "2026-07-23",
+     "publisher": "Figma",
+     "source_role": "원출처"
+    }
+   ]
+  },
+  {
+   "statement": "Figma Make는 'AI-driven, prompt-to-app tool'로, 아이디어와 기존 Figma 디자인을 기능하는 프로토타입·웹앱·인터랙티브 UI로 만들어주는 도구이며 Full 시트에 포함(Dev/Collab/View 시트는 초안에서만 체험 가능)된다. 공식문서(Explore Figma Make, Figma Make FAQs)에는 Figma Make와 Figma MCP 서버·Cursor 같은 외부 코드 에디터 워크플로 간의 관계를 직접 설명하는 문장이 없다 — 둘은 제품 목록에서 별개 항목(Dev Mode='Translate designs into code', Figma Make='Prompt to code anything you can imagine')으로만 병기된다.",
+   "risk": "normal",
+   "primary_source": "help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make",
+     "title": "Explore Figma Make – Figma Learn - Help Center",
+     "quote": "Figma Make is an AI-driven, prompt-to-app tool that lets you bring ideas and existing Figma designs to life as functional prototypes, web apps, and interactive UI.",
+     "locator": "Explore Figma Make (intro)",
+     "observed_at": "2026-07-23",
+     "publisher": "Figma",
+     "source_role": "원출처"
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make",
+     "title": "Explore Figma Make – Figma Learn - Help Center",
+     "quote": "Figma Make is included on the Full seat for paid plans, though users with a Dev, Collab or View seat can also try Figma Make in drafts.",
+     "locator": "Explore Figma Make (seat availability)",
+     "observed_at": "2026-07-23",
+     "publisher": "Figma",
+     "source_role": "원출처"
+    }
+   ]
+  }
+ ],
+ "resources": [
+  {
+   "title": "Model Context Protocol (MCP) | Cursor Docs",
+   "url": "https://cursor.com/docs/mcp",
+   "type": "공식문서",
+   "difficulty": "중급",
+   "language": "영어",
+   "related_part": "Cursor MCP 설정",
+   "free": true,
+   "reason": "MCP 서버 등록 UI(Customize 페이지), mcp.json 형식, 원클릭 설치, transport 종류를 다루는 Cursor 1차 공식 레퍼런스"
+  },
+  {
+   "title": "Download and install Cursor | Cursor Docs",
+   "url": "https://cursor.com/help/getting-started/install",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "영어",
+   "related_part": "Cursor 설치",
+   "free": true,
+   "reason": "Windows/Mac 설치 단계별 절차를 다루는 공식 Help 문서"
+  },
+  {
+   "title": "Quickstart | Cursor Docs",
+   "url": "https://cursor.com/docs/get-started/quickstart",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "영어",
+   "related_part": "Cursor 설치/첫 사용",
+   "free": true,
+   "reason": "OS별 시스템 요구사항과 설치 후 첫 작업 흐름을 안내"
+  },
+  {
+   "title": "Changelog · Cursor",
+   "url": "https://cursor.com/changelog",
+   "type": "공식문서(changelog)",
+   "difficulty": "입문",
+   "language": "영어",
+   "related_part": "Cursor 업데이트 추적",
+   "free": true,
+   "reason": "Agent/Tab/MCP 관련 최신 기능·요금 변경을 시기별로 추적할 수 있는 1차 소스"
+  },
+  {
+   "title": "How AI credits work – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "영어",
+   "related_part": "Figma AI credits 요금",
+   "free": true,
+   "reason": "플랜별 AI credits 배정량과 credits 소모 기능 전체 목록을 담은 1차 공식문서"
+  },
+  {
+   "title": "Guide to the Figma MCP server – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server",
+   "type": "공식문서",
+   "difficulty": "중급",
+   "language": "영어",
+   "related_part": "Figma MCP 서버 설정·과금정책",
+   "free": true,
+   "reason": "원격/데스크톱 MCP 서버 차이와 캔버스 쓰기 기능의 향후 유료화 계획을 설명"
+  },
+  {
+   "title": "Cursor and Figma: Set up the MCP server – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+   "type": "공식문서",
+   "difficulty": "중급",
+   "language": "영어",
+   "related_part": "Figma MCP + Cursor 연동 절차",
+   "free": true,
+   "reason": "Figma가 직접 제공하는 Cursor 연동 단계별 가이드(Cursor 쪽 UI 경로 포함)"
+  },
+  {
+   "title": "Explore Figma Make – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "영어",
+   "related_part": "Figma Make 소개",
+   "free": true,
+   "reason": "Figma Make의 공식 정의·용도·시트별 이용 가능 여부를 담은 1차 문서"
+  },
+  {
+   "title": "Introduction | Figma MCP Server Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/",
+   "type": "공식문서(개발자)",
+   "difficulty": "고급",
+   "language": "영어",
+   "related_part": "Figma MCP 서버 기술 상세",
+   "free": true,
+   "reason": "개발자용 MCP 서버 문서로, credits/과금 관련 유일한 문구(캔버스 쓰기 유료화 예정)를 확인할 수 있는 원출처"
+  }
+ ],
+ "glossary": [
+  {
+   "term": "MCP (Model Context Protocol)",
+   "plain_ko": "Cursor 같은 AI 코딩 툴이 Figma·Supabase 같은 외부 서비스와 '대화'할 수 있게 해주는 공통 연결 규격. USB 포트처럼 한 번 맞춰두면 여러 도구를 갈아 끼울 수 있다.",
+   "detail_url": "https://cursor.com/docs/mcp"
+  },
+  {
+   "term": "mcp.json",
+   "plain_ko": "어떤 MCP 서버를 어떻게 실행할지 적어두는 설정 파일. 프로젝트 폴더 안(.cursor/mcp.json)에 두면 그 프로젝트에서만, 사용자 홈 폴더(~/.cursor/mcp.json)에 두면 모든 프로젝트에서 쓸 수 있다.",
+   "detail_url": "https://cursor.com/docs/mcp"
+  },
+  {
+   "term": "AI credits (Figma)",
+   "plain_ko": "Figma의 AI 기능(이미지 생성, Figma Make 등)을 쓸 때마다 깎이는 사용량 포인트. 요금제·시트 등급마다 매달 주어지는 양이 다르다.",
+   "detail_url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work"
+  },
+  {
+   "term": "Figma Make",
+   "plain_ko": "Figma 안에서 채팅으로 지시만 하면 실제 동작하는 웹앱·프로토타입을 만들어주는 AI 도구. 코드를 직접 안 짜도 되는 대신, Cursor처럼 세밀한 코드 제어는 안 된다.",
+   "detail_url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make"
+  },
+  {
+   "term": "Dev Mode MCP server (Figma)",
+   "plain_ko": "Figma 디자인 파일의 구조·컴포넌트·변수를 Cursor 같은 외부 코딩 도구에 '읽기 자료'로 넘겨주는 통로. Figma Make(자체 실행형)와 달리 코드는 Cursor 쪽에서 만든다.",
+   "detail_url": "https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server"
+  }
+ ],
+ "faq": [
+  {
+   "q": "Cursor에서 MCP 서버는 어디서 설정하나요?",
+   "a_hint": "Settings가 아니라 'Customize' 페이지에서 등록·관리한다(cursor.com/docs/mcp 원문 기준). 다만 Figma 공식 가이드는 아직 'Tools & MCP' 경로로 안내하고 있어 실제 화면에서는 두 명칭이 혼재할 수 있다.",
+   "source_url": "https://cursor.com/docs/mcp"
+  },
+  {
+   "q": "Figma MCP 서버(Cursor 연동)를 쓰면 Figma AI credits가 줄어드나요?",
+   "a_hint": "공식문서에 명시적 답이 없다 — credits 소모 기능 목록에 MCP가 없어 간접적으로는 아닐 가능성이 높지만, 확정 문장은 확인되지 않아 '확인 불가'로 남겨둬야 한다.",
+   "source_url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work"
+  },
+  {
+   "q": "Figma Make와 Figma MCP(Cursor 연동)는 같은 건가요?",
+   "a_hint": "다르다. Figma Make는 Figma 안에서 프롬프트만으로 앱을 완성해주는 자체 실행형 도구이고, Figma MCP 서버는 디자인 정보를 Cursor 등 외부 에디터에 넘겨 그쪽에서 코드를 짜게 하는 연결 통로다. 공식문서는 둘을 나란히 소개할 뿐 직접 비교하지 않는다.",
+   "source_url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make"
+  },
+  {
+   "q": "Cursor 공식 설치 가이드 페이지(get-started/installation)가 따로 있나요?",
+   "a_hint": "없다. docs.cursor.com/get-started/installation은 cursor.com/docs로 리다이렉트되고, 실제 설치 안내는 'Download and install Cursor'(help)와 'Quickstart' 두 페이지에 나뉘어 있다.",
+   "source_url": "https://cursor.com/help/getting-started/install"
+  }
+ ],
+ "expand_leads": [
+  {
+   "lead": "Cursor 'Tools & MCP' → 'Customize' UI 명칭 전환 시점 정확히 특정",
+   "why": "Figma 공식 가이드가 여전히 구 명칭('Tools & MCP')을 쓰고 있어, 가이드 제작 시 스크린샷/메뉴명이 실제 최신 Cursor UI와 어긋날 위험이 있음. cursor.com/changelog/customize(2026-06-22) 전후 버전별 UI 변경 이력을 추가로 확인하면 좋음.",
+   "angle": "changelog 버전별(v3.8 이전) 스크린샷·문구 비교"
+  },
+  {
+   "lead": "developers.figma.com REST API 문서의 'AI Usage API'(Enterprise 전용) 상세",
+   "why": "help.figma.com 문서에 'Figma also provides an AI Usage API for organizations on the Enterprise plan'라는 언급이 있었는데, 이게 MCP 호출 사용량까지 추적하는지 여부는 미확인 — 크레딧-MCP 관계의 '확인 불가'를 좁힐 단서가 될 수 있음.",
+   "angle": "AI Usage API 엔드포인트 스펙 확인"
+  },
+  {
+   "lead": "Figma Make의 credits 소모량(견적/예시) 확인",
+   "why": "Figma Make가 credits 소모 목록 1번 항목으로 확인됐지만, 실제 소모 단위(프롬프트당 몇 credits 등)는 이번 조사 범위에서 확인하지 못함 — 초보 사용자의 예산 계획에 필요.",
+   "angle": "help.figma.com Figma Make FAQ의 'AI credits' 섹션 재확인 또는 별도 pricing 페이지 열람"
+  }
+ ],
+ "dead_ends": [
+  "docs.cursor.com/get-started/installation 및 cursor.com/docs/get-started/installation은 독립된 'Installation' 전용 문서가 아니라 문서 홈/Quickstart로 흡수되어 있음 — Wave1의 403은 이번엔 재현되지 않았고 대신 '그런 전용 페이지가 없다'는 구조적 사실만 확인됨.",
+  "Figma Make와 Figma MCP 서버·Cursor 워크플로 간의 관계를 직접 설명하는 공식문서 문장은 발견하지 못함(Explore Figma Make, Figma Make FAQs 모두 미포함) — 두 제품은 별도 항목으로만 병기됨.",
+  "'MCP 도구 호출은 Figma AI credits를 소모하지 않는다'는 명시적 1차 출처 문장을 developers.figma.com/help.figma.com 어디서도 찾지 못함 — 3자 요약만 이를 단정하고 있어 fact로 채택하지 않고 '확인 불가'로 하향 처리함."
+ ],
+ "failed_urls": [],
+ "summary": "Cursor 공식문서(cursor.com/docs/mcp)를 원문 열람해 MCP 서버 등록이 'Settings'가 아닌 'Customize' 페이지에서 이뤄지고 mcp.json이 프로젝트(.cursor/mcp.json)·전역(~/.cursor/mcp.json) 두 범위로 나뉜다는 점, 마켓플레이스 원클릭 설치가 'Add to Cursor' 버튼이라는 점을 verbatim으로 확인했다. 다만 Figma의 공식 Cursor 연동 가이드는 여전히 'Tools & MCP' 구 명칭을 쓰고 있어 두 공식 소스 간 UI 표기 시점 불일치를 함께 기록했다. Wave1에서 403이던 get-started/installation 경로는 이번엔 cursor.com/docs로 308 리다이렉트됐고, 실제 설치 절차는 'Download and install Cursor'(Windows: 설치파일 실행, Mac: Applications로 드래그)와 'Quickstart'(OS 요구사항) 두 공식 페이지에 나뉘어 있음을 확인했다. Changelog는 2026년 상반기 중 MCP/Agent 관련 4건(01-08 /mcp enable-disable, 03-03 MCP Apps, 06-04 SDK custom tools, 06-22 Customize 페이지 통합)을 원문 인용으로 정리했으며 모두 기능 변경이고 요금 변경 언급은 없었다. Figma AI credits는 Professional 3,000/Organization 3,500/Enterprise 4,250/Starter 500(월, Full seat 기준)으로 확인(고위험, 반박검색으로 3/18 enforcement 전후 수치 불변 교차확인)했으나, MCP 도구 호출이 이 크레딧을 소모하는지는 공식문서 어디에도 명시 문장이 없어 '확인 불가'로 남겼다(간접 근거: credits 소모 기능 목록에 MCP 미포함). Figma Make는 'AI-driven, prompt-to-app tool'로 공식 정의를 확인했으나, Figma MCP·Cursor 워크플로와의 직접적 관계를 설명하는 공식 문장은 찾지 못했다(dead end로 기록). raw 노트는 insights.md에 방문 URL 로그·문맥과 함께 저장했다."
+}

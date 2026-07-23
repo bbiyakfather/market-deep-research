@@ -1,0 +1,217 @@
+안녕하세요! 결제 페이지 개발하기 포스트에서 받은 뜨거운 반응에 힘을 입어 React 버전으로 돌아왔어요. 이번에도 많은 관심 부탁드려요. 🤗
+오늘은 결제 연동을 쉽게 풀어 주는 결제위젯 React 프로젝트를 소개해요! 결제위젯은 한 번 연동하면 다양한 결제 수단과 커스텀 디자인을 노코드(No-code)로 제공하는 서비스입니다.
+프로젝트 만들기
+우선 React 프로젝트를 만들게요. 이미 만든 프로젝트에 결제위젯을 추가하려면 다음 섹션부터 보세요.
+터미널에 아래 커맨드를 사용해서 Vite 프로젝트를 생성하세요. 프로젝트를 생성할 때 리액트 템플릿을 지정해주세요. 이 가이드에서는 TypeScript + SWC를 사용하는데, 원하는 언어를 선택하세요.
+# npm 6.x
+npm create vite@latest my-project --react-swc-ts
+# npm 7+, '--'를 반드시 붙여주세요
+npm create vite@latest my-project -- --template react-swc-ts프로젝트가 잘 생성되었으면 의존성을 설치하고 바로 프로젝트를 실행해요.
+cd my-project
+npm install
+npm run dev브라우저에 프로젝트가 잘 뜨는 걸 확인했다면, 보일러플레이트를 지울게요.
+- index.css파일을 삭제하세요.- main.tsx파일에서- import './index.css’를 삭제하세요.
+- App.css파일은- #root빼고 다 지우세요.
+라우터 설정
+결제할 때 볼 Checkout 페이지, 결제 성공했을 때 볼 Success 페이지, 결제 실패했을 때 갈 Fail 페이지를 만들기 위해 라우터를 미리 설정할게요.
+페이지 이동할 때 필요한 React 라우터를 설치해요.
+npm install react-router-dom다음, src에 pages 디렉토리를 만들어요. App.tsx 파일 이름을 Checkout.tsx로 바꾸고 pages 디렉토리로 옮겨요.
+main.tsx
+src
+ㄴ Checkout.tsx마지막으로 main.tsx에서 아래와 같이 라우터를 설정해요.
+import React from "react"
+import ReactDOM from "react-dom/client"
+import { CheckoutPage } from "./pages/Checkout"
+import { createBrowserRouter, RouterProvider } from "react-router-dom"
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <CheckoutPage />,
+  },
+])
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+)이제 진짜 준비 끝이에요!
+SDK 추가
+프로젝트 폴더에서 결제위젯 SDK를 설치해요.
+npm install @tosspayments/payment-widget-sdkSDK 패키지에서 loadPaymentWidget을 불러올게요. PaymentWidget인스턴스를 반환하는 메서드예요. 우리는 이 인스턴스를 사용해서 결제위젯을 렌더링해요.
+loadPaymentWidget은 파라미터로 clientKey랑 customerKey를 받아요.
+clientKey는 위젯을 렌더링하는 상점을 식별해요. 직접 개발자센터에서 내 클라이언트 키를 사용하거나, 아래 예시에 있는 키를 사용하세요. customerKey로 결제 고객을 식별해요. 상점에서 사용하는 고유값을 넣거나, 비회원 결제라면 @tosspayments/payment-widget-sdk에서 ANONYMOUS를 불러와서 사용해요.
+// Checkout.tsx
+import { useEffect, useRef } from "react"
+import { loadPaymentWidget, PaymentWidgetInstance } from "@tosspayments/payment-widget-sdk"
+// import { ANONYMOUS } from "@tosspayments/payment-widget-sdk"
+import "../App.css"
+const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"
+const customerKey = "YbX2HuSlsC9uVJW6NMRMj"결제를 만들 때 주문 아이디(orderId)가 필요해요. 우리는 nanoid 패키지를 사용해서 임의로 주문 아이디을 만들게요. npm으로 패키지를 다운로드 하고, Checkout.tsx 파일에 패키지를 불러와요.
+npm install nanoidimport { nanoid } from nanoid1️⃣ 위젯 렌더링
+결제위젯을 담을 div를 만들고 결제위젯을 렌더링할게요.
+loadPaymentWidget()을 호출해서 인스턴스를 생성하고, renderPaymentMethods()로 결제위젯을 렌더링하고, useRef를 사용해서 인스턴스를 저장해요.
+그럼 결제위젯 띄우기 완료! 너무 쉽죠?
+// Checkout.tsx
+export default function App() {
+  const paymentWidgetRef = useRef<PaymentWidgetInstance | null>(null)
+  const price = 50_000
+  useEffect(() => {
+    (async () => {
+      const paymentWidget = await loadPaymentWidget(clientKey, customerKey)
+      paymentWidget.renderPaymentMethods("#payment-widget", price)
+      paymentWidgetRef.current = paymentWidget
+    })()
+  }, [])
+  return (
+    <div className="App">
+      <h1>주문서</h1>
+      <div id="payment-widget" />
+    </div>
+  )
+}2️⃣ 결제 버튼 만들기
+근데 막상 결제를 하려니 버튼이 없네요. 결제하기 버튼을 추가하고 결제를 요청할게요.
+아까 ref에 결제위젯 인스턴스를 담아뒀죠? 결제위젯 인스턴스는 결제를 요청하는 requestPayment()라는 함수도 반환해요. 버튼 onClick 이벤트 핸들러 안에서 이 함수를 호출하세요.
+아래처럼 requestPayment()에  orderId, successUrl, failUrl 등 필수 파라미터를 넘겨요.
+<div className="App">
+  <h1>주문서</h1>
+  <div id="payment-widget" />
+  <button
+      onClick={() => {
+        const paymentWidget = paymentWidgetRef.current
+        try {
+          await paymentWidget?.requestPayment({
+          	orderId: nanoid(),
+            orderName: "토스 티셔츠 외 2건",
+            customerName: "김토스",
+            customerEmail: "customer123@gmail.com",
+            successUrl: `${window.location.origin}/success`,
+            failUrl: `${window.location.origin}/fail`,
+        })
+        } catch (err) {
+          	console.log(err)
+        }
+     }}
+  >
+  	결제하기
+  </button>
+</div>3️⃣ 할인 쿠폰 적용
+앗 근데 할인 수단이 있다고요? 그럼 updateAmount()를 사용하면 돼요. 일단 체크박스로 쿠폰 기능을 구현해 볼게요.
+<div className="App">
+  <h1>주문서</h1>
+  <div id="payment-widget" />
+  <div>
+    <input
+      type="checkbox"
+      onChange={(event) => {
+			  // 여기서 updateAmount을 할 예정
+      }}
+    />
+    <label>5,000원 할인 쿠폰 적용</label>
+  </div>
+	...
+</div>이제 가격을 실제로 갱신하면 돼요.
+updateAmount()는 paymentWidget.renderPaymentMethods()에서 반환해요.
+체크박스에 onChange를 걸어두고 체크하면 5,000원을 깎고 체크를 해제하면 가격을 다시 5만원으로 설정할게요. 카드사 할부 가능 금액에 따라 할부 개월을 선택하는 드롭다운 메뉴가 자동으로 나타났다 없어져요. 멋지죠!
+가격은 보통 서버에서 불러오거나 쿼리 파라미터로 받겠지만 여기선 useState으로 관리를 할게요. 그리고 체크박스 onChange에 setPrice를 해요. price가 바뀌면 부수효과로 updateAmount()를 호출할게요.
+이건 또 다른 useEffect를 만들어서 구현할 수 있어요. price를 의존성으로 추가해요.
+최종적으로 Checkout.tsx 파일은 아래와 같아요.
+import { useEffect, useRef, useState } from "react"
+import { loadPaymentWidget, PaymentWidgetInstance } from "@tosspayments/payment-widget-sdk"
+import { nanoid } from “nanoid”
+import "../App.css"
+const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"
+const customerKey = "YbX2HuSlsC9uVJW6NMRMj"
+export default function App() {
+  const paymentWidgetRef = useRef<PaymentWidgetInstance | null>(null)
+  const paymentMethodsWidgetRef = useRef<ReturnType<
+    PaymentWidgetInstance["renderPaymentMethods"]
+  > | null>(null)
+  const [price, setPrice] = useState(50_000)
+  useEffect(() => {
+    (async () => {
+      const paymentWidget = await loadPaymentWidget(clientKey, customerKey)
+      const paymentMethodsWidget = paymentWidget.renderPaymentMethods(
+        "#payment-widget",
+        price
+      )
+      paymentWidgetRef.current = paymentWidget
+      paymentMethodsWidgetRef.current = paymentMethodsWidget
+    })()
+  }, [])
+  useEffect(() => {
+    const paymentMethodsWidget = paymentMethodsWidgetRef.current
+    if (paymentMethodsWidget == null) {
+      return
+    }
+    paymentMethodsWidget.updateAmount(
+      price,
+      paymentMethodsWidget.UPDATE_REASON.COUPON
+    )
+  }, [price])
+  return (
+    <div>
+      <h1>주문서</h1>
+      <div id="payment-widget" />
+      <div>
+        <input
+          type="checkbox"
+          onChange={(event) => {
+            setPrice(event.target.checked ? price - 5_000 : price + 5_000)
+          }}
+        />
+        <label>5,000원 할인 쿠폰 적용</label>
+      </div>
+      <button
+        onClick={() => {
+          const paymentWidget = paymentWidgetRef.current
+          try {
+              await paymentWidget?.requestPayment({
+                orderId: nanoid(),
+                orderName: "토스 티셔츠 외 2건",
+                customerName: "김토스",
+                customerEmail: "customer123@gmail.com",
+                successUrl: `${window.location.origin}/success`,
+                failUrl: `${window.location.origin}/fail`,
+              }) catch (err) {
+                console.log(err)
+              }
+          })
+        }}
+      >
+        결제하기
+      </button>
+    </div>
+  )
+}4️⃣ 리다이렉트 페이지 만들기
+고객이 성공적으로 결제하면 successUrl로 리다이렉트돼요. 이 페이지를 만들어볼게요. src/pages에 Success.tsx를 만들어요.
+import { useSearchParams } from "react-router-dom"
+export function SuccessPage() {
+  const [searchParams] = useSearchParams()
+  // 서버로 승인 요청
+  return (
+    <div>
+      <h1>결제 성공</h1>
+      <div>{`주문 아이디: ${searchParams.get("orderId")}`}</div>
+      <div>{`결제 금액: ${Number(
+        searchParams.get("amount")
+      ).toLocaleString()}원`}</div>
+    </div>
+  )
+}successUrl로 돌아온 쿼리 파라미터를 확인하고 결제 승인을 요청하세요. 결제 승인을 성공해야만 결제가 정상적으로 완료돼요.
+고객이 결제에 실패하면 failUrl로 리다이렉트돼요. src/pages에 Fail.tsx도 만들어요.
+import { useSearchParams } from "react-router-dom"
+export function FailPage() {
+  const [searchParams] = useSearchParams()
+  // 고객에게 실패 사유 알려주고 다른 페이지로 이동
+  return (
+    <div>
+      <h1>결제 실패</h1>
+      <div>{`사유: ${searchParams.get("message")}`}</div>
+    </div>
+  )
+}이제 프론트에서 결제 연동은 완료입니다! 샘플 프로젝트는 토스페이먼츠 GitHub에서 확인하세요.
+노코드 운영
+연동이 벌써 끝났다고요? 이제 토스페이먼츠 상점관리자에서 노출할 결제 수단을 선택하고, 내 쇼핑몰에 맞는 디자인을 적용해 보세요. 더 자세한 기능은 결제위젯 이해하기에서 확인하세요. 상점관리자는 토스페이먼츠와 계약한 뒤에 사용할 수 있습니다.
+📍 함께 읽으면 좋을 콘텐츠
+Edit 임재후, 박수연 Graphic 이은호, 이나눔
+ⓒ토스페이먼츠, 무단 전재 및 배포 금지
+고객사의 성장이 곧 우리의 성장이라는 확신을 가지고 더 나은 결제 경험을 만듭니다. 결제가 불편한 순간을 기록하고 바꿔갈게요.

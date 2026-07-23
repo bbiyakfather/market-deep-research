@@ -1,0 +1,130 @@
+Title: Models & Pricing | Cursor Docs
+
+URL Source: https://cursor.com/docs/account/pricing
+
+Markdown Content:
+Cursor supports frontier models from OpenAI, Anthropic, Google, SpaceXAI, and more. Every individual plan includes two usage pools so you can pick the right balance of intelligence, speed, and cost.
+
+## [Usage pools](https://cursor.com/docs/account/pricing#usage-pools)
+
+There are two separate usage pools for individual plans, each resetting with your monthly billing cycle:
+
+*   **Cursor Models**: Significantly more included usage for Cursor Grok 4.5 and Composer 2.5.
+*   **Other Models**: The pool for third-party models, charged at the model's API price. Individual plans include at least $20 of third-party model usage each month (more on higher tiers) with the option to pay for additional usage as needed.
+
+Both pools are visible in your editor settings and on your [usage dashboard](https://cursor.com/dashboard/usage).
+
+## [Cursor Models](https://cursor.com/docs/account/pricing#cursor-models)
+
+The Cursor Models pool includes Cursor Grok 4.5 and Composer 2.5.
+
+On Teams and Enterprise plans, [Cursor Router](https://cursor.com/docs/cursor-router) picks the model for each Auto request based on your optimization mode.
+
+### [Composer pricing](https://cursor.com/docs/account/pricing#composer-pricing)
+
+Composer 2.5 is Cursor's own model, trained to be highly capable for agentic coding.
+
+| Name |  |  |  |  |
+| --- | --- | --- | --- | --- |
+| [Composer 2.5](https://cursor.com/docs/models/cursor-composer-2-5) | $0.5 | - | $0.2 | $2.5 |
+| [Composer 2.5 (Fast)](https://cursor.com/docs/models/cursor-composer-2-5) | $3 | - | $0.5 | $15 |
+
+### [Grok 4.5 pricing](https://cursor.com/docs/account/pricing#grok-45-pricing)
+
+Grok 4.5 is jointly trained by Cursor and SpaceXAI for long-running coding and knowledge work.
+
+| Name |  |  |  |  |
+| --- | --- | --- | --- | --- |
+| [Grok 4.5](https://cursor.com/docs/models/grok-4-5) | $2 | - | $0.5 | $6 |
+| [Grok 4.5 (Fast)](https://cursor.com/docs/models/grok-4-5) | $4 | - | $1 | $18 |
+
+## [Other Models](https://cursor.com/docs/account/pricing#other-models)
+
+When you select a specific third-party model, usage is drawn from the **Other Models** pool at that model's API rate.
+
+### [Model pricing](https://cursor.com/docs/account/pricing#model-pricing)
+
+All prices are per million tokens:
+
+| Name |  |  |  |  |
+| --- | --- | --- | --- | --- |
+| [Claude Fable 5](https://cursor.com/docs/models/claude-fable-5) | $10 | $12.5 | $1 | $50 |
+| [Claude Opus 4.8](https://cursor.com/docs/models/claude-opus-4-8) | $5 | $6.25 | $0.5 | $25 |
+| [Claude Sonnet 5](https://cursor.com/docs/models/claude-sonnet-5) | $3 | $3.75 | $0.3 | $15 |
+| [Composer 2.5](https://cursor.com/docs/models/cursor-composer-2-5) | $0.5 | - | $0.2 | $2.5 |
+| [Gemini 3.1 Pro](https://cursor.com/docs/models/gemini-3-1-pro) | $2 | - | $0.2 | $12 |
+| [Gemini 3.6 Flash](https://cursor.com/docs/models/gemini-3-6-flash) | $1.5 | - | $0.15 | $7.5 |
+| [GPT-5.6 Luna](https://cursor.com/docs/models/gpt-5-6-luna) | $1 | $1.25 | $0.1 | $6 |
+| [GPT-5.6 Sol](https://cursor.com/docs/models/gpt-5-6-sol) | $5 | $6.25 | $0.5 | $30 |
+| [GPT-5.6 Terra](https://cursor.com/docs/models/gpt-5-6-terra) | $2.5 | $3.125 | $0.25 | $15 |
+| [Grok 4.5](https://cursor.com/docs/models/grok-4-5) | $2 | - | $0.5 | $6 |
+
+Opting in to regional data residency incurs a 10% uplift on Model pricing for eligible Models. See [Privacy and Data Governance](https://cursor.com/docs/enterprise/privacy-and-data-governance) for details on supported regions, Models, functions and data residency policies.
+
+## [Plans](https://cursor.com/docs/account/pricing#plans)
+
+All individual plans include unlimited tab completions, extended agent usage limits on all models, access to Bugbot, and access to Cloud Agents.
+
+| Plan | Price | Other Models usage included | Cursor Models |
+| --- | --- | --- | --- |
+| **Pro** | $20/mo | $20 | Generous included usage |
+| **Pro Plus** | $60/mo | $70 | Generous included usage |
+| **Ultra** | $200/mo | $400 | Generous included usage |
+
+Since different models have different API costs, your model selection affects how quickly your included usage is consumed.
+
+### [How much usage do I need?](https://cursor.com/docs/account/pricing#how-much-usage-do-i-need)
+
+*   **Daily Tab users**: Always stay within $20
+*   **Limited Agent users**: Often stay within the included $20
+*   **Daily Agent users**: Typically $60–$100/mo total usage
+*   **Power users (multiple agents/automation)**: Often $200+/mo total usage
+
+### [What happens when I reach my limit?](https://cursor.com/docs/account/pricing#what-happens-when-i-reach-my-limit)
+
+When you exceed your included monthly usage, you can either:
+
+*   **Add on-demand usage**: Continue at the same API rates with pay-as-you-go billing
+*   **Upgrade your plan**: Move to a higher tier for more included usage
+
+On-demand usage is billed monthly at the same rates. Requests are never downgraded in quality or speed.
+
+### [Teams](https://cursor.com/docs/account/pricing#teams)
+
+There are two business plans: Teams and Enterprise (Custom). Teams offers two seat types: Standard ($40/user/mo) and Premium ($120/user/mo), where Premium adds 5x the Standard limits on Agent.
+
+Team plans provide additional features like centralized team billing and administration, a team marketplace for internal rules, skills, and plugins, agentic code reviews with Bugbot, cloud agents and automations with shared team context, usage analytics, team-wide privacy mode enforcement, and SAML/OIDC SSO.
+
+We recommend Teams for any customer that is happy self-serving. We recommend [Enterprise](https://cursor.com/contact-sales?source=docs-models-pricing) for customers that need priority support, pooled usage, invoicing, SCIM, or advanced security controls.
+
+Learn more about [Teams pricing](https://cursor.com/docs/account/teams/pricing).
+
+## [Cursor Token Rate](https://cursor.com/docs/account/pricing#cursor-token-rate)
+
+On Teams and Enterprise plans, third-party model requests include a Cursor Token Rate of $0.25 per million tokens. This rate applies on top of model API pricing for included usage, on-demand usage, and BYOK usage.
+
+The Cursor Token Rate applies when you select a third-party model directly, and when Auto Balance or Auto Intelligence routes to a third-party model. Auto Cost and all first-party Cursor models, including Composer 2.5 and Grok 4.5, are exempt from the Cursor Token Rate.
+
+## [Auto modes](https://cursor.com/docs/account/pricing#auto-modes)
+
+Auto has three modes: Auto Cost, Auto Balance, and Auto Intelligence.
+
+### [Auto Cost](https://cursor.com/docs/account/pricing#auto-cost)
+
+Auto Cost pricing is set per million tokens, regardless of which model is used.
+
+| Name |  |  |  |  |
+| --- | --- | --- | --- | --- |
+| Auto Cost | $1.25 | $1.25 | $0.25 | $6 |
+
+### [Auto Balance and Auto Intelligence](https://cursor.com/docs/account/pricing#auto-balance-and-auto-intelligence)
+
+Auto Balance and Auto Intelligence are charged at Model API rates for the model used, based on actual usage. Third-party models also incur the Cursor Token Rate. See [Model pricing](https://cursor.com/docs/account/pricing#model-pricing) for per-model rates.
+
+## [Legacy request-based pricing](https://cursor.com/docs/account/pricing#legacy-request-based-pricing)
+
+### [Max Mode](https://cursor.com/docs/account/pricing#max-mode)
+
+Max Mode is available only on legacy request-based plans. It extends a model's context window beyond the default limit and is billed at the model's API rate plus 20%. See [Max Mode on legacy plans](https://cursor.com/help/ai-features/max-mode) for details.
+
+## [FAQ](https://cursor.com/docs/account/pricing#faq)

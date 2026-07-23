@@ -1,0 +1,17 @@
+Title: Avoid selecting large, heavy frames | Developer Docs
+
+URL Source: https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/
+
+Markdown Content:
+Break screens into smaller parts (like components or logical chunks) for faster, more reliable results.
+
+Large selections can slow the tools down, cause errors, or result in incomplete responses, especially when there's too much context for the model to process. Instead:
+
+1.   Generate code for **smaller sections or individual components** (e.g. `Card`, `Header`, `Sidebar`)
+2.   **If it feels slow or stuck, reduce your selection size and try again**
+
+This helps keep the context manageable and results more predictable, both for you and for the model.
+
+**The bottom line -**
+
+If something in the output doesn't look quite right, it usually helps to revisit the basics: how the Figma file is structured, how the prompt is written, and what context is being sent. Following the best practices above can make a big difference, and often leads to more consistent, reusable code.

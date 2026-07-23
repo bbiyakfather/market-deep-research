@@ -1,0 +1,221 @@
+Title: Auth | Supabase Docs
+
+URL Source: https://supabase.com/docs/guides/auth
+
+Published Time: 2026-07-23T12:45:10.041Z
+
+Markdown Content:
+[Skip to content](https://supabase.com/docs/guides/auth#docs-content-container)
+
+[![Image 1: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 2: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+
+*   [Start](https://supabase.com/docs/guides/getting-started)
+*   Products
+*   Build
+*   Manage
+*   Reference
+*   Resources
+
+[![Image 3: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 4: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+
+Search docs...
+
+Ctrl K
+
+Main menu
+
+[Auth](https://supabase.com/docs/guides/auth)
+
+*   [Overview](https://supabase.com/docs/guides/auth)
+
+*   [Architecture](https://supabase.com/docs/guides/auth/architecture)
+
+Getting Started*   [Next.js](https://supabase.com/docs/guides/auth/quickstarts/nextjs)
+*   [Astro](https://supabase.com/docs/guides/auth/quickstarts/astrojs)
+*   [React](https://supabase.com/docs/guides/auth/quickstarts/react)
+*   [React Native](https://supabase.com/docs/guides/auth/quickstarts/react-native)
+*   [React Native with Expo & Social Auth](https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth)
+
+Concepts*   [Users](https://supabase.com/docs/guides/auth/users)
+*   [Identities](https://supabase.com/docs/guides/auth/identities)
+
+Sessions
+
+Flows (How-tos)*   [Which package to use](https://supabase.com/docs/guides/auth/choosing-a-server-package)
+
+Server-Side Rendering
+
+*   [Password-based](https://supabase.com/docs/guides/auth/passwords)
+*   [Email (Magic link or OTP)](https://supabase.com/docs/guides/auth/auth-email-passwordless)
+*   [Phone Login](https://supabase.com/docs/guides/auth/phone-login)
+*   [Passkey](https://supabase.com/docs/guides/auth/passkeys)
+
+Social Login (OAuth)
+
+Enterprise SSO
+
+*   [Custom OAuth/OIDC Providers](https://supabase.com/docs/guides/auth/custom-oauth-providers)
+*   [Anonymous Sign-Ins](https://supabase.com/docs/guides/auth/auth-anonymous)
+*   [Web3 (Ethereum or Solana)](https://supabase.com/docs/guides/auth/auth-web3)
+*   [Mobile Deep Linking](https://supabase.com/docs/guides/auth/native-mobile-deep-linking)
+*   [Identity Linking](https://supabase.com/docs/guides/auth/auth-identity-linking)
+
+Multi-Factor Authentication
+
+*   [Signout](https://supabase.com/docs/guides/auth/signout)
+
+Debugging*   [Error Codes](https://supabase.com/docs/guides/auth/debugging/error-codes)
+*   [Troubleshooting](https://supabase.com/docs/guides/auth/troubleshooting)
+
+OAuth 2.1 Server*   [Overview](https://supabase.com/docs/guides/auth/oauth-server)
+*   [Getting Started](https://supabase.com/docs/guides/auth/oauth-server/getting-started)
+*   [OAuth Flows](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows)
+*   [MCP Authentication](https://supabase.com/docs/guides/auth/oauth-server/mcp-authentication)
+*   [Token Security & RLS](https://supabase.com/docs/guides/auth/oauth-server/token-security)
+
+Third-party auth*   [Overview](https://supabase.com/docs/guides/auth/third-party/overview)
+*   [Clerk](https://supabase.com/docs/guides/auth/third-party/clerk)
+*   [Firebase Auth](https://supabase.com/docs/guides/auth/third-party/firebase-auth)
+*   [Auth0](https://supabase.com/docs/guides/auth/third-party/auth0)
+*   [AWS Cognito (Amplify)](https://supabase.com/docs/guides/auth/third-party/aws-cognito)
+*   [WorkOS](https://supabase.com/docs/guides/auth/third-party/workos)
+
+Configuration*   [General Configuration](https://supabase.com/docs/guides/auth/general-configuration)
+*   [Email Templates](https://supabase.com/docs/guides/auth/auth-email-templates)
+*   [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
+
+Auth Hooks
+
+*   [Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp)
+*   [User Management](https://supabase.com/docs/guides/auth/managing-user-data)
+
+Security*   [Password Security](https://supabase.com/docs/guides/auth/password-security)
+*   [Rate Limits](https://supabase.com/docs/guides/auth/rate-limits)
+*   [Bot Detection (CAPTCHA)](https://supabase.com/docs/guides/auth/auth-captcha)
+*   [Audit Logs](https://supabase.com/docs/guides/auth/audit-logs)
+
+JSON Web Tokens (JWT)
+
+*   [JWT Signing Keys](https://supabase.com/docs/guides/auth/signing-keys)
+*   [Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
+*   [Column Level Security](https://supabase.com/docs/guides/database/postgres/column-level-security)
+
+[![Image 5: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 6: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+
+*   [Start](https://supabase.com/docs/guides/getting-started)
+*   Products
+*   Build
+*   Manage
+*   Reference
+*   Resources
+
+[![Image 7: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 8: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+
+Search docs...
+
+Ctrl K
+
+Auth
+
+# Auth
+
+Use Supabase to authenticate and authorize your users.
+
+Supabase Auth makes it easy to implement authentication and authorization in your app. We provide client SDKs and API endpoints to help you create and manage users.
+
+Your users can use many popular Auth methods, including password, magic link, one-time password (OTP), social login, and single sign-on (SSO).
+
+## About authentication and authorization[#](https://supabase.com/docs/guides/auth#about-authentication-and-authorization)
+
+Authentication and authorization are the core responsibilities of any Auth system.
+
+*   **Authentication** means checking that a user is who they say they are.
+*   **Authorization** means checking what resources a user is allowed to access.
+
+Supabase Auth uses [JSON Web Tokens (JWTs)](https://supabase.com/docs/guides/auth/jwts) for authentication. For a complete reference of all JWT fields, see the [JWT Fields Reference](https://supabase.com/docs/guides/auth/jwt-fields). Auth integrates with Supabase's database features, making it easy to use [Row Level Security (RLS)](https://supabase.com/docs/guides/database/postgres/row-level-security) for authorization.
+
+## The Supabase ecosystem[#](https://supabase.com/docs/guides/auth#the-supabase-ecosystem)
+
+You can use Supabase Auth as a standalone product, but it's also built to integrate with the Supabase ecosystem.
+
+Auth uses your project's Postgres database under the hood, storing user data and other Auth information in a special schema. You can connect this data to your own tables using triggers and foreign key references.
+
+Auth also enables access control to your database's automatically generated [REST API](https://supabase.com/docs/guides/api). When using Supabase SDKs, your data requests are automatically sent with the user's Auth Token. The Auth Token scopes database access on a row-by-row level when used along with [RLS policies](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## Get started[#](https://supabase.com/docs/guides/auth#get-started)
+
+Start here if you're new to Supabase Auth:
+
+*   [Auth with email and password Sign up and sign in users with email and password.](https://supabase.com/docs/guides/auth/passwords)
+*   [Server-side rendering Create a Supabase client for SSR frameworks like Next.js and SvelteKit.](https://supabase.com/docs/guides/auth/server-side)
+*   [Which package to use supabase-js vs @supabase/ssr vs @supabase/server — which to use on the server.](https://supabase.com/docs/guides/auth/choosing-a-server-package)
+*   [Row Level Security Use RLS policies to authorize data access from the client.](https://supabase.com/docs/guides/database/postgres/row-level-security)
+
+## Providers[#](https://supabase.com/docs/guides/auth#providers)
+
+Supabase Auth works with many popular Auth methods, including Social and Phone Auth using third-party providers. See the following sections for a list of supported third-party providers.
+
+### Social Auth[#](https://supabase.com/docs/guides/auth#social-auth)
+
+[![Image 9: Apple Icon](https://supabase.com/docs/img/icons/apple-icon.svg) ##### Apple](https://supabase.com/docs/guides/auth/social-login/auth-apple)[![Image 10: Azure (Microsoft) Icon](https://supabase.com/docs/img/icons/microsoft-icon.svg) ##### Azure (Microsoft)](https://supabase.com/docs/guides/auth/social-login/auth-azure)[![Image 11: Bitbucket Icon](https://supabase.com/docs/img/icons/bitbucket-icon.svg) ##### Bitbucket](https://supabase.com/docs/guides/auth/social-login/auth-bitbucket)[![Image 12: Discord Icon](https://supabase.com/docs/img/icons/discord-icon.svg) ##### Discord](https://supabase.com/docs/guides/auth/social-login/auth-discord)[![Image 13: Facebook Icon](https://supabase.com/docs/img/icons/facebook-icon.svg) ##### Facebook](https://supabase.com/docs/guides/auth/social-login/auth-facebook)[![Image 14: Figma Icon](https://supabase.com/docs/img/icons/figma-icon.svg) ##### Figma](https://supabase.com/docs/guides/auth/social-login/auth-figma)[![Image 15: GitHub Icon](https://supabase.com/docs/img/icons/github-icon-light.svg) ##### GitHub](https://supabase.com/docs/guides/auth/social-login/auth-github)[![Image 16: GitLab Icon](https://supabase.com/docs/img/icons/gitlab-icon.svg) ##### GitLab](https://supabase.com/docs/guides/auth/social-login/auth-gitlab)[![Image 17: Google Icon](https://supabase.com/docs/img/icons/google-icon.svg) ##### Google](https://supabase.com/docs/guides/auth/social-login/auth-google)[![Image 18: Kakao Icon](https://supabase.com/docs/img/icons/kakao-icon.svg) ##### Kakao](https://supabase.com/docs/guides/auth/social-login/auth-kakao)[![Image 19: Keycloak Icon](https://supabase.com/docs/img/icons/keycloak-icon.svg) ##### Keycloak](https://supabase.com/docs/guides/auth/social-login/auth-keycloak)[![Image 20: LinkedIn Icon](https://supabase.com/docs/img/icons/linkedin-icon.svg) ##### LinkedIn](https://supabase.com/docs/guides/auth/social-login/auth-linkedin)[![Image 21: Notion Icon](https://supabase.com/docs/img/icons/notion-icon.svg) ##### Notion](https://supabase.com/docs/guides/auth/social-login/auth-notion)[![Image 22: Slack Icon](https://supabase.com/docs/img/icons/slack-icon.svg) ##### Slack](https://supabase.com/docs/guides/auth/social-login/auth-slack)[![Image 23: Spotify Icon](https://supabase.com/docs/img/icons/spotify-icon.svg) ##### Spotify](https://supabase.com/docs/guides/auth/social-login/auth-spotify)[![Image 24: Twitter Icon](https://supabase.com/docs/img/icons/twitter-icon-light.svg) ##### Twitter](https://supabase.com/docs/guides/auth/social-login/auth-twitter)[![Image 25: Twitch Icon](https://supabase.com/docs/img/icons/twitch-icon.svg) ##### Twitch](https://supabase.com/docs/guides/auth/social-login/auth-twitch)[![Image 26: WorkOS Icon](https://supabase.com/docs/img/icons/workos-icon.svg) ##### WorkOS](https://supabase.com/docs/guides/auth/social-login/auth-workos)[![Image 27: Zoom Icon](https://supabase.com/docs/img/icons/zoom-icon.svg) ##### Zoom](https://supabase.com/docs/guides/auth/social-login/auth-zoom)
+
+You can also add any OAuth2 or OIDC-compatible identity provider using [Custom OAuth/OIDC Providers](https://supabase.com/docs/guides/auth/custom-oauth-providers).
+
+### Phone Auth[#](https://supabase.com/docs/guides/auth#phone-auth)
+
+[![Image 28: MessageBird Icon](https://supabase.com/docs/img/icons/messagebird-icon.svg) ##### MessageBird](https://supabase.com/docs/guides/auth/phone-login?showSmsProvider=MessageBird)[![Image 29: Twilio Icon](https://supabase.com/docs/img/icons/twilio-icon.svg) ##### Twilio](https://supabase.com/docs/guides/auth/phone-login?showSmsProvider=Twilio)[![Image 30: Vonage Icon](https://supabase.com/docs/img/icons/vonage-icon-light.svg) ##### Vonage](https://supabase.com/docs/guides/auth/phone-login?showSmsProvider=Vonage)
+
+## Pricing[#](https://supabase.com/docs/guides/auth#pricing)
+
+Charges apply to Monthly Active Users (MAU), Monthly Active Third-Party Users (Third-Party MAU), and Monthly Active SSO Users (SSO MAU) and Advanced MFA Add-ons. For a detailed breakdown of how these charges are calculated, refer to the following pages.
+
+*   [**Pricing MAU**: How MAU usage is measured and billed.](https://supabase.com/docs/guides/platform/manage-your-usage/monthly-active-users)
+*   [**Pricing Third-Party MAU**: How third-party auth MAU is measured and billed.](https://supabase.com/docs/guides/platform/manage-your-usage/monthly-active-users-third-party)
+*   [**Pricing SSO MAU**: How SSO MAU usage is measured and billed.](https://supabase.com/docs/guides/platform/manage-your-usage/monthly-active-users-sso)
+*   [**Advanced MFA - Phone**: How Advanced MFA Phone add-on usage is measured and billed.](https://supabase.com/docs/guides/platform/manage-your-usage/advanced-mfa-phone)
+
+## Next steps[#](https://supabase.com/docs/guides/auth#next-steps)
+
+Once you've covered the basics, these guides help with other use cases and features:
+
+*   [Email (Magic link or OTP) Sign up and sign in users with a Magic Link or email OTP instead of a password.](https://supabase.com/docs/guides/auth/auth-email-passwordless)
+*   [Enterprise SSO Add Single Sign-On for enterprise applications with SAML 2.0.](https://supabase.com/docs/guides/auth/enterprise-sso)
+*   [User sessions Control session lifetime, refresh tokens, and multi-device sign-in behavior.](https://supabase.com/docs/guides/auth/sessions)
+*   [Third-party auth Use Clerk, Auth0, Firebase Auth, Cognito, or WorkOS JWTs with Supabase APIs.](https://supabase.com/docs/guides/auth/third-party/overview)
+*   [Multi-factor authentication Add a second factor to user sign-in with TOTP or phone.](https://supabase.com/docs/guides/auth/auth-mfa)
+*   [JWTs Understand how Supabase Auth issues and validates JWTs.](https://supabase.com/docs/guides/auth/jwts)
+*   [Auth Hooks Customize Auth behavior with Postgres functions at key lifecycle points.](https://supabase.com/docs/guides/auth/auth-hooks)
+
+[Edit this page on GitHub](https://github.com/supabase/supabase/blob/master/apps/docs/content/guides/auth.mdx)
+
+Watch video guide
+
+![Image 31: Video guide preview](https://supabase.com/docs/_next/image?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2F6ow_jW4epf8%2F0.jpg&w=3840&q=75)
+
+### Is this helpful?
+
+No Yes
+
+### AI Tools
+
+Copy as Markdown[Ask ChatGPT](https://chatgpt.com/?hint=search&q=Read%20from%20https://supabase.com/docs/guides/auth%20so%20I%20can%20ask%20questions%20about%20its%20contents)[Ask Claude](https://claude.ai/new?q=Read%20from%20https://supabase.com/docs/guides/auth%20so%20I%20can%20ask%20questions%20about%20its%20contents)
+
+*   Need some help?
+
+[Contact support](https://supabase.com/support)
+*   Latest product updates?
+
+[See Changelog](https://supabase.com/changelog)
+*   Something's not right?
+
+[Check system status](https://status.supabase.com/)
+
+* * *
+
+[© Supabase Inc](https://supabase.com/)—[Contributing](https://github.com/supabase/supabase/blob/master/apps/docs/DEVELOPERS.md)[Author Styleguide](https://github.com/supabase/supabase/blob/master/apps/docs/CONTRIBUTING.md)[Open Source](https://supabase.com/open-source)[SupaSquad](https://supabase.com/supasquad)Privacy Settings
+
+[Twitter](https://twitter.com/supabase)[GitHub](https://github.com/supabase)[Discord](https://discord.supabase.com/)[Youtube](https://youtube.com/c/supabase)
+
+1.   [Auth](https://supabase.com/docs/guides/auth)
+
+3.   [Overview](https://supabase.com/docs/guides/auth)

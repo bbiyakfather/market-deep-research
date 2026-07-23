@@ -1,0 +1,63 @@
+Title: Use Supabase with Next.js | Supabase Docs
+
+URL Source: https://supabase.com/docs/guides/getting-started/quickstarts/nextjs
+
+Published Time: 2026-07-23T12:45:10.057Z
+
+Markdown Content:
+Learn how to create a Supabase project, add some sample data, and query from a Next.js app.
+
+To start, you need a Supabase project.
+
+Create a new Supabase project from [the Dashboard of any organization](https://supabase.com/dashboard/new/_) you belong to.
+
+When your Supabase project is up and running, create an `instruments` table with some sample data. Then set only the privileges each Postgres role needs, add [Row Level Security (RLS)](https://supabase.com/docs/guides/database/postgres/row-level-security) for enhanced security for database data by default, and create an RLS policy to make the data in the table publicly readable.
+
+Do these steps within your project's dashboard by copying and running the snippet in your project's [SQL Editor](https://supabase.com/dashboard/project/_/sql/new).
+
+`1-- Create the table2create table instruments (3  id bigint primary key generated always as identity,4  name text not null5);67-- Insert sample data into the table8insert into instruments (name)9values10  ('violin'),11  ('viola'),12  ('cello');1314-- Grant the privileges the role needs, which is read access15grant select on public.instruments to anon;1617-- Enable row level security for the table18alter table instruments enable row level security;1920-- Create a policy to allow the anon role to read from the instruments table21create policy "public can read instruments"22on public.instruments23for select to anon24using (true);`
+
+Use the `create-next-app` command and the `with-supabase` template, to create a Next.js app pre-configured with [Cookie-based Auth](https://supabase.com/docs/guides/auth/server-side/creating-a-client?queryGroups=package-manager&package-manager=npm&queryGroups=framework&framework=nextjs&queryGroups=environment&environment=server), [TypeScript](https://www.typescriptlang.org/), and [Tailwind CSS](https://tailwindcss.com/).
+
+`1npx create-next-app -e with-supabase`
+
+Supabase's [Agent Skills](https://supabase.com/docs/guides/ai-tools/ai-skills) is a curated set of instructions that give your AI agent procedural knowledge about working with Supabase.
+
+To install, run the following command in the root of your project:
+
+`1npx skills add supabase/agent-skills`
+
+Rename `.env.example` to `.env.local` and populate with your Supabase connection variables that you can get from the helper below, or [from the project **Connect** panel](https://supabase.com/dashboard/project/_?showConnect=true&framework=nextjs&tab=frameworks).
+
+[Open Connect panel](https://supabase.com/dashboard/project/_?showConnect=true&connectTab=frameworks&framework=nextjs)
+
+###### .env.local
+
+`1NEXT_PUBLIC_SUPABASE_URL=<SUBSTITUTE_SUPABASE_URL>2NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<SUBSTITUTE_SUPABASE_PUBLISHABLE_KEY>`
+
+### Get API details[#](https://supabase.com/docs/guides/getting-started/quickstarts/nextjs#get-api-details)
+
+To interact with data in database tables, you use the client libraries that wrap [the auto-generated Data API endpoints](https://supabase.com/docs/guides/api), authenticating using the Project URL and key from [the project **Connect** dialog](https://supabase.com/dashboard/project/_?showConnect=true&connectTab=frameworks&framework=nextjs).
+
+###### Project URL
+
+To get your Project URL, [log in](https://supabase.com/dashboard).
+
+###### Publishable key
+
+To get your Publishable key, [log in](https://supabase.com/dashboard).
+
+Create a new file at `app/instruments/page.tsx` and populate with the following.
+
+This selects all the rows from the `instruments` table you created earlier and renders them on the page.
+
+`1import { createClient } from "@/lib/supabase/server";2import { Suspense } from "react";34async function InstrumentsData() {5  const supabase = await createClient();6  const { data: instruments } = await supabase.from("instruments").select();78  return <pre>{JSON.stringify(instruments, null, 2)}</pre>;9}1011export default function Instruments() {12  return (13    <Suspense fallback={<div>Loading instruments...</div>}>14      <InstrumentsData />15    </Suspense>16  );17}`
+
+Run the development server, go to [http://localhost:3000/instruments](http://localhost:3000/instruments) in a browser and you should see the list of instruments.
+
+`1npm run dev`
+
+*   Explore [drop-in UI components](https://supabase.com/ui) for your Supabase app
+*   Set up [Auth](https://supabase.com/docs/guides/auth) for your app
+*   [Insert more data](https://supabase.com/docs/guides/database/import-data) into your database
+*   Upload and serve static files using [Storage](https://supabase.com/docs/guides/storage)

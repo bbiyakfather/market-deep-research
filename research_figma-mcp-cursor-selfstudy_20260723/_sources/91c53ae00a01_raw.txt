@@ -1,0 +1,148 @@
+Title: Set up the desktop server (using desktop app) | Developer Docs
+
+URL Source: https://developers.figma.com/docs/figma-mcp-server/local-server-installation/
+
+Published Time: Wed, 22 Jul 2026 15:08:30 GMT
+
+Markdown Content:
+important
+
+Figma provides the local desktop version of the Figma MCP server for some specific organization and enterprise use cases, but we strongly recommend using the remote version of the Figma MCP server. The remote version of the server provides the broadest set of features.
+
+You can only use the desktop MCP server via the Figma desktop app. [Download the Figma desktop app](https://www.figma.com/downloads/) →
+
+You must use a code editor or application that supports MCP servers, such as VS Code, Cursor, Claude Code. For a complete list of supported clients, see the [MCP catalog](https://www.figma.com/mcp-catalog/).
+
+## Step 1: Enable the desktop MCP Server[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#step-1-enable-the-desktop-mcp-server "Direct link to Step 1: Enable the desktop MCP Server")
+
+1.   Open the [Figma desktop app](https://www.figma.com/downloads/) and make sure you've [updated to the latest version](https://help.figma.com/hc/en-us/articles/360039824114-Update-the-Figma-desktop-app).
+2.   Create or open a Figma Design file.
+3.   In the toolbar at the bottom, toggle to [Dev Mode](https://help.figma.com/hc/en-us/articles/15023124644247-Guide-to-Dev-Mode) or use the keyboard shortcut Shift D
+4.   In the **MCP server** section of the inspect panel, click **Enable desktop MCP server**.
+
+You should see a confirmation message at the bottom of the screen letting you know the server is enabled and running.
+
+note
+
+**Note:** The desktop server runs locally at `http://127.0.0.1:3845/mcp`. Keep this address handy for your configuration file in the next step.
+
+## Step 2: Set up your MCP client[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#step-2-set-up-your-mcp-client "Direct link to Step 2: Set up your MCP client")
+
+Once the server is running locally on the Figma desktop app, MCP clients will be able to connect to your server. Follow the instructions for your specific client to add the MCP server.
+
+### VS Code[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#vs-code "Direct link to VS Code")
+
+1.   Use the shortcut ⌘ Shift P to search for `MCP:Add Server`.
+
+2.   Select `HTTP`.
+
+3.   Past the server url `http://127.0.0.1:3845/mcp` in the search bar, then hit Enter.
+
+4.   Type in `figma-desktop` when it asks for a Server ID, then hit Enter.
+
+5.   Select whether you want to add this server globally or only for the current workspace. Once confirmed, you'll see a configuration like this in your `mcp.json` file:
+
+{
+   "servers": {
+     "figma-desktop": {
+       "type": "http",
+       "url": "http://127.0.0.1:3845/mcp"
+     }
+   }
+ }
+6.   Open the chat toolbar using ⌥⌘B or ⌃⌘I and switch to **Agent** mode.
+
+7.   With the chat open, type in `#get_design_context` to confirm that the MCP server tools are available. If no tools are listed, restart the Figma desktop app and VS Code.
+
+### Cursor[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#cursor "Direct link to Cursor")
+
+1.   Open **Cursor → Settings → Cursor Settings**.
+
+2.   Go to the **MCP** tab.
+
+3.   Click **+ Add new global MCP server**.
+
+4.   Enter the following configuration and save:
+
+{
+   "mcpServers": {
+     "figma-desktop": {
+       "url": "http://127.0.0.1:3845/mcp"
+     }
+   }
+ }
+
+For more information, see [Cursor's official documentation](https://docs.cursor.com/context/model-context-protocol).
+
+### Claude Code[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#claude-code "Direct link to Claude Code")
+
+1.   Open your terminal and run:
+
+claude mcp add --transport http figma-desktop http://127.0.0.1:3845/mcp
+1.   Use the following commands to check MCP settings and manage servers:
+
+    *   List all configured servers
+
+claude mcp list
+    *   Get details for a specific server
+
+claude mcp get my-server
+    *   Remove a server
+
+claude mcp remove my-server
+
+For more information, see [Anthropic's official documentation](https://docs.anthropic.com/en/docs/build-with-claude/computer-use).
+
+### Other editors[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#other-editors "Direct link to Other editors")
+
+You can manually add the MCP server using this configuration:
+
+{
+  "mcpServers": {
+    "figma-desktop": {
+      "url": "http://127.0.0.1:3845/mcp"
+    }
+  }
+}
+Once configured, refresh or start the server. You should see a successful connection and the available tools. If the connection failed or you do not see any tools, double check that the server is active in the Figma desktop app.
+
+## Step 3: Prompt your MCP client[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#step-3-prompt-your-mcp-client "Direct link to Step 3: Prompt your MCP client")
+
+The MCP server introduces a set of tools that help LLMs translate designs in Figma. Once connected, you can prompt your MCP client to access a specific design node.
+
+There are two ways to provide Figma design context to your AI client:
+
+### Selection-based[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#selection-based "Direct link to Selection-based")
+
+1.   Select a frame or layer inside Figma using the desktop app.
+
+2.   Prompt your client to help you implement your current selection.
+
+![Image 1: MCP client with selection-based prompt](https://developers.figma.com/assets/images/mcp-client-selection-prompt-cf643ebe90c096b76aa2fce77b255f5a.png)
+
+### Link-based[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#link-based "Direct link to Link-based")
+
+1.   Copy the link to a frame or layer in Figma.
+
+2.   Prompt your client to help you implement the design at the selected URL.
+
+![Image 2: MCP client with link-based prompt](https://developers.figma.com/assets/images/mcp-client-link-prompt-9d423d7411aa6f368abb1e71ad9fd93c.png)
+
+note
+
+**Note:** Your client won't be able to navigate to the selected URL, but it will extract the node-id that is required for the MCP server to identify which object to return information about.
+
+## Step 4: Tweak your settings[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#step-4-tweak-your-settings "Direct link to Step 4: Tweak your settings")
+
+The desktop MCP server has a few settings you can tweak to get it working just as you like it. To find these settings, go the **MCP server** section of the inspect panel and click the **Open settings modal** button.
+
+### Image settings[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#image-settings "Direct link to Image settings")
+
+Lets you choose how image assets are handled:
+
+*   **Local server:** uses local images, adds a localhost link to the returned markup, allowing you to use the actual image asset wherever your file is rendered.
+*   **Download assets:** allow the MCP server to download and write image assets (e.g. icons, images) from Figma into the user's project.
+
+### Enable Code Connect[​](https://developers.figma.com/docs/figma-mcp-server/local-server-installation/#enable-code-connect "Direct link to Enable Code Connect")
+
+Includes Code Connect mappings in the response, so the generated code can reuse components from your connected codebase where possible.

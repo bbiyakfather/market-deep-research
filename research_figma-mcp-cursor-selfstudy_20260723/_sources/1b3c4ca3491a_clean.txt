@@ -1,0 +1,77 @@
+Before you start
+Who can use this feature
+Figma Make is available for Full seats on paid plans.
+You can try Figma Make on other seats and plans.
+What is Figma Make?
+Figma Make is an AI-driven, prompt-to-app tool that lets you bring ideas and existing Figma designs to life as functional prototypes, web apps, and interactive UI. Through conversation, you can ideate, iterate, and improve your functional prototypes and web apps.
+Use Figma Make to:
+- Preview the look and feel of your designs in a functional form
+- Turn proposals and ideas into prototypes to help hone your product approach
+- Explore a variety of solutions for a problem you're trying to solve
+Figma Make provides several features that make it easy to transform your Figma designs into functional prototypes:
+- Attach your existing Figma designs, components, and Community content to your prompts
+- As you continue a conversation, point to specific parts of the preview that you want to improve
+- Search the web for current information or fetch content from a specific URL to ground your prototype in real-world data
+- Collaborate with your team in the same conversations, and simultaneously modify the generated code
+- Share previews of your functional prototype or web app with other people
+- Publish your functional prototype or web app as a website with a dedicated URL
+To get started, check out Create and edit a functional prototype or web app. You can create Figma Make files the same way you create other new files in Figma. In the file browser, navigate to your drafts. Then, in the upper-right corner, click Make.
+Note: Figma Make may incorporate third-party content from the internet—such as fonts, code packages, or images—into your functional prototype or web app. You are responsible for ensuring you have appropriate rights to all content before publishing.
+Find your way around
+Figma Make offers a straightforward interface to help you start generating prototypes from your designs as quickly as possible. Figma Make has two primary areas: the AI chat, where you can prompt the model, and the preview, where you can see a working version of your app and edit the code.
+Chat with AI
+The AI chat in Figma Make is where you'll share Figma designs and images, converse with the model to generate your functional prototype or web app, and iterate by prompting.
+Bring your design to Figma Make
+To use your existing designs to generate an app, click +, then Import from Figma, and then select the design you want to use. You can attach more than one design to help give the model more guidance.
+You can also paste frames and components from your designs directly into the AI chat.
+Use images to create with Figma Make
+Have an idea that's not in a design file yet? Provide images in the AI chat to get your app started. To use an image, click +, then Upload image and select the image you want to add, or paste the image directly into chat.
+Guide the AI with conversation
+Have inspired ideas or instructions you want the model to follow? Just write them in the AI chat and work iteratively with Figma Make to bring those ideas to life.
+Iterate with conversation and the edit tool
+Improving your functional prototype or web app is as simple as continuing the conversation in the AI chat. You can keep attaching designs, images, and typing into the prompt box to iterate on the result of your conversation.
+You can also use Figma Make's edit tool to point to specific parts of your functional prototype or web app and make direct changes. Depending on the element, you can do things like change padding, margins, colors, text properties. You can also use the Edit tool to prompt the specific changes you want to see.
+Create functional prototypes, web apps, and interactive UI
+Ready to get started? Check out Create and edit a functional prototype or web app, where you'll find all the details to help get you started generating with the AI chat.
+Once you have your functional prototype or web app, you can also view it in a dedicated, fullscreen preview, similar to Figma Design prototypes.
+You can also add a backend to your functional prototype or web app to securely store and manage data. For example, you’ll need a backend when you want to maintain the state of an app across different browsers, provide login screens, save and load content like text and images, and store secrets and API keys.
+Collaborate on and share functional prototypes and web apps
+After you've created a functional prototype or web app, you can share it in different ways with your teammates or anyone on the web.
+Copy a Figma Make preview as design layers
+In Figma Make, you can can copy a snapshot of a preview as layers and then paste those layers into Figma Design. Bringing in Figma Make previews as layers is a great way to iterate on designs with other teammates. For example, you could copy the different interfaces in your web app one at a time, and then use a Figma Design file as a place to collaborate with others, try out different design ideas, and further edit the designs.
+Create and use templates
+Templates in Figma Make are a great way to create a high quality foundation for users in a team or organization to get started faster with Figma Make.
+Templates enable you to:
+- Build a polished Figma Make file that's consistent with brand and product guidelines
+- Share that file with others to use while setting guidelines for how the styles and functionality can be changed
+- Let members of your team and organization get making in a way that respects the guidelines you’ve set
+When you create a template in Figma Make, your teammates can start using the template right away to riff on and experiment with the work you've been doing.
+Create and publish a Make kit
+In a Make kit, you can add npm packages to provide context on which assets—like components, styles, and tokens—to use, import variables and styles from your design library, and write guidelines to provide context on how the assets should use style context and behave.
+Share and publish
+You can share the preview of your functional prototype or web app with anyone you want, using the granular permissions to control access and keep your concepts safe.
+Then, when you're ready, publish your functional prototype or web app to the public web with its own dedicated URL courtesy of Figma, or assign a custom domain that you own.
+Permissions in Figma Make
+Your permissions determine what actions you can take in Figma Make files and whether you can make changes to a functional prototype or web app.
+Sharing Figma Make files
+File owners and anyone with the can edit permission for a Figma Make file can publish the file to the public web. Once Figma Make files are published as functional prototypes or web apps, they will be available on the public web. However, visitors to the site cannot access the Figma Make file that was used to publish the site.
+Creating files
+To create Figma Make files, a Full seat on a paid plan. You can also try out Figma Make with other seats and plans.
+Editing, viewing, and sharing
+Depending on your permissions, you can take different actions in a Figma Make file.
+- People with can editattach designs, images, see the chat history, and write prompts in the AI chat. They can view the full-screen preview. They can invite other editors and viewers to the file. They can publish the Figma Make file to the public web.
+- People with can viewcan view the prompts in the AI chat, see the chat history, but not write their own prompts. They can view the full-screen preview. They can invite other viewers to the file.
+What's next?
+To get started using Figma Make, check out the following articles:
+- Create and edit a functional prototype or web app
+- Attach designs and images to a prompt
+- Edit the code of a functional prototype or web app
+- Preview a functional prototype or web app
+- Create and update a template in Figma Make
+- Custom skills for Figma Make
+- Publish a functional prototype or web app to the Figma Community
+- Remix a functional prototype or web app
+- Publish, update, or unpublish a functional prototype or web app
+- Best practices for optimizing AI credits in Figma Make
+Questions about Figma Make?
+If you have questions about Figma Make or how to use the product, check out the Figma Make FAQs.

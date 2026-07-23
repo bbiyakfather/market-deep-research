@@ -1,0 +1,33 @@
+Rate limits & access
+Who can access the MCP server?
+Access to the Figma MCP server depends on your Figma plan and seat type. Per-minute rate limits apply in addition to daily or monthly tool call limits.
+| Seat | Starter | Professional | Organization | Enterprise | 
+|---|---|---|---|---|
+| View, Collab | Up to 6/month | Up to 6/month | Up to 6/month | Up to 6/month | 
+| Dev, Full | Up to 200/day 10/min | Up to 200/day 15/min | Up to 600/day 20/min | 
+Rate limits apply to Figma MCP server tools that read data from Figma. Some tools, such as those that write to Figma files, are exempt from the rate limits. Exempt tools include:
+- add_code_connect_map
+- generate_figma_design
+- whoami
+Figma reserves the right to change rate limits.
+What if I'm rate-limited?
+If you're encountering rate limits with the Figma MCP server, you can increase your limits in certain scenarios by upgrading your seat or plan.
+- 
+If you're on a Starter plan (6 tool calls per month), upgrade to a Pro, Organization, or Enterprise plan. Ensure you have a Full or Dev seat on the new plan. 
+- 
+If you have a View or Collab seat on an Organization or Enterprise plan (6 tool calls per month), upgrade to a Full or Dev seat. 
+- 
+If you have a Full or Dev seat on an Organization plan (200 tool calls per day), upgrade to an Enterprise plan (600 tool calls per day). 
+Full and Dev seats on Enterprise plans get the least-limited usage, as described in Who can access the MCP server?
+Does the Figma MCP server support enterprise-managed authorization?
+Yes. Currently, enterprise-managed authorization is supported only for Claude via Okta Cross App Access (XAA).
+Normally, the Figma MCP server requires each user to follow an OAuth login flow to get access. Using Okta XAA, access is brokered by Okta: a member signs in once through Okta, and Claude can then work with the Figma MCP server without asking that member to authorize again.
+To learn more, see Set up OIDC for Okta XAA in Figma's Help Center.
+Which MCP clients are supported?
+To use the MCP server, you’ll need a code editor or application that supports MCP servers (for example, VS Code, Cursor, or Claude Code).
+Only clients listed in the Figma MCP Catalog are able to connect to the Figma MCP Server. If you’re a developer interested in connecting a new MCP client, you can join the waitlist.
+Why am I getting permission errors?
+You can only access Figma content that you already have permission to view or edit. If you get an error indicating that resources can’t be accessed:
+- Check the file link: Make sure it’s a valid Figma Design, FigJam, or Figma Make file.
+- Verify your user: Run the whoami tool to confirm the email used for authentication. It also tells you all the plans the user belongs to and their seat types in these plans.
+- Confirm permissions: Ensure the user belongs to the plan to which the file being accessed belongs to as well

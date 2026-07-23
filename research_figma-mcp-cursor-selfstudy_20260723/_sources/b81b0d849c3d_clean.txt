@@ -1,0 +1,38 @@
+Use Supabase with Next.js
+Learn how to create a Supabase project, add some sample data, and query from a Next.js app.
+1. Create a Supabase project#
+To start, you need a Supabase project.
+Create a new Supabase project from the Dashboard of any organization you belong to.
+Want to create a project programmatically?
+Use the Management API or ask the MCP server to create a new Supabase project.
+2. Set up your database#
+When your Supabase project is up and running, create an instruments table with some sample data. Then set only the privileges each Postgres role needs, add Row Level Security (RLS) for enhanced security for database data by default, and create an RLS policy to make the data in the table publicly readable.
+Do these steps within your project's dashboard by copying and running the snippet in your project's SQL Editor.
+Save some steps by clicking here to prefill the SQL in the SQL Editor, and then clicking Run.
+Want to setup the database programmatically?
+You can use the Management API or ask the MCP server to execute SQL queries.
+1-- Create the table2create table instruments (3  id bigint primary key generated always as identity,4  name text not null5);67-- Insert sample data into the table8insert into instruments (name)9values10  ('violin'),11  ('viola'),12  ('cello');1314-- Grant the privileges the role needs, which is read access15grant select on public.instruments to anon;1617-- Enable row level security for the table18alter table instruments enable row level security;1920-- Create a policy to allow the anon role to read from the instruments table21create policy "public can read instruments"22on public.instruments23for select to anon24using (true);If you disabled the Data API during project setup, enable it in the Integrations > Data API section of the Dashboard and expose the specific tables or functions you want to access. To automatically grant access for new tables and functions in public, enable Automatically expose new tables.
+3. Create a Next.js app#
+Use the create-next-app command and the with-supabase template, to create a Next.js app pre-configured with Cookie-based Auth, TypeScript, and Tailwind CSS.
+1npx create-next-app -e with-supabase4. Install Agent Skills (optional)#
+Supabase's Agent Skills is a curated set of instructions that give your AI agent procedural knowledge about working with Supabase.
+To install, run the following command in the root of your project:
+1npx skills add supabase/agent-skills5. Declare Supabase environment variables#
+Rename .env.example to .env.local and populate with your Supabase connection variables that you can get from the helper below, or from the project Connect panel.
+Open Connect panel
+.env.local
+1NEXT_PUBLIC_SUPABASE_URL=<SUBSTITUTE_SUPABASE_URL>2NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<SUBSTITUTE_SUPABASE_PUBLISHABLE_KEY>Get API details#
+To interact with data in database tables, you use the client libraries that wrap the auto-generated Data API endpoints, authenticating using the Project URL and key from the project Connect dialog.
+Project URL
+Publishable key
+Read the API keys docs for a full explanation of all key types, their uses, and where to find them.
+6. Query Supabase data from Next.js#
+Create a new file at app/instruments/page.tsx and populate with the following.
+This selects all the rows from the instruments table you created earlier and renders them on the page.
+1import { createClient } from "@/lib/supabase/server";2import { Suspense } from "react";34async function InstrumentsData() {5  const supabase = await createClient();6  const { data: instruments } = await supabase.from("instruments").select();78  return <pre>{JSON.stringify(instruments, null, 2)}</pre>;9}1011export default function Instruments() {12  return (13    <Suspense fallback={<div>Loading instruments...</div>}>14      <InstrumentsData />15    </Suspense>16  );17}7. Start the app#
+Run the development server, go to http://localhost:3000/instruments in a browser and you should see the list of instruments.
+1npm run devNext steps#
+- Explore drop-in UI components for your Supabase app
+- Set up Auth for your app
+- Insert more data into your database
+- Upload and serve static files using Storage

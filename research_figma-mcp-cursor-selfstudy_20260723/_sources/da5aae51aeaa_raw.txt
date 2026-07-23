@@ -1,0 +1,85 @@
+Title: Cursor and Figma: Set up the MCP server
+
+URL Source: https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server
+
+Markdown Content:
+The Figma MCP server gives Cursor structured access to Figma files and tools. It can read design context such as components, variables, layout data, FigJam content, and Make resources, generate code from selected frames, use Code Connect to stay aligned with real components. When moving from Cursor to Figma, you can also write directly to the canvas to create or update native Figma content, and send live web interfaces to Figma as editable layers.
+
+[Jump to the setup instructions →](https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server#h_01KPPGE8VQMJAXZ6CSZ0M32VHY)
+
+This article describes how to set up the Figma MCP server in Cursor. To learn more about the features of the Figma MCP server and how to use it, see:
+
+*   [Guide to the Figma MCP server](https://help.figma.com/hc/en-us/articles/32132100833559)
+*   [Figma MCP collection](https://help.figma.com/hc/en-us/sections/35280374295831-Figma-MCP-collection)
+
+Figma provides two versions of the Figma MCP server: remote and desktop. The remote Figma MCP server is the version most users need and has the broadest set of features. The desktop version is for specific organization and enterprise use cases. Generally, you should use the remote Figma MCP server.
+
+**Note:** Make sure to install Cursor on your computer before the setup. [Download Cursor →](https://cursor.com/download)
+
+## Set up the remote Figma MCP server (preferred)
+
+The recommended way to set up the Figma MCP server in Cursor is by installing the Figma plugin, which includes MCP server settings as well as Agent Skills for common workflows.
+
+![Image 1: HC_setup in cursor.gif](https://help.figma.com/hc/article_attachments/39890131504407)
+To set up the Figma MCP server in Cursor:
+
+1.   Open the command palette using the shortcut:
+    *   **Mac:**Cmd + Shift + P
+    *   **Windows:**Ctrl + Shift + P
+
+2.   Search for **Open chat**.
+3.   In the chat window, enter `/add-plugin figma` in the prompt box and hit **Submit**.
+4.   Click **Add Plugin** to begin the installation process.
+5.   After the installation process, open the command palette again and search for **Cursor Settings.**
+6.   Select **Tools & MCP**.
+7.   Under **Installed MCP Servers**, click **Connect** to go through the authentication process.
+
+You should then see the Figma MCP server is enabled in Cursor and ready to use.
+
+## Set up the desktop Figma MCP server
+
+Figma provides the local desktop version of the Figma MCP server for some specific organization and enterprise use cases, but we strongly recommend using the [remote version of the Figma MCP server](https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server#h_01KPPGE8VQMJAXZ6CSZ0M32VHY). The remote version of the server provides the broadest set of features.
+
+Instructions for the desktop Figma MCP server
+
+**First, enable the desktop MCP server in Figma:**
+
+1.   Install and open the Figma desktop app.
+2.   Open a Figma Design file.
+3.   With nothing selected on canvas, click the toggle switch in the toolbar to switch to [Dev Mode](https://help.figma.com/hc/en-us/articles/15023124644247).
+4.   Then, click to enable the MCP server in the right sidebar.
+5.   Figma will display a confirmation message at the bottom of the screen letting you know the server is enabled and running, and you’ll see a button to copy the address for the server.
+6.   Click copy URL, and keep it handy for your configuration in the next step.
+
+**Then, configure the desktop MCP server in Cursor:**
+
+1.   Open the command palette.
+    1.   macOS: Shift Command P
+    2.   Windows: Shift Ctrl P
+
+2.   Search for "Cursor settings".
+3.   Click on the **MCP** tab.
+4.   Click **Add Custom MCP**.
+5.   Copy the configuration below.
+6.   Then save the file and head back to settings.
+7.   ```
+{
+  "mcpServers": {
+    "figma-desktop": {
+      "url": "http://127.0.0.1:3845/mcp"
+    }
+  }
+}
+``` 
+8.   You should see the Figma MCP tool enabled in Cursor. That means you’re all set up and ready to start using the MCP server.
+
+## What's next?
+
+If you're coming from the Figma MCP collection, [jump back into the previous article](https://help.figma.com/hc/en-us/articles/35281350665623-Figma-MCP-collection-How-to-set-up-the-Figma-remote-MCP-server-preferred#h_01K6BEK6DD4A2HHRYXVH6KSS3M).
+
+For more about using the Figma MCP server, see:
+
+*   [Guide to the Figma MCP server](https://help.figma.com/hc/en-us/articles/32132100833559)
+*   [Figma MCP collection](https://help.figma.com/hc/en-us/sections/35280374295831-Figma-MCP-collection)
+*   [Other Figma MCP server articles in our Help Center](https://help.figma.com/hc/en-us/sections/39166717350935-Figma-MCP-server)
+*   [Figma MCP server developer documentation](https://developers.figma.com/docs/figma-mcp-server/)

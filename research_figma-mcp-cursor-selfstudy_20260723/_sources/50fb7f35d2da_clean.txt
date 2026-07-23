@@ -1,0 +1,199 @@
+토스 페이먼츠에서 제공하는 API를 통해 결제 위젯을 아주 손쉽게 구현할 수 있다.
+공식홈페이지 및 Github에서 예제 코드를 아주 잘 제공해주고 있으니 두 가지만 봐도 구현하는데는 문제가 없을 거라고 생각된다.
+나 또한 위의 두 가지 링크를 거의 대부분 참조했고, 내 프로젝트에 맞게 고친 과정을 쓰고자 한다.
+PaymentContainer.tsx
+const PaymentContainer = () => {
+  const paymentMethodsWidgetRef = useRef<PaymentMethodsWidget>();
+  const { paymentWidget } = usePaymentWidget();
+  const { getTotalPrice } = useOrderStore.getState(); // 선택한 메뉴의 총 가격을 가져온다.
+  useEffect(() => {
+    if (paymentWidget == null) {
+      return;
+    }
+    // 결제위젯 렌더링
+    // @docs https://docs.tosspayments.com/reference/widget-sdk#renderpaymentmethods선택자-결제-금액-옵션
+    paymentMethodsWidgetRef.current = paymentWidget.renderPaymentMethods(
+      '#payment-widget',
+      { value: getTotalPrice() },
+      { variantKey: 'DEFAULT' },
+    );
+    // 이용약관 렌더링
+    // @docs https://docs.tosspayments.com/reference/widget-sdk#renderagreement선택자-옵션
+    paymentWidget.renderAgreement('#agreement', {
+      variantKey: 'AGREEMENT',
+    });
+  }, [paymentWidget]);
+  return (
+    <div className={styles.container}>
+      {/* 결제 UI, 이용약관 UI 영역 */}
+      <div id="payment-widget" />
+      <div id="agreement" />
+      {/*  결제 버튼은 StepButtonContainer.tsx에 */}
+    </div>
+  );
+};예제 코드와는 다르게 결제 버튼은 다른 컴포넌트에 있다. 그럼 다른 컴포넌트에서 어떻게 결제 버튼을 만들었는지 보자.
+StepButtonContainer.tsx
+const StepButtonContainer = ({ step, sliderRef }: StepButtonContainerProps) => {
+  const { goNextStep, goPrevStep, orderList } = useOrderStore.getState();
+  const { paymentWidget, handlePaymentRequest } = usePaymentWidget();
+  const prev = BUTTON_OPTIONS[step]?.prev;
+  const next = BUTTON_OPTIONS[step]?.next;
+  const prevClickHandler = () => {
+    sliderRef.current!.swiper.slidePrev();
+    goPrevStep();
+  };
+  // 결제에 필요한 paymentWidget, handlePaymentRequest는
+  // usePaymentWidget hook을 통해 가져온다!
+  const nextClickHandler = async () => {
+    if (step === ORDER_STEP.PAYMENT && paymentWidget) {
+      await handlePaymentRequest(orderList);
+    } else {
+      sliderRef.current!.swiper.slideNext();
+      goNextStep();
+    }
+  };
+  return (
+    <div className={styles.container}>
+      {prev && <StepButton text={prev} handler={prevClickHandler} />}
+      {next && <StepButton text={next} handler={nextClickHandler} disabled={orderList.length === 0} />}
+    </div>
+  );
+};결제 관련 기능과 필요한 변수, 함수들이 usePaymentWidget Hook에 담겨져 있다.
+usePaymentWidget.ts
+export const usePaymentWidget = () => {
+  const { data: paymentWidget } = useQuery({
+    queryKey: ['payment-widget', TOSS_WIDGET_CLIENT_KEY, ANONYMOUS],
+    queryFn: () => {
+      return loadPaymentWidget(TOSS_WIDGET_CLIENT_KEY, ANONYMOUS);
+    },
+  });
+  const handlePaymentRequest = async (orderList: Tables<'menu_item'>[]) => {
+    // 결제를 요청하기 전에 orderId, amount를 서버(토스)에 저장하세요.
+    // 결제 과정에서 악의적으로 결제 금액이 바뀌는 것을 확인하는 용도입니다.
+    try {
+      await paymentWidget?.requestPayment({
+        orderId: nanoid(),
+        orderName: orderList.length > 1 ? `${orderList[0].name} 외 ${orderList.length - 1}개` : `${orderList[0].name}`,
+        successUrl: `${window.location.origin}/order/success`,
+        failUrl: `${window.location.origin}/order/fail`,
+      });
+    } catch (error) {
+      console.error('Error requesting payment:', error);
+    }
+  };
+  return { paymentWidget, handlePaymentRequest };
+};결제 요청이 성공적으로 진행되면 ~/success 페이지로 리다이렉트 된다. success 페이지에서 결제가 전부 끝날 때 까지 기다리게 된다.
+success.tsx
+const OrderSuccessPage = ({ payment, isError }: { payment: Payment; isError: boolean }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { orderNumber } = useOrderStore();
+  const router = useRouter();
+  useEffect(() => {
+    // 에러이면서 주문번호가 있으면 주문 내역 화면을 보여줍니다.
+    if (isError && orderNumber) {
+      router.push(`/order/receipt`);
+      return;
+    } else if (isError) {
+      // 에러만 있다면 에러 화면을 보여줍니다.
+      router.push('/error');
+      return;
+    }
+    // payment의 상태가 DONE일 때만 완료 화면을 보여줍니다.
+    if (payment && payment.status === 'DONE') setIsLoaded(true);
+  }, []);
+  return <>{isLoaded ? <SuccessContainer payment={payment} /> : <Waiting />}</>;
+};
+export default OrderSuccessPage;
+export const getServerSideProps: GetServerSideProps = async context => {
+  const {
+    query: { paymentKey, orderId, amount },
+  } = context;
+  try {
+    // 결제 승인
+    // @docs https://docs.tosspayments.com/guides/payment-widget/integration#3-결제-승인하기
+    const buffer = Buffer.from(`${process.env.NEXT_PUBLIC_TOSS_WIDGET_SECRET_KEY}:`).toString('base64');
+    // success 페이지에서 새로고침시 다른 에러가 발생할 수 있다. 따라서 처리를 해줘야 한다.
+    if (!paymentKey) {
+      return {
+        props: { isError: true },
+      };
+    }
+    const { data: payment } = await axios.post<Payment>(
+      'https://api.tosspayments.com/v1/payments/confirm',
+      {
+        paymentKey,
+        orderId,
+        amount,
+      },
+      {
+        headers: {
+          Authorization: `Basic ${buffer}`,
+        },
+      },
+    );
+    return {
+      props: { payment, isError: false },
+    };
+  } catch (err: unknown) {
+    const error = err as ErrorResponse;
+    // success 페이지에서 새로고침시 다른 에러가 발생할 수 있다. 따라서 처리를 해줘야 한다.
+    // 이미 결제가 된 경우 에러를 표시합니다.
+    if (error.response.data.code === 'ALREADY_PROCESSED_PAYMENT') {
+      return {
+        props: { isError: true },
+      };
+    }
+    return {
+      redirect: {
+        destination: `/order/fail?code=${error.response.data.code}&message=${encodeURIComponent(
+          error.response.data.message,
+        )}`,
+        permanent: false,
+      },
+    };
+  }
+};코드를 작성하며 사용된 타입은 다음과 같다.
+interface Payment {
+  orderName: string;
+  approvedAt: string;
+  receipt: {
+    url: string;
+  };
+  totalAmount: number;
+  method: '카드' | '가상계좌' | '계좌이체';
+  paymentKey: string;
+  orderId: string;
+  status:
+    | 'READY'
+    | 'IN_PROGRESS'
+    | 'WAITING_FOR_DEPOSIT'
+    | 'DONE'
+    | 'CANCELED'
+    | 'PARTIAL_CANCELED'
+    | 'ABORTED'
+    | 'EXPIRED';
+}
+interface PaymentMethodsWidget {
+  updateAmount: (amount: number, reason?: string | string[]) => void;
+  UPDATE_REASON: {
+    COUPON: string;
+    POINT: string;
+  };
+  on: (eventName: string, callback: (selectedPaymentMethod: string) => unknown) => void;
+  getSelectedPaymentMethod: () => {
+    type: 'NORMAL' | 'BRANDPAY' | 'KEYIN' | 'CUSTOM';
+    method?: string;
+    easyPay?: {
+      provider: string;
+    };
+    paymentMethodKey?: string;
+  };
+}
+interface ErrorResponse {
+  response: {
+    data: {
+      message: string;
+      code: string;
+    };
+  };
+}

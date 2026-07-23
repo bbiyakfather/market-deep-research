@@ -1,0 +1,243 @@
+Title: 구독 결제 서비스 구현하기 (2) 스케줄링 | 토스페이먼츠 개발자센터
+
+URL Source: https://docs.tosspayments.com/blog/subscription-service-2
+
+Markdown Content:
+목차
+
+*   [3. 스케줄링으로 결제 실행하기](https://docs.tosspayments.com/blog/subscription-service-2#3-%EC%8A%A4%EC%BC%80%EC%A4%84%EB%A7%81%EC%9C%BC%EB%A1%9C-%EA%B2%B0%EC%A0%9C-%EC%8B%A4%ED%96%89%ED%95%98%EA%B8%B0)
+*   [결제 결과 및 기록 확인하기](https://docs.tosspayments.com/blog/subscription-service-2#%EA%B2%B0%EC%A0%9C-%EA%B2%B0%EA%B3%BC-%EB%B0%8F-%EA%B8%B0%EB%A1%9D-%ED%99%95%EC%9D%B8%ED%95%98%EA%B8%B0)
+*   [번외: 카드 등록할 때 첫 결제 같이 하기](https://docs.tosspayments.com/blog/subscription-service-2#%EB%B2%88%EC%99%B8-%EC%B9%B4%EB%93%9C-%EB%93%B1%EB%A1%9D%ED%95%A0-%EB%95%8C-%EC%B2%AB-%EA%B2%B0%EC%A0%9C-%EA%B0%99%EC%9D%B4-%ED%95%98%EA%B8%B0)
+
+2023년 9월 6일 ・ 읽는 시간 5분
+
+[![Image 1: 빌링키 발급 메인 이미지](https://static.toss.im/assets/payments/contents/subs-thumb-2.jpg)](https://static.toss.im/assets/payments/contents/subs-thumb-2.jpg)
+
+구독 결제 서비스 구현 순서는 다음과 같다고 설명했었는데요. [지난 포스트](https://docs.tosspayments.com/blog/subscription-service-1)에서 빌링키를 발급하고 저장하는 부분까지 함께 해봤어요.
+
+1.   고객의 결제 수단 정보를 대체하는 빌링키를 발급받은 뒤
+2.   빌링키와 고객 정보, 구독 정보를 데이터베이스에서 관리하고
+3.   **그 정보에 따라 동적으로 스케줄링된 결제를 실행하고 결과 확인**
+
+이번 포스트에서는 3단계인 구독 결제 시스템의 핵심인 스케줄링을 구현하고 마무리 해볼게요.
+
+### [![Image 2: 링크 복사](https://static.toss.im/icons/svg/icon-link-mono.svg)](https://docs.tosspayments.com/blog/subscription-service-2#3-%EC%8A%A4%EC%BC%80%EC%A4%84%EB%A7%81%EC%9C%BC%EB%A1%9C-%EA%B2%B0%EC%A0%9C-%EC%8B%A4%ED%96%89%ED%95%98%EA%B8%B0)3. 스케줄링으로 결제 실행하기
+
+스케줄링은 구독 정보에 따라 맞게 반복해서 결제를 실행하는 로직이에요. 빌링키와 고객 정보가 연결된 걸 확인했으니, 이제 정기적으로 결제할 수 있도록 스케줄링 로직을 넣을 차례에요. `index.js`에 `node-cron` 패키지를 추가해서 구현해볼게요.
+
+월간 플랜을 매달 1일에 실행한다고 가정했어요.
+
+index.js
+
+```
+// 매달 1일에 실행
+cron.schedule('0 0 1 * *', function () {
+  // 데이터베이스에서 billingKey와 customerKey를 가져오는 로직
+  db.get(
+    'SELECT customerKey, billingKey FROM user LIMIT 1',
+    [],
+    (error, row) => {
+      if (error || !row) {
+        console.error('Database error or no data: ', error);
+        return;
+      }
+
+      const { customerKey, billingKey } = row;
+
+      // 결제 실행하기
+      got
+        .post('https://api.tosspayments.com/v1/billing/' + billingKey, {
+          headers: {
+            Authorization:
+             'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
+             'Content-Type': 'application/json',
+          },
+          json: {
+            customerKey,
+            amount: 4900,
+            orderId: uuid(),
+            orderName: '스트리밍 서비스 구독',
+            customerEmail: 'customer@email.com',
+            customerName: '박토스',
+            taxFreeAmount: 0,
+          },
+          responseType: 'json',
+        })
+        .then(function (response) {
+          console.log(response.body);
+        })
+        .catch(function (error) {
+          console.log('Error:', error);
+        });
+    }
+  );
+});
+```
+
+테스트를 위해 맨 처음 cron job 설정을 매 분 실행하는 걸로 설정해 볼게요.
+
+```
+cron.schedule('* * * * *', function () {
+  // ...
+})
+```
+
+매 분마다 결제가 실행되는 것을 서버 콘솔에서 확인한 뒤, 다시 매달 1일에 실행하는 cron 표현식으로 바꿔주세요.
+
+**cron 표현식 이해하기**
+
+`cron.schedule`의 첫 번째 인자는 cron 표현식입니다. 각각 `분 시 일 월 요일`을 뜻하고 공백으로 구분합니다. `*`는 와일드 카드로 '매 번'을 의미합니다. 예제에서 사용한 cron 표현식 `'0 0 1 * *'`을 예시로 cron 표현식의 의미를 알아볼게요.
+
+- `0`: 0분
+
+- `0`: 0시 (자정)
+
+- `1`: 매월 1일
+
+- `*`: 매월
+
+- `*`: 매 요일
+
+`node-cron`은 초 설정이 생략되면 기본적으로 0초로 간주합니다. 더 자세한 내용은 [cron 위키피디아](https://ko.wikipedia.org/wiki/Cron)에서 살펴보세요.
+
+### [![Image 3: 링크 복사](https://static.toss.im/icons/svg/icon-link-mono.svg)](https://docs.tosspayments.com/blog/subscription-service-2#%EA%B2%B0%EC%A0%9C-%EA%B2%B0%EA%B3%BC-%EB%B0%8F-%EA%B8%B0%EB%A1%9D-%ED%99%95%EC%9D%B8%ED%95%98%EA%B8%B0)결제 결과 및 기록 확인하기
+
+이제 결제 결과를 확인해볼게요.
+
+```
+{
+  "mId": "tvivarepublica2",
+  "lastTransactionKey": "748038ECC457E11C9532BB4A7B7D02E1",
+  "paymentKey": "xMljweGQBN5OWRapdA8dPbZN9zYl7X8o1zEqZKLPbmD70vk4",
+  "orderId": "b05c8d5b-7414-44af-9bcd-053e5eeec1e1",
+  "orderName": "음악 스트리밍 구독",
+  "taxExemptionAmount": 0,
+  "status": "DONE",
+  "requestedAt": "2023-08-08T16:30:01+09:00",
+  "approvedAt": "2023-08-08T16:30:01+09:00",
+  "useEscrow": false,
+  "cultureExpense": false,
+  "card": {
+    "company": "토스뱅크",
+    "issuerCode": "24",
+    "acquirerCode": "21",
+    "number": "53275010****222*",
+    "installmentPlanMonths": 0,
+    "isInterestFree": false,
+    "interestPayer": null,
+    "approveNo": "00000000",
+    "useCardPoint": false,
+    "cardType": "신용",
+    "ownerType": "개인",
+    "acquireStatus": "READY",
+    "receiptUrl": "https://dashboard.tosspayments.com/receipt/redirection?transactionId=tviva20230808163001X5IR1&ref=PX",
+    "amount": 4900
+  },
+  "virtualAccount": null,
+  "transfer": null,
+  "mobilePhone": null,
+  "giftCertificate": null,
+  "cashReceipt": null,
+  "cashReceipts": null,
+  "discount": null,
+  "cancels": null,
+  "secret": null,
+  "type": "BILLING",
+  "easyPay": null,
+  "country": "KR",
+  "failure": null,
+  "isPartialCancelable": true,
+  "receipt": {
+    "url": "https://dashboard.tosspayments.com/receipt/redirection?transactionId=tviva20230808163001X5IR1&ref=PX"
+  },
+  "checkout": {
+    "url": "https://api.tosspayments.com/v1/payments/xMljweGQBN5OWRapdA8dPbZN9zYl7X8o1zEqZKLPbmD70vk4/checkout"
+  },
+  "transactionKey": "748038ECC457E11C9532BB4A7B7D02E1",
+  "currency": "KRW",
+  "totalAmount": 50000,
+  "balanceAmount": 50000,
+  "suppliedAmount": 45455,
+  "vat": 4545,
+  "taxFreeAmount": 0,
+  "method": "카드",
+  "version": "2024-06-01"
+}
+```
+
+이렇게 개발자센터 [테스트 결제내역](https://developers.tosspayments.com/my/payment-logs)에서도 결제 기록을 확인할 수 있어요.
+
+[![Image 4: 테스트 결제 내역 이미지](https://static.toss-internal.com/ipd-tcs/toss_core/live/1a5200f9-af89-4710-9e2c-64796fdfbbaf)](https://static.toss-internal.com/ipd-tcs/toss_core/live/1a5200f9-af89-4710-9e2c-64796fdfbbaf)
+
+여기까지 간단한 구독 서비스를 구현하는 방법을 익혔어요. 빌링키와 스케줄링 두 가지를 알면 어렵지 않게 구현할 수 있어요. 실제 라이브 환경에서는 추가적인 보안 및 에러 핸들링을 추가적으로 고려해서 서비스를 만들어보세요.
+
+### [![Image 5: 링크 복사](https://static.toss.im/icons/svg/icon-link-mono.svg)](https://docs.tosspayments.com/blog/subscription-service-2#%EB%B2%88%EC%99%B8-%EC%B9%B4%EB%93%9C-%EB%93%B1%EB%A1%9D%ED%95%A0-%EB%95%8C-%EC%B2%AB-%EA%B2%B0%EC%A0%9C-%EA%B0%99%EC%9D%B4-%ED%95%98%EA%B8%B0)번외: 카드 등록할 때 첫 결제 같이 하기
+
+카드 등록과 동시에 첫 결제를 하고 싶다면 사용자가 카드를 등록할 때 바로 첫 결제를 하는 로직을 추가하면 돼요.
+
+`/success` 라우터 내에서 `billingKey`를 데이터베이스에 저장한 후 바로 첫 결제를 진행합니다.
+
+```
+// ... 기존 코드 ...
+
+db.run(
+  'INSERT INTO user (customerKey, billingKey) VALUES (?, ?)',
+  [customerKey, billingKey],
+  (error) => {
+    if (error) {
+      console.log('Database error: ', error);
+      return res.render('fail', {
+        isSuccess: false,
+        responseJson: error.message,
+      });
+    }
+
+    // 첫 결제 로직
+    got
+      .post('https://api.tosspayments.com/v1/billing/' + billingKey, {
+        headers: {
+          Authorization:
+            'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
+          'Content-Type': 'application/json',
+        },
+        json: {
+          customerKey,
+          amount: 4900,
+          orderId: uuid(),
+          orderName: '토스 프라임 구독 첫 결제',
+          customerEmail: 'customer@email.com',
+          customerName: '박토스',
+          taxFreeAmount: 0,
+        },
+        responseType: 'json',
+      })
+      .then(function (firstPaymentResponse) {
+        console.log('First payment success: ', firstPaymentResponse.body);
+        res.render('success', { responseJson: response.body });
+      })
+      .catch(function (firstPaymentError) {
+        console.log('First payment error: ', firstPaymentError);
+        res.render('fail', {
+          isSuccess: false,
+          responseJson: firstPaymentError.response.body,
+        });
+      });
+  }
+);
+
+// ... 기존 코드 ...
+```
+
+이렇게 하면 첫 결제가 빌링키 발급과 동시에 완료되고 다음 결제일이 설정됩니다.
+
+지금까지 간단한 구독 서비스를 구현해 봤어요. 이 튜토리얼에서는 하나의 플랜을 가지고 정기결제를 내는 로직만 구현하고 있어요. 또, 결제 주기가 매달 1일로 고정되어 있습니다. 실제 서비스 환경에서는 사용자가 원하는 다양한 결제 주기(매주, 매 2주, 매 3개월 등)를 선택할 수 있도록 스케줄링 로직을 확장해서 구현해 보세요.
+
+**Writer** 한주연 **Graphic** 이은호, 이나눔
+
+* * *
+
+📍 **함께 읽으면 좋을 콘텐츠**
+
+*   [구독 결제 서비스 구현하기 (1) 빌링키 발급](https://docs.tosspayments.com/blog/subscription-service-1)
+
+*   [자동결제(빌링) 가이드](https://docs.tosspayments.com/guides/billing/overview)

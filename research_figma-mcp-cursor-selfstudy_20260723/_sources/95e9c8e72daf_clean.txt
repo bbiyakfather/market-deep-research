@@ -1,0 +1,359 @@
+The largest open-source collection of n8n automation templates on GitHub. Browse 280+ free, ready-to-import workflow templates covering Gmail, Telegram, OpenAI, WhatsApp, Slack, Discord, WordPress, Google Sheets, and dozens more platforms. Continuously updated as of March 2026.
+- Quick Start: How to Use These Templates
+- Why n8n?
+- Repository Statistics
+- Disclaimer
+- Categories & Template List
+- Gmail & Email Automation
+- Telegram
+- Google Drive & Google Sheets
+- WordPress
+- PDF & Document Processing
+- Discord
+- Database & Storage
+- DevOps / Server Automation
+- Airtable
+- Notion
+- Slack
+- OpenAI & LLMs
+- Instagram, Twitter, Social Media
+- Other Integrations & Use Cases
+- Forms & Surveys
+- AI Research, RAG, and Data Analysis
+- Other
+ 
+- FAQ
+- Contributing
+- Star History
+- Contributors
+- Sponsors
+- Sign up for n8n (free & open-source)
+- Download any .jsontemplate file from this repository
+- In n8n, go to Workflows → Import from File and select the JSON
+- Configure your credentials for each connected service
+- Activate the workflow and start automating!
+n8n is an open-source workflow automation platform that lets you connect anything to everything. Unlike closed-source alternatives, n8n gives you full control over your data and infrastructure. Key advantages include:
+- Open-source and self-hostable -- run it on your own server with no vendor lock-in
+- 400+ built-in integrations -- connect to virtually any service or API
+- Visual workflow editor -- build automations by dragging and dropping nodes, no coding required
+- AI-native capabilities -- built-in support for OpenAI, Claude, Gemini, LangChain, and vector databases
+- Free to start -- generous free tier on n8n Cloud, or self-host at no cost
+Whether you are automating email workflows, building AI chatbots, processing documents, or orchestrating DevOps pipelines, n8n provides the foundation these templates run on.
+- 280+ automation templates across 18 categories
+- 19,000+ GitHub stars from the automation community
+- Platforms covered: Gmail, Telegram, Google Drive, Google Sheets, WordPress, Discord, Slack, Notion, Airtable, WhatsApp, Instagram, Twitter/X, LinkedIn, Spotify, Pinterest, Todoist, Obsidian, and more
+- AI integrations: OpenAI GPT-4, Anthropic Claude, Google Gemini, DeepSeek R1, Mistral AI, LangChain, Perplexity, Hugging Face, and more
+- Use cases: Email automation, AI chatbots, RAG pipelines, document processing, social media management, HR workflows, DevOps automation, lead qualification, sentiment analysis, data extraction, and more
+- Database support: PostgreSQL, MongoDB, SQLite, Supabase, Pinecone, Qdrant, Elasticsearch, Airtable, NocoDB, Baserow
+All automation templates in this repository were found online and are uploaded here solely for easy access and sharing. None of the templates are created or owned by the repository author. If you encounter any issues, errors, or damages resulting from the use of these templates, the repository author assumes no responsibility or liability. All rights to the original templates belong to their respective creators.
+This collection includes 9 email automation templates for n8n covering Gmail, Outlook, and IMAP. Templates range from AI-powered email labeling and categorization with OpenAI to phishing detection, auto-reply drafting, and daily financial news delivery. Ideal for operations, security, and executive teams looking to streamline email management.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Daily AI digest of unread emails to Telegram (Italian) | Sends a morning Telegram digest of unread Gmail messages, prioritized by urgency with AI. Nodes and setup notes in Italian, ideal for Italian-speaking teams. | Ops | Link to Template | 
+| Auto-label incoming Gmail messages with AI nodes | Automatically labels incoming Gmail messages using AI. The workflow retrieves message content, suggests labels like Partnership or Inquiry, and assigns them for better organization. | Ops | Link to Template | 
+| Basic Automatic Gmail Email Labelling with OpenAI and Gmail API | Uses OpenAI and Gmail API to trigger on new emails, analyze content, and assign or create labels automatically. Helps categorize emails efficiently using AI. | Ops | Link to Template | 
+| Compose reply draft in Gmail with OpenAI Assistant | Generates draft replies in Gmail using OpenAI. Triggers on new emails, extracts content, and creates a suggested reply draft to streamline responses. | Executive | Link to Template | 
+| Analyze & Sort Suspicious Email Contents with ChatGPT | Analyzes suspicious emails using ChatGPT, classifies them, and can generate screenshots for review. Helps identify and sort potentially dangerous emails. | Security | Link to Template | 
+| Analyze Suspicious Email Contents with ChatGPT Vision | Uses both text and image analysis (ChatGPT Vision) to evaluate suspicious emails. Extracts screenshots, analyzes headers and content, and flags phishing attempts. | Security | Link to Template | 
+| A Very Simple "Human in the Loop" Email Response System Using AI and IMAP | Implements a simple workflow for human-in-the-loop email responses. Uses IMAP to fetch emails, summarizes content with AI, and drafts professional replies for review before sending. | Support | Link to Template | 
+| Auto Categorise Outlook Emails with AI | Automatically categorizes Outlook emails using AI models. Moves messages to folders and assigns categories based on content, reducing manual sorting. | Ops | Link to Template | 
+| Microsoft Outlook AI Email Assistant with contact support from Monday and Airtable | An AI-powered assistant for Outlook that processes emails, sanitizes content, and assigns categories using rules from Airtable. Integrates with Monday.com for contact support. | Ops | Link to Template | 
+| 📈 Receive Daily Market News from FT.com to your Microsoft outlook inbox | Extracts financial news from FT.com and delivers daily updates to your Outlook inbox. Automates content extraction and email delivery for timely market insights. | Executive | Link to Template | 
+| AI Email Auto-Responder with Ollama | Classifies incoming emails, filters spam, and drafts context-aware replies using Ollama local AI. No external API keys required. | Support | Link to Template | 
+| InboxZero Lite - AI Email Classifier | AI classifies Gmail emails as urgent, important, info, or spam using OpenAI gpt-4o-mini. Lightweight single-workflow setup with Google Sheets logging. | Ops | Link to Template | 
+| LeadPilot Lite - AI Cold Email Writer | AI writes personalized cold emails from a Google Sheets lead list using OpenAI. Generates subject lines and body text tailored to each prospect. | Sales | Link to Template | 
+| Daily Email Notification | Summarizes daily inbox emails using local LLM (Ollama) and sends notifications via Telegram or ntfy. | Ops | Link to Template | 
+| Website-Grounded Cold Email Writer | Fetches each lead's real website, extracts the page text, and writes a personalized cold email grounded only in that content. Flags thin or broken sites for human review instead of inventing facts. | Sales | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Explore 20 Telegram automation templates for n8n, including AI chatbots with LangChain and OpenAI, voice-to-text translation across 55 languages, PDF chat functionality, image analysis bots, and Spotify integration. These templates cover support, marketing, and content moderation use cases for Telegram.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Agentic Telegram AI bot with LangChain nodes and new tools | An advanced Telegram bot leveraging LangChain and OpenAI for conversational AI. Supports memory, dynamic tool use, and handles incoming events for rich, context-aware chat interactions. | Support | Link to Template | 
+| AI-Powered Children's Arabic Storytelling on Telegram | A Telegram bot that uses OpenAI to generate and narrate children's stories in Arabic, making storytelling interactive and educational for young users. | Support | Link to Template | 
+| AI-Powered Children's English Storytelling on Telegram with OpenAI | Creates and tells children's stories in English using OpenAI to engage young audiences in an interactive way. | Support | Link to Template | 
+| Automated AI image analysis and response via Telegram | Lets users send images to Telegram and receive AI-based analysis and feedback automatically. | Ops | Link to Template | 
+| Angie, Personal AI Assistant with Telegram Voice and Text | Personal voice & text assistant bot that answers queries, manages tasks, and interacts naturally using AI. | Support | Link to Template | 
+| Chat with OpenAI's GPT via a simple Telegram Bot | A minimal Telegram bot that forwards user messages to GPT and returns AI-generated replies. Ideal starting point for AI chat. | Support | Link to Template | 
+| Internship Informer | Extracts and parses internship postings from Telegram channels using AI, scrapes application pages via Firecrawl, filters for eligibility, and sends alerts to WhatsApp. | HR/Ops | Link to Template | 
+| Resume Bot | An AI-powered resume and cover letter assistant on Telegram that parses PDF resumes, updates user profiles in Supabase, and compiles tailored LaTeX resumes via SSH. | HR/Ops | Link to Template | 
+| Telegram AI bot assistant: ready-made template for voice & text messages | Ready-made assistant bot handling both voice and text input, leveraging AI for smart conversational responses in Telegram. | Support | Link to Template | 
+| Telegram AI Bot: NeurochainAI Text & Image | Integrates NeurochainAI API for text and image generation inside Telegram, enabling creative media interactions. | Marketing | Link to Template | 
+| Telegram AI bot with LangChain nodes | Uses LangChain nodes for advanced AI conversations and tool use in Telegram. | Support | Link to Template | 
+| Telegram AI Chatbot | A general-purpose AI chatbot template for Telegram that can be customized for various use cases. | Support | Link to Template | 
+| Telegram Bot with Supabase memory and OpenAI assistant integration | Adds long-term memory with Supabase to a Telegram bot, coupled with OpenAI for rich, context-aware conversations. | Support | Link to Template | 
+| Telegram AI Support Bot with Conversation Memory | Turns a Telegram bot into an AI support assistant with per-customer conversation memory and multilingual replies; works with OpenAI or local models via Ollama. | Support | Link to Template | 
+| Telegram chat with PDF | Allows users to upload a PDF to Telegram and chat with its contents using AI-powered summarization and Q&A. | Ops | Link to Template | 
+| 🤖 Telegram Messaging Agent for Text_Audio_Images | Multi-modal agent that processes text, audio, and images in Telegram chats using AI for responses. | Support | Link to Template | 
+| Telegram to Spotify with OpenAI | Lets users request songs or playlists in Telegram and automatically create them in Spotify via OpenAI. | Marketing | Link to Template | 
+| Send a random recipe once a day to Telegram | Scheduled workflow that fetches a random recipe daily and posts it to a Telegram chat. | Marketing | Link to Template | 
+| Detect toxic language in Telegram messages | Monitors Telegram chats and flags messages containing toxic language using AI moderation. | Security | Link to Template | 
+| Translate Telegram audio messages with AI (55 supported languages) | Receives voice messages, transcribes them, and sends back translations in over 50 languages. | Support | Link to Template | 
+| Bitcoin price alert to Telegram with CoinPaprika | Polls the keyless CoinPaprika API on a schedule and sends a Telegram alert when Bitcoin moves 5% or more in 24h. No API key or signup required; swap the coin id to track any asset. | Finance | Link to Template | 
+| Empower Your AI Chatbot with Long-Term Memory and Dynamic Tool Routing | External workflow enhancing an AI chatbot with long-term memory and dynamic tool routing capabilities. | Support | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Browse 13 Google Drive and Google Sheets automation templates for n8n. Includes RAG chatbots for company documents, OpenAI model fine-tuning pipelines, automated background removal, lead qualification with GPT-4, applicant screening for HR, and document summarization workflows. Perfect for operations, sales, marketing, and engineering teams.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Website leads to Google Sheets with Telegram alert and auto-reply (Italian) | Captures website form leads via webhook, appends them to Google Sheets, alerts the owner on Telegram and sends a courtesy reply to the lead. Docs in Italian. | Sales | Link to Template | 
+| Automatic payment reminders from Google Sheets (Italian) | Checks an invoices sheet every weekday morning and emails polite payment reminders for invoices due within 3 days or overdue. Docs in Italian. | Finance | Link to Template | 
+| Automated End-to-End Fine-Tuning of OpenAI Models with Google Drive Integration | Automates the fine-tuning of OpenAI models by integrating with Google Drive for data input and output, streamlining custom AI model training. | Engineering | Link to Template | 
+| Automatic Background Removal for Images in Google Drive | Automatically removes backgrounds from images stored in Google Drive, preparing them for various uses like product catalogs or marketing materials. | Marketing | Link to Template | 
+| Build an OpenAI Assistant with Google Drive Integration | Demonstrates building an OpenAI Assistant that accesses and utilizes files in Google Drive, enabling it to answer questions or perform tasks based on document content. | Support | Link to Template | 
+| RAG Chatbot for Company Documents using Google Drive and Gemini | Creates a Retrieval-Augmented Generation (RAG) chatbot that answers questions based on company documents stored in Google Drive, leveraging Google Gemini. | Support | Link to Template | 
+| RAG_Context-Aware Chunking: Google Drive to Pinecone via OpenRouter & Gemini | Implements context-aware chunking for Google Drive documents, sending them to Pinecone for vector storage and using OpenRouter & Gemini for advanced RAG. | Engineering | Link to Template | 
+| Summarize the New Documents from Google Drive and Save Summary in Google Sheet | Monitors Google Drive for new documents, summarizes their content using AI, and saves these summaries into a Google Sheet for quick overview and analysis. | Ops | Link to Template | 
+| Upload to Instagram and Tiktok from Google Drive | Automates uploading media from Google Drive directly to Instagram and TikTok, streamlining social media content publishing. | Marketing | Link to Template | 
+| Author and Publish Blog Posts From Google Sheets | Enables authoring blog posts in Google Sheets and automatically publishing them to a content management system, simplifying content creation and publishing. | Marketing | Link to Template | 
+| Chat with a Google Sheet using AI | Allows users to interact with and query data within a Google Sheet using natural language via an AI model, making data analysis more accessible. | Ops | Link to Template | 
+| Chat with your event schedule from Google Sheets in Telegram | Connects a Google Sheet containing an event schedule to Telegram, allowing users to query their schedule through a Telegram bot. | Ops | Link to Template | 
+| Qualify new leads in Google Sheets via OpenAI's GPT-4 | Uses OpenAI's GPT-4 to analyze and qualify new leads entered into a Google Sheet, helping sales teams prioritize their outreach. | Sales | Link to Template | 
+| Screen Applicants With AI, notify HR and save them in a Google Sheet | Automates the screening of job applicants using AI, notifies HR of qualified candidates, and saves applicant data into a Google Sheet. | HR | Link to Template | 
+| Summarize Google Sheets form feedback via OpenAI's GPT-4 | Summarizes feedback collected through Google Forms and stored in Google Sheets using OpenAI's GPT-4, providing quick insights from survey responses. | Marketing | Link to Template | 
+| Airtable to Google Sheets Auto-Sync | Automates bidirectional sync between Airtable and Google Sheets using n8n. Searches Airtable for recently updated records and upserts them into Google Sheets. | Ops | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+This section features 6 WordPress automation templates for n8n. Automate blog post categorization and tagging with AI, generate content in your brand voice, use DeepSeek R1 for rapid content creation, embed an AI chatbot with Supabase and OpenAI, or write full blog posts from just a few keywords.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Auto-Categorize blog posts in wordpress using A.I. | This workflow automates the categorization of WordPress blog posts using AI, streamlining content organization and management. | Marketing/Content | Link to Template | 
+| Auto-Tag Blog Posts in WordPress with AI | This workflow automatically tags WordPress blog posts using AI, improving SEO and content discoverability. | Marketing/Content | Link to Template | 
+| Automate Blog Creation in Brand Voice with AI | This workflow automates the creation of blog posts, ensuring they adhere to a specific brand voice using AI. | Marketing/Content | Link to Template | 
+| Automate Content Generator for WordPress with DeepSeek R1 | This workflow automates content generation for WordPress using the DeepSeek R1 AI model, enabling rapid content creation. | Marketing/Content | Link to Template | 
+| WordPress - AI Chatbot to enhance user experience - with Supabase and OpenAI | This workflow integrates an AI chatbot into WordPress using Supabase and OpenAI to enhance user experience by providing intelligent interactions. | Customer Support/Marketing | Link to Template | 
+| Write a WordPress post with AI (starting from a few keywords) | This workflow uses AI to write WordPress posts based on a few keywords, simplifying the content creation process. | Marketing/Content | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Find 11 PDF and document processing templates for n8n. These workflows handle AI-powered PDF Q&A with source quoting, resume parsing with multimodal vision AI, invoice data extraction via LlamaParse, document-to-study-notes conversion, ETL text pipelines, HTML-to-Markdown conversion, and more. Supports Claude, Gemini, MistralAI, and OpenAI models.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Ask questions about a PDF using AI | This workflow fetches a PDF from Google Drive, splits it into chunks, embeds the chunks using OpenAI embeddings, and enables chat interactions with the document content. | Customer Support/Knowledge Management | Link to Template | 
+| Breakdown Documents into Study Notes using Templating MistralAI and Qdrant | This workflow triggers on new files, processes documents with MistralAI embeddings, and stores data in Qdrant vector store for study note generation. | Education/Knowledge Management | Link to Template | 
+| CV Resume PDF Parsing with Multimodal Vision AI | This workflow converts candidate resume PDFs to images, uses a Vision Language Model to assess candidate fit, and includes logic to bypass hidden AI prompts in resumes. | HR | Link to Template | 
+| Chat with PDF docs using AI (quoting sources) | This workflow enables chat interactions with PDF documents, allowing users to ask questions and receive answers with quoted sources from the document. | Customer Support/Knowledge Management | Link to Template | 
+| Convert URL HTML to Markdown Format and Get Page Links | This workflow converts HTML content from a given URL into Markdown format and extracts all page links, useful for content scraping and analysis. | Marketing/Content | Link to Template | 
+| ETL pipeline for text processing | This workflow implements an ETL pipeline for text processing, extracting data from Twitter, storing it in MongoDB and PostgreSQL, and sending alerts to Slack based on sentiment analysis. | Data Analytics/IT | Link to Template | 
+| Extract and process information directly from PDF using Claude and Gemini | This workflow extracts and processes information directly from PDFs using advanced AI models like Claude and Gemini, enabling intelligent document analysis. | Data Extraction/IT | Link to Template | 
+| Extract data from resume and create PDF with Gotenberg | This workflow extracts structured data from resumes using AI, converts it into HTML, and then generates a well-formatted PDF using Gotenberg. | HR | Link to Template | 
+| Extract license plate number from image uploaded via an n8n form | This workflow extracts license plate numbers from images uploaded via an n8n form using a Vision Language Model, then displays the extracted information. | Operations/Logistics | Link to Template | 
+| Extract text from PDF and image using Vertex AI (Gemini) into CSV | This workflow extracts text from PDFs and images using Vertex AI (Gemini), routes based on file type, and converts the extracted data into a CSV format. | Data Extraction/IT | Link to Template | 
+| Invoice data extraction with LlamaParse and OpenAI | This workflow extracts structured data from invoices using LlamaParse and OpenAI, then processes it with a structured output parser for detailed invoice data extraction. | Finance/Admin | Link to Template | 
+| Extract data from PDFs with human-in-the-loop validation and auto-training using Cradl AI | Extracts structured data from invoices and similar documents using Cradl AI. Flags low-confidence predictions for human review before they enter your system, automatically retrains the model on approved corrections, and applies built-in LLM guardrails to detect and reject hallucinations. | Finance/Logistics/Operations | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+This section contains 3 Discord automation templates for n8n. Build an AI-powered Discord bot that routes messages to the right department, automate daily comic translations and posts, or share YouTube videos with AI-generated summaries directly to your Discord server.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Discord AI-powered bot | This workflow creates an AI-powered Discord bot that categorizes user messages (success story, urgent issue, ticket) and routes them to the appropriate department (customer success, IT, customer support). | Customer Support | Link to Template | 
+| Send daily translated Calvin and Hobbes Comics to Discord | This workflow automates the daily retrieval of Calvin and Hobbes comics, translates the dialogues into English and Korean (or other languages), and posts them to Discord. | Marketing/Content | Link to Template | 
+| Share YouTube Videos with AI Summaries on Discord | This workflow automatically shares new YouTube videos on Discord along with AI-generated summaries of their content, leveraging caption data. | Marketing | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Find 5 database and storage automation templates for n8n. Chat with PostgreSQL using natural language, generate SQL queries from schema with AI, get intelligent movie recommendations from MongoDB, manage Supabase vector embeddings, or query SQLite databases through a LangChain AI agent.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Chat with Postgresql Database | This workflow enables an AI assistant to chat with a PostgreSQL database, allowing users to query and retrieve data using natural language. It supports custom SQL queries and schema introspection. | Data Analytics | Link to Template | 
+| Generate SQL queries from schema only - AI-powered | This workflow uses AI to generate SQL queries based on a given database schema, making it easier to interact with databases without manual query writing. | Engineering | Link to Template | 
+| MongoDB AI Agent - Intelligent Movie Recommendations | This workflow creates an AI agent that provides intelligent movie recommendations by interacting with a MongoDB database, using aggregation pipelines to fetch relevant movie data. | Data Analytics | Link to Template | 
+| Supabase Insertion & Upsertion & Retrieval | This workflow demonstrates how to perform insertion, upsertion, and retrieval operations with Supabase, specifically for handling vector embeddings and associated metadata. | Engineering | Link to Template | 
+| Talk to your SQLite database with a LangChain AI Agent | This workflow allows users to interact with a SQLite database using a LangChain AI agent, enabling natural language queries and data retrieval from the database. | Data Analytics | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+This section includes 2 DevOps and server automation templates for n8n. Trigger Linux system updates via authenticated webhooks over SSH, or control Docker Compose services remotely through HTTP POST requests. Both templates use SSH for secure server management.
+| Title | Description | Link | 
+|---|---|---|
+| Linux System Update via Webhook | Trigger update & upgrade of your Debian-based server via an authenticated POST request and SSH. | SSH Tools | 
+| Docker Compose Controller via Webhook | Start or stop Docker Compose services on your server via authenticated HTTP POST request with n8n + SSH. | SSH Tools | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Browse 5 Airtable automation templates for n8n. Automate project management and meeting follow-ups with Fireflies transcripts, chat with Airtable data using AI agents, integrate with Obsidian Notes, process job applications with AI-powered resume parsing, or connect HubSpot Chat with OpenAI and Airtable for customer support.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| AI Agent for project management and meetings with Airtable and Fireflies | This workflow uses an AI agent to automate project management tasks and meeting follow-ups by analyzing call transcripts from Fireflies. It creates tasks in Airtable and notifies clients about their tasks. | Operations | Link to Template | 
+| AI Agent to chat with Airtable and analyze data | This workflow creates an AI agent that can chat with Airtable, analyze data, and perform queries based on user requests. It can handle aggregation functions and generate graphs/images. | Data Analytics | Link to Template | 
+| Get Airtable data via AI and Obsidian Notes | This workflow retrieves data from Airtable using an AI agent and integrates it with Obsidian Notes, allowing for seamless data access and organization within Obsidian. | Productivity | Link to Template | 
+| Handling Job Application Submissions with AI and n8n Forms | This workflow automates the handling of job application submissions by extracting information from resumes (PDFs) using AI, parsing it into a structured format, and potentially storing it in Airtable. | HR | Link to Template | 
+| vAssistant for Hubspot Chat using OpenAi and Airtable | This workflow integrates an OpenAI assistant with HubSpot Chat and Airtable to provide automated responses and manage customer interactions. It fetches chat messages, processes them with AI, and can store relevant information in Airtable. | Sales | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Discover 10 Notion automation templates for n8n. Store positive feedback from Typeform with sentiment analysis, analyze Hugging Face research papers, run competitor research with AI agents, automate LinkedIn outreach, build custom AI assistants for your Notion databases, create knowledge base chatbots, and integrate with Pinecone and Supabase vector stores.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Add positive feedback messages to a table in Notion | Captures positive feedback from Typeform, analyzes sentiment with Google Cloud Natural Language, and adds it to a Notion table, with Slack notifications for high-scoring feedback. | Support | Link to Template | 
+| Analyse papers from Hugging Face with AI and store them in Notion | Automatically fetches and analyzes papers from Hugging Face, extracts key information using AI, and stores the structured data in a Notion database. | Engineering | Link to Template | 
+| Automate Competitor Research with Exa.ai, Notion and AI Agents | Builds a competitor research agent using Exa.ai to find similar companies. AI agents then scour the internet for company overviews, product offerings, and customer reviews, compiling a report into a Notion table. | Marketing | Link to Template | 
+| Automate LinkedIn Outreach with Notion and OpenAI | Automates LinkedIn outreach by fetching daily posts from a Notion database, formatting them with OpenAI for LinkedIn engagement, and then posting them to LinkedIn. | Marketing | Link to Template | 
+| Notion AI Assistant Generator | Generates a custom AI Assistant chatbot workflow for a specific Notion database schema, allowing users to chat with their Notion data. | Engineering | Link to Template | 
+| Notion knowledge base AI assistant | Creates an AI assistant that can search and retrieve information from a Notion knowledge base, providing answers to user queries. | Support | Link to Template | 
+| Notion to Pinecone Vector Store Integration | Integrates Notion with Pinecone, allowing Notion pages to be converted into vector embeddings and stored in Pinecone for advanced search and retrieval. | Engineering | Link to Template | 
+| Store Notion's Pages as Vector Documents into Supabase with OpenAI | Automates storing Notion pages as vector documents in a Supabase database, using OpenAI to generate embeddings for the content. | Engineering | Link to Template | 
+| Turn Emails into AI-Enhanced Tasks in Notion (Multi-User Support) with Gmail, Airtable and Softr | Transforms emails into AI-enhanced tasks in Notion, supporting multiple users. It integrates with Gmail for email triggers, Airtable for routing, and Softr for a user interface. | Ops | Link to Template | 
+| Upsert huge documents in a vector store with Supabase and Notion | Manages large documents by splitting them into chunks, generating embeddings, and upserting them into a Supabase vector store, with Notion serving as the document source. | Engineering | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Explore 9 Slack automation templates for n8n. Monitor RSS feeds with AI-powered summaries, build Slack bots using Google Gemini, automate customer support ticketing with Linear, enhance security operations with Qualys integration, enrich Pipedrive CRM data, create IT knowledge base chatbots, track sentiment on support issues, and manage certificates via Venafi Cloud.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| AI-Powered Information Monitoring with OpenAI, Google Sheets, Jina AI and Slack | Monitors RSS feeds, summarizes articles with OpenAI and Jina AI, classifies them, and sends formatted notifications to Slack, enabling AI-powered information monitoring. | Marketing | Link to Template | 
+| Creating a AI Slack Bot with Google Gemini | Builds an AI Slack bot using Google Gemini, handling webhooks, integrating an AI agent, managing memory, and responding to Slack messages. | Engineering | Link to Template | 
+| Customer Support Channel and Ticketing System with Slack and Linear | Automates customer support by querying Slack for messages with a ticket emoji, deciding if a new Linear ticket is needed, creating or updating tickets, and notifying Slack. | Support | Link to Template | 
+| Enhance Security Operations with the Qualys Slack Shortcut Bot! | Creates a Slack shortcut bot for Qualys to enhance security operations, allowing users to trigger actions like creating reports or starting vulnerability scans directly from Slack. | Security | Link to Template | 
+| Enrich Pipedrive's Organization Data with OpenAI GPT-4o & Notify it in Slack | Enriches Pipedrive organization data by scraping website content, using OpenAI GPT-4o to generate a summary, and adding it as a note in Pipedrive, then notifying a Slack channel. | Sales | Link to Template | 
+| IT Ops AI SlackBot Workflow - Chat with your knowledge base | Creates an AI Slackbot for IT Operations, enabling users to chat with a knowledge base to retrieve information and get answers directly within Slack. | IT | Link to Template | 
+| Sentiment Analysis Tracking on Support Issues with Linear and Slack | Tracks sentiment on support issues by integrating with Linear and Slack, performing sentiment analysis using OpenAI on Linear comments, and notifying relevant Slack channels. | Support | Link to Template | 
+| Slack slash commands AI Chat Bot | Implements an AI chatbot accessible via Slack slash commands, processing user commands, interacting with an AI model, and responding within Slack. | IT | Link to Template | 
+| Venafi Cloud Slack Cert Bot | Provides a Slack bot that interacts with Venafi Cloud for certificate management, allowing users to check certificate status, receive alerts, or request certificate actions via Slack. | Security | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+This is the largest category with 17 AI and LLM templates for n8n. Templates include advanced AI agent demos, web scraping agents, stock analysis crews, customer feedback sentiment analysis, AI-powered lead management with ERPNext, fitness coaching via Strava, candidate shortlisting for HR, RAG pipelines for email and stock reports, social media amplification, WooCommerce support agents, YouTube summarization, and podcast enhancement with Wikipedia.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Advanced AI Demo (Presented at AI Developers #14 meetup) | Advanced AI capabilities demo. | AI/Development | Link to Template | 
+| AI agent chat | Basic AI chat agent. | AI/Customer Service | Link to Template | 
+| AI agent that can scrape webpages | AI agent for web scraping. | AI/Data Extraction | Link to Template | 
+| AI Crew to Automate Fundamental Stock Analysis - Q&A Workflow | Stock analysis automation. | Finance/AI/Data Analysis | Link to Template | 
+| AI Customer feedback sentiment analysis | Sentiment analysis on customer feedback. | Customer Service/Marketing/Data Analysis | Link to Template | 
+| AI Data Extraction with Dynamic Prompts and Airtable | AI-driven data extraction with Airtable integration. | AI/Data Extraction/Database | Link to Template | 
+| AI Data Extraction with Dynamic Prompts and Baserow | AI-driven data extraction with Baserow integration. | AI/Data Extraction/Database | Link to Template | 
+| AI-Driven Lead Management and Inquiry Automation with ERPNext & n8n | Lead management automation. | Sales/CRM/AI | Link to Template | 
+| AI Fitness Coach Strava Data Analysis and Personalized Training Insights | Fitness coaching via Strava data analysis. | Fitness/AI/Data Analysis | Link to Template | 
+| AI-Powered Candidate Shortlisting Automation for ERPNext | Candidate shortlisting automation. | HR/AI/Recruitment | Link to Template | 
+| AI-Powered Email Automation for Business: Summarize & Respond with RAG | Email automation with summarization and response. | Business Automation/AI/Communication | Link to Template | 
+| AI-Powered RAG Workflow For Stock Earnings Report Analysis | Stock earnings report analysis with RAG. | Finance/AI/Data Analysis | Link to Template | 
+| AI-Powered Social Media Amplifier | Amplifies social media presence using AI. | Marketing/AI/Social Media | Link to Template | 
+| AI-powered WooCommerce Support-Agent | Creates an AI-powered support agent for WooCommerce stores. | E-commerce/AI/Customer Service | Link to Template | 
+| AI-Powered YouTube Video Summarization & Analysis | Summarizes and analyzes YouTube videos using AI. | Content Creation/AI/Data Analysis | Link to Template | 
+| AI: Ask questions about any data source (using the n8n workflow retriever) | Allows users to ask questions about various data sources using an n8n workflow retriever. | AI/Data Analysis/Workflow Automation | Link to Template | 
+| AI: Summarize podcast episode and enhance using Wikipedia | Summarizes podcast episodes and enhances the summary with information from Wikipedia using AI. | Content Creation/AI/Data Analysis | Link to Template | 
+| AI Blog Writer Pipeline with Ollama | Uses Ollama local AI to research topics, create outlines, draft full blog posts, and edit them. Runs entirely locally with no API keys needed. | Content Creation/AI | Link to Template | 
+| Claude AI Content Generator | HTTP POST with a topic and content type triggers Claude to write a full blog post, newsletter, or social media content draft. Returns content via API and notifies via Slack. | Content Creation/AI/Marketing | Link to Template | 
+| Claude AI LINE Chatbot | Connects LINE messaging to Anthropic Claude AI. Receives LINE webhook, generates contextual reply with Claude, and sends response back to LINE user. | AI/Customer Service | Link to Template | 
+| Claude AI Morning Brief | Runs daily at 8:00 AM, compiles a personalized briefing with Claude AI, and delivers it via LINE or email. | Productivity/AI/Automation | Link to Template | 
+| Claude Smart Webhook AI Router | Routes incoming webhook requests by Anthropic Claude AI classification. Claude analyzes each payload and routes to support, technical, sales, or general handler. | AI/DevOps/Automation | Link to Template | 
+| SupportFlow Lite - Simple AI Customer Support Chatbot | A lightweight AI chatbot that answers customer questions using company info and OpenAI gpt-4o-mini. Easy single-workflow setup with Google Sheets knowledge base. | Customer Support/AI | Link to Template | 
+| GCF Token Optimization for LLM Tool Responses | Fetches GitHub contributors, batches into an array, encodes to GCF (Graph Compact Format) for 53-71% fewer tokens, then decodes back to JSON losslessly. Uses the n8n-nodes-gcf community node. | AI/DevOps/Optimization | Link to Template | 
+| n8n + Local LLM (Ollama) Basic Setup | Connect n8n with local LLMs (Llama 3, Mistral, Phi-3) for 100% free AI automation. No API keys required. | AI/Automation | Link to Template | 
+| DaoXE Multi-Model Chat with Automatic Fallback | Calls a primary model and, if it errors, automatically retries the same prompt on a fallback model — all through one OpenAI-compatible API key (DaoXE gateway). Pure HTTP nodes, so it runs on any n8n version. | AI/Development | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+This section includes 5 WhatsApp and cross-channel messaging automation templates for n8n. Automate sales meeting preparation with AI and Apify, build WhatsApp chatbots, or use one workflow to receive and send messages across WhatsApp, Instagram DM, and Facebook Messenger. Ideal for customer service, sales, and business communication workflows.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Automate Sales Meeting Prep with AI & APIFY Sent To WhatsApp | This workflow automates sales meeting preparation using AI and Apify, sending relevant information to WhatsApp. | Sales/AI/Automation | Link to Template | 
+| Building Your First WhatsApp Chatbot | This workflow guides you through building your first WhatsApp chatbot. | Customer Service/Development | Link to Template | 
+| Complete business WhatsApp AI-Powered RAG Chatbot using OpenAI | This workflow builds a complete business WhatsApp AI-powered RAG chatbot using OpenAI. | Customer Service/AI/Development | Link to Template | 
+| Receive and Send Messages Across WhatsApp, Instagram and Facebook Messenger with Fiwano | Demonstrates a minimal receive → custom logic → send pattern across three official Meta APIs. Fiwano unifies the channels into one Trigger/Action node set and normalized payload; replace the middle with any routing, CRM, helpdesk, or AI logic. | Customer Service/Development | Link to Template | 
+| Respond to WhatsApp Messages with AI Like a Pro! | This workflow enables professional AI-powered responses to WhatsApp messages. | Customer Service/AI/Communication | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Explore 13 social media automation templates for n8n covering Instagram, Twitter/X, Reddit, YouTube, LinkedIn, and more. Templates include AI-powered Instagram DM management with Manychat, dynamic Twitter banners, trend-based content generation with AI image creation, tweet generators, YouTube-to-X posting, Reddit digest creation, social media analytics, and virtual AI influencer management.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| AI agent for Instagram DM_inbox. Manychat + Open AI integration | Integrates Manychat with OpenAI to create an AI agent for managing Instagram direct messages. | Marketing/Customer Service/AI | Link to Template | 
+| Create dynamic Twitter profile banner | Automates the creation of dynamic Twitter profile banners. | Marketing/Social Media | Link to Template | 
+| Generate Instagram Content from Top Trends with AI Image Generation | Creates Instagram content by analyzing top trends and generating relevant images using AI. | Marketing/AI/Content | Link to Template | 
+| OpenAI-powered tweet generator | Generates tweets using OpenAI's language models. | Marketing/Social Media/AI | Link to Template | 
+| Post New YouTube Videos to X | Automatically posts new YouTube videos to X (formerly Twitter). | Marketing/Social Media | Link to Template | 
+| Reddit AI digest | Creates an AI-generated digest of Reddit content. | Marketing/Content/AI | Link to Template | 
+| Social Media Analysis and Automated Email Generation | Analyzes social media data and generates automated email reports. | Marketing/Analytics | Link to Template | 
+| Speed Up Social Media Banners With BannerBear.com | Automates the creation of social media banners using BannerBear.com. | Marketing/Design | Link to Template | 
+| Twitter Virtual AI Influencer | Manages a virtual AI influencer's Twitter account. | Marketing/AI | Link to Template | 
+| Update Twitter banner using HTTP request | Updates a Twitter banner using HTTP requests. | Marketing/Development | Link to Template | 
+| AI Social Media Content Generator with Ollama | Generates optimized posts for Twitter, LinkedIn, Reddit, and Instagram from a single topic using Ollama local AI with built-in quality review. | Marketing/AI/Content | Link to Template | 
+| FlowScribe Lite - AI Content Repurposing (4 Platforms) | Converts one blog post into four optimized social media posts for Twitter, LinkedIn, Instagram, and Facebook using OpenAI. | Marketing/Content | Link to Template | 
+| Monitor X Search with Xquik | Searches X with Xquik, normalizes matching posts, and builds an email-ready social listening digest. | Marketing/Analytics | Link to Template | 
+| Grounded Article to Thread and LinkedIn Post | Turns a pasted article or transcript into a numbered X/Twitter thread and a LinkedIn post, with every fact grounded in the source text. Flags thin input for human review instead of padding filler. | Marketing/Content/AI | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+This section includes 30 additional n8n integration templates covering a wide range of platforms and use cases. Highlights include API schema extraction, Pinterest analysis with AI, SIEM alert enrichment with MITRE ATT&CK, Bitrix24 chatbots, GitLab code review with ChatGPT, LINE assistant integration, Spotify playlist archiving, Zoom meeting AI assistants, Siri AI agents via Apple Shortcuts, and Todoist inbox organization.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| API Schema Extractor | Extracts API schemas from web services for documentation or integration purposes. | Development/Integration | Link to Template | 
+| Synthetic Candidate Intake Reliability Harness | Runs six credential-free synthetic tests for candidate-intake deduplication, idempotency, partial-failure resume, invalid-input quarantine, and bounded 429 retry behavior. | HR/QA/Workflow Reliability | Link to Template | 
+| Generate a Song via Webhook (Tunova / Suno API) | POST a prompt to a webhook and get back a finished Suno AI music track (audio URL) — a drop-in music-generation endpoint for your app. Core HTTP node; free API key at tunova.ai. | Engineering/Creative | Link to Template | 
+| Analyze feedback and send a message on Mattermost | Analyzes user feedback and sends notifications to Mattermost channels. | Support/Communication | Link to Template | 
+| Analyze feedback using AWS Comprehend | Performs sentiment analysis on feedback using AWS Comprehend and sends results to Mattermost. | Support/AI | Link to Template | 
+| Automate Pinterest Analysis & AI-Powered Content Suggestions | Analyzes Pinterest data and provides AI-powered content suggestions. | Marketing/AI | Link to Template | 
+| Automate SIEM Alert Enrichment | Enriches SIEM alerts with MITRE ATT&CK data and integrates with Zendesk. | Security/IT | Link to Template | 
+| Automate Screenshots with URLbox & Analyze with AI | Takes screenshots of webpages and analyzes them using AI. | Development/Marketing | Link to Template | 
+| Automate testimonials in Strapi | Automates the process of collecting and managing testimonials in Strapi. | Marketing/Content | Link to Template | 
+| Bitrix24 Chatbot Application | Example workflow for creating a Bitrix24 chatbot with webhook integration. | Business/Communication | Link to Template | 
+| ChatGPT Automatic Code Review in Gitlab MR | Automates code reviews in GitLab merge requests using ChatGPT. | Development/DevOps | Link to Template | 
+| Classify new bugs in Linear with OpenAI's GPT-4 | Automatically classifies and routes new bug reports in Linear using AI. | Development/QA | Link to Template | 
+| Create, update, and get a profile in Humantic AI | Manages user profiles in Humantic AI platform. | Marketing/AI | Link to Template | 
+| Enhance Customer Chat with Twilio and Redis | Implements message buffering for customer chats using Twilio and Redis. | Support/Development | Link to Template | 
+| Glasp Highlights Auto Export | Fetches new Glasp highlights on a schedule and formats them for export to any destination (Notion, Slack, Google Sheets, etc.). | Productivity | Link to Template | 
+| Hacker News Throwback Machine | Shows what was popular on Hacker News on this day in previous years. | Development/Community | Link to Template | 
+| Handling Appointment Leads with Twilio, Cal.com and AI | Manages appointment scheduling and follow-ups using Twilio and Cal.com. | Sales/Support | Link to Template | 
+| Integrating AI with Open-Meteo API | Enhances weather forecasting with AI analysis. | Data Science/Weather | Link to Template | 
+| Introduction to the HTTP Tool | Basic tutorial on using HTTP tools in n8n. | Development | Link to Template | 
+| KB Tool - Confluence Knowledge Base | Integrates with Confluence for knowledge base management. | Documentation/IT | Link to Template | 
+| Komos Regulated Browser Ops Task Queue | Queues a Komos browser automation task from n8n for CRA, banking, or insurance portal operations with audit-ready run metadata. | Ops/Compliance | Link to Template | 
+| Latchshot — capture a public webpage | Captures a public URL as a binary PNG through Latchshot using an n8n Bearer credential, typed viewport inputs, bounded delay, and no embedded API key. The output is ready for storage, email, chat, or file-aware nodes. | Engineering/Automation | Link to Template | 
+| LINE Assistant with Google Calendar and Gmail | Creates a LINE assistant that integrates with Google Calendar and Gmail. | Productivity/Communication | Link to Template | 
+| Monthly Spotify Track Archiving | Archives and classifies monthly Spotify tracks into playlists. | Personal/Music | Link to Template | 
+| Obsidian Notes Read Aloud | Converts Obsidian notes into audio format as a podcast feed. | Productivity/Content | Link to Template | 
+| Optimize & Update Printify Title and Description | Automates optimization of Printify product titles and descriptions. | E-commerce | Link to Template | 
+| Qualify replies from Pipedrive persons with AI | Uses AI to qualify and categorize replies from Pipedrive contacts. | Sales/AI | Link to Template | 
+| Siri AI Agent with Apple Shortcuts | Creates a Siri-powered AI agent using Apple Shortcuts. | Personal/Productivity | Link to Template | 
+| Text automations using Apple Shortcuts | Implements text-based automations with Apple Shortcuts. | Personal/Productivity | Link to Template | 
+| UTM Link Creator & QR Code Generator | Creates UTM links, generates QR codes, and schedules Google Analytics reports. | Marketing/Analytics | Link to Template | 
+| Use AI to organize your Todoist Inbox | Automatically organizes tasks in Todoist using AI. | Productivity | Link to Template | 
+| Using External Workflows as Tools in n8n | Demonstrates how to use external workflows as tools within n8n. | Development | Link to Template | 
+| Visualize SQL Agent queries with OpenAI and Quickchart.io | Creates visualizations from SQL queries using OpenAI and Quickchart.io. | Data Analysis/Visualization | Link to Template | 
+| Zoom AI Meeting Assistant | Creates meeting summaries, ClickUp tasks, and schedules follow-ups from Zoom meetings. | Productivity/Communication | Link to Template | 
+| ClientFlow Lite - Client Onboarding Automation | Client submits a form, receives a welcome email, and gets added to a Google Sheets pipeline automatically. Simple onboarding workflow. | Ops/Sales | Link to Template | 
+| VoiceAgent Lite - Phone Call Logger | Logs phone calls from Vapi.ai or Bland.ai to Google Sheets via webhook. Captures caller info, duration, and transcript summary. | Ops/Support | Link to Template | 
+| Generate Seedance videos with Vancine API and bounded polling | Submits a Seedance video generation task, polls its asynchronous status, and handles completion, failure, and bounded timeout paths. | Engineering | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+This section contains 4 form and survey automation templates for n8n. Conduct AI-powered conversational interviews via n8n Forms, manage email subscriptions with Airtable integration, or qualify appointment requests using AI. These templates streamline data collection and lead processing workflows.
+| Title | Description | Department | Link | 
+|---|---|---|---|
+| Conversational Interviews with AI Agents and n8n Forms | Implements AI-powered conversational interviews using n8n Forms for interactive data collection. | Research/Marketing | Link to Template | 
+| Email Subscription Service with n8n Forms, Airtable and AI | Manages email subscriptions with n8n Forms, stores data in Airtable, and uses AI for processing. | Marketing/Communication | Link to Template | 
+| Generate a Song from a Form (Tunova) | A hosted n8n Form collects a text prompt, then Tunova generates an original Suno AI song (v5.5) and returns the audio URL. Core HTTP node — runs on any n8n. Free API key at tunova.ai. | Marketing/Creative | Link to Template | 
+| Qualifying Appointment Requests with AI & n8n Forms | Uses AI to qualify and process appointment requests submitted through n8n Forms. | Sales/Support | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+Explore 39 AI research, RAG, and data analysis templates for n8n -- the largest category in this collection. Templates cover deep research agents with Apify and OpenAI, autonomous web crawlers, RAG chatbots with Qdrant and Pinecone, TradingView chart analysis, Hugging Face paper summarization, financial document assistants, SEO keyword generation, sentiment analysis, visual regression testing, and vector database analysis for anomaly detection and KNN classification.
+| Workflow Title | Description | Department | Link to Template | 
+|---|---|---|---|
+| Bilig WorkPaper MCP formula engine for n8n agents | Calls Bilig's public MCP endpoint from n8n to write a spreadsheet formula, calculate the result, and verify restored readback without Excel UI automation. | Engineering, AI Automation | Link to Template | 
+| Analyze tradingview.com charts with Chrome extension, N8N and OpenAI | Analyzes TradingView charts using a Chrome extension, n8n, and OpenAI for automated insights. | Data Analysis | Analyze tradingview.com charts with Chrome extension, N8N and OpenAI.txt | 
+| Automated Hugging Face Paper Summary Fetching & Categorization Workflow | Automates fetching, summarizing, and categorizing research papers from Hugging Face. | AI Research | Automated Hugging Face Paper Summary Fetching & Categorization Workflow.txt | 
+| Autonomous AI crawler | An autonomous AI-powered web crawler for data collection and analysis. | AI Research | Autonomous AI crawler.txt | 
+| Build Your Own Image Search Using AI Object Detection, CDN and ElasticSearch | Builds an image search engine using AI object detection, CDN, and Elasticsearch for efficient image retrieval. | AI Research | Build Your Own Image Search Using AI Object Detection, CDN and ElasticSearch.txt | 
+| Build a Financial Documents Assistant using Qdrant and Mistral.ai | Creates an AI assistant for financial document analysis using Qdrant for vector search and Mistral.ai for language processing. | Finance, AI Research | Build a Financial Documents Assistant using Qdrant and Mistral.ai.txt | 
+| Build a Tax Code Assistant with Qdrant, Mistral.ai and OpenAI | Develops an AI assistant for tax code queries using Qdrant, Mistral.ai, and OpenAI for comprehensive responses. | Finance, AI Research | Build a Tax Code Assistant with Qdrant, Mistral.ai and OpenAI.txt | 
+| Building RAG Chatbot for Movie Recommendations with Qdrant and Open AI | Constructs a RAG-based chatbot for movie recommendations, leveraging Qdrant for retrieval and OpenAI for generation. | AI Research, Entertainment | Building RAG Chatbot for Movie Recommendations with Qdrant and Open AI.txt | 
+| Chat with GitHub API Documentation: RAG-Powered Chatbot with Pinecone & OpenAI | Implements a RAG-powered chatbot for interacting with GitHub API documentation using Pinecone and OpenAI. | Development, AI Research | Chat with GitHub API Documentation_ RAG-Powered Chatbot with Pinecone & OpenAI.txt | 
+| Create a Google Analytics Data Report with AI and sent it to E-Mail and Telegram | Generates Google Analytics data reports using AI and sends them via email and Telegram. | Data Analysis, Marketing | Create a Google Analytics Data Report with AI and sent it to E-Mail and Telegram.txt | 
+| Customer Insights with Qdrant, Python and Information Extractor | Extracts customer insights using Qdrant, Python, and an information extraction module. | Data Analysis, Customer Service | Customer Insights with Qdrant, Python and Information Extractor.txt | 
+| Deduplicate Scraping AI Grants for Eligibility using AI | Automates the deduplication and eligibility assessment of scraped AI grant data using AI. | AI Research, Data Management | Deduplicate Scraping AI Grants for Eligibility using AI.txt | 
+| Enrich Property Inventory Survey with Image Recognition and AI Agent | Enhances property inventory surveys with image recognition and AI agents for automated data enrichment. | Real Estate, AI Research | Enrich Property Inventory Survey with Image Recognition and AI Agent.txt | 
+| Extract insights & analyse YouTube comments via AI Agent chat | Extracts insights and analyzes YouTube comments through an AI agent chat interface. | Social Media, Data Analysis | Extract insights & analyse YouTube comments via AI Agent chat.txt | 
+| Generate SEO Seed Keywords Using AI | Generates SEO seed keywords using AI to optimize content for search engines. | Marketing, AI Research | Generate SEO Seed Keywords Using AI.txt | 
+| Hacker News Job Listing Scraper and Parser | Scrapes and parses job listings from Hacker News for job seekers or recruiters. | Data Collection, HR | Hacker News Job Listing Scraper and Parser.txt | 
+| Hacker News to Video Content | Converts Hacker News articles into video content automatically. | Content Creation, Media | Hacker News to Video Content.txt | 
+| Host Your Own AI Deep Research Agent with n8n, Apify and OpenAI o3 | Sets up a self-hosted AI deep research agent using n8n, Apify, and OpenAI. | AI Research, Automation | Host Your Own AI Deep Research Agent with n8n, Apify and OpenAI o3.txt | 
+| Intelligent Web Query and Semantic Re-Ranking Flow using Brave and Google Gemini | Performs intelligent web queries and semantic re-ranking using Brave browser and Google Gemini AI. | AI Research, Data Analysis | Intelligent Web Query and Semantic Re-Ranking Flow using Brave and Google Gemini.txt | 
+| Learn Anything from HN - Get Top Resource Recommendations from Hacker News | Extracts top resource recommendations from Hacker News to facilitate learning on any topic. | Education, Data Analysis | Learn Anything from HN - Get Top Resource Recommendations from Hacker News.txt | 
+| Make OpenAI Citation for File Retrieval RAG | Generates citations for file retrieval in RAG systems using OpenAI. | AI Research, Documentation | Make OpenAI Citation for File Retrieval RAG.txt | 
+| Open Deep Research - AI-Powered Autonomous Research Workflow | An AI-powered autonomous workflow for conducting deep research. | AI Research, Automation | Open Deep Research - AI-Powered Autonomous Research Workflow.txt | 
+| Query Perplexity AI from your n8n workflows | Integrates Perplexity AI into n8n workflows for advanced querying capabilities. | AI Research, Automation | Query Perplexity AI from your n8n workflows.txt | 
+| Recipe Recommendations with Qdrant and Mistral | Provides recipe recommendations using Qdrant for vector search and Mistral AI for content generation. | Food, AI Research | Recipe Recommendations with Qdrant and Mistral.txt | 
+| Reconcile Rent Payments with Local Excel Spreadsheet and OpenAI | Reconciles rent payments by comparing local Excel spreadsheets with data processed by OpenAI. | Finance, Data Management | Reconcile Rent Payments with Local Excel Spreadsheet and OpenAI.txt | 
+| Scrape Trustpilot Reviews with DeepSeek, Analyze Sentiment with OpenAI | Scrapes Trustpilot Reviews using DeepSeek and analyzes sentiment with OpenAI. | Marketing, Data Analysis | Scrape Trustpilot Reviews with DeepSeek, Analyze Sentiment with OpenAI.txt | 
+| Scrape and summarize posts of a news site without RSS feed using AI and save them to a NocoDB | Scrapes and summarizes news posts without RSS feeds using AI, saving the output to NocoDB. | Content Curation, Data Management | Scrape and summarize posts of a news site without RSS feed using AI and save them to a NocoDB.txt | 
+| Scrape and summarize webpages with AI | Scrapes and summarizes content from webpages using AI. | Content Curation, Data Analysis | Scrape and summarize webpages with AI.txt | 
+| Send Google analytics data to A.I. to analyze then save results in Baserow | Sends Google Analytics data to AI for analysis and saves the results in Baserow. | Data Analysis, Marketing | Send Google analytics data to A.I. to analyze then save results in Baserow.txt | 
+| Spot Workplace Discrimination Patterns with AI | Identifies patterns of workplace discrimination using AI-driven analysis. | HR, AI Research | Spot Workplace Discrimination Patterns with AI.txt | 
+| Summarize SERPBear data with AI (via Openrouter) and save it to Baserow | Summarizes SERPBear data using AI (via Openrouter) and saves the insights to Baserow. | SEO, Data Analysis | Summarize SERPBear data with AI (via Openrouter) and save it to Baserow.txt | 
+| Summarize Umami data with AI (via Openrouter) and save it to Baserow | Summarizes Umami analytics data using AI (via Openrouter) and saves the insights to Baserow. | Data Analysis, Marketing | Summarize Umami data with AI (via Openrouter) and save it to Baserow.txt | 
+| Survey Insights with Qdrant, Python and Information Extractor | Extracts and analyzes insights from survey data using Qdrant, Python, and an information extractor. | Data Analysis, Market Research | Survey Insights with Qdrant, Python and Information Extractor.txt | 
+| Ultimate Scraper Workflow for n8n | A comprehensive scraping workflow for n8n to extract data from various sources. | Data Collection, Automation | Ultimate Scraper Workflow for n8n.txt | 
+| Vector Database as a Big Data Analysis Tool for AI Agents [1/3 anomaly][1/2 KNN] | Utilizes a vector database for big data analysis, focusing on anomaly detection and KNN classification for AI agents. | AI Research, Data Analysis | Vector Database as a Big Data Analysis Tool for AI Agents [1_3 anomaly][1_2 KNN].txt | 
+| Vector Database as a Big Data Analysis Tool for AI Agents [2/2 KNN] | Continues the use of a vector database for big data analysis, focusing on KNN classification for AI agents. | AI Research, Data Analysis | Vector Database as a Big Data Analysis Tool for AI Agents [2_2 KNN].txt | 
+| Vector Database as a Big Data Analysis Tool for AI Agents [2/3 - anomaly] | Explores the use of a vector database for big data analysis, focusing on anomaly detection for AI agents. | AI Research, Data Analysis | Vector Database as a Big Data Analysis Tool for AI Agents [2_3 - anomaly].txt | 
+| Vector Database as a Big Data Analysis Tool for AI Agents [3/3 - anomaly] | Concludes the use of a vector database for big data analysis, focusing on anomaly detection for AI agents. | AI Research, Data Analysis | Vector Database as a Big Data Analysis Tool for AI Agents [3_3 - anomaly].txt | 
+| Visual Regression Testing with Apify and AI Vision Model | Performs visual regression testing using Apify and an AI vision model to detect UI changes. | QA, AI Research | Visual Regression Testing with Apify and AI Vision Model.txt | 
+| SocialPulse Lite - Reddit Trend Monitor | Monitors Reddit subreddits for trending topics and analyzes them with OpenAI. Saves insights to Google Sheets for tracking emerging trends. | Data Analysis, Marketing | Link to Template | 
+| DataForge Lite - AI URL Data Extractor | POST any URL and extract structured data using OpenAI. Returns clean JSON output for easy integration with other workflows. | Data Extraction, AI Research | Link to Template | 
+| 🔍 Perplexity Research to HTML: AI-Powered Content Creation | Transforms Perplexity AI research into HTML content for AI-powered content creation. | Content Creation, AI Research | 🔍 Perplexity Research to HTML_ AI-Powered Content Creation.txt | 
+| Live Web Research Agent with Superhighway | Search the live web, get AI-ready results (title, URL, snippet) using Superhighway's free search API. No browser required — pure HTTP. | Research | Link to Template | 
+🚀 Automate any workflow. Create your free n8n account and start building →
+- ALL_unique_nodes.txt-- Complete node reference listing all unique n8n nodes used across these templates.
+Download the .json file for any template you want to use. Open your n8n instance (either self-hosted or on n8n Cloud), navigate to Workflows, click "Import from File," and select the downloaded JSON file. The workflow will appear in your editor ready for configuration. You will need to add your own credentials for each connected service before activating the workflow.
+n8n is a free, open-source workflow automation platform with over 400 built-in integrations. Unlike SaaS alternatives like Zapier or Make, n8n can be self-hosted on your own infrastructure, giving you full control over your data. It features a visual drag-and-drop editor, native AI and LLM support, and an active community. You can start using n8n for free on their cloud platform or deploy it on your own server.
+Yes, all templates in this repository are completely free to download and use. They were collected from publicly available sources across the internet and are shared here for easy access. n8n itself is open-source and free to self-host. The n8n Cloud platform also offers a free tier with generous limits, so you can get started without any cost.
+Absolutely. Contributions are welcome and encouraged. If you have built an n8n workflow that others might find useful, please open a pull request with your template JSON file placed in the appropriate category folder. Include a clear title and description. You can also suggest new categories or improvements by opening an issue on this repository.
+These templates integrate with a wide range of AI models and providers, including OpenAI GPT-4 and GPT-4o, Anthropic Claude, Google Gemini and Vertex AI, DeepSeek R1, Mistral AI, LangChain, Perplexity AI, NeurochainAI, and Hugging Face models. Many templates use vector databases like Pinecone, Qdrant, Supabase, and Elasticsearch for RAG (Retrieval-Augmented Generation) pipelines.
+This repository is actively maintained and updated regularly with new templates as they become available from the n8n community. New categories and templates are added on an ongoing basis. You can watch or star this repository to get notified of new additions. Check the last commit badge at the top of this page for the most recent update date.
+Contributions are welcome. If you have an n8n workflow template to share, please open a pull request with the JSON file placed in the appropriate category folder. For new category suggestions, bug reports, or general improvements, open an issue. See CONTRIBUTING.md for detailed guidelines.
+Last updated: March 2026

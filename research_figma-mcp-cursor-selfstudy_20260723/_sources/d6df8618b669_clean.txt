@@ -1,0 +1,150 @@
+Title: Use Supabase Auth with React Native | Supabase Docs
+URL Source: https://supabase.com/docs/guides/auth/quickstarts/react-native
+Published Time: 2026-07-23T12:45:10.041Z
+Markdown Content:
+[Skip to content](https://supabase.com/docs/guides/auth/quickstarts/react-native#docs-content-container)
+[![Image 1: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 2: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+*   [Start](https://supabase.com/docs/guides/getting-started)
+*   Products
+*   Build
+*   Manage
+*   Reference
+*   Resources
+[![Image 3: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 4: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+Search docs...
+Ctrl K
+Main menu
+[Auth](https://supabase.com/docs/guides/auth)
+*   [Overview](https://supabase.com/docs/guides/auth)
+*   [Architecture](https://supabase.com/docs/guides/auth/architecture)
+Getting Started*   [Next.js](https://supabase.com/docs/guides/auth/quickstarts/nextjs)
+*   [Astro](https://supabase.com/docs/guides/auth/quickstarts/astrojs)
+*   [React](https://supabase.com/docs/guides/auth/quickstarts/react)
+*   [React Native](https://supabase.com/docs/guides/auth/quickstarts/react-native)
+*   [React Native with Expo & Social Auth](https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth)
+Concepts*   [Users](https://supabase.com/docs/guides/auth/users)
+*   [Identities](https://supabase.com/docs/guides/auth/identities)
+Sessions
+Flows (How-tos)*   [Which package to use](https://supabase.com/docs/guides/auth/choosing-a-server-package)
+Server-Side Rendering
+*   [Password-based](https://supabase.com/docs/guides/auth/passwords)
+*   [Email (Magic link or OTP)](https://supabase.com/docs/guides/auth/auth-email-passwordless)
+*   [Phone Login](https://supabase.com/docs/guides/auth/phone-login)
+*   [Passkey](https://supabase.com/docs/guides/auth/passkeys)
+Social Login (OAuth)
+Enterprise SSO
+*   [Custom OAuth/OIDC Providers](https://supabase.com/docs/guides/auth/custom-oauth-providers)
+*   [Anonymous Sign-Ins](https://supabase.com/docs/guides/auth/auth-anonymous)
+*   [Web3 (Ethereum or Solana)](https://supabase.com/docs/guides/auth/auth-web3)
+*   [Mobile Deep Linking](https://supabase.com/docs/guides/auth/native-mobile-deep-linking)
+*   [Identity Linking](https://supabase.com/docs/guides/auth/auth-identity-linking)
+Multi-Factor Authentication
+*   [Signout](https://supabase.com/docs/guides/auth/signout)
+Debugging*   [Error Codes](https://supabase.com/docs/guides/auth/debugging/error-codes)
+*   [Troubleshooting](https://supabase.com/docs/guides/auth/troubleshooting)
+OAuth 2.1 Server*   [Overview](https://supabase.com/docs/guides/auth/oauth-server)
+*   [Getting Started](https://supabase.com/docs/guides/auth/oauth-server/getting-started)
+*   [OAuth Flows](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows)
+*   [MCP Authentication](https://supabase.com/docs/guides/auth/oauth-server/mcp-authentication)
+*   [Token Security & RLS](https://supabase.com/docs/guides/auth/oauth-server/token-security)
+Third-party auth*   [Overview](https://supabase.com/docs/guides/auth/third-party/overview)
+*   [Clerk](https://supabase.com/docs/guides/auth/third-party/clerk)
+*   [Firebase Auth](https://supabase.com/docs/guides/auth/third-party/firebase-auth)
+*   [Auth0](https://supabase.com/docs/guides/auth/third-party/auth0)
+*   [AWS Cognito (Amplify)](https://supabase.com/docs/guides/auth/third-party/aws-cognito)
+*   [WorkOS](https://supabase.com/docs/guides/auth/third-party/workos)
+Configuration*   [General Configuration](https://supabase.com/docs/guides/auth/general-configuration)
+*   [Email Templates](https://supabase.com/docs/guides/auth/auth-email-templates)
+*   [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
+Auth Hooks
+*   [Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp)
+*   [User Management](https://supabase.com/docs/guides/auth/managing-user-data)
+Security*   [Password Security](https://supabase.com/docs/guides/auth/password-security)
+*   [Rate Limits](https://supabase.com/docs/guides/auth/rate-limits)
+*   [Bot Detection (CAPTCHA)](https://supabase.com/docs/guides/auth/auth-captcha)
+*   [Audit Logs](https://supabase.com/docs/guides/auth/audit-logs)
+JSON Web Tokens (JWT)
+*   [JWT Signing Keys](https://supabase.com/docs/guides/auth/signing-keys)
+*   [Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
+*   [Column Level Security](https://supabase.com/docs/guides/database/postgres/column-level-security)
+[![Image 5: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 6: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+*   [Start](https://supabase.com/docs/guides/getting-started)
+*   Products
+*   Build
+*   Manage
+*   Reference
+*   Resources
+[![Image 7: Supabase wordmark](https://supabase.com/docs/supabase-dark.svg)![Image 8: Supabase wordmark](https://supabase.com/docs/supabase-light.svg)DOCS](https://supabase.com/docs)
+Search docs...
+Ctrl K
+Auth
+# Use Supabase Auth with React Native
+Learn how to use Supabase Auth with React Native
+1
+### Create a new Supabase project
+[Launch a new project](https://supabase.com/dashboard) in the Supabase Dashboard.
+Your new database has a table for storing your users. You can see that this table is currently empty by running some SQL in the [SQL Editor](https://supabase.com/dashboard/project/_/sql).
+###### SQL_EDITOR
+`1select * from auth.users;`
+2
+### Create a React app
+Create a React app using the `create-expo-app` command.
+###### Terminal
+`1npx create-expo-app -t expo-template-blank-typescript my-app`
+3
+### Install the Supabase client library
+Install `supabase-js` and the required dependencies.
+###### Terminal
+`1cd my-app && npx expo install @supabase/supabase-js @react-native-async-storage/async-storage @rneui/themed react-native-url-polyfill`
+4
+### Set up your login component
+Create a helper file `lib/supabase.ts` that exports a Supabase client using your Project URL and key.
+Rename `.env.example` to `.env` and populate with your Supabase connection variables:
+###### Project URL
+No project found
+###### Publishable key
+No project found
+###### lib/supabase.ts
+`1import { AppState, Platform } from 'react-native'2import 'react-native-url-polyfill/auto'3import AsyncStorage from '@react-native-async-storage/async-storage'4import { createClient, processLock } from '@supabase/supabase-js'56const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!7const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY!89export const supabase = createClient(supabaseUrl, supabasePublishableKey, {10  auth: {11    ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),12    autoRefreshToken: true,13    persistSession: true,14    detectSessionInUrl: false,15    lock: processLock,16  },17})1819// Tells Supabase Auth to continuously refresh the session automatically20// if the app is in the foreground. When this is added, you will continue21// to receive `onAuthStateChange` events with the `TOKEN_REFRESHED` or22// `SIGNED_OUT` event if the user's session is terminated. This should23// only be registered once.24if (Platform.OS !== 'web') {25  AppState.addEventListener('change', (state) => {26    if (state === 'active') {27      supabase.auth.startAutoRefresh()28    } else {29      supabase.auth.stopAutoRefresh()30    }31  })32}`
+[View source](https://github.com/supabase/supabase/blob/4272aba4b16c111b0ce5922a6d5891e35bf4fdb3/examples/auth/quickstarts/react-native/lib/supabase.ts)
+### Get API details[#](https://supabase.com/docs/guides/auth/quickstarts/react-native#get-api-details)
+To interact with data in database tables, you use the client libraries that wrap [the auto-generated Data API endpoints](https://supabase.com/docs/guides/api), authenticating using the Project URL and key from [the project **Connect** dialog](https://supabase.com/dashboard/project/_?showConnect=true&connectTab=mobiles&framework=exporeactnative).
+###### Project URL
+No project found
+###### Publishable key
+No project found
+[Read the API keys docs](https://supabase.com/docs/guides/getting-started/api-keys) for a full explanation of all key types, their uses, and where to find them.
+5
+### Create a login component
+Create a React Native component to manage logins and sign ups. The app later uses the [`getClaims`](https://supabase.com/docs/reference/javascript/auth-getclaims) method in `App.tsx` to validate the local JWT before showing the signed-in user.
+###### components/Auth.tsx
+`1import React, { useState } from 'react'2import { Alert, StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native'3import { supabase } from '../lib/supabase'45export default function Auth() {6  const [email, setEmail] = useState('')7  const [password, setPassword] = useState('')8  const [loading, setLoading] = useState(false)910  async function signInWithEmail() {11    setLoading(true)12    const { error } = await supabase.auth.signInWithPassword({13      email: email,14      password: password,15    })1617    if (error) Alert.alert(error.message)18    setLoading(false)19  }2021  async function signUpWithEmail() {22    setLoading(true)23    const {24      data: { session },25      error,26    } = await supabase.auth.signUp({27      email: email,28      password: password,29    })3031    if (error) Alert.alert(error.message)32    if (!session) Alert.alert('Please check your inbox for email verification!')33    setLoading(false)34  }3536  return (37    38      39        Email40         setEmail(text)}42          value={email}43          placeholder="email@address.com"44          autoCapitalize="none"45          style={styles.input}46        />47      48      49        Password50         setPassword(text)}52          value={password}53          secureTextEntry={true}54          placeholder="Password"55          autoCapitalize="none"56          style={styles.input}57        />58      59      60         signInWithEmail()}63          disabled={loading}64        >65          Sign in66        67      68      69         signUpWithEmail()}72          disabled={loading}73        >74          Sign up75        76      77    78  )79}8081const styles = StyleSheet.create({82  container: {83    marginTop: 40,84    padding: 12,85  },86  verticallySpaced: {87    paddingTop: 4,88    paddingBottom: 4,89    alignSelf: 'stretch',90  },91  mt20: {92    marginTop: 20,93  },94  label: {95    fontSize: 16,96    fontWeight: '600',97    color: '#86939e',98    marginBottom: 6,99  },100  input: {101    borderWidth: 1,102    borderColor: '#86939e',103    borderRadius: 4,104    padding: 12,105    fontSize: 16,106  },107  button: {108    backgroundColor: '#2089dc',109    borderRadius: 4,110    padding: 12,111    alignItems: 'center',112  },113  buttonDisabled: {114    opacity: 0.5,115  },116  buttonText: {117    color: '#fff',118    fontSize: 16,119    fontWeight: '600',120  },121})`
+[View source](https://github.com/supabase/supabase/blob/4272aba4b16c111b0ce5922a6d5891e35bf4fdb3/examples/auth/quickstarts/react-native/components/Auth.tsx)
+6
+### Add the Auth component to your app
+Add the `Auth` component to your `App.tsx` file. If the user is logged in, print the user id to the screen.
+###### App.tsx
+`1import 'react-native-url-polyfill/auto'2import { useState, useEffect } from 'react'3import { supabase } from './lib/supabase'4import Auth from './components/Auth'5import { View, Text } from 'react-native'6import { JwtPayload } from '@supabase/supabase-js'78export default function App() {9  const [claims, setClaims] = useState(null)1011  useEffect(() => {12    supabase.auth.getClaims().then(({ data: { claims } }) => {13      setClaims(claims)14    })1516    supabase.auth.onAuthStateChange(() => {17      supabase.auth.getClaims().then(({ data: { claims } }) => {18        setClaims(claims)19      })20    })21  }, [])2223  return (24    25      26      {claims && {claims.sub}}27    28  )29}`
+[View source](https://github.com/supabase/supabase/blob/4272aba4b16c111b0ce5922a6d5891e35bf4fdb3/examples/auth/quickstarts/react-native/App.tsx)
+7
+### Start the app
+Start the app, and follow the instructions in the terminal.
+###### Terminal
+`1npm start`
+[Edit this page on GitHub](https://github.com/supabase/supabase/blob/master/apps/docs/content/guides/auth/quickstarts/react-native.mdx)
+### Is this helpful?
+No Yes
+### AI Tools
+Copy as Markdown[Ask ChatGPT](https://chatgpt.com/?hint=search&q=Read%20from%20https://supabase.com/docs/guides/auth/quickstarts/react-native%20so%20I%20can%20ask%20questions%20about%20its%20contents)[Ask Claude](https://claude.ai/new?q=Read%20from%20https://supabase.com/docs/guides/auth/quickstarts/react-native%20so%20I%20can%20ask%20questions%20about%20its%20contents)
+*   Need some help?
+[Contact support](https://supabase.com/support)
+*   Latest product updates?
+[See Changelog](https://supabase.com/changelog)
+*   Something's not right?
+[Check system status](https://status.supabase.com/)
+* * *
+[© Supabase Inc](https://supabase.com/)—[Contributing](https://github.com/supabase/supabase/blob/master/apps/docs/DEVELOPERS.md)[Author Styleguide](https://github.com/supabase/supabase/blob/master/apps/docs/CONTRIBUTING.md)[Open Source](https://supabase.com/open-source)[SupaSquad](https://supabase.com/supasquad)Privacy Settings
+[Twitter](https://twitter.com/supabase)[GitHub](https://github.com/supabase)[Discord](https://discord.supabase.com/)[Youtube](https://youtube.com/c/supabase)
+1.   [Auth](https://supabase.com/docs/guides/auth)
+3.   Getting Started
+5.   [React Native](https://supabase.com/docs/guides/auth/quickstarts/react-native)

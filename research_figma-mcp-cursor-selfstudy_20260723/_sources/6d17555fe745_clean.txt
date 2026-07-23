@@ -1,0 +1,51 @@
+Version 2
+최신 버전의 토스페이먼츠 SDK로 마이그레이션하는 방법을 알아보세요.
+토스페이먼츠 SDK v1에서는 결제위젯, 브랜드페이, 결제창이 각자 다른 SDK로 분리되어 있었어요. 기존 구매자가 새로운 결제 서비스를 도입하거나 두 개의 결제 서비스를 함께 사용하기 불편했죠.
+토스페이먼츠 SDK v2부터는 모든 결제 서비스를 하나의 토스페이먼츠 SDK로 사용할 수 있어요. 통일된 인터페이스와 SDK로 더 편리하게 결제를 연동하세요. API에는 변경사항이 없기 때문에 클라이언트 코드만 변경하면 바로 최신 버전의 SDK를 사용할 수 있어요.
+SDK를 초기화하는 방법은 다음과 같이 바뀌었어요.
+네. 클라이언트 키, 시크릿 키는 모든 버전에서 동일하게 이용할 수 있어요. 결제위젯은 연동하고 있다면 결제위젯 연동 키를 사용하고, 결제창 및 브랜드페이는 API 개별 연동 키를 사용해주세요. 자세한 내용은 API 키 가이드에서 확인하세요.
+v2는 카드, 간편결제, 계좌이체(퀵계좌이체), 가상계좌, 휴대폰, 상품권 결제를 지원해요. v1이 지원하는 결제수단과 동일합니다.
+아니요, 결제 제품의 UI는 이전과 같습니다. SDK v2는 연동 편의가 개선되었습니다.
+아니요, API는 이전과 같이 v1 엔드포인트를 사용하면 됩니다.
+아니요, v2는 아직 모바일 SDK를 지원하지 않아요. 앞으로 지원할 계획은 있지만 출시되기 전까지는 SDK v1을 사용해주세요.
+토스페이먼츠 SDK를 초기화한 다음에 widgets() 메서드로 결제위젯 인스턴스를 생성하세요.
+결제 금액을 설정하는 setAmount() 메서드가 추가되었습니다. renderPaymentMethods()를 호출하기 전에 해당 메서드로 반드시 결제 금액을 설정하세요. 결제 UI 렌더 이후에도 할인 쿠폰 등의 이유로 결제 금액이 변경되면 setAmount() 메서드로 결제 금액을 업데이트할 수 있어요. 따라서 결제위젯 SDK v1에서 제공된 updateAmount() 메서드는 토스페이먼츠 SDK v2에서 제공되지 않습니다.
+결제 금액을 별도의 메서드로 설정하기 때문에 renderPaymentMethods()의 파라미터로 더 이상 결제 금액 정보를 받지 않습니다. 또한, 해당 렌더링 메서드가 비동기적으로 바뀌었습니다. 렌더링이 언제 완료되었는지 편리하게 확인할 수 있기 때문에 결제위젯 SDK v1에서 제공된 on() 메서드의 ready 이벤트가 제거됩니다.
+on() 메서드에 구매자가 선택한 결제수단을 확인할 수 있는 paymentMethodSelect 이벤트가 추가됩니다. 결제위젯 Pro 커스텀 결제수단 기능에 사용하던 customRequest, customPaymentMethodSelect, customPaymentMethodUnselect 이벤트는 제거됐어요.
+생성한 결제 UI의 인스턴스를 삭제할 수 있는 destroy() 메서드가 추가됐습니다. 한 페이지 내에서 2 개 이상의 결제 UI를 렌더링할 수 없기 때문에 새로운 결제 UI를 렌더링하고 싶다면 해당 메서드로 인스턴스를 먼저 삭제해주세요.
+| v1 | v2 | 설명 | 
+|---|---|---|
+| 동기적 렌더링 메서드 | 비동기적 렌더링 메서드 | renderPaymentMethods(),renderAgreement()메서드가 비동기로 바뀌었습니다. | 
+| updateAmount() | setAmount() | 결제위젯을 렌더링할 때 받던 결제 금액을 이제 별도로 메서드로 설정하게 되었습니다. | 
+| on() | on('paymentMethodSelect', callback) | v1에서 사용하던 ready및 커스텀 결제수단과 관련된 이벤트가 모두paymentMethodSelect로 대체됩니다. | 
+| - | destroy() | 결제수단 UI, 이용약관 UI를 삭제할 수 있는 이벤트가 추가됐습니다. 결제수단 UI와 이용약관 UI는 한 페이지에 각 하나씩만 렌더링할 수 있습니다. | 
+토스페이먼츠 SDK를 초기화한 다음에 brandpay() 메서드로 브랜드페이 인스턴스를 생성하세요.
+브랜드페이 메서드에는 크게 두 가지 변화가 있습니다.
+첫 번째로는 v1에서 제공되던 getPaymentMethods() 메서드가 제거됐어요. 구매자가 등록한 결제수단을 더 이상 확인할 수 없기 때문에 결제를 요청하는 requestPayment() 메서드에서 특정 결제수단에만 해당했던 아래 파라미터도 모두 제거됩니다.
+- methodId
+- cardInstallmentPlan
+- useCardPoint
+- discountCode
+- cashReceipt
+두 번째로는 결제 금액이 number에서 object로 바뀝니다. 결제위젯, 결제창과 동일하게 결제 금액, 결제 통화를 객체로 받아요. 하지만 브랜드페이는 아직 국내 결제에만 사용되기 때문에 결제 통화는 항상 KRW입니다.
+추가로 아래와 같이 단순 메서드 이름 변경 및 메서드가 제거되었습니다.
+| v1 | v2 | 설명 | 
+|---|---|---|
+| getPaymentMethods() | - | 메서드 제거 | 
+| requestPayment() | requestPayment()파라미터 변경 및 제거 | methodId,cardInstallmentPlan,useCardPoint,discountCode,cashReceipt파라미터가 제거됩니다.amount는 타입이 객체로 바뀌었습니다. | 
+| setupPassword() | changePassword() | 메서드 이름 변경 | 
+| setupOneTouchPay() | changeOneTouchPay() | 메서드 이름 변경 | 
+| isOneTouchPay():boolean | isOneTouchPayEnabled():{isEnable: boolean} | 메서드 이름 및 응답 변경 | 
+| toggleOneTouchPay() | - | 메서드 제거 | 
+| requestAgreement() | - | 메서드 제거 | 
+토스페이먼츠 SDK를 초기화한 다음에 payment() 메서드로 결제창 인스턴스를 생성하세요.
+requestPayment()는 원래 결제수단, 결제정보 두 가지 파라미터를 받았는데요. v2에서는 두 파라미터를 통합합니다. SDK v2에서는 결제정보 객체 안에 있는 method 필드로 결제수단 정보를 추가할 수 있어요. 선택한 method에 해당하는 파라미터를 전달해주세요. 예를 들어, 결제수단으로 CARD를 선택하면 requestPayment()의 card 필드 안에 카드 결제 관련 내용을 전달해야 됩니다.
+또 결제정보에서 아래 필드가 제거됩니다.
+- cultureExpense
+- hideMobileAppHeader
+- showCustomerMobilePhone
+- mobileCarrier
+| v1 | v2 | 설명 | 
+|---|---|---|
+| requestPayment(결제수단, 결제정보) | requestPayment(결제정보) | 결제수단, 결제정보 파라미터를 통합합니다. SDK v2에서는 결제정보의 method필드로 결제수단을 전달해주세요. | 
+| - | 결제정보 필드 제거 | cultureExpense,hideMobileAppHeader,showCustomerMobilePhone,mobileCarrier |

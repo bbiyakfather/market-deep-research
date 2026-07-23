@@ -1,0 +1,217 @@
+Cursor for Designers Tutorial #3: Figma to Code and Beyond
+One of the highest-value designer workflows in Cursor is translating Figma files into production code.
+Designers create tremendous leverage here: reducing handoff drift, preserving system consistency, and helping teams ship UI changes faster without breaking logic.
+This tutorial is Part 3 of a 3-part Cursor for Designers series:
+- Part 1: Greenfield / vibe-coding UI workflows
+- Part 2: Working inside an existing product repo
+- Part 3: Figma → production code translation (you are here)
+You can start here from search and still succeed. This tutorial is fully standalone.
+In this guide, you’ll learn how to update existing UI and add new screens from Figma using Cursor prompts, built-in preview, and visual editing tools like element selection and the css panel. You’ll do all this while preserving logic, tokens, and system consistency.
+This Figma to Cursor tutorial is for you if:
+- Your day-to-day starts in Figma
+- You're responsible for design QA in code
+- You need to reduce handoff drift
+- You want production-safe UI updates, not just mockups
+- You need to preserve system consistency while moving fast
+Or read Part 2 first if:
+- Repo navigation is your blocker
+- You struggle to find the right file/component in a codebase
+- You've never run a local app in Cursor before
+Or read Part 1 first if:
+- You want a simpler environment to practice Cursor prompts + Visual Editor
+- You're new to AI-assisted UI workflows and want greenfield confidence first
+What you'll learn in Part 3
+In this tutorial, you’ll learn how to:
+- Start from a running app in Cursor preview
+- Locate the component/screen that matches a Figma frame
+- Connect Figma via MCP and prompt with constraints
+- Constrain Cursor to preserve logic and reuse system patterns
+- Use Cursor’s visual editing features for the final 20%
+- Review diffs for risky changes
+- QA Figma-to-code updates
+- Add a brand new Figma screen to an existing app safely
+And by the end, you’ll have a repeatable Figma-to-production workflow you can use in real teams.
+What you'll ship by the end
+By the end of this tutorial, you’ll have:
+- One Figma-matched UI update in a real app
+- One new Figma-derived screen (optional scenario)
+- A repeatable prompt pattern for safe design translation
+- A PR-ready summary of what changed and what stayed intact
+How Cursor works for designers
+Cursor isn’t just autocomplete. For designers doing Figma-to-code work, Cursor is most useful when it helps you:
+- Locate the right components in a repo
+- Apply design changes with constrained prompts
+- Preserve logic while updating layout/styling
+- Summarize diffs
+- Flag potential risk areas
+- Pair code changes with visual refinement in Visual Editor
+The goal isn’t just “generate code from a screenshot.” The goal is to translate design intent into production UI changes safely.
+Before you start: Open the app in Cursor preview (standalone setup bridge)
+This tutorial is standalone, so here’s the quick setup path if you don’t already have a repo running.
+If you already have a repo running
+Great—keep the app visible in Cursor’s built-in preview while you work.
+If you don’t have a repo running yet
+Use a prompt-first setup flow:
+“Clone this repo into my workspace and open it.”
+“Install dependencies and get local dev running. Tell me the localhost URL.”
+If repo setup and navigation are new to you, read Part 2 for the full existing-repo workflow. We also have steps to clone a nice demo app you can use.
+You might also want to check out Git Branching for Designers if you need a refresher on version control.
+The core Figma-to-code rule
+Match the design without breaking logic
+This is the rule that matters most.
+Use these constraints in your prompts:
+- “Keep logic intact.”
+- “Minimal diff only.”
+- “Reuse existing components and tokens.”
+- “Do not refactor unless I ask.”
+How to update existing UI to match new Figma
+This is the most common real-world case: The product already exists, and the design has changed.
+Step 1 — Prompt Cursor to locate the existing UI in the repo
+Start from what you can see in Cursor preview.
+Prompt:
+“I need to update this screen to match a new Figma design. Find the file/component responsible for this section and open it.”
+If needed, attach a screenshot and say:
+“Use this screenshot to identify the section and open the relevant file(s).”
+✅ Checkpoint: Cursor opens the correct file/component.
+Step 2 — Connect Figma via MCP and prompt with constraints
+If you haven't already, connect the Figma MCP server in Cursor to give it direct access to your Figma files. If you need help with setup, we have a general Figma MCP guide and another for Claude Code.
+Prompt:
+"Connect to Figma MCP. Open this Figma file [paste Figma link] and extract the specs for [frame name]. Update this component to match those specs exactly. Keep logic intact. Make minimal changes. Reuse existing components and tokens."
+This gives Cursor direct access to:
+- Spacing values
+- Typography hierarchy
+- Layout structure
+- Color tokens
+- Component hierarchy
+The Figma MCP server eliminates manual spec copying and reduces translation errors.
+✅ Checkpoint: Cursor proposes a constrained update (not a full rewrite) based on actual Figma data.
+Step 3 — Add screenshot-driven prompting (with strict guardrails)
+Paste a screenshot of the Figma frame or selection.
+Prompt:
+“Update this section to match the screenshot layout. Keep existing logic intact. Do not remove links, handlers, forms, or routing. Reuse the repo’s existing components and patterns. Minimal diff only.”
+If Cursor gets too creative:
+“Do not refactor. Do not rename things. Apply only the visual changes needed.”
+✅ Checkpoint: The proposed changes match the design direction without obvious logic drift.
+Step 4 — Use the Element Selector and CSS panel for the final 20%
+Pick one improvement to practice safely:
+- Increase information density slightly
+- Reduce visual noise
+- Improve typography hierarchy
+- Tighten spacing rhythm across cards
+- Make the screen feel more enterprise
+Example prompt:
+“Make this dashboard section feel more enterprise. Increase density slightly. Improve typography hierarchy. Reduce visual noise. Keep logic intact. Minimal diff.”
+Then use Visual Editor for the final details:
+- Spacing rhythm
+- Alignment
+- Card padding consistency
+- Label vs metric emphasis
+✅ Checkpoint: The UI looks better and behaves the same.
+Step 5 — Ask Cursor to summarize the diff and flag risk
+Prompt:
+“Summarize this diff and call out any risky changes (logic, handlers, routing, forms, state) before I accept.”
+You do not need to read every line to review well.
+You do need to know:
+- What changed visually
+- Whether logic got touched
+- Where risk might exist
+If logic changed unnecessarily:
+“Undo the refactor. Restore logic. Apply only the visual changes.”
+✅ Checkpoint: You’ve reviewed for shipping risk, not just aesthetics.
+Step 6 — Ask Cursor for a designer QA checklist
+Prompt:
+“Give me a short QA checklist for this Figma-to-code update focused on visual accuracy and interaction safety.”
+Then verify in Cursor preview:
+- Hover/focus states
+- Responsive behavior
+- Links/navigation still work
+- Forms/buttons still behave correctly
+- No obvious regressions
+✅ Checkpoint: You have a production-safe Figma update.
+How to Implement a brand new Figma screen in an existing app using Cursor
+This is the next level: adding a new Figma screen to a real product without breaking system consistency.
+Step 1 — Ask Cursor where the new page should live
+Prompt:
+“Where should I create a new page for this feature in this repo? Show me an example of an existing page and how it’s connected to navigation.”
+You want the existing pattern for:
+- File location
+- Layout wrapper
+- Route structure
+- Nav wiring
+✅ Checkpoint: Cursor shows the correct pattern for adding a new page.
+Step 2 — Ask Cursor to scaffold the new page using existing patterns
+Prompt:
+“Create a new page called ‘Usage’ using the app’s existing dashboard layout, header, and navigation patterns. Reuse existing Card/Table/Button components. Do not introduce new styling conventions.”
+This avoids the most common mistake:
+the new page “looks nice” but doesn’t feel like part of the product.
+✅ Checkpoint: A new page exists and follows the app’s architecture.
+Step 3 — Apply Figma layout without inventing new tokens
+Prompt:
+“Match the Figma spacing and layout, but keep token usage consistent with the repo. Don’t invent new colors unless necessary. Prefer existing typography and spacing patterns.”
+Then add specs/screenshots.
+✅ Checkpoint: The page matches Figma while still feeling native to the product.
+You can also do this in Builder:
+Step 4 — Ask Cursor to wire it into navigation safely
+Prompt:Enter some text...“Add this page to the sidebar navigation using the same pattern as existing routes. Don’t rename or break existing routes.”
+Then test in Cursor preview:
+- Click the new nav item
+- Confirm layout parity
+- Confirm no regressions in existing nav
+✅ Checkpoint: The new page behaves like a real part of the app.
+Step 5 — Ask Cursor to save the change and draft a PR summary
+Prompt:
+“Create a commit for this new page and draft a PR summary that explains what was added, what patterns were reused, and what reviewers should verify.”
+This is where design implementation becomes team-ready.
+✅ Checkpoint: You have a handoff-ready implementation summary.
+Moving beyond Cursor + Figma MCP
+Even with MCP, you're still bridging between Figma and code through prompts and manual verification. If your team is doing frequent Figma-to-production updates, a visual-first platform like Builder.io can be a huge help.
+Builder directly imports Figma designs and generate production-ready components that preserve your design system—no prompt engineering required. Builder's Figma plugin handles the translation automatically while maintaining system consistency.
+“Stop refactoring. Restore the original structure. Apply only the visual changes needed to match Figma.”
+“Reuse existing components, spacing scale, typography patterns, and tokens already used in this repo. Don’t introduce new conventions.”
+“Keep logic intact. Restore handlers, links, forms, routing, and state. Make only the visual changes needed.”
+“Open this in Visual Editor and help me fine-tune spacing, alignment, and hierarchy without refactoring the structure.”
+“Identify which responsive classes are affecting this layout. Propose the minimal fix that preserves desktop and improves mobile.”
+“Use this screenshot to identify the responsible component(s) and show me the file path(s).”
+What you just learned in Part 3
+You now have a repeatable Figma-to-production workflow in Cursor that helps you:
+- Locate the right UI in a repo
+- Apply Figma changes with guardrails
+- Preserve logic and system consistency
+- Refine visually in Visual Editor
+- Review diff risk
+- QA interactions before shipping
+That’s the highest-leverage skill in this series.
+You’re no longer just generating UI—you’re translating design intent into production-safe changes.
+What to read next in the series
+Go to Part 2 if…
+- Repo navigation and component discovery are still slowing you down
+- You want more practice making safe UI changes in existing codebases
+- You need a stronger “find the right file” workflow
+Go to Part 1 if…
+- You want a simpler environment to practice prompting + Visual Editor
+- You want to build speed in a blank project before touching production systems
+Cursor for designers series
+- Part 1: Greenfield / Vibe-Coding UI Workflows
+- Part 2: Working Inside an Existing Product Repo
+- Part 3: Figma → Production Code Translation (you are here)
+FAQ: Figma to code in Cursor for designers
+How do I use Cursor to translate a Figma design into production code?
+Connect the Figma MCP server in Cursor, then prompt: "Open this Figma file [link] and extract the specs for [frame name]. Update this component to match those specs. Keep logic intact. Minimal diff only. Reuse existing components and tokens." The MCP connection gives Cursor direct access to spacing, typography, layout, and color tokens — no manual spec copying required.
+What is the Figma MCP server and why does it matter for designers using Cursor?
+The Figma MCP server is a direct integration between Figma and Cursor that lets Cursor read your Figma files programmatically. Instead of pasting screenshots or manually copying spacing values, Cursor can pull exact specs from the live Figma file. This reduces translation errors and makes Figma-to-code updates significantly faster and more accurate.
+How do I stop Cursor from breaking the design system when implementing a Figma design?
+Use four constraints together in every prompt: "Keep logic intact," "Minimal diff only," "Reuse existing components and tokens," and "Do not refactor unless I ask." These guardrails prevent Cursor from inventing new patterns, renaming things, or cleaning up code you didn't ask it to touch — which is the most common source of design system drift in AI-assisted implementation.
+How do I add a brand new Figma screen to an existing app without breaking consistency?
+Start by asking Cursor: "Where should I create a new page for this feature? Show me an existing page and how it connects to navigation." Then scaffold it with: "Create this new page using the app's existing layout, header, and nav patterns. Reuse existing components. Do not introduce new styling conventions." Apply Figma layout last, after the structural pattern is already in place.
+What's the difference between updating existing UI from Figma vs. adding a new Figma screen in Cursor?
+Updating existing UI means locating the right component, applying constrained changes to match new Figma specs, and reviewing the diff for logic drift. Adding a new screen means first understanding where pages live in the repo, scaffolding with existing patterns, then applying the Figma design — in that order. Skipping the scaffolding step is why new screens often feel inconsistent with the rest of the product.
+How do I review a Figma-to-code diff in Cursor before accepting it?
+Prompt: "Summarize this diff and call out any risky changes — logic, handlers, routing, forms, state — before I accept." You don't need to read every line. You need to know what changed visually, whether any logic was touched, and where risk exists. If logic changed when you only asked for visual updates, prompt: "Undo the refactor. Restore logic. Apply only the visual changes."
+How do I QA a Figma-to-code update before shipping?
+Prompt Cursor: "Give me a short QA checklist for this Figma-to-code update focused on visual accuracy and interaction safety." Then verify manually in Cursor's built-in preview: hover and focus states, responsive behavior, navigation links, form and button behavior, and any visual regressions against the original. Visual accuracy and interaction safety are both required — not just one.
+What should I do when Cursor matches the screenshot but violates the design system?
+Prompt: "Reuse existing components, spacing scale, typography patterns, and color tokens already used in this repo. Don't introduce new conventions." Cursor optimizes for visual similarity to the reference image, not system consistency — so you have to explicitly constrain it to use what already exists rather than invent new patterns that look right but don't belong.
+How do I wire a new Figma-derived page into the navigation in Cursor?
+Prompt: "Add this page to the sidebar navigation using the same pattern as existing routes. Don't rename or break existing routes." Then test in Cursor preview: click the new nav item, confirm layout parity with other pages, and verify no regressions in existing navigation. Cursor can do the wiring, but you need to manually confirm it in the running app.
+When does Figma-to-Cursor workflow hit its limits for design teams?
+Cursor handles individual Figma-to-code translation well, but the workflow relies heavily on prompt engineering, manual diff review, and screenshot-based verification. For teams doing frequent design system updates or high-volume Figma-to-production work, a purpose-built platform like Builder.io can be more efficient — it reads Figma directly and generates production-ready components using your existing design tokens without requiring the same level of prompt iteration.

@@ -1,0 +1,64 @@
+Title: 연동하기 | 토스페이먼츠 개발자센터
+
+URL Source: https://docs.tosspayments.com/guides/payment-widget/integration
+
+Markdown Content:
+*   [![Image 3: 토스페이먼츠 개발자센터 로고](https://static.toss.im/icons/svg/logo_payments_developer_blue.svg)](https://developers.tosspayments.com/)
+*   [가이드](https://docs.tosspayments.com/guides/v2/get-started) 
+*   API & SDK     
+    *   [API 레퍼런스](https://docs.tosspayments.com/reference) 
+    *   [SDK 레퍼런스](https://docs.tosspayments.com/sdk/v2/js) 
+    *   [기관 및 ENUM 코드](https://docs.tosspayments.com/codes/org-codes) 
+
+*   [샌드박스](https://developers.tosspayments.com/sandbox) 
+*   커뮤니티·지원     
+    *   [시스템 상태](https://status.tosspayments.com/) 
+    *   [실시간 문의](https://techchat.tosspayments.com/) 
+    *   [용어사전](https://docs.tosspayments.com/resources/glossary/index) 
+    *   [자주 묻는 질문](https://docs.tosspayments.com/resources/faq) 
+    *   [릴리즈 노트](https://docs.tosspayments.com/resources/release-note) 
+
+*   [블로그](https://docs.tosspayments.com/blog) 
+
+*   로그인   
+
+[시작하기](https://docs.tosspayments.com/guides/get-started)
+
+*   기초 지식    [결제 기초](https://docs.tosspayments.com/guides/basics/payment)  [서비스 기초](https://docs.tosspayments.com/guides/basics/service)    
+
+[환경 설정하기](https://docs.tosspayments.com/guides/environment)
+
+결제위젯
+
+[이해하기](https://docs.tosspayments.com/guides/payment-widget/overview)
+
+[어드민 사용하기](https://docs.tosspayments.com/guides/payment-widget/admin)
+
+[연동하기](https://docs.tosspayments.com/guides/payment-widget/integration)
+
+[배포 체크리스트](https://docs.tosspayments.com/guides/payment-widget/deploy-checklist)
+
+*   추천 서비스    [브랜드페이](https://docs.tosspayments.com/guides/payment-widget/integration-brandpay)  [PayPal](https://docs.tosspayments.com/guides/payment-widget/integration-paypal)  [Pro 기능](https://docs.tosspayments.com/guides/payment-widget/pro/overview)    
+
+기타 제품
+
+[브랜드페이](https://docs.tosspayments.com/guides/brandpay/overview)
+
+[자동결제(빌링)](https://docs.tosspayments.com/guides/billing/overview)
+
+[결제창](https://docs.tosspayments.com/guides/payment/overview)
+
+더 알아보기
+
+[웹훅 연결하기](https://docs.tosspayments.com/guides/webhook)
+
+[결제 취소하기](https://docs.tosspayments.com/guides/cancel-payment)
+
+*   결제 깊이 이해하기    [결제수단](https://docs.tosspayments.com/guides/learn/payment-methods)  [결제 흐름](https://docs.tosspayments.com/guides/learn/payment-flow)  [세금 처리](https://docs.tosspayments.com/guides/learn/tax)  [결제 결과 안내](https://docs.tosspayments.com/guides/learn/payment-results)    
+*   연동 깊이 이해하기    [간편결제 응답 확인](https://docs.tosspayments.com/guides/learn/easypay-response)  [웹뷰 연동](https://docs.tosspayments.com/guides/webview)    
+
+* * *
+
+[Version 2 →](https://docs.tosspayments.com/guides/v2/get-started)
+
+[가이드](https://docs.tosspayments.com/guides/payment-widget/integration)/[연동하기](https://docs.tosspayments.com/guides/payment-widget/integration)

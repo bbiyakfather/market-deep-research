@@ -1,0 +1,119 @@
+web demo: Expo Netflix
+First, make sure you have Expo CLI installed: npm install -g expo-cli
+Install:
+yarnRun Project Locally:
+yarn dev- Expo SDK 50
+- iOS, Android and PWA (Progressive Web App)
+- React Navigation v6
+- PropTypes
+- React Native
+- Animated
+- Alertand- Switch
+- Imageand- ImageBackground
+- Keyboardand- TextInput
+- TouchableOpacityand- TouchableWithoutFeedback
+- Dimensions,- Platformand- StatusBar
+- ScrollViewand- FlatList
+- StyleSheet,- Text, and- View
+ 
+- Expo
+- expo-asset
+- expo-font
+- expo-linear-gradient
+- AppLoading
+- ScreenOrientation
+ 
+- 3rd Party
+- react-native-appearance
+- react-native-svg
+- react-native-webview
+ 
+- run: yarn lintfor a list of linting warnings/error in cli
+- prettier and airbnb config
+- make sure you have prettier package installed:
+- then make sure to enable these options (packages → prettier):
+- eslint integration
+- stylelint integration
+- automatic format on save (toggle format on save)
+ 
+- be aware of the .prettierignorefile
+Currently Expo Web support is not production ready, but if you want to see how this project looks on the web as a PWA (Progressive Web App)... using react-native-web and react-dom.
+PWA: Expo Netflix looks best on a mobile device, but not bad on desktop!
+Dev with Expo Web
+- Remove node_modules if they exist: rm -rf nodes_modules
+- Install/Re-install: yarn
+- Start development: yarn weborexpo start --web
+- Build PWA: yarn web-buildorexpo build:web
+a couple manual changes within index.html i found needed to be made so far:
+- to make splash screen work: "mobile-web-app-capable" => "apple-mobile-web-app-capable"
+- status bar transparent: apple-mobile-web-app-status-bar-style="default" => "black-translucent"
+- no white background: add background color within body{background-color: #121212; ...}
+- check output meta: double image meta tags
+- check output js: double/triple js packages
+version 0.0.2 (current)
+- upgraded to Expo SDK 50
+- upgraded to Expo SDK 49
+- upgraded to Expo SDK 48
+- upgraded to Expo SDK 47
+- upgraded to Expo SDK 46
+- upgraded to Expo SDK 45
+- upgraded to Expo SDK 44
+- upgraded to Expo SDK 43
+- upgraded to React Navigation v6
+- upgraded to React Navigation v5
+- upgraded to Expo SDK 42
+- upgraded to Expo SDK 41
+- upgraded to Expo SDK 40
+- upgraded to Expo SDK 39
+- upgraded to Expo SDK 38
+- upgraded to Expo SDK 37
+- upgraded to React Navigation v4
+- upgraded to Expo SDK 36
+- upgraded to Expo SDK 35
+- Expo Web support
+- upgraded to Expo SDK 34
+- upgraded to Expo SDK 33
+- Home Top Navbar
+- show/hide on scroll
+- start of stack navigation in nav bar
+- TV Shows, Movies and My List screens
+- start of mock data and images for shows/movies
+ 
+- More Stack
+- menu list (scrollable) created, with current version on screen
+- app settings
+- start of section headings
+- displays current phone model name (ios only, for now)
+- delete all downloads (mock alert)
+- storage bar styled: device storage space, netflix (downloaded) space used, and free space (all mock data)
+ 
+- privacy now opens a modal with WebView that opens Help Netflix - Privacy page
+- sign out now opens an alert with selectable options
+- manage profiles
+- modal popup with edit overlay
+- modal add profile with for kids switch
+ 
+ 
+- Modal Video player screen added
+- on open (mount), screen orientation changes to landscape
+- on close (unmount), screen orientation changes back to portrait
+ 
+version 0.0.1
+- iOS and Android
+- Tab Navigation
+- Home
+- simple banner (bandersnatch)
+- add to my list
+- simple wireframe with FlatList (horizontal scroll)
+ 
+- Search
+- simple animation onFocus and onBlur of search input
+- autofocus on first render
+ 
+- My Downloads
+- More
+- simple account profiles layout
+ 
+ 
+- Home
+- Chrome Cast modal screen

@@ -1,0 +1,2916 @@
+{
+ "facts": [
+  {
+   "ref": "A1-figma-mcp#0",
+   "statement": "Figma 데스크톱 앱에서 MCP 서버를 켜는 절차는 앱을 최신 버전으로 업데이트 → Figma Design 파일을 열고 하단 툴바에서 Dev Mode로 전환(단축키 Shift+D",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.74,
+     "sha256": "2c646fbeccb400e821b8fc488b730b103b35510ea9e183a67b0004525a71f064",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#1",
+   "statement": "Figma가 공식적으로 권장하는 방식은 데스크톱 앱 설치 없이 쓸 수 있는 원격(remote) MCP 서버이며, 엔드포인트는 https://mcp.figma.com/mcp 이고 접",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.84,
+     "sha256": "c14f409a6e86724e92827d23ba11c9d53aa91aa22e1cc926ee34921fd7a9bca2",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#2",
+   "statement": "Figma MCP 서버는 아무 편집기나 연결되는 것이 아니라 Figma MCP Catalog에 등재된 클라이언트(VS Code, Cursor, Claude Code 등)만 연결이 ",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.83,
+     "sha256": "e0cb95e90d63e84b2827bdd57b18f3afcd53990e5ba84df13120f91562875199",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#3",
+   "statement": "무료 Starter 플랜에서도 Figma MCP 서버(원격) 자체는 켤 수 있지만 월 6회 호출로 제한되며, 이 제한을 풀려면 유료 플랜(Pro/Organization/Enterp",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "e0cb95e90d63e84b2827bdd57b18f3afcd53990e5ba84df13120f91562875199",
+     "archived_url": null
+    },
+    {
+     "url": "https://www.figma.com/pricing/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.33,
+     "sha256": "3fe6eedac0598693e84458dd4eadfb7bc562e1f246c2d5760b7385417704ae31",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.33"
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#4",
+   "statement": "MCP 서버 접근에는 유료 플랜의 Dev 또는 Full 시트가 필요하며, 그중에서도 Figma 파일에 실제로 쓰기(write to canvas, use_figma 도구)까지 하려면",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.81,
+     "sha256": "da2e930c44d304095703d88fa7fbce1406cc97560cd429f8cb5a45867d9e3bd2",
+     "archived_url": null
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "5d1b57bb221d893e241f3fff0c2867e45e16426cd37b6d8a5fb2506a0a69440d",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#5",
+   "statement": "Figma Professional 플랜 가격은 공식 페이지 정적 렌더링 기준(연간 청구가 기본 선택된 상태) Full seat $16/mo, Dev seat $12/mo이다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://www.figma.com/pricing/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.17,
+     "sha256": "3fe6eedac0598693e84458dd4eadfb7bc562e1f246c2d5760b7385417704ae31",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#6",
+   "statement": "Figma MCP 서버 호출 한도는 시트·플랜별로 표로 정해져 있다: 모든 플랜의 View/Collab 시트와 Starter 플랜은 시트 종류와 무관하게 월 6회, Professi",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.58,
+     "sha256": "e0cb95e90d63e84b2827bdd57b18f3afcd53990e5ba84df13120f91562875199",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    },
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "e0cb95e90d63e84b2827bdd57b18f3afcd53990e5ba84df13120f91562875199",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#7",
+   "statement": "Cursor에서 원격 MCP 서버를 붙이는 공식 권장 방법은 Cursor 에이전트 채팅창에 `/add-plugin figma`를 입력해 Figma 플러그인(설정+Agent Skil",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "c14f409a6e86724e92827d23ba11c9d53aa91aa22e1cc926ee34921fd7a9bca2",
+     "archived_url": null
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.19,
+     "sha256": "70a0ef7f3f90c99c2cc558974950d1208c7848cf0cc2adffc71695b1c0519a0c",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.05"
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#8",
+   "statement": "Figma 데스크톱 서버를 Cursor에 수동으로 붙일 때는 mcp.json에 {\"mcpServers\": {\"figma-desktop\": {\"url\": \"http://127.0.0",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.59,
+     "sha256": "2c646fbeccb400e821b8fc488b730b103b35510ea9e183a67b0004525a71f064",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.53"
+    },
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.86,
+     "sha256": "91c53ae00a01eea5996c164c825f0d0d4c5d94f3f50b4b400035ec5b6e427151",
+     "archived_url": null,
+     "pass2": "jina"
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#9",
+   "statement": "Cursor에서 원격 서버를 수동으로 붙이는 방법도 별도로 있는데, Figma가 제공하는 'Figma MCP server deep link'를 클릭해 Cursor 안에서 MCP 설",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.54,
+     "sha256": "c14f409a6e86724e92827d23ba11c9d53aa91aa22e1cc926ee34921fd7a9bca2",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.4"
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#10",
+   "statement": "무료 플랜 사용자를 위한 대표적 커뮤니티 대체재는 Framelink Figma MCP(npm 패키지명 figma-developer-mcp, GitHub 저장소 GLips/Figma",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/GLips/Figma-Context-MCP",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "61bb4b1df94a522e5450f251f885a3b2878dd33879e323836ebdcf14dae1c795",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#11",
+   "statement": "Framelink Figma MCP(figma-developer-mcp) 같은 커뮤니티 대체재도 내부적으로 Figma 개인 액세스 토큰(personal access token)으로",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/rest-api/rate-limits/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "056f1a960b6c35a8dea4795e0d6e56eed5c5d11aaaba5a6e1d18156bdefcd57c",
+     "archived_url": null
+    },
+    {
+     "url": "https://github.com/GLips/Figma-Context-MCP",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "61bb4b1df94a522e5450f251f885a3b2878dd33879e323836ebdcf14dae1c795",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#12",
+   "statement": "Figma 공식(figma/mcp-server-guide 저장소)이 제시하는 디자인→코드 품질 향상 best practice는 버튼·카드·인풋처럼 재사용되는 요소를 컴포넌트로 만들",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/figma/mcp-server-guide",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.58,
+     "sha256": "a9b63dd2e2b934473c6ce825d97858deaf5b0cbce171a6317e2c382433f63263",
+     "archived_url": null,
+     "pass2": "github-raw-readme:ratio=0.54"
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#13",
+   "statement": "Figma MCP 서버의 핵심 한계는 한 번에 너무 큰 화면(대형 프레임)을 통째로 선택해서 코드 생성을 요청하면 느려지거나 오류가 나거나 응답이 불완전해질 수 있다는 것이며, 공",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "0f509ed0a8cef843915824d3d701cbc08f5a0a3de73405c2f64e00274beed99a",
+     "archived_url": "https://r.jina.ai/https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/"
+    }
+   ]
+  },
+  {
+   "ref": "A1-figma-mcp#14",
+   "statement": "Figma MCP의 'write to canvas'(코드/에이전트가 Figma 캔버스에 직접 컴포넌트·변수·프레임을 쓰는 기능, use_figma 도구)는 2026-07-23 기준",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "c14f409a6e86724e92827d23ba11c9d53aa91aa22e1cc926ee34921fd7a9bca2",
+     "archived_url": null
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "5d1b57bb221d893e241f3fff0c2867e45e16426cd37b6d8a5fb2506a0a69440d",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#0",
+   "statement": "Windows에서는 설치 파일(installer)을 실행하고 화면의 안내(prompt)를 따르면 설치가 완료된다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.8,
+     "sha256": "9bd28a546aa6e3d86d691be454aec7727bf44664cb0a266efaeb2536afbecb8b",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#1",
+   "statement": "Mac에서는 다운로드한 Cursor 아이콘을 Applications 폴더로 드래그하면 설치가 완료된다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.4,
+     "sha256": "9bd28a546aa6e3d86d691be454aec7727bf44664cb0a266efaeb2536afbecb8b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.67"
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#2",
+   "statement": "Cursor를 쓰려면 사전에 무료 Cursor 계정을 만들어야 하고, 설치 후 첫 실행 시 안내에 따라 로그인해야 한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.44,
+     "sha256": "9bd28a546aa6e3d86d691be454aec7727bf44664cb0a266efaeb2536afbecb8b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.56"
+    },
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "9bd28a546aa6e3d86d691be454aec7727bf44664cb0a266efaeb2536afbecb8b",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#3",
+   "statement": "Cursor 공식 웹사이트(cursor.com)는 한국어 등 여러 언어로 제공되지만, 에디터 앱 자체의 인터페이스(UI) 언어를 한국어로 바꾸는 공식 설정은 공식 문서(설치/도움말",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/ko",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "421eec1f9161e18f41211955b70443f7383c13257374067cbe0751576f69db4f",
+     "archived_url": "https://r.jina.ai/https://cursor.com/ko",
+     "pass2": "jina:ratio=0.0"
+    },
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "9bd28a546aa6e3d86d691be454aec7727bf44664cb0a266efaeb2536afbecb8b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#4",
+   "statement": "Tab은 Cursor의 AI 자동완성 기능으로, 최근 편집 이력·주변 코드·린터 오류를 근거로 타이핑 중 코드를 제안한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/tab/overview",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "52ecd2e6641deb43869aa7c635e1844ff22727102d6415826ac6dbfc9c7b91bc",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#5",
+   "statement": "Cmd/Ctrl+K(Inline Edit)는 채팅 패널을 열지 않고 선택한 코드 범위를 즉시, 국소적으로 수정하는 기능이다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/inline-edit/overview",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "8190298198653d23845fa63839f9186695d2527022f232ca6a8cb186ce315034",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#6",
+   "statement": "Chat(Ask 모드)는 코드를 변경하지 않고 코드베이스를 이해·탐색하며 질문에 답하는 읽기 전용(read-only) 모드다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/ai-features/ask-mode",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "7dd6e7659a541f39b199ec5f113d730bbea3210a8f935e43f1e0cc951e541752",
+     "archived_url": null
+    },
+    {
+     "url": "https://cursor.com/help/ai-features/ask-mode",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "7dd6e7659a541f39b199ec5f113d730bbea3210a8f935e43f1e0cc951e541752",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#7",
+   "statement": "Agent 모드는 기능을 처음부터 만들고, 리팩터링하고, 버그를 고치고, 테스트를 작성하고, 셸 명령을 실행하는 등 복잡한 코딩 작업을 독립적으로 수행하는 Cursor의 어시스턴트",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/agent/overview",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.94,
+     "sha256": "4492333dd22cd6c65cacda767b0cbcfae456b7b2657b1fa11f33ec45d22c5ebc",
+     "archived_url": null
+    },
+    {
+     "url": "https://cursor.com/help/ai-features/agent",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "b24e7da46627b128499d46f42c6eec2f021e0abd1941031303e5b8d28fd10eaf",
+     "archived_url": null
+    },
+    {
+     "url": "https://cursor.com/help/ai-features/agent",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "b24e7da46627b128499d46f42c6eec2f021e0abd1941031303e5b8d28fd10eaf",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#8",
+   "statement": "Cursor Rules는 Agent에게 주는 시스템 수준 지시문으로, 프롬프트·스크립트 등을 하나로 묶어 팀 전체가 워크플로를 관리·공유할 수 있게 한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/rules",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "370054ab1be6fe1b01c1750e2209ca044fa1d875a660ea37bcc5976c6f08d344",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#9",
+   "statement": "프로젝트 규칙(Project Rules)은 프로젝트 폴더 안 .cursor/rules 경로에 .mdc 확장자 파일로 저장되며 버전관리(git) 대상이 된다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/rules",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "f1ad6dc2775873b5d0795ae5a983bc2486def141e8720b77395e6770d3bad8a7",
+     "archived_url": null,
+     "pass2": "jina"
+    },
+    {
+     "url": "https://cursor.com/docs/rules",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "f1ad6dc2775873b5d0795ae5a983bc2486def141e8720b77395e6770d3bad8a7",
+     "archived_url": null,
+     "pass2": "jina"
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#10",
+   "statement": "AGENTS.md는 메타데이터 없이 순수 마크다운으로 에이전트 지시사항을 정의하는 파일로, 프로젝트 루트에 두며 .cursor/rules의 대안으로 쓸 수 있다. 현재 공식 문서에",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/rules",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.71,
+     "sha256": "370054ab1be6fe1b01c1750e2209ca044fa1d875a660ea37bcc5976c6f08d344",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#11",
+   "statement": "MCP 서버는 (1) Customize 화면의 Cursor Marketplace에서 원클릭 설치, (2) Cursor Settings UI, (3) mcp.json 파일 수동 작성",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.38,
+     "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.5"
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#12",
+   "statement": "mcp.json은 프로젝트 전용이면 프로젝트 폴더의 .cursor/mcp.json, 모든 프로젝트에서 공용으로 쓰려면 홈 디렉터리의 ~/.cursor/mcp.json에 두며, mc",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.8,
+     "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b",
+     "archived_url": null
+    },
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.83,
+     "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#13",
+   "statement": "2026년 7월 현재 Hobby 플랜은 신용카드 없이 무료로 가입 가능하며, 'Limited Agent requests'와 'Limited Tab completions'로만 한도가",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://cursor.com/pricing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "7855e99c00bbd81cb21e88d258595cbb2a1a24402b5fc4434130a1a7908ebddb",
+     "archived_url": null
+    },
+    {
+     "url": "https://cursor.com/pricing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "7855e99c00bbd81cb21e88d258595cbb2a1a24402b5fc4434130a1a7908ebddb",
+     "archived_url": null
+    },
+    {
+     "url": "https://cursor.com/pricing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "7855e99c00bbd81cb21e88d258595cbb2a1a24402b5fc4434130a1a7908ebddb",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A2-cursor#14",
+   "statement": "2026년 7월 현재 Pro(Individual) 플랜은 월 $20이며, Tab 자동완성은 무제한, Agent 사용 한도는 확장(extended)되고 Bugbot·Cloud Age",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://cursor.com/pricing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "a51119fc4b3f68dc08eec4cdf52c1a0372029ded03c1c176a3695629a0ef89ac",
+     "archived_url": null,
+     "pass2": "jina"
+    },
+    {
+     "url": "https://cursor.com/docs/account/pricing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "26b372e0c5b6456afba2208b6ed3272a1868f28841d5d94b3a4997ab7afbbc3c",
+     "archived_url": null
+    },
+    {
+     "url": "https://cursor.com/docs/account/pricing",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.72,
+     "sha256": "cc067c7f68f3a9263e6e8a695dd4328a0623ab5243fab5f64442325eb417767f",
+     "archived_url": null,
+     "pass2": "jina"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#0",
+   "statement": "Supabase 대시보드에서 새 프로젝트를 만드는 첫 단계는 조직(organization)의 Dashboard에서 New project를 생성하는 것이다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "b81b0d849c3d4662f4a26e6618cf2de6f4137f79a41afe07d6522373b23c967e",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#1",
+   "statement": "테이블은 코드 없이 대시보드의 Table Editor에서 New Table로 이름을 정해 만들고, New Column으로 컬럼명과 데이터 타입(예: text)을 지정해 추가한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/database/tables",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.56,
+     "sha256": "c8472f07bd14dd41114afe9addbf5a191cbfa0dc1fe6eb9cf2bf69ea809e81be",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.47"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#2",
+   "statement": "테이블 생성 시 각 컬럼의 데이터 타입을 반드시 지정해야 하며, 생성 후에도 언제든 컬럼을 추가/삭제할 수 있다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/database/tables",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.77,
+     "sha256": "c8472f07bd14dd41114afe9addbf5a191cbfa0dc1fe6eb9cf2bf69ea809e81be",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#3",
+   "statement": "Supabase Next.js quickstart는 프로젝트 생성 → instruments 테이블·샘플 데이터 생성 및 Row Level Security(RLS) 활성화 → Nex",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.48,
+     "sha256": "b81b0d849c3d4662f4a26e6618cf2de6f4137f79a41afe07d6522373b23c967e",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.41"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#4",
+   "statement": "Supabase Auth는 이메일/비밀번호 방식의 회원가입·로그인을 공식 기능으로 제공하며, Google을 포함한 소셜 로그인(Social Auth)을 별도 가이드로 지원한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.55,
+     "sha256": "d1ec2e0dba1e525a26ce1c2e754fb0f3a6c1afca730b3853734cc14d2bff6e7a",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.55"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#5",
+   "statement": "Google 소셜 로그인을 붙이려면 Google Auth Platform 콘솔에서 Web application 유형 OAuth 클라이언트를 만들어 Authorized redirec",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/social-login/auth-google",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "df50f05c55403055b7f46e9dce9028779f14cba246bc2918a618bca0205cc988",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#6",
+   "statement": "Next.js용 Auth quickstart는 프로젝트 생성 → Next.js 앱 생성 → .env.example을 .env.local로 바꿔 Supabase 연결 변수 채우기 →",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/quickstarts/nextjs",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.75,
+     "sha256": "a4a2c736a67a39010d370c7de5c9c0734d9084326fd3419aa3cf4fc79d8e381e",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#7",
+   "statement": "React Native/Expo용 Auth quickstart는 프로젝트 생성 → create-expo-app으로 앱 생성 → supabase-js 등 의존성 설치 → lib/su",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/quickstarts/react-native",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.57,
+     "sha256": "fa5cd9b93a084cca33f2c2cdcf5b76834231a79214c17b7188040b16435f40f6",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.57"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#8",
+   "statement": "Supabase 무료(Free) 플랜 한도는 활성 프로젝트 최대 2개, 데이터베이스 500MB, 월간 활성 사용자(MAU) 50,000명, egress 5GB(+캐시된 egress",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://supabase.com/pricing",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.19,
+     "sha256": "7bc1c1632836e71715b809b8228f3a714403c1f04c9b43c236f04051cd117c09",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.31"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#9",
+   "statement": "Supabase는 Cursor 등 AI 에디터가 Supabase 프로젝트와 직접 대화할 수 있게 하는 공식 MCP(Model Context Protocol) 서버를 제공하며, Cu",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/getting-started/mcp",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.5,
+     "sha256": "5d40e6613ca76ece29e80df20d72b0a4d1aa4562a5d0526c1f99284d6e0cb67b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#10",
+   "statement": "MCP(Model Context Protocol)는 대형 언어 모델(LLM)이 Supabase 같은 플랫폼과 대화하는 방식을 표준화한 프로토콜이며, Cursor 연동 시 npx로 ",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/blog/mcp-server",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.85,
+     "sha256": "75344f24dfd91fe9a1eeb79d7191d29e28b10474ffda0da87dd17a9f2e814829",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A3-supabase#11",
+   "statement": "RLS(Row Level Security)는 노출된(exposed) 스키마의 모든 테이블에 반드시 켜야 하며, 켜져 있으면 정책(policy)이 모든 쿼리에 자동으로 WHERE절을",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.74,
+     "sha256": "6adbf3087ca99427cb4ca300c8c3c0a11aba950df8133551a7be1e9117d715fb",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#0",
+   "statement": "n8n Cloud는 연간 결제 기준 Starter 20€/월(2,500 executions), Pro 50€/월(10,000 executions), Business 667€/월(4",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://n8n.io/pricing/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.21,
+     "sha256": "667c8c1604abe1ace3737bf6dc37a5534b5b2501167005661793ec0abaf50dd8",
+     "archived_url": "https://r.jina.ai/https://n8n.io/pricing/",
+     "pass2": "jina:ratio=0.21"
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#1",
+   "statement": "n8n Cloud는 Starter/Pro 플랜에 신용카드 없이 체험 가능하고, Business 플랜은 신용카드 등록이 필요한 14일 체험을 제공한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://n8n.io/pricing/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "667c8c1604abe1ace3737bf6dc37a5534b5b2501167005661793ec0abaf50dd8",
+     "archived_url": "https://r.jina.ai/https://n8n.io/pricing/",
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#2",
+   "statement": "n8n의 self-hosted Community Edition은 GitHub에서 무료로 제공되는 표준 버전이다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://n8n.io/pricing/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "667c8c1604abe1ace3737bf6dc37a5534b5b2501167005661793ec0abaf50dd8",
+     "archived_url": "https://r.jina.ai/https://n8n.io/pricing/"
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#3",
+   "statement": "n8n을 Docker로 self-host하는 공식 절차는 `docker volume create n8n_data` 실행 후 `docker run -it --rm --name n8n",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.n8n.io/deploy/host-n8n/install-options/install-with-docker.md",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.14,
+     "sha256": "5aa39f5da0698a1ca5cdf6e4b12fe57e43661b3a0356a6c414c435e3a483e7a3",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.12"
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#4",
+   "statement": "HTTP Request 노드는 REST API를 가진 모든 앱/서비스에서 데이터를 조회하도록 요청을 보내는 n8n의 범용 노드로, DELETE/GET/HEAD/OPTIONS/PAT",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.73,
+     "sha256": "48eb340b9332977977642a02b99890efbd82a4288368be6cc7fe1fa99f1de30f",
+     "archived_url": "https://r.jina.ai/https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/"
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#5",
+   "statement": "n8n의 HTML 노드(버전 0.213.0부터 이전 HTML Extract 노드를 대체)는 'Extract HTML Content' 동작에서 CSS Selector와 반환 유형(속",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.html/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.31,
+     "sha256": "ab386eb9def011fac9ce969ca5f31f424a24a7d841c379b1bad60c5255c2344b",
+     "archived_url": "https://r.jina.ai/https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.html/",
+     "pass2": "jina:ratio=0.31"
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#6",
+   "statement": "n8n 공식 워크플로 템플릿 갤러리에는 HTTP Request 노드로 여러 공개 API를 매일 수집해 정규화한 뒤 Supabase(Postgres) 테이블과 Google Sheet",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://n8n.io/workflows/14996-aggregate-multi-source-job-boards-to-supabase-and-google-sheets/",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.82,
+     "sha256": "a8ced84891d4f0197565be16a7ed81176253ef6d86181583ce5cd3448f7d0170",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#7",
+   "statement": "GitHub의 커뮤니티 저장소 awesome-n8n-templates는 280개 이상의 무료 n8n 자동화 템플릿을 모아두었고, 이 중 Google Drive&Sheets 카테고리",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/enescingoz/awesome-n8n-templates",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "95e9c8e72dafba5508f64ea8655ab6309a12d4cd18295e4b1e84874f40b2ff04",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#8",
+   "statement": "robots.txt는 검색엔진 크롤러에게 접근 가능한 URL을 알려주는 파일이지만, Google Search Central 공식 문서에 따르면 이 지침에 법적 강제력은 없고 크롤러",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.google.com/search/docs/crawling-indexing/robots/intro",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.81,
+     "sha256": "bcddd0a66b26eb228ae384d08fe359cb302057480f261829ecc647212ac2f91d",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#9",
+   "statement": "유럽개인정보보호위원회(EDPB)가 2026년 7월 7일 채택한 가이드라인은 웹 스크래핑이 개인정보 처리(수집·저장·조직화·검색)를 포함할 경우 GDPR이 적용된다고 명시한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.edpb.europa.eu/system/files/2026-07/edpb_guidelines_2020603_webscraping_v1_en_0.pdf",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.9,
+     "sha256": "f27807865e3df3ec8866ef1f23f327225bbd48b0ea9f750957193ed1468ece11",
+     "archived_url": null,
+     "pass2": "fitz-pdf"
+    }
+   ]
+  },
+  {
+   "ref": "A4-n8n#10",
+   "statement": "인포그랩(InfoGrab)이 자체 개발한 자동번역 프로그램으로 n8n 공식 문서의 한국어판을 국내 최초로 제공하며, Level 1(기초 편집기 UI·미니 워크플로)·Level 2(",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://n8n-docs.infograb.net/courses/level-two/chapter-2/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "c7cbd38c86f904298005931230e5e11dd36430e3ef95bbeaf2384e9d09e6250c",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#0",
+   "statement": "테스트 환경에서는 카드 번호 등 실제 결제 정보를 입력해도 결제가 가상으로만 승인되며, 실제 결제수단에서 돈이 출금되지 않는다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#1",
+   "statement": "이메일·전화번호만으로 가입하는 '개발 연동 체험 상점' 단계에서는 사업자등록 없이도 API 로그 확인, 웹훅 설정·연결, 가상계좌 모의입금까지 테스트할 수 있다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/blog/how-to-test-toss-payments",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "312dd5a7d051f215a995f1754ea52632dc29ee4969d26431bf78f6857a407363",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/blog/how-to-test-toss-payments",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "312dd5a7d051f215a995f1754ea52632dc29ee4969d26431bf78f6857a407363",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/blog/how-to-test-toss-payments",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "312dd5a7d051f215a995f1754ea52632dc29ee4969d26431bf78f6857a407363",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#2",
+   "statement": "정산(실제 결제금이 사업자 계좌로 입금되는) 기록은 라이브 환경에서만 조회할 수 있어, 테스트 키만으로는 실제 정산 과정까지 학습할 수 없다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/resources/faq",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "dcff8a690937f7bf1f7f36152f6b6db7dbe8d653bae4204b9084e8e68467f207",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#3",
+   "statement": "테스트 환경에서 발급되는 가상계좌는 번호 앞에 'X'가 붙는 가짜 계좌라 실제로 입금할 수 없다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/resources/faq",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "dcff8a690937f7bf1f7f36152f6b6db7dbe8d653bae4204b9084e8e68467f207",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#4",
+   "statement": "카카오페이는 테스트 키로 연동 자체가 불가능하며 전자결제 계약 체결 후 발급되는 상점 전용 MID 테스트 키로만 가능하고, 페이코는 테스트 키 대신 라이브 키로만 테스트해야 한다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#5",
+   "statement": "자동결제(빌링)는 리스크 검토와 별도 계약을 완료해야 실제 서비스에 쓸 수 있고, 정기 구독형 서비스가 아니면 정책적으로 사용이 제한된다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "eed22bd90ce342d7b2567992b8d6bd108c2966598a4b138c480da8b549a68532",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "eed22bd90ce342d7b2567992b8d6bd108c2966598a4b138c480da8b549a68532",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#6",
+   "statement": "테스트 환경에서는 카드번호 앞 여섯 자리(BIN 번호)만 유효해도 자동결제(빌링키)가 등록되므로, 실계약 전에도 빌링키 발급~자동결제 흐름을 연습할 수 있다.",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#7",
+   "statement": "결제위젯은 주문서 페이지에 결제 UI 영역을 직접 넣는 '주문서형'과, 결제하기 버튼 클릭 시 팝업으로 호출하는 '결제창형' 두 가지 연동 방식을 제공한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/payment-widget",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "27bb574f15b4d38d58c0643a86023c8f6159663e9d0a17ba9e3b1a13f1f1b815",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/payment-widget",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "27bb574f15b4d38d58c0643a86023c8f6159663e9d0a17ba9e3b1a13f1f1b815",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#8",
+   "statement": "결제위젯 연동은 상점관리자(어드민)의 '결제 UI 설정 메뉴'에서 UI를 만든 뒤, 해당 variantKey를 복사해 코드에 넣는 절차로 진행된다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/payment-widget",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "27bb574f15b4d38d58c0643a86023c8f6159663e9d0a17ba9e3b1a13f1f1b815",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/payment-widget",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "27bb574f15b4d38d58c0643a86023c8f6159663e9d0a17ba9e3b1a13f1f1b815",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#9",
+   "statement": "개발자센터는 결제위젯 연동을 시작하기 전, 내 상점의 업종이 입점 불가·제한 업종인지부터 확인하라고 안내한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "3eef391afbda040c3eb8045430b024e8206f3a964c2a08933e7de5d246f4594a",
+     "archived_url": "https://r.jina.ai/https://docs.tosspayments.com/guides/v2/get-started"
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#10",
+   "statement": "공식 GitHub의 SDK v1 샘플 저장소(payment-widget-sample)조차 README에서 더 편리한 연동을 위해 SDK v2 사용을 직접 권장하고 있어, 한국어 튜",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/tosspayments/payment-widget-sample",
+     "fetch": "partial",
+     "verdict": "PARTIAL",
+     "ratio": 0.75,
+     "sha256": "07aeede752e66f5b5412c20728857aa361d31bcf70208211d94e0d398394c912",
+     "archived_url": "https://r.jina.ai/https://github.com/tosspayments/payment-widget-sample",
+     "pass2": "github-raw-readme"
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#11",
+   "statement": "공식 GitHub 저장소 tosspayments-sample은 결제연동 샘플 프로젝트로, Express+React·Express+Vue 등 프레임워크 조합별 폴더를 제공한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/tosspayments/tosspayments-sample",
+     "fetch": "partial",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "a0f0ec1625b3ddffec9103117b32e8fdadbb41f46f04715d4742661ed0df0ceb",
+     "archived_url": "https://r.jina.ai/https://github.com/tosspayments/tosspayments-sample",
+     "pass2": "github-raw-readme"
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#12",
+   "statement": "공식 블로그(토스페이먼츠 작성, 2023.03.06) 'React로 결제 페이지 개발하기'는 Vite 기반 React 프로젝트에서 npm install @tosspayments/p",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.tosspayments.com/blog/articles/paytech-4",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "37d112c11699baae29f43329d2f39c8d7e55d148850666d4b1cb4032b616811b",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#13",
+   "statement": "자동결제 승인은 구독 서비스의 결제 주기(결제일)마다 저장해둔 빌링키로 원하는 금액을 승인 요청하는 방식으로 이뤄지며, 이 승인 API를 언제 호출할지 정하는 스케줄링 자체는 개발",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "eed22bd90ce342d7b2567992b8d6bd108c2966598a4b138c480da8b549a68532",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A5-tosspayments#14",
+   "statement": "테스트 환경에서는 각 API가 분당 100건의 요청 제한을 두고 있어, 반복 실습 시 이 한도를 감안해야 한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#0",
+   "statement": "노마드코더의 '에어비앤비 클론코딩'은 백엔드 Django/DRF, 프론트엔드 ReactJS/Chakra UI 스택의 유료 강의(191개 영상, 30시간 이상, 중급)로, 숙소 검색",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://nomadcoders.co/airbnb-clone",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "187ae33c4b0dcf416edb41038b4bd401809d5975e34e02d52aedd03b05419a60",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#1",
+   "statement": "노마드코더의 '캐럿마켓(당근마켓) 클론코딩'은 Next.js 14, TypeScript, Prisma, Tailwind, Zod, Vercel, Twilio, Supabase, C",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://nomadcoders.co/carrot-market",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "fe9297dbc73fcbde93c2e23ca7d642af8eba51d1c3af2044f37997b79f2810d8",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#2",
+   "statement": "노마드코더의 Next.js 무료 입문강의는 App Router, Server Components, Dynamic Pages, React Suspense, CSS Modules 등을",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://nomadcoders.co/nextjs-for-beginners",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "4091cdf5ec010c3c11275de944ac7fea2d60cd6e90cf6870785822579f3d0a96",
+     "archived_url": "https://r.jina.ai/https://nomadcoders.co/nextjs-for-beginners"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#3",
+   "statement": "노마드코더의 자바스크립트 무료 강의('자바스크립트로 웹 서비스 만들기')는 8시간 60개 영상 분량이며, 강의 페이지에는 'HTML.CSS.JS 이해도 필요'라는 선수지식 표기가 ",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://nomadcoders.co/javascript-for-beginners",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "0430f61d9cc867553fa8a4d3af7ef82555da95369884acd81583b52d005a7889",
+     "archived_url": "https://r.jina.ai/https://nomadcoders.co/javascript-for-beginners",
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#4",
+   "statement": "인프런 로펀 강사의 유료 강의 '[풀스택 완성] Supabase로 웹사이트 3개 클론하기'는 Next.js 14 + Supabase + Tailwind + React Query +",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.inflearn.com/course/%EC%9A%94%EC%A6%98%EC%97%94-supabase-%EB%8C%80%EC%84%B8%EC%A7%80-nextjs-%ED%81%B4%EB%A1%A0%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "3128b0b180ab64c274a16cecdb0acf5fc96f9f85ca40424eab55e82942ea12cb",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#5",
+   "statement": "인프런 무료 강의 '1. 웹개발 기초 [HTML, CSS]'는 총 2시간 34분, 11개 강의로 구성된 입문 난이도의 무료 강좌다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.inflearn.com/course/%EC%9B%B9%EA%B0%9C%EB%B0%9C-%EA%B8%B0%EC%B4%88-html-css",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "ff6b3863a18f6b1286a7c07f016ea44da8cf719283bdf51491313df4a95d7a60",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#6",
+   "statement": "notjust.dev의 'Build a Netflix Clone App with React Native and Expo' 튜토리얼은 2025년 5월 31일 게시됐으며 Expo Ro",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.notjust.dev/blog/netflix-clone",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "9f0080927b3bddce032d0c885e64605f35087dbe3cca5fc0ca2f42378c951aba",
+     "archived_url": "https://r.jina.ai/https://www.notjust.dev/blog/netflix-clone"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#7",
+   "statement": "GitHub 저장소 Lordhacker756/Netflix는 저장소 설명(About)에는 '사용자 인증으로 회원가입·로그인 가능'이라 적혀 있지만, 실제 README 본문에는 Ho",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/Lordhacker756/Netflix",
+     "fetch": "partial",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "527f5d4ad2f0dcc519cba6f18be37e086dab28164cf1c1ed5ab96e1ec457d54e",
+     "archived_url": "https://r.jina.ai/https://github.com/Lordhacker756/Netflix",
+     "pass2": "github-raw-readme:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#8",
+   "statement": "Figma 공식 Help Center 문서에 따르면 Cursor에 Figma MCP 서버를 연결하는 권장 방법은 Figma 플러그인 설치(Cursor 명령창에서 /add-plugi",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "70a0ef7f3f90c99c2cc558974950d1208c7848cf0cc2adffc71695b1c0519a0c",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#9",
+   "statement": "Figma 공식 개발자 문서(원격 서버 설치 가이드)도 동일하게 Cursor 플러그인 설치를 권장 방법으로 안내하며, MCP 딥링크를 통해 Install 후 Connect하는 절차",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "c14f409a6e86724e92827d23ba11c9d53aa91aa22e1cc926ee34921fd7a9bca2",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#10",
+   "statement": "토스페이먼츠 공식 개발자센터의 결제위젯 연동 가이드는 '이해하기 → 어드민 사용하기 → 연동하기 → 배포 체크리스트' 4단계로 구성돼 있으며, 이 페이지 발췌 내용만으로는 프레임워",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/payment-widget/integration",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "9ac51508908148083578679aaaedea961d77d241541807e8993e57ed55c24def",
+     "archived_url": "https://r.jina.ai/https://docs.tosspayments.com/guides/payment-widget/integration",
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#11",
+   "statement": "토스페이먼츠 공식 샘플 저장소(tosspayments-sample)의 README에는 Express+React/Vue/JS, PHP+JS, ASP+JS, JSP+JS, Spring",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/tosspayments/tosspayments-sample",
+     "fetch": "partial",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "a0f0ec1625b3ddffec9103117b32e8fdadbb41f46f04715d4742661ed0df0ceb",
+     "archived_url": "https://r.jina.ai/https://github.com/tosspayments/tosspayments-sample",
+     "pass2": "github-raw-readme"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#12",
+   "statement": "브런치 글 '비개발자를 위한 Cursor-figma-MCP 사용법'(2025-03-24 게시)은 프로덕트 디자이너를 대상으로 Cursor-Figma MCP 연결 과정을 단계별로 설",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://brunch.co.kr/@zitopd/8",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "e23a6c17dfd8bc0df138cc7a59ec02e323f9f9ca62224944c4ec434243068045",
+     "archived_url": "https://r.jina.ai/https://brunch.co.kr/@zitopd/8"
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#13",
+   "statement": "모비인사이드 기사(2025-06-25, 저자 유훈식)는 MCP를 'AI용 USB-C 단자'에 비유하며, Figma 디자인을 받아 React 코드로 자동 변환하는 데 약 10분이 소",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.mobiinside.co.kr/2025/06/25/mcp/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "a6fe1cf69e34a33dcfa532d65626755d3d05ba367c575dd70b4ed92cac365a6f",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "A6-resources#14",
+   "statement": "Builder.io 블로그의 'Cursor for Designers Tutorial #3: Figma to Code and Beyond'는 2026년 3월 7일 게시된 최신 글로,",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.builder.io/blog/figma-to-cursor-for-designers",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "d73431195d3de32a6d6ebc896b74c1fa88ded55e0be4fc8720f408211a7499c0",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#0",
+   "statement": "Cursor 공식문서 기준 MCP 서버 등록·관리는 'Settings' 메뉴가 아니라 'Customize' 페이지에서 이루어지며, 마켓플레이스 항목은 'Add to Cursor' ",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.8,
+     "sha256": "a11f3d3f38d9f6ec11ae9dd762114e8636c88944d8bd24baec533e5bd4f8df9c",
+     "archived_url": null,
+     "pass2": "jina"
+    },
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.37,
+     "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.37"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#1",
+   "statement": "Cursor의 mcp.json은 프로젝트 범위(.cursor/mcp.json)와 전역 범위(~/.cursor/mcp.json) 두 곳에 둘 수 있고, mcpServers 객체 아래",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.4,
+     "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    },
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#2",
+   "statement": "Figma 공식 가이드(Cursor and Figma: Set up the MCP server)는 Cursor 내 연결 경로를 'Cursor Settings > Tools & MC",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.69,
+     "sha256": "70a0ef7f3f90c99c2cc558974950d1208c7848cf0cc2adffc71695b1c0519a0c",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.54"
+    },
+    {
+     "url": "https://cursor.com/changelog/customize",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "3fde2a2c24316b58bfa1a751470134a04c08c1b4e2290d811abd516490e8583f",
+     "archived_url": "https://r.jina.ai/https://cursor.com/changelog/customize"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#3",
+   "statement": "Cursor 설치 절차(공식 Help 문서)는 Windows에서 'Run the installer and follow the prompts', Mac에서 'Drag Cursor i",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.31,
+     "sha256": "9bd28a546aa6e3d86d691be454aec7727bf44664cb0a266efaeb2536afbecb8b",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.35"
+    },
+    {
+     "url": "https://docs.cursor.com/get-started/installation",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "ddbff9f295838b1c6b3015db4dcfe0b9a637614db9dcf9495ae5e8046c9c5ea6",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#4",
+   "statement": "Cursor Quickstart 공식문서의 설치 관련 시스템 요구사항은 macOS 'macOS 12 (Monterey) and later'(Apple Silicon/Intel 지원",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/get-started/quickstart",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.18,
+     "sha256": "5a90071bba508c8144a3c2358aa2260dadef6b01f919b6e3fc42d6d657b9606e",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    },
+    {
+     "url": "https://cursor.com/docs/get-started/quickstart",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.2,
+     "sha256": "5a90071bba508c8144a3c2358aa2260dadef6b01f919b6e3fc42d6d657b9606e",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#5",
+   "statement": "Cursor changelog 2026-01-08 'New CLI Features and Improved CLI Performance'에서 '/mcp enable', '/mcp d",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/cli-jan-08-2026",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.58,
+     "sha256": "e877d3a65f47e303608c07d0cbec0140e5e95f0e88467132f2f7351e6a380598",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.67"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#6",
+   "statement": "Cursor changelog 2026-03-03(v2.6) 'MCP Apps and Team Marketplaces for Plugins'에서 MCP Apps 기능이 도입되어 A",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/2-6",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "2970773497f06da93bfb6d60297af62c770e95210e02f069b1bfab934ec7878a",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#7",
+   "statement": "Cursor changelog 2026-06-04 'Custom stores, custom tools, and auto-review for the Cursor SDK'에서 로컬 에",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/sdk-updates-jun-2026",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.83,
+     "sha256": "7c05334d394d89b0ed77508ae1ac14adb043c84a72315195639d4e08e90a2f17",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#8",
+   "statement": "Cursor changelog 2026-06-22(v3.9) 'Customize Cursor'에서 플러그인·스킬·MCP·서브에이전트·규칙·커맨드·훅을 사용자/팀/워크스페이스 단위로",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://cursor.com/changelog/customize",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "3fde2a2c24316b58bfa1a751470134a04c08c1b4e2290d811abd516490e8583f",
+     "archived_url": "https://r.jina.ai/https://cursor.com/changelog/customize"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#9",
+   "statement": "Figma AI credits는 요금제·시트 종류별로 월간 배정량이 다르며(Full seat 기준), Professional 3,000/월, Organization 3,500/월,",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "3e9bff032114e3e8f0bf965d9f930badb94a9be1173758e88cde5041b9217213",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#10",
+   "statement": "Figma MCP 서버(도구 호출) 자체가 AI credits를 소모하는지는 공식문서에서 명시적으로 확인되지 않는다 — help.figma.com의 'credits를 소모하는 기능",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.13,
+     "sha256": "3e9bff032114e3e8f0bf965d9f930badb94a9be1173758e88cde5041b9217213",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.13"
+    },
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "52727d3b6f4947f65e0c915b813e56ca089e4aedb6c5e0ca167262a7b754b168",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-1-cursor-figma-latest#11",
+   "statement": "Figma Make는 'AI-driven, prompt-to-app tool'로, 아이디어와 기존 Figma 디자인을 기능하는 프로토타입·웹앱·인터랙티브 UI로 만들어주는 도구이며",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "1b3c4ca3491afaa6182af1857b820b335fcb56d8a3e733bdd460234b5968c896",
+     "archived_url": null
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "1b3c4ca3491afaa6182af1857b820b335fcb56d8a3e733bdd460234b5968c896",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#0",
+   "statement": "v2(@tosspayments/tosspayments-sdk) 설치는 script 태그(https://js.tosspayments.com/v2/standard) 또는 npm ins",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/sdk/v2/js",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "d921fbced7e0e5717da7682de52d625f3d311380b3c2be58c1844ec41daef7ef",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    },
+    {
+     "url": "https://docs.tosspayments.com/sdk/v2/js",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "c36c38baa918e9f7efc7e227a0df41ce35b137f2c298196b9ba81cccaadf018c",
+     "archived_url": null,
+     "pass2": "jina"
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#1",
+   "statement": "v2 결제위젯 핵심 흐름은 loadTossPayments()(또는 TossPayments())로 초기화 → widgets({customerKey})로 인스턴스 생성 → render",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "1e03d7c0906ac7079a970e72f28700740402dd2c09a3c98da2cd99ad8a49e9fc",
+     "archived_url": null,
+     "pass2": "jina"
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "1e03d7c0906ac7079a970e72f28700740402dd2c09a3c98da2cd99ad8a49e9fc",
+     "archived_url": null,
+     "pass2": "jina"
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "6d17555fe745e382b5e405d3e24694d049c7fb1abf139912e0ee0533168641bd",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#2",
+   "statement": "결제 요청은 widgets.requestPayment({orderId, orderName, successUrl, failUrl, ...})로 호출하며, 성공 시 successUrl",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/sdk/v2/js",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.2,
+     "sha256": "d921fbced7e0e5717da7682de52d625f3d311380b3c2be58c1844ec41daef7ef",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/payment-widget/integration",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "bab7a167a27876689243c318f303319f41133534ac62b79c0653a9a38a505033",
+     "archived_url": "https://r.jina.ai/https://docs.tosspayments.com/guides/v2/payment-widget/integration",
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#3",
+   "statement": "v1은 결제위젯·브랜드페이·결제창이 각각 별도 스크립트/SDK로 분리돼 있었으나 v2부터는 스크립트 하나(/v2/standard)와 SDK 하나(@tosspayments/tossp",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.74,
+     "sha256": "6d17555fe745e382b5e405d3e24694d049c7fb1abf139912e0ee0533168641bd",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.5,
+     "sha256": "6d17555fe745e382b5e405d3e24694d049c7fb1abf139912e0ee0533168641bd",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#4",
+   "statement": "결제위젯 API 변경점: v1의 updateAmount()는 제거되고 setAmount()로 분리, renderPaymentMethods()/renderAgreement()가 동기",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "6d17555fe745e382b5e405d3e24694d049c7fb1abf139912e0ee0533168641bd",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "6d17555fe745e382b5e405d3e24694d049c7fb1abf139912e0ee0533168641bd",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#5",
+   "statement": "v2는 아직 React Native·Flutter 등 모바일 네이티브 SDK를 지원하지 않아 모바일 앱 연동은 v1을 써야 하며, 토스페이먼츠 자사 공식 블로그의 대표 React ",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.65,
+     "sha256": "6d17555fe745e382b5e405d3e24694d049c7fb1abf139912e0ee0533168641bd",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    },
+    {
+     "url": "https://www.tosspayments.com/blog/articles/paytech-4",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "37d112c11699baae29f43329d2f39c8d7e55d148850666d4b1cb4032b616811b",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#6",
+   "statement": "토스페이먼츠는 PG 업계 최초로 공식 MCP 서버 @tosspayments/integration-guide-mcp를 제공하며, npx -y @tosspayments/integrat",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "2fa8434e83466833e29149af55a1efebdac404f201852ed932a241f6d487ee1c",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "72abe81e2c7281523a41c449ccad7bdca43751a0ef1acec371abe2fb2037a8dc",
+     "archived_url": null,
+     "pass2": "jina"
+    },
+    {
+     "url": "https://www.itworld.co.kr/article/4008892/%EA%B2%B0%EC%A0%9C-%EC%97%B0%EB%8F%99-10%EB%B6%84-%EC%8B%9C%EB%8C%80-%EA%B0%9C%EB%A7%89-%ED%86%A0%EC%8A%A4%ED%8E%98%EC%9D%B4%EB%A8%BC%EC%B8%A0-pg-%EC%97%85%EA%B3%84-%EC%B5%9C.html",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "f4281d944d63f1ff639b8d9fb665060635608248bd55352ed3f84ccfbb638ddb",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#7",
+   "statement": "MCP 서버는 4개 도구를 제공한다: 버전 미지정 질문에 자동 검색되는 get-v2-documents(기본), \"V1으로 작성해줘\" 등 명시 요청 시 쓰이는 get-v1-docum",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "2fa8434e83466833e29149af55a1efebdac404f201852ed932a241f6d487ee1c",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "2fa8434e83466833e29149af55a1efebdac404f201852ed932a241f6d487ee1c",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#8",
+   "statement": "공식 문서는 \"결제창을 연결해줘\", \"구독 결제(빌링) 흐름을 처음부터 끝까지 만들어줘\" 같은 자연어 활용 예시를 제시하며, MCP 연결이 안 될 때는 AI 도구 MCP 설정 화면",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "72abe81e2c7281523a41c449ccad7bdca43751a0ef1acec371abe2fb2037a8dc",
+     "archived_url": null,
+     "pass2": "jina"
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.58,
+     "sha256": "2fa8434e83466833e29149af55a1efebdac404f201852ed932a241f6d487ee1c",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.58"
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#9",
+   "statement": "MCP 서버 외에도 결제 연동 핵심을 압축한 영문 \"LLM Quick Reference\"(/guides/v2/get-started/llms-quick-reference), 문서 전",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.86,
+     "sha256": "2fa8434e83466833e29149af55a1efebdac404f201852ed932a241f6d487ee1c",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "2fa8434e83466833e29149af55a1efebdac404f201852ed932a241f6d487ee1c",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#10",
+   "statement": "v2 자동결제(빌링) 공식 가이드(/guides/v2/billing/integration)는 (1) payment.requestBillingAuth({method:\"CARD\",..",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing/integration",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "37c58f6f837bff4821312ec7ae870182484f3adb2fd859f0bc576f7f99688ba7",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.4"
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing/integration",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "37c58f6f837bff4821312ec7ae870182484f3adb2fd859f0bc576f7f99688ba7",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-2-toss-v2-mcp#11",
+   "statement": "빌링 테스트(샌드박스) 환경에서는 본인인증 문자가 발송되지 않고 인증번호 000000 입력으로 대체되며 카드 앞 6자리(BIN 번호)만 유효해도 자동결제 등록이 되어 실카드 없이 ",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing/integration",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.75,
+     "sha256": "37c58f6f837bff4821312ec7ae870182484f3adb2fd859f0bc576f7f99688ba7",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing/integration",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "37c58f6f837bff4821312ec7ae870182484f3adb2fd859f0bc576f7f99688ba7",
+     "archived_url": null
+    },
+    {
+     "url": "https://docs.tosspayments.com/guides/v2/billing/integration",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "37c58f6f837bff4821312ec7ae870182484f3adb2fd859f0bc576f7f99688ba7",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#0",
+   "statement": "토스페이먼츠 개발자센터 공식 블로그의 '구독 결제 서비스 구현하기 (1)(2)'는 빌링키 발급→DB 관리→스케줄링(cron)으로 이어지는 구독 결제 로직을 다루지만, 예시 코드는 ",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/blog/subscription-service-1",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.3,
+     "sha256": "edafa235920ee0a0852d7836d813ca7e95d4d56bce32497e02d3d0ceb7a2e567",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.3"
+    },
+    {
+     "url": "https://docs.tosspayments.com/blog/subscription-service-2",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.29,
+     "sha256": "607f233a9e3e8873b4c1f563bcd5f4ccd71c7e221a11d87056e08239453eb4dc",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.29"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#1",
+   "statement": "velog '토스 페이먼츠 API를 이용한 결제 위젯 구현하기 (Feat. NextJS, TypeScript)'(2024-01-11)는 Next.js 환경에서 토스페이먼츠 결제위젯",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://velog.io/@sanghyeon/토스-페이먼츠-API를-이용한-결제-위젯-구현하기-Feat.-NextJS-TypeScript",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "50fb7f35d2da4a857d6170cd543ab6b210f953a8fcc96ae13d84e788d7f53b22",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#2",
+   "statement": "Vercel 공식 Next.js+Stripe 구독 SaaS 템플릿(vercel/nextjs-subscription-payments)은 2025-01-23 아카이브 처리되었고, 후속",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/vercel/nextjs-subscription-payments",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "a1e9ca47fc06624d84e0b97af1e9949dcc8b6b514dc59836b1c7e3b60c6da2fa",
+     "archived_url": null
+    },
+    {
+     "url": "https://github.com/nextjs/saas-starter",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.55,
+     "sha256": "30794f58a1c10958d4d12400503d54c30bcd07451fea6d63172dddcfae3b8fe6",
+     "archived_url": null,
+     "pass2": "github-raw-readme:ratio=0.55"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#3",
+   "statement": "pedroalonso.net의 'Stripe + Next.js 15: The Complete 2025 Guide'는 Stripe Checkout mode:'subscription'",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.pedroalonso.net/blog/stripe-nextjs-complete-guide-2025/",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.35,
+     "sha256": "a4908cda96393df771d48824ee8035034b3982490fc1a6b65b85d5f6b2d2c21a",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.5"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#4",
+   "statement": "Supabase 공식 문서 'Build a Social Auth App with Expo React Native'는 Expo Router의 protected routes로 네비게이",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.65,
+     "sha256": "5306560a7485f885e3f7a557cac49f8c09535411ef7aba4fe985f7f5ae6c1f9a",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.4"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#5",
+   "statement": "GitHub Gist 'Expo Router + Supabase Auth + NativeWind Tutorial'(최종 활동 2025-08-09)은 supabase.auth.sig",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://gist.github.com/TortoiseWolfe/119b16a4c27c559ede0ddec71a9f7786",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.35,
+     "sha256": "f9a16ef470467092339fb67c9cf2af11d0ee02f4d0c430ea872ee130e3e79411",
+     "archived_url": null,
+     "pass2": "none"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#6",
+   "statement": "Vercel 공식 템플릿 페이지는 'Deploy to Vercel' 버튼 클릭 한 번으로 Supabase 계정/프로젝트 생성을 안내하고 Supabase Integration 설치 ",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://vercel.com/templates/next.js/supabase",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "0582fdbfe89c1c6f0ea4cf735e692ba4ab6570218874905e73d2db39e0e14081",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#7",
+   "statement": "Supabase 공식 문서 'Vercel Marketplace'는 Next.js+Supabase 배포 시 POSTGRES_URL, SUPABASE_URL 등 환경변수 자동 동기화를",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/integrations/vercel-marketplace",
+     "fetch": "ok",
+     "verdict": "MATCH",
+     "ratio": null,
+     "sha256": "f88a3cc59d0cb8c5b2c4c4960b5925269338c4b890231ec2376a27fcc1ebc5db",
+     "archived_url": null
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#8",
+   "statement": "@supabase/auth-ui-react(로그인 화면 기성 컴포넌트)를 담은 supabase-community/auth-ui 저장소는 2025-10-23 소유자에 의해 아카이브(",
+   "risk": "high",
+   "evidence": [
+    {
+     "url": "https://github.com/supabase-community/auth-ui",
+     "fetch": "ok",
+     "verdict": "PARTIAL",
+     "ratio": 0.81,
+     "sha256": "543ff083c553799d15f07a98d5c5e01609aa5ce2cd3ffafde068087a5052346d",
+     "archived_url": null
+    },
+    {
+     "url": "https://registry.npmjs.org/@supabase/auth-ui-react",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "f66c3766824c9e8d160dc520d6564d185f18fe3789ba06f1b17f804e5b66c306",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#9",
+   "statement": "Supabase 공식 'Storage Quickstart' 문서는 대시보드/SQL/JS 클라이언트로 버킷 생성 및 파일 업로드하는 방법을 현재도 안내하는 활성 문서이며, depre",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/storage/quickstart",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "a0ef7e9563a97c6cce3226ca64bf1a365a2794ac68633c85b217706ac3de9412",
+     "archived_url": null,
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#10",
+   "statement": "개인정보보호위원회가 2024-07-19 공개한 「인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서」는 위키백과·블로그·커먼크롤 등 웹사이트에 공개된 데이터를 대규모로",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=10375",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "b78b93ad24c3e058cd17d690ed107a51b2a2d27b582c4f5f99fa97c0c421ec62",
+     "archived_url": "https://r.jina.ai/https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=10375",
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  },
+  {
+   "ref": "W2-3-project-gaps#11",
+   "statement": "개인정보보호위원회 공식 안내서 게시판(bbsId=BS217) 목록 및 KISA 관련 검색 어디에서도 '웹크롤링' 또는 '스크래핑'을 표제로 한 별도의 종합 가이드라인·해설서는 확인",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030000",
+     "fetch": "ok",
+     "verdict": "MISS",
+     "ratio": 0.0,
+     "sha256": "83e870d860f32705a617817ce39a01bba8a39e4dfc72a349b9c4bc03cd2a656c",
+     "archived_url": "https://r.jina.ai/https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030000",
+     "pass2": "jina:ratio=0.0"
+    }
+   ]
+  }
+ ],
+ "resources": [
+  {
+   "axis": "A1-figma-mcp",
+   "title": "Introduction | Figma MCP Server Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/",
+   "fetch": "ok",
+   "sha256": "52727d3b6f4947f65e0c915b813e56ca089e4aedb6c5e0ca167262a7b754b168"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "Set up the remote server (recommended) | Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+   "fetch": "ok",
+   "sha256": "c14f409a6e86724e92827d23ba11c9d53aa91aa22e1cc926ee34921fd7a9bca2"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "Set up the desktop server (using desktop app) | Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+   "fetch": "ok",
+   "sha256": "2c646fbeccb400e821b8fc488b730b103b35510ea9e183a67b0004525a71f064"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "Rate limits & access | Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+   "fetch": "ok",
+   "sha256": "e0cb95e90d63e84b2827bdd57b18f3afcd53990e5ba84df13120f91562875199"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "Plans & Pricing | Figma",
+   "url": "https://www.figma.com/pricing/",
+   "fetch": "ok",
+   "sha256": "3fe6eedac0598693e84458dd4eadfb7bc562e1f246c2d5760b7385417704ae31"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "Cursor and Figma: Set up the MCP server – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+   "fetch": "ok",
+   "sha256": "70a0ef7f3f90c99c2cc558974950d1208c7848cf0cc2adffc71695b1c0519a0c"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "Figma MCP server FAQs – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs",
+   "fetch": "ok",
+   "sha256": "5d1b57bb221d893e241f3fff0c2867e45e16426cd37b6d8a5fb2506a0a69440d"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "GitHub - figma/mcp-server-guide",
+   "url": "https://github.com/figma/mcp-server-guide",
+   "fetch": "ok",
+   "sha256": "a9b63dd2e2b934473c6ce825d97858deaf5b0cbce171a6317e2c382433f63263"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "GitHub - GLips/Figma-Context-MCP (Framelink Figma MCP / npm figma-developer-mcp)",
+   "url": "https://github.com/GLips/Figma-Context-MCP",
+   "fetch": "ok",
+   "sha256": "61bb4b1df94a522e5450f251f885a3b2878dd33879e323836ebdcf14dae1c795"
+  },
+  {
+   "axis": "A1-figma-mcp",
+   "title": "2026 피그마 MCP 완벽 가이드: use_figma로 캔버스 직접 수정하기 (Claude Code 연동 후기)",
+   "url": "https://litmers.com/blog/%ED%94%BC%EA%B7%B8%EB%A7%88-mcp-%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80-%EA%B5%AC%ED%98%84-%ED%81%B4%EB%A1%9C%EB%93%9C-%EC%BD%94%EB%93%9C-%EC%97%B0%EB%8F%99-%ED%9B%84%EA%B8%B0",
+   "fetch": "ok",
+   "sha256": "610d4ee486ddcd69318499f3bbd34135497b38477f83c4b2ad9ca7bb2af13b40"
+  },
+  {
+   "axis": "A2-cursor",
+   "title": "Cursor Docs — Rules (프로젝트 규칙 공식 문서)",
+   "url": "https://cursor.com/docs/rules",
+   "fetch": "ok",
+   "sha256": "370054ab1be6fe1b01c1750e2209ca044fa1d875a660ea37bcc5976c6f08d344"
+  },
+  {
+   "axis": "A2-cursor",
+   "title": "Cursor Docs — Model Context Protocol (MCP)",
+   "url": "https://cursor.com/docs/mcp",
+   "fetch": "ok",
+   "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b"
+  },
+  {
+   "axis": "A2-cursor",
+   "title": "Cursor · Pricing (공식 요금 페이지)",
+   "url": "https://cursor.com/pricing",
+   "fetch": "ok",
+   "sha256": "7855e99c00bbd81cb21e88d258595cbb2a1a24402b5fc4434130a1a7908ebddb"
+  },
+  {
+   "axis": "A2-cursor",
+   "title": "[지금 무료][연재형] WE CAN Cursor AI!",
+   "url": "https://www.inflearn.com/en/course/we-can-cusor-ai",
+   "fetch": "ok",
+   "sha256": "bf0e57eaaad6085a7c14774f417c1b3fe559ce360f83f489c14e7e6f16208c4a"
+  },
+  {
+   "axis": "A2-cursor",
+   "title": "왕초보도 개발 가능 | 커서 AI 설치부터 기본 사용법 강의",
+   "url": "https://www.youtube.com/watch?v=he0gEZ5wg0Q",
+   "fetch": "ok",
+   "sha256": "ae8249e444868274de612d55d3354fb27129348b1fedc8c9cb576d3962c24158",
+   "yt_title": "왕초보도 개발 가능 | 커서 AI 설치부터 기본 사용법 강의"
+  },
+  {
+   "axis": "A2-cursor",
+   "title": "이제 코딩 3배 빨라진다고? 커서 AI 실화? (25분 완벽 정리)",
+   "url": "https://www.youtube.com/watch?v=_oEhh8666pA",
+   "fetch": "ok",
+   "sha256": "a670a98b83ecceee8bfe854b804a813ddde7602d9e9e3d1a877f065198c67b02",
+   "yt_title": "이제 코딩 3배 빨라진다고? 커서 AI 실화? (25분 완벽 정리)"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Use Supabase with Next.js (Quickstart)",
+   "url": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+   "fetch": "ok",
+   "sha256": "b81b0d849c3d4662f4a26e6618cf2de6f4137f79a41afe07d6522373b23c967e"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Tables | Supabase Docs (Table Editor로 테이블 만들기)",
+   "url": "https://supabase.com/docs/guides/database/tables",
+   "fetch": "ok",
+   "sha256": "c8472f07bd14dd41114afe9addbf5a191cbfa0dc1fe6eb9cf2bf69ea809e81be"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Auth | Supabase Docs (Auth 개요)",
+   "url": "https://supabase.com/docs/guides/auth",
+   "fetch": "ok",
+   "sha256": "d1ec2e0dba1e525a26ce1c2e754fb0f3a6c1afca730b3853734cc14d2bff6e7a"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Use Supabase Auth with Next.js",
+   "url": "https://supabase.com/docs/guides/auth/quickstarts/nextjs",
+   "fetch": "ok",
+   "sha256": "a4a2c736a67a39010d370c7de5c9c0734d9084326fd3419aa3cf4fc79d8e381e"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Use Supabase Auth with React Native",
+   "url": "https://supabase.com/docs/guides/auth/quickstarts/react-native",
+   "fetch": "ok",
+   "sha256": "fa5cd9b93a084cca33f2c2cdcf5b76834231a79214c17b7188040b16435f40f6"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Login with Google | Supabase Docs",
+   "url": "https://supabase.com/docs/guides/auth/social-login/auth-google",
+   "fetch": "ok",
+   "sha256": "df50f05c55403055b7f46e9dce9028779f14cba246bc2918a618bca0205cc988"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Model context protocol (MCP) | Supabase Docs",
+   "url": "https://supabase.com/docs/guides/getting-started/mcp",
+   "fetch": "ok",
+   "sha256": "5d40e6613ca76ece29e80df20d72b0a4d1aa4562a5d0526c1f99284d6e0cb67b"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Supabase MCP with Cursor — Step-by-step Guide",
+   "url": "https://www.youtube.com/watch?v=wa9-d63velk",
+   "fetch": "ok",
+   "sha256": "788978cc015be87f37e3fe56116261f32839b80495dfc0eb39839992320974ef",
+   "yt_title": "Supabase MCP with Cursor — Step-by-step Guide"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "Row Level Security | Supabase Docs",
+   "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+   "fetch": "ok",
+   "sha256": "6adbf3087ca99427cb4ca300c8c3c0a11aba950df8133551a7be1e9117d715fb"
+  },
+  {
+   "axis": "A3-supabase",
+   "title": "[Supabase] 데이터베이스 테이블에 RLS 설정하기 – 모두의매뉴얼",
+   "url": "https://triki.net/prgm/11626",
+   "fetch": "ok",
+   "sha256": "617be54f85f5b58ea61f8bd70934b0912da6896900d071c47e6ad974a81d3aeb"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "n8n Pricing (Cloud plans, self-hosted)",
+   "url": "https://n8n.io/pricing/",
+   "fetch": "ok",
+   "sha256": "667c8c1604abe1ace3737bf6dc37a5534b5b2501167005661793ec0abaf50dd8"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "Install with Docker | n8n Docs",
+   "url": "https://docs.n8n.io/deploy/host-n8n/install-options/install-with-docker",
+   "fetch": "ok",
+   "sha256": "2132195d61db9339a5a465b6c7a7e508098eb1e5b490e1cf1c21e3f3f3366c56"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "HTTP Request | Nodes | n8n Docs",
+   "url": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/",
+   "fetch": "ok",
+   "sha256": "48eb340b9332977977642a02b99890efbd82a4288368be6cc7fe1fa99f1de30f"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "HTML | Nodes | n8n Docs",
+   "url": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.html/",
+   "fetch": "ok",
+   "sha256": "ab386eb9def011fac9ce969ca5f31f424a24a7d841c379b1bad60c5255c2344b"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "n8n에서 HTTP 요청 노드 활용하기 - 지니코딩랩",
+   "url": "https://www.jiniai.biz/2025/03/20/n8n%EC%97%90%EC%84%9C-http-%EC%9A%94%EC%B2%AD-%EB%85%B8%EB%93%9C-%ED%99%9C%EC%9A%A9%ED%95%98%EA%B8%B0/",
+   "fetch": "ok",
+   "sha256": "65f9833d45836d17823b87e12949a2c01c954bffbcf203edee00828f310332e7"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "Aggregate multi-source job boards to Supabase and Google Sheets | n8n workflow t",
+   "url": "https://n8n.io/workflows/14996-aggregate-multi-source-job-boards-to-supabase-and-google-sheets/",
+   "fetch": "ok",
+   "sha256": "a8ced84891d4f0197565be16a7ed81176253ef6d86181583ce5cd3448f7d0170"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "Guidelines 03/2026 on web scraping in the context of generative AI",
+   "url": "https://www.edpb.europa.eu/system/files/2026-07/edpb_guidelines_2020603_webscraping_v1_en_0.pdf",
+   "fetch": "ok",
+   "sha256": "f27807865e3df3ec8866ef1f23f327225bbd48b0ea9f750957193ed1468ece11"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "Introduction to robots.txt | Google Search Central",
+   "url": "https://developers.google.com/search/docs/crawling-indexing/robots/intro",
+   "fetch": "ok",
+   "sha256": "bcddd0a66b26eb228ae384d08fe359cb302057480f261829ecc647212ac2f91d"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "n8n 공식 기술 문서 한글판 (InfoGrab)",
+   "url": "https://n8n-docs.infograb.net/courses/level-two/chapter-2/",
+   "fetch": "ok",
+   "sha256": "c7cbd38c86f904298005931230e5e11dd36430e3ef95bbeaf2384e9d09e6250c"
+  },
+  {
+   "axis": "A4-n8n",
+   "title": "당신이 원하던 n8n 2026 버전 마스터클래스! 8시간 완전정복 기초강의",
+   "url": "https://www.youtube.com/watch?v=LR2vONAVEYk",
+   "fetch": "ok",
+   "sha256": "b2c5b9b6feb27def2287a98f6ea147264878d6c4c1be80d81b3b7b35414ee0bf",
+   "yt_title": "\"당신이 원하던 n8n 2026 버전 마스터클래스!\" 8시간 완전정복 기초강의. 실전 프로젝트로 '자동화 괴물'이 됩니다 🚨🚨"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "시작하기 | 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/guides/v2/get-started",
+   "fetch": "ok",
+   "sha256": "3eef391afbda040c3eb8045430b024e8206f3a964c2a08933e7de5d246f4594a"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "결제위젯 이해하기 | 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/guides/v2/payment-widget",
+   "fetch": "ok",
+   "sha256": "27bb574f15b4d38d58c0643a86023c8f6159663e9d0a17ba9e3b1a13f1f1b815"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "회원가입, 사업자번호 없이 결제 테스트하기 | 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/blog/how-to-test-toss-payments",
+   "fetch": "ok",
+   "sha256": "312dd5a7d051f215a995f1754ea52632dc29ee4969d26431bf78f6857a407363"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "환경 설정하기 | 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/guides/v2/get-started/environment",
+   "fetch": "ok",
+   "sha256": "57d4ca7b11563be0a38c4da014d9ee92d25c4db01cbe98f7a456a2d888b19b27"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "자동결제(빌링) 이해하기 | 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/guides/v2/billing",
+   "fetch": "ok",
+   "sha256": "eed22bd90ce342d7b2567992b8d6bd108c2966598a4b138c480da8b549a68532"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "GitHub - tosspayments/tosspayments-sample",
+   "url": "https://github.com/tosspayments/tosspayments-sample",
+   "fetch": "partial",
+   "sha256": "527f5d4ad2f0dcc519cba6f18be37e086dab28164cf1c1ed5ab96e1ec457d54e"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "React로 결제 페이지 개발하기 (ft. 결제위젯)",
+   "url": "https://www.tosspayments.com/blog/articles/paytech-4",
+   "fetch": "ok",
+   "sha256": "37d112c11699baae29f43329d2f39c8d7e55d148850666d4b1cb4032b616811b"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "결제위젯으로 React의 useEffect 사용해보기 | 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/blog/react-use-effect",
+   "fetch": "ok",
+   "sha256": "70ec6dda42012e64c5e236a84165068c4160bf3ef451fa331dcee6c287589abb"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "NextJs 결제연동하기 (feat. Toss/토스페이먼츠)",
+   "url": "https://www.youtube.com/watch?v=lpfO2mebYQk",
+   "fetch": "ok",
+   "sha256": "9854f6b3d2ccaca3fbefcabbd6b5f9930940d50629ff4227252dbb8cf0d10a8e",
+   "yt_title": "NextJs 결제연동하기 (feat. Toss/토스페이먼츠)"
+  },
+  {
+   "axis": "A5-tosspayments",
+   "title": "[CCOMMIT] 경력/비전공자 토스페이먼츠 결제 API 연동",
+   "url": "https://www.youtube.com/watch?v=5DiSLv-n6l0",
+   "fetch": "ok",
+   "sha256": "28d7601327e1a1335ad5d334fe4ff98266f095e2a126d59e57ce52469c6879c9",
+   "yt_title": "[CCOMMIT] 경력/비전공자 토스페이먼츠 결제 API 연동"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "에어비앤비 클론코딩 (Django, REST Framework, Chakra UI)",
+   "url": "https://nomadcoders.co/airbnb-clone",
+   "fetch": "ok",
+   "sha256": "187ae33c4b0dcf416edb41038b4bd401809d5975e34e02d52aedd03b05419a60"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "캐럿마켓(당근마켓) 클론코딩 (Next.js 14, Tailwind, Prisma)",
+   "url": "https://nomadcoders.co/carrot-market",
+   "fetch": "ok",
+   "sha256": "fe9297dbc73fcbde93c2e23ca7d642af8eba51d1c3af2044f37997b79f2810d8"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "NextJS 무료 강의: 앱 라우터로 웹사이트 만들기",
+   "url": "https://nomadcoders.co/nextjs-for-beginners",
+   "fetch": "ok",
+   "sha256": "4091cdf5ec010c3c11275de944ac7fea2d60cd6e90cf6870785822579f3d0a96"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "Mastering Next.js 14 - Build Airbnb Clone from Scratch",
+   "url": "https://www.udemy.com/course/mastering-nextjsbuild-an-airbnb-clone-from-scratch-2024/",
+   "fetch": "ok",
+   "sha256": "93e587e032e0f22e40bd5e2e85dd653dee5f181373c10b210733aaf83fe5094b"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "SashenJayathilaka/Airbnb-Build (오픈소스 코드)",
+   "url": "https://github.com/SashenJayathilaka/Airbnb-Build",
+   "fetch": "ok",
+   "sha256": "4cb0dfa69970fbc58026e4265610217a94af2afb67fe165a16b8a7a55dd19865"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "[풀스택 완성] Supabase로 웹사이트 3개 클론하기 (Next.js 14) - Dropbox/Netflix/Instagram",
+   "url": "https://www.inflearn.com/course/%EC%9A%94%EC%A6%98%EC%97%94-supabase-%EB%8C%80%EC%84%B8%EC%A7%80-nextjs-%ED%81%B4%EB%A1%A0%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8",
+   "fetch": "ok",
+   "sha256": "3128b0b180ab64c274a16cecdb0acf5fc96f9f85ca40424eab55e82942ea12cb"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "연동하기 (결제위젯 통합 가이드)",
+   "url": "https://docs.tosspayments.com/guides/payment-widget/integration",
+   "fetch": "ok",
+   "sha256": "9ac51508908148083578679aaaedea961d77d241541807e8993e57ed55c24def"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "tosspayments-sample (공식 결제 연동 샘플 저장소)",
+   "url": "https://github.com/tosspayments/tosspayments-sample",
+   "fetch": "partial",
+   "sha256": "527f5d4ad2f0dcc519cba6f18be37e086dab28164cf1c1ed5ab96e1ec457d54e"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "[무작정 플러터] 넷플릭스 클론 코딩 with Flutter/Firebase",
+   "url": "https://www.inflearn.com/course/flutter-netflix-clone-app",
+   "fetch": "ok",
+   "sha256": "3d51267219cbc76ada7f88f1a2b6b3eae69eddbfdc8c06404cb3f0e675847a1c"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "Build a Netflix Clone App with React Native and Expo — Full Tutorial",
+   "url": "https://www.notjust.dev/blog/netflix-clone",
+   "fetch": "ok",
+   "sha256": "9f0080927b3bddce032d0c885e64605f35087dbe3cca5fc0ca2f42378c951aba"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "Lordhacker756/Netflix (React Native 넷플릭스 클론, 인증 포함 주장)",
+   "url": "https://github.com/Lordhacker756/Netflix",
+   "fetch": "partial",
+   "sha256": "527f5d4ad2f0dcc519cba6f18be37e086dab28164cf1c1ed5ab96e1ec457d54e"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "calebnance/expo-netflix (Netflix UI Clone with React Native & Expo)",
+   "url": "https://github.com/calebnance/expo-netflix",
+   "fetch": "ok",
+   "sha256": "47e748a9efce7ca47d63d638bc554aa994f678abebbaf9c505c81e916cda4377"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "Authentication in Expo and React Native apps",
+   "url": "https://docs.expo.dev/develop/authentication/",
+   "fetch": "ok",
+   "sha256": "826545bf73e679b31b8b3790d89041189c4a36acfd37ec56dbb87026c9dbd463"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "Cursor and Figma: Set up the MCP server",
+   "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+   "fetch": "ok",
+   "sha256": "70a0ef7f3f90c99c2cc558974950d1208c7848cf0cc2adffc71695b1c0519a0c"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "Set up the remote server (recommended) | Figma Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+   "fetch": "ok",
+   "sha256": "c14f409a6e86724e92827d23ba11c9d53aa91aa22e1cc926ee34921fd7a9bca2"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "비개발자를 위한 Cursor-figma-MCP 사용법",
+   "url": "https://brunch.co.kr/@zitopd/8",
+   "fetch": "ok",
+   "sha256": "e23a6c17dfd8bc0df138cc7a59ec02e323f9f9ca62224944c4ec434243068045"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "Cursor for Designers Tutorial #3: Figma to Code and Beyond",
+   "url": "https://www.builder.io/blog/figma-to-cursor-for-designers",
+   "fetch": "ok",
+   "sha256": "d73431195d3de32a6d6ebc896b74c1fa88ded55e0be4fc8720f408211a7499c0"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "[무료] 1. 웹개발 기초 [HTML, CSS]",
+   "url": "https://www.inflearn.com/course/%EC%9B%B9%EA%B0%9C%EB%B0%9C-%EA%B8%B0%EC%B4%88-html-css",
+   "fetch": "ok",
+   "sha256": "ff6b3863a18f6b1286a7c07f016ea44da8cf719283bdf51491313df4a95d7a60"
+  },
+  {
+   "axis": "A6-resources",
+   "title": "자바스크립트로 웹 서비스 만들기 (무료)",
+   "url": "https://nomadcoders.co/javascript-for-beginners",
+   "fetch": "ok",
+   "sha256": "0430f61d9cc867553fa8a4d3af7ef82555da95369884acd81583b52d005a7889"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Model Context Protocol (MCP) | Cursor Docs",
+   "url": "https://cursor.com/docs/mcp",
+   "fetch": "ok",
+   "sha256": "75f5ed4e8b371d507707d2c3686a68763439d787b381aee4964482f7ebafc51b"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Download and install Cursor | Cursor Docs",
+   "url": "https://cursor.com/help/getting-started/install",
+   "fetch": "ok",
+   "sha256": "9bd28a546aa6e3d86d691be454aec7727bf44664cb0a266efaeb2536afbecb8b"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Quickstart | Cursor Docs",
+   "url": "https://cursor.com/docs/get-started/quickstart",
+   "fetch": "ok",
+   "sha256": "5a90071bba508c8144a3c2358aa2260dadef6b01f919b6e3fc42d6d657b9606e"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Changelog · Cursor",
+   "url": "https://cursor.com/changelog",
+   "fetch": "ok",
+   "sha256": "07d417e4d4c866a751d0f67fa2440796c114fcb2cf2f10e5d44a365be8f77ca0"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "How AI credits work – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work",
+   "fetch": "ok",
+   "sha256": "3e9bff032114e3e8f0bf965d9f930badb94a9be1173758e88cde5041b9217213"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Guide to the Figma MCP server – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server",
+   "fetch": "ok",
+   "sha256": "da2e930c44d304095703d88fa7fbce1406cc97560cd429f8cb5a45867d9e3bd2"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Cursor and Figma: Set up the MCP server – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+   "fetch": "ok",
+   "sha256": "70a0ef7f3f90c99c2cc558974950d1208c7848cf0cc2adffc71695b1c0519a0c"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Explore Figma Make – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make",
+   "fetch": "ok",
+   "sha256": "1b3c4ca3491afaa6182af1857b820b335fcb56d8a3e733bdd460234b5968c896"
+  },
+  {
+   "axis": "W2-1-cursor-figma-latest",
+   "title": "Introduction | Figma MCP Server Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/",
+   "fetch": "ok",
+   "sha256": "52727d3b6f4947f65e0c915b813e56ca089e4aedb6c5e0ca167262a7b754b168"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "결제위젯 이해하기 (Version 2)",
+   "url": "https://docs.tosspayments.com/guides/v2/payment-widget",
+   "fetch": "ok",
+   "sha256": "27bb574f15b4d38d58c0643a86023c8f6159663e9d0a17ba9e3b1a13f1f1b815"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "결제위젯(주문서형) 연동하기",
+   "url": "https://docs.tosspayments.com/guides/v2/payment-widget/integration",
+   "fetch": "ok",
+   "sha256": "bab7a167a27876689243c318f303319f41133534ac62b79c0653a9a38a505033"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "토스페이먼츠 JavaScript SDK (레퍼런스)",
+   "url": "https://docs.tosspayments.com/sdk/v2/js",
+   "fetch": "ok",
+   "sha256": "d921fbced7e0e5717da7682de52d625f3d311380b3c2be58c1844ec41daef7ef"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "마이그레이션하기 (v1 → v2)",
+   "url": "https://docs.tosspayments.com/guides/v2/get-started/migration-guide",
+   "fetch": "ok",
+   "sha256": "6d17555fe745e382b5e405d3e24694d049c7fb1abf139912e0ee0533168641bd"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "AI 도구로 결제 연동하기 (MCP 서버)",
+   "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-guide",
+   "fetch": "ok",
+   "sha256": "2fa8434e83466833e29149af55a1efebdac404f201852ed932a241f6d487ee1c"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "자동결제(빌링) 결제창 연동하기",
+   "url": "https://docs.tosspayments.com/guides/v2/billing/integration",
+   "fetch": "ok",
+   "sha256": "37c58f6f837bff4821312ec7ae870182484f3adb2fd859f0bc576f7f99688ba7"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "LLM Quick Reference",
+   "url": "https://docs.tosspayments.com/guides/v2/get-started/llms-quick-reference",
+   "fetch": "ok",
+   "sha256": "a618e57d08cb8ebb7b66d0a41f27fc523c6477e931ec4a1b0182395a95d82d69"
+  },
+  {
+   "axis": "W2-2-toss-v2-mcp",
+   "title": "tosspayments/browser-sdk (GitHub)",
+   "url": "https://github.com/tosspayments/browser-sdk",
+   "fetch": "partial",
+   "sha256": "527f5d4ad2f0dcc519cba6f18be37e086dab28164cf1c1ed5ab96e1ec457d54e"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "구독 결제 서비스 구현하기 (1)(2) - 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/blog/subscription-service-1",
+   "fetch": "ok",
+   "sha256": "edafa235920ee0a0852d7836d813ca7e95d4d56bce32497e02d3d0ceb7a2e567"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "토스 페이먼츠 API를 이용한 결제 위젯 구현하기 (Feat. NextJS, TypeScript)",
+   "url": "https://velog.io/@sanghyeon/토스-페이먼츠-API를-이용한-결제-위젯-구현하기-Feat.-NextJS-TypeScript",
+   "fetch": "ok",
+   "sha256": "50fb7f35d2da4a857d6170cd543ab6b210f953a8fcc96ae13d84e788d7f53b22"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "Stripe + Next.js 15: The Complete 2025 Guide",
+   "url": "https://www.pedroalonso.net/blog/stripe-nextjs-complete-guide-2025/",
+   "fetch": "ok",
+   "sha256": "a4908cda96393df771d48824ee8035034b3982490fc1a6b65b85d5f6b2d2c21a"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "nextjs/saas-starter",
+   "url": "https://github.com/nextjs/saas-starter",
+   "fetch": "ok",
+   "sha256": "30794f58a1c10958d4d12400503d54c30bcd07451fea6d63172dddcfae3b8fe6"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "Build a Social Auth App with Expo React Native",
+   "url": "https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth",
+   "fetch": "ok",
+   "sha256": "5306560a7485f885e3f7a557cac49f8c09535411ef7aba4fe985f7f5ae6c1f9a"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "Expo Router + Supabase Auth + NativeWind Tutorial",
+   "url": "https://gist.github.com/TortoiseWolfe/119b16a4c27c559ede0ddec71a9f7786",
+   "fetch": "ok",
+   "sha256": "f9a16ef470467092339fb67c9cf2af11d0ee02f4d0c430ea872ee130e3e79411"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "Supabase & Next.js App Router Starter Template for Auth",
+   "url": "https://vercel.com/templates/next.js/supabase",
+   "fetch": "ok",
+   "sha256": "0582fdbfe89c1c6f0ea4cf735e692ba4ab6570218874905e73d2db39e0e14081"
+  },
+  {
+   "axis": "W2-3-project-gaps",
+   "title": "Storage Quickstart",
+   "url": "https://supabase.com/docs/guides/storage/quickstart",
+   "fetch": "ok",
+   "sha256": "a0ef7e9563a97c6cce3226ca64bf1a365a2794ac68633c85b217706ac3de9412"
+  }
+ ]
+}

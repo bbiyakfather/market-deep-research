@@ -1,0 +1,704 @@
+Introduction 
+If you’re building a SaaS product or any application that needs payments, you’ve probably heard about Stripe. It’s the gold standard for payment processing, offering everything from simple one-time payments to complex subscription management. But here’s the thing: most Stripe tutorials are stuck in 2023 .
+They’ll show you how to create API routes, make fetch calls, manually manage loading states, and write tons of boilerplate code. That approach works, but it’s unnecessarily complex for most use cases.
+This guide is different.  We’re going to build a production-ready Stripe integration using Next.js 15’s most powerful features:
+Server Actions  for checkout flows (no API routes!)Server Components  for subscription statusOptimistic UI  for instant feedbackModern webhooks  with proper security 
+We’ll cover three complete payment models:
+One-time payments  (checkout for products)Subscriptions  (recurring revenue)Credit systems  (usage-based billing) 
+By the end of this guide, you’ll have:
+✅ A working payment system you can ship to production 
+✅ Understanding of Stripe’s gotchas and how to avoid them 
+✅ Security best practices baked in from the start 
+✅ Code that’s actually maintainable 
+ 
+Let’s skip the tutorial hell and build something real.
+Note : This guide assumes you have a Next.js 15+ project with the App Router. If you want deep dives into specific topics, I’ve written detailed articles on Stripe Checkout , Subscriptions , Payment Links & Customer Portal , Webhooks , and Credit Systems .
+ 
+The Evolution: From API Routes to Server Actions 
+Before we dive into implementation, let’s understand why  the old approach was painful and how  Server Actions make it better.
+The Old Way (Pages Router + API Routes) 
+Here’s what you’d do in a traditional setup:
+import   Stripe   from   'stripe' ; 
+export   default   async   function   handler ( req ,  res ) { 
+   if  ( req . method   !==   'POST' ) { 
+     return   res . status ( 405 ). json ({  error :  'Method not allowed'  }); 
+   const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ); 
+   const  {  priceId  }  =   req . body ; 
+   const   session   =   await   stripe . checkout . sessions . create ({ 
+     line_items : [{  price :  priceId ,  quantity :  1  }], 
+     success_url :  ` ${ req . headers . origin } /success?session_id={CHECKOUT_SESSION_ID}` , 
+     cancel_url :  ` ${ req . headers . origin } /cancel` , 
+   res . status ( 200 ). json ({  sessionId :  session . id  }); 
+// components/CheckoutButton.tsx 
+import  {  useState  }  from   'react' ; 
+import  {  loadStripe  }  from   '@stripe/stripe-js' ; 
+export   function   CheckoutButton ({  priceId  }) { 
+   const  [ loading ,  setLoading ]  =   useState ( false ); 
+   const   handleClick   =   async  ()  =>  { 
+     // Make a fetch call to your API route 
+     const   res   =   await   fetch ( '/api/checkout' , { 
+       headers : {  'Content-Type' :  'application/json'  }, 
+       body :  JSON . stringify ({  priceId  }), 
+     const  {  sessionId  }  =   await   res . json (); 
+     const   stripe   =   await   loadStripe ( process . env . NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ); 
+     await   stripe . redirectToCheckout ({  sessionId  }); 
+     < button   onClick = { handleClick }  disabled = { loading } > 
+       { loading  ?  'Loading...'  :  'Buy Now' } 
+What’s wrong with this? 
+Boilerplate overload : Separate API route, manual fetch, loading statesNo type safety : req.body is any, easy to mess upDuplication : Every payment feature needs its own API routeManual error handling : You write the same try/catch everywhereSecurity risks : Easy to forget validation on API routes 
+⚠️ On top of all that, the client-side stripe.redirectToCheckout() shown above is now removed from Stripe.js session.url straight from the server, so you don’t need it at all.
+ 
+The New Way (App Router + Server Actions) 
+Here’s the same feature with Server Actions:
+import   Stripe   from   'stripe' ; 
+import  {  redirect  }  from   'next/navigation' ; 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+export   async   function   createCheckoutSession ( priceId :  string ) { 
+   const   session   =   await   stripe . checkout . sessions . create ({ 
+     line_items : [{  price :  priceId ,  quantity :  1  }], 
+     success_url :  ` ${ process . env . NEXT_PUBLIC_URL } /success?session_id={CHECKOUT_SESSION_ID}` , 
+     cancel_url :  ` ${ process . env . NEXT_PUBLIC_URL } /cancel` , 
+   // Server Actions can redirect directly! 
+// components/CheckoutButton.tsx 
+import  {  createCheckoutSession  }  from   '@/app/actions/checkout' ; 
+export   function   CheckoutButton ({  priceId  }: {  priceId :  string  }) { 
+     < form   action = {() =>  createCheckoutSession ( priceId )} > 
+       < button   type = "submit" > Buy   Now </ button > 
+What’s better? 
+✅ No API route needed  - one less file to maintain 
+✅ Type safety  - priceId is typed, TypeScript catches errors 
+✅ Loading states automatic  - React handles pending state 
+✅ Less code  - 60% less boilerplate 
+✅ Direct server functions  - call Stripe directly, no HTTP layer 
+ 
+This is the pattern we’ll use throughout this guide. Server Actions aren’t just “syntactic sugar” - they fundamentally change how you structure payment flows.
+Part 1: One-Time Payments 
+Let’s start with the simplest use case: selling a digital product or service with a one-time payment. Think Gumroad-style checkout or a lifetime license.
+Quick Setup 
+First, install dependencies and set up environment variables:
+npm   install   stripe   @stripe/stripe-js 
+Create .env.local:
+# Get these from https://dashboard.stripe.com/test/apikeys 
+STRIPE_SECRET_KEY = sk_test_... 
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = pk_test_... 
+# For webhooks (we'll set this up later) 
+STRIPE_WEBHOOK_SECRET = whsec_... 
+NEXT_PUBLIC_URL = http://localhost:3000 
+Security tip : Never commit .env.local to git. Add it to .gitignore.
+ 
+Creating Products in Stripe 
+Before you can charge customers, you need products and prices in Stripe.
+Option 1: Use the Stripe Dashboard  (recommended for starting out)
+Go to Products  in your Stripe Dashboard  
+Click Add product  
+Fill in:
+Name: “Premium Feature” 
+Description: “One-time access to premium features” 
+Price: $29.99 
+ 
+ 
+Save and copy the Price ID  (starts with price_) 
+ 
+Option 2: Create products programmatically 
+import   Stripe   from   'stripe' ; 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+async   function   setupProducts () { 
+   const   product   =   await   stripe . products . create ({ 
+     description :  'One-time access to premium features' , 
+   // Create a price for the product 
+   const   price   =   await   stripe . prices . create ({ 
+     unit_amount :  2999 ,  // $29.99 (in cents) 
+   console . log ( 'Price ID:' ,  price . id );  // Save this! 
+Server Action for Checkout 
+Now let’s create the checkout flow. Create app/actions/checkout.ts:
+import   Stripe   from   'stripe' ; 
+import  {  redirect  }  from   'next/navigation' ; 
+import  {  auth  }  from   '@/lib/auth' ;  // Your auth solution (NextAuth, Clerk, etc.) 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+export   async   function   createCheckoutSession ( priceId :  string ) { 
+   // Get authenticated user 
+   const   session   =   await   auth (); 
+     throw   new   Error ( 'You must be logged in to purchase' ); 
+   // Create Stripe checkout session 
+   const   checkoutSession   =   await   stripe . checkout . sessions . create ({ 
+     success_url :  ` ${ process . env . NEXT_PUBLIC_URL } /success?session_id={CHECKOUT_SESSION_ID}` , 
+     cancel_url :  ` ${ process . env . NEXT_PUBLIC_URL } /pricing` , 
+     // 🔥 Critical: Store user info in metadata 
+       userEmail :  session . user . email , 
+     // Optional: Associate with existing Stripe customer 
+     customer_email :  session . user . email , 
+   // Redirect directly from Server Action (no need to return URL!) 
+   redirect ( checkoutSession . url ! ); 
+Key points: 
+'use server'metadataredirect()Authentication  happens before payment - prevents anonymous purchases 
+Checkout Component 
+Create a simple component to trigger checkout:
+import  {  createCheckoutSession  }  from   '@/app/actions/checkout' ; 
+export   function   BuyButton ({  priceId ,  label   =   'Buy Now'  }: {  priceId :  string ;  label ? :  string  }) { 
+     < form   action = {createCheckoutSession.bind( null , priceId)} > 
+         className = "bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700" 
+Use it anywhere: 
+import  {  BuyButton  }  from   '@/components/BuyButton' ; 
+export   default   function   PricingPage () { 
+         < BuyButton   priceId = "price_1234567890"   label = "Get Premium"  /> 
+That’s it!  No API routes, no fetch calls, no manual loading states. The form automatically shows a loading state when submitting.
+Success Page 
+After payment, users are redirected to your success page. Let’s make it useful:
+import  {  redirect  }  from   'next/navigation' ; 
+import   Stripe   from   'stripe' ; 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+export   default   async   function   SuccessPage ({ 
+   searchParams : {  session_id ? :  string  }; 
+   if  ( ! searchParams . session_id ) { 
+   // Retrieve session details (Server Component - free!) 
+   const   session   =   await   stripe . checkout . sessions . retrieve ( searchParams . session_id ); 
+   if  ( session . payment_status   !==   'paid' ) { 
+     < div   className = "max-w-2xl mx-auto p-8" > 
+       < div   className = "bg-green-50 border border-green-200 rounded-lg p-6" > 
+         < h1   className = "text-2xl font-bold text-green-900 mb-2" > 
+         < p   className = "text-green-800" > 
+           Thank   you   for   your   purchase , { session . customer_details ?. email } 
+         < p   className = "text-sm text-green-700 mt-2" > 
+         < a   href = "/dashboard"   className = "text-blue-600 hover:underline" > 
+Server Component magic:  We’re calling Stripe directly in the component - no API route, no useEffect, no loading spinner. It just works.
+The example above works for single products. What if you have multiple items?
+Server Action with dynamic line items: 
+export   async   function   createCartCheckoutSession ( items :  CartItem []) { 
+   const   session   =   await   auth (); 
+   if  ( ! session ?. user )  throw   new   Error ( 'Not authenticated' ); 
+   const   checkoutSession   =   await   stripe . checkout . sessions . create ({ 
+     line_items :  items . map ( item   =>  ({ 
+     success_url :  ` ${ process . env . NEXT_PUBLIC_URL } /success?session_id={CHECKOUT_SESSION_ID}` , 
+     cancel_url :  ` ${ process . env . NEXT_PUBLIC_URL } /cart` , 
+   redirect ( checkoutSession . url ! ); 
+Component: 
+import  {  createCartCheckoutSession  }  from   '@/app/actions/checkout' ; 
+import  {  useCart  }  from   '@/hooks/useCart' ;  // Your cart state 
+export   function   CheckoutButton () { 
+   const  {  items  }  =   useCart (); 
+     < form   action = { ()  =>   createCartCheckoutSession ( items ) } > 
+         Checkout ( { items . length }  items) 
+Important : Never trust prices from the client! Always fetch product prices from your database or Stripe in the Server Action. Users can manipulate client-side data.
+ 
+Secure version: 
+export   async   function   createCartCheckoutSession ( cartItems : {  productId :  string ;  quantity :  number  }[]) { 
+   // Fetch real prices from YOUR database 
+   const   products   =   await   db . product . findMany ({ 
+     where : {  id : {  in :  cartItems . map ( i   =>   i . productId ) } }, 
+     select : {  id :  true ,  stripePriceId :  true  }, 
+   const   line_items   =   cartItems . map ( item   =>  { 
+     const   product   =   products . find ( p   =>   p . id   ===   item . productId ); 
+     if  ( ! product )  throw   new   Error ( 'Invalid product' ); 
+       price :  product . stripePriceId ,  // ✅ Server-side truth 
+   // ... rest of checkout creation 
+Part 2: Subscriptions 
+One-time payments are great, but recurring revenue is what scales a SaaS . Let’s implement subscriptions with the same Server Actions approach.
+Why Subscriptions are Different 
+Subscriptions have ongoing state that one-time payments don’t:
+✅ Active/Canceled status  - users can cancel anytime 
+✅ Renewal cycles  - monthly/yearly billing 
+✅ Failed payments  - credit cards expire 
+✅ Upgrades/Downgrades  - plan changes 
+✅ Customer Portal  - self-service management 
+ 
+Stripe handles all of this, but you need to track it in your database.
+Database Schema 
+Here’s a minimal schema for subscriptions (using Prisma):
+   id                 String      @id   @default ( cuid ()) 
+   stripeCustomerId   String ?    @unique 
+   subscription       Subscription ? 
+   id                   String      @id   @default ( cuid ()) 
+   user                 User        @relation ( fields : [userId],  references : [id]) 
+   stripeSubscriptionId   String    @unique 
+   stripeCurrentPeriodEnd   DateTime 
+   status               String      // active, canceled, past_due, etc. 
+   createdAt            DateTime    @default ( now ()) 
+   updatedAt            DateTime    @updatedAt 
+Create Subscription Products in Stripe 
+Unlike one-time payments, subscription products need recurring prices :
+Go to Products  in Stripe Dashboard 
+Click Add product  
+Under Pricing model , select Recurring  
+Choose billing interval (monthly, yearly) 
+Set price (e.g., $9.99/month) 
+Save and copy the Price ID  
+ 
+Subscription Checkout Server Action 
+import   Stripe   from   'stripe' ; 
+import  {  redirect  }  from   'next/navigation' ; 
+import  {  auth  }  from   '@/lib/auth' ; 
+import  {  db  }  from   '@/lib/db' ; 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+export   async   function   createSubscriptionCheckout ( priceId :  string ) { 
+   const   session   =   await   auth (); 
+   if  ( ! session ?. user )  throw   new   Error ( 'Not authenticated' ); 
+   const   user   =   await   db . user . findUnique ({ 
+     where : {  id :  session . user . id  }, 
+     select : {  stripeCustomerId :  true  }, 
+   // Create checkout session 
+   const   checkoutSession   =   await   stripe . checkout . sessions . create ({ 
+     mode :  'subscription' ,  // 🔥 Key difference! 
+     line_items : [{  price :  priceId ,  quantity :  1  }], 
+     success_url :  ` ${ process . env . NEXT_PUBLIC_URL } /dashboard?success=true` , 
+     cancel_url :  ` ${ process . env . NEXT_PUBLIC_URL } /pricing` , 
+     // If user already has Stripe customer, reuse it 
+     customer :  user . stripeCustomerId   ||   undefined , 
+     customer_email :  ! user . stripeCustomerId   ?   session . user . email   :   undefined , 
+     // Optional: Add a trial period 
+   redirect ( checkoutSession . url ! ); 
+Key differences from one-time payments: 
+mode: 'subscription'customersubscription_data 
+Checking Subscription Status (Server Component) 
+Want to show subscription status in your dashboard? Server Component to the rescue:
+import  {  auth  }  from   '@/lib/auth' ; 
+import  {  db  }  from   '@/lib/db' ; 
+import  {  redirect  }  from   'next/navigation' ; 
+export   default   async   function   DashboardPage () { 
+   const   session   =   await   auth (); 
+   if  ( ! session )  redirect ( '/login' ); 
+   const   user   =   await   db . user . findUnique ({ 
+     where : {  id :  session . user . id  }, 
+     include : {  subscription :  true  }, 
+   const   hasActiveSubscription   = 
+     user ?. subscription ?. status   ===   'active'   && 
+     new   Date ( user . subscription . stripeCurrentPeriodEnd )  >   new   Date (); 
+       { hasActiveSubscription  ? ( 
+         < div   className = "bg-green-50 p-4 rounded" > 
+             Renews   on  { new   Date ( user . subscription . stripeCurrentPeriodEnd ). toLocaleDateString ()} 
+         < div   className = "bg-gray-50 p-4 rounded" > 
+           < a   href = "/pricing"   className = "text-blue-600" > 
+No API calls, no loading states  - Server Components fetch data at request time. This is perfect for subscription status that doesn’t change often.
+Customer Portal (Self-Service) 
+Users need to manage their subscription (cancel, update payment method, view invoices). Stripe’s Customer Portal handles all of this:
+import   Stripe   from   'stripe' ; 
+import  {  redirect  }  from   'next/navigation' ; 
+import  {  auth  }  from   '@/lib/auth' ; 
+import  {  db  }  from   '@/lib/db' ; 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+export   async   function   redirectToCustomerPortal () { 
+   const   session   =   await   auth (); 
+   if  ( ! session ?. user )  throw   new   Error ( 'Not authenticated' ); 
+   const   user   =   await   db . user . findUnique ({ 
+     where : {  id :  session . user . id  }, 
+     select : {  stripeCustomerId :  true  }, 
+   if  ( ! user ?. stripeCustomerId ) { 
+     throw   new   Error ( 'No Stripe customer found' ); 
+   const   portalSession   =   await   stripe . billingPortal . sessions . create ({ 
+     customer :  user . stripeCustomerId , 
+     return_url :  ` ${ process . env . NEXT_PUBLIC_URL } /dashboard` , 
+   redirect ( portalSession . url ); 
+Component: 
+import  {  redirectToCustomerPortal  }  from   '@/app/actions/customer-portal' ; 
+export   function   ManageSubscriptionButton () { 
+     < form   action = { redirectToCustomerPortal } > 
+Before this works , you need to enable the Customer Portal in Stripe:
+Go to Settings  → Billing  → Customer Portal  
+Click Activate  
+Configure what customers can do (cancel, change plan, etc.) 
+ 
+Part 3: Credit Systems (Usage-Based Billing) 
+Many SaaS products need usage-based billing: APIs, AI tools, processing services. You could use Stripe’s metering API, but for most apps, a pre-paid credit system is simpler and more profitable .
+Why Pre-Paid Credits? 
+Stripe Metering API (post-paid): 
+❌ Complex implementation with meter events 
+❌ Risk of unpaid usage 
+❌ More webhook handling 
+❌ Better for enterprise customers 
+ 
+Pre-Paid Credits: 
+✅ Money upfront (better cash flow) 
+✅ No unpaid usage risk 
+✅ Simpler to implement 
+✅ Users understand it immediately 
+✅ Still flexible for different plans 
+ 
+Think: “Buy 1000 API calls for $50” instead of “Pay $0.05 per API call at the end of the month.”
+Database Schema 
+   id         String   @id   @default ( cuid ()) 
+   credits    Int      @default ( 0 )  // Current balance 
+   purchases    CreditPurchase [] 
+   id          String     @id   @default ( cuid ()) 
+   user        User       @relation ( fields : [userId],  references : [id]) 
+   amount      Int        // Credits deducted 
+   reason      String     // "API call", "Image generation", etc. 
+   success     Boolean    // Did operation succeed? 
+   createdAt   DateTime   @default ( now ()) 
+   @@index ([userId, createdAt]) 
+   id                    String     @id   @default ( cuid ()) 
+   user                  User       @relation ( fields : [userId],  references : [id]) 
+   credits               Int        // Credits purchased 
+   amount                Int        // Amount paid (in cents) 
+   status                String     // PENDING, COMPLETED, FAILED 
+   stripeSessionId       String     @unique 
+   stripePaymentIntentId   String ?  @unique 
+   createdAt             DateTime   @default ( now ()) 
+   updatedAt             DateTime   @updatedAt 
+Credit Packages 
+Define your pricing tiers:
+export   const   CREDIT_PACKAGES   =  [ 
+     priceId :  'price_starter' ,  // Your Stripe price ID 
+     price :  8000 ,  // $80 (20% discount) 
+     price :  60000 ,  // $600 (40% discount) 
+     priceId :  'price_enterprise' , 
+Purchasing Credits 
+import   Stripe   from   'stripe' ; 
+import  {  redirect  }  from   'next/navigation' ; 
+import  {  auth  }  from   '@/lib/auth' ; 
+import  {  CREDIT_PACKAGES  }  from   '@/lib/credit-packages' ; 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+export   async   function   purchaseCredits ( packageId :  string ) { 
+   const   session   =   await   auth (); 
+   if  ( ! session ?. user )  throw   new   Error ( 'Not authenticated' ); 
+   const   pkg   =   CREDIT_PACKAGES . find ( p   =>   p . id   ===   packageId ); 
+   if  ( ! pkg )  throw   new   Error ( 'Invalid package' ); 
+   const   checkoutSession   =   await   stripe . checkout . sessions . create ({ 
+     line_items : [{  price :  pkg . priceId ,  quantity :  1  }], 
+     success_url :  ` ${ process . env . NEXT_PUBLIC_URL } /credits?success=true` , 
+     cancel_url :  ` ${ process . env . NEXT_PUBLIC_URL } /credits` , 
+       credits :  pkg . credits . toString (),  // ⚠️ Must be string 
+   redirect ( checkoutSession . url ! ); 
+Using Credits (Atomic Deduction) 
+Critical : Credit deduction must be atomic  to prevent race conditions. Two requests shouldn’t both deduct from the same balance.
+import  {  auth  }  from   '@/lib/auth' ; 
+import  {  db  }  from   '@/lib/db' ; 
+export   async   function   useCredits ( amount :  number ,  reason :  string ) { 
+   const   session   =   await   auth (); 
+   if  ( ! session ?. user )  throw   new   Error ( 'Not authenticated' ); 
+   if  ( amount   <=   0 )  throw   new   Error ( 'Invalid amount' ); 
+     // 🔥 Atomic operation - only updates if balance >= amount 
+     await   db . $transaction ( async  ( tx )  =>  { 
+       const   user   =   await   tx . user . update ({ 
+           credits : {  gte :  amount  },  // ✅ Prevents race conditions 
+           credits : {  decrement :  amount  }, 
+       await   tx . usageLog . create ({ 
+     return  {  success :  true  }; 
+     await   db . usageLog . create ({ 
+     throw   new   Error ( 'Insufficient credits' ); 
+How this prevents race conditions: 
+credits: { gte: amount } checks balance in the WHERE clauseIf balance is insufficient, update fails (throws error) 
+Transaction ensures both update and log succeed together 
+Two simultaneous requests can’t both succeed 
+ 
+Example usage in an API endpoint: 
+import  {  useCredits  }  from   '@/app/actions/use-credits' ; 
+export   async   function   POST ( req :  Request ) { 
+   // Deduct credits BEFORE expensive operation 
+     await   useCredits ( 10 ,  'Image generation' ); 
+     return   Response . json ({  error :  'Insufficient credits'  }, {  status :  402  }); 
+   // Now do the expensive operation 
+   const   image   =   await   generateImage ( /* ... */ ); 
+   return   Response . json ({  image  }); 
+Part 4: Webhooks (The Critical Part) 
+Here’s the truth: Your payment system isn’t complete without webhooks . Success pages are nice, but webhooks are how you actually fulfill orders, grant access, and handle subscription changes.
+Why Webhooks Matter 
+Success page approach (❌ not enough): 
+// This only runs if user lands on success page 
+// What if they close the browser? What if the redirect fails? 
+Webhook approach (✅ reliable): 
+// Stripe GUARANTEES this runs after successful payment 
+// Even if user never sees success page 
+What can go wrong without webhooks: 
+User pays but never gets access (closed browser) 
+Subscription renews but you don’t know 
+Subscription canceled but you still grant access 
+Payment fails but you don’t update status 
+ 
+Webhook Security (Non-Negotiable) 
+Never trust webhook data without verification . Anyone can POST to your webhook URL. Stripe’s signature verification ensures the request actually came from Stripe.
+import  {  headers  }  from   'next/headers' ; 
+import  {  NextResponse  }  from   'next/server' ; 
+import   Stripe   from   'stripe' ; 
+const   stripe   =   new   Stripe ( process . env . STRIPE_SECRET_KEY ! ); 
+const   webhookSecret   =   process . env . STRIPE_WEBHOOK_SECRET ! ; 
+export   async   function   POST ( req :  Request ) { 
+   const   body   =   await   req . text ();  // ⚠️ Must be raw text, not JSON 
+   const   signature   =   headers (). get ( 'stripe-signature' ) ! ; 
+     // 🔥 CRITICAL: Verify signature 
+     event   =   stripe . webhooks . constructEvent ( body ,  signature ,  webhookSecret ); 
+     console . error ( '❌ Webhook signature verification failed:' ,  err . message ); 
+     return   NextResponse . json ({  error :  'Invalid signature'  }, {  status :  400  }); 
+   // Now we know it's from Stripe 
+   console . log ( '✅ Verified event:' ,  event . type ); 
+   // Handle the event (next section) 
+   return   NextResponse . json ({  received :  true  }); 
+Getting your webhook secret: 
+Install Stripe CLI: brew install stripe/stripe-cli/stripe 
+Login: stripe login 
+Forward webhooks locally: stripe listen --forward-to localhost:3000/api/webhooks/stripe 
+Copy the signing secret (starts with whsec_) 
+Add to .env.local as STRIPE_WEBHOOK_SECRET 
+ 
+Handling Events 
+Different payment models need different events:
+export   async   function   POST ( req :  Request ) { 
+   // ... signature verification ... 
+       // ===== ONE-TIME PAYMENTS ===== 
+       case   'checkout.session.completed' : 
+         if  ( event . data . object . mode   ===   'payment' ) { 
+           await   handleOneTimePayment ( event . data . object ); 
+         }  else   if  ( event . data . object . mode   ===   'subscription' ) { 
+           await   handleSubscriptionCreated ( event . data . object ); 
+       // ===== SUBSCRIPTIONS ===== 
+       case   'customer.subscription.created' : 
+       case   'customer.subscription.updated' : 
+         await   handleSubscriptionChange ( event . data . object ); 
+       case   'customer.subscription.deleted' : 
+         await   handleSubscriptionCanceled ( event . data . object ); 
+       case   'invoice.payment_succeeded' : 
+         await   handleInvoicePaid ( event . data . object ); 
+       case   'invoice.payment_failed' : 
+         await   handlePaymentFailed ( event . data . object ); 
+         console . log ( `Unhandled event type:  ${ event . type } ` ); 
+     return   NextResponse . json ({  received :  true  }); 
+     console . error ( 'Webhook handler failed:' ,  err ); 
+     return   NextResponse . json ( 
+       {  error :  'Webhook handler failed'  }, 
+One-Time Payment Handler 
+async   function   handleOneTimePayment ( session :  Stripe . Checkout . Session ) { 
+   const  {  userId  }  =   session . metadata ! ; 
+   // 🔥 Idempotency check - prevent duplicate processing 
+   const   existingPurchase   =   await   db . creditPurchase . findUnique ({ 
+     where : {  stripeSessionId :  session . id  }, 
+   if  ( existingPurchase ?. status   ===   'COMPLETED' ) { 
+     console . log ( 'Already processed:' ,  session . id ); 
+     return ;  // Already handled 
+   // Add credits if this was a credit purchase 
+   if  ( session . metadata ?. credits ) { 
+     const   credits   =   parseInt ( session . metadata . credits ); 
+         data : {  credits : {  increment :  credits  } }, 
+       db . creditPurchase . upsert ({ 
+         where : {  stripeSessionId :  session . id  }, 
+         update : {  status :  'COMPLETED'  }, 
+           stripeSessionId :  session . id , 
+           stripePaymentIntentId :  session . payment_intent   as   string , 
+           amount :  session . amount_total ! , 
+     console . log ( `✅ Added  ${ credits }  credits to user  ${ userId } ` ); 
+   // Send confirmation email, grant access, etc. 
+Key points: 
+Idempotency check  - Stripe retries failed webhooks, don’t process twiceTransaction  - Both updates succeed or both failMetadata  - We stored userId and credits in checkout, now we use them 
+Subscription Handlers 
+async   function   handleSubscriptionCreated ( session :  Stripe . Checkout . Session ) { 
+   const  {  userId  }  =   session . metadata ! ; 
+   const   subscriptionId   =   session . subscription   as   string ; 
+   // Fetch full subscription details 
+   const   subscription   =   await   stripe . subscriptions . retrieve ( subscriptionId ); 
+   await   db . subscription . upsert ({ 
+       stripeSubscriptionId :  subscription . id , 
+       stripePriceId :  subscription . items . data [ 0 ]. price . id , 
+       status :  subscription . status , 
+       stripeCurrentPeriodEnd :  new   Date ( subscription . current_period_end   *   1000 ), 
+       stripeSubscriptionId :  subscription . id , 
+       stripePriceId :  subscription . items . data [ 0 ]. price . id , 
+       status :  subscription . status , 
+       stripeCurrentPeriodEnd :  new   Date ( subscription . current_period_end   *   1000 ), 
+   // Save Stripe customer ID to user 
+     data : {  stripeCustomerId :  subscription . customer   as   string  }, 
+   console . log ( `✅ Subscription created for user  ${ userId } ` ); 
+async   function   handleSubscriptionChange ( subscription :  Stripe . Subscription ) { 
+   await   db . subscription . update ({ 
+     where : {  stripeSubscriptionId :  subscription . id  }, 
+       stripePriceId :  subscription . items . data [ 0 ]. price . id , 
+       status :  subscription . status , 
+       stripeCurrentPeriodEnd :  new   Date ( subscription . current_period_end   *   1000 ), 
+   console . log ( `✅ Subscription updated:  ${ subscription . id } ` ); 
+async   function   handleSubscriptionCanceled ( subscription :  Stripe . Subscription ) { 
+   await   db . subscription . update ({ 
+     where : {  stripeSubscriptionId :  subscription . id  }, 
+     data : {  status :  'canceled'  }, 
+   console . log ( `✅ Subscription canceled:  ${ subscription . id } ` ); 
+async   function   handleInvoicePaid ( invoice :  Stripe . Invoice ) { 
+   const   subscriptionId   =   invoice . subscription   as   string ; 
+   // Update subscription period (renewal) 
+   await   db . subscription . update ({ 
+     where : {  stripeSubscriptionId :  subscriptionId  }, 
+       stripeCurrentPeriodEnd :  new   Date ( invoice . period_end   *   1000 ), 
+   console . log ( `✅ Invoice paid for subscription:  ${ subscriptionId } ` ); 
+async   function   handlePaymentFailed ( invoice :  Stripe . Invoice ) { 
+   const   subscriptionId   =   invoice . subscription   as   string ; 
+   await   db . subscription . update ({ 
+     where : {  stripeSubscriptionId :  subscriptionId  }, 
+     data : {  status :  'past_due'  }, 
+   // Send email to user about failed payment 
+   console . log ( `❌ Payment failed for subscription:  ${ subscriptionId } ` ); 
+Testing Webhooks Locally 
+Use Stripe CLI to forward webhooks to localhost: 
+stripe   listen   --forward-to   localhost:3000/api/webhooks/stripe 
+stripe   trigger   checkout.session.completed 
+stripe   trigger   customer.subscription.created 
+stripe   trigger   invoice.payment_failed 
+You’ll see events hit your local endpoint in real-time. Perfect for debugging!
+Part 5: Production Checklist 
+Before you ship to production, make sure you have:
+Security ✅ 
+Database ✅ 
+Error Handling ✅ 
+Testing ✅ 
+Monitoring ✅ 
+User Experience ✅ 
+Going Live ✅ 
+Common Gotchas & How to Avoid Them 
+1. Webhook Signature Fails 
+Problem:  stripe.webhooks.constructEvent throws error
+Solution: 
+Use raw body  (not parsed JSON): await req.text() 
+Make sure header is exactly stripe-signature (case-sensitive) 
+Verify webhook secret is correct (starts with whsec_) 
+ 
+2. Credits Added Twice 
+Problem:  User gets credits multiple times for one payment
+Solution:  Idempotency check before processing:
+const   existing   =   await   db . purchase . findUnique ({ 
+   where : {  stripeSessionId :  session . id  } 
+if  ( existing ?. status   ===   'COMPLETED' )  return ;  // Already processed 
+3. Race Condition on Credit Deduction 
+Problem:  Two API calls both deduct credits, user goes negative
+Solution:  Atomic update with balance check:
+     credits : {  gte :  amount  }  // ✅ Check in WHERE clause 
+   data : {  credits : {  decrement :  amount  } } 
+Problem:  session.metadata.userId is undefined in webhook
+Solution: 
+Check you’re setting metadata in checkout creation 
+Metadata values must be strings  (not numbers) 
+Use session.metadata, not payment_intent.metadata 
+ 
+5. Subscription Status Out of Sync 
+Problem:  Database shows “active” but Stripe shows “canceled”
+Solution: 
+Handle all subscription webhook events (updated, deleted, invoice.payment_failed) 
+Always check subscription.current_period_end before granting access 
+Implement a daily sync job to reconcile with Stripe 
+ 
+6. Test vs Live Mode Confusion 
+Problem:  Works in test mode, fails in production
+Solution: 
+Use separate environment variables for test/live keys 
+Customer Portal must be configured in BOTH modes separately 
+Webhook endpoints are separate for test/live 
+Products/prices are separate between modes 
+ 
+Caching Subscription Status 
+Hitting the database on every request for subscription status is slow. Cache it:
+import  {  unstable_cache  }  from   'next/cache' ; 
+import  {  db  }  from   './db' ; 
+export   const   getSubscriptionStatus   =   unstable_cache ( 
+   async  ( userId :  string )  =>  { 
+     const   subscription   =   await   db . subscription . findUnique ({ 
+       isActive :  subscription ?. status   ===   'active'   && 
+                 new   Date ( subscription . stripeCurrentPeriodEnd )  >   new   Date (), 
+       periodEnd :  subscription ?. stripeCurrentPeriodEnd , 
+   {  revalidate :  3600 ,  tags : [ 'subscription' ] }  // Cache for 1 hour 
+Invalidate on webhook: 
+import  {  revalidateTag  }  from   'next/cache' ; 
+async   function   handleSubscriptionChange ( subscription :  Stripe . Subscription ) { 
+   revalidateTag ( 'subscription' ); 
+Optimistic UI for Credits 
+Show instant feedback when using credits:
+import  {  useOptimistic  }  from   'react' ; 
+import  {  useCredits  }  from   '@/app/actions/use-credits' ; 
+export   function   CreditDisplay ({  initialCredits  }: {  initialCredits :  number  }) { 
+   const  [ optimisticCredits ,  setOptimisticCredits ]  =   useOptimistic ( initialCredits ); 
+   async   function   handleUseCredits ( amount :  number ) { 
+     // Show optimistic update immediately 
+     setOptimisticCredits (( prev )  =>   prev   -   amount ); 
+       await   useCredits ( amount ,  'API call' ); 
+       setOptimisticCredits ( initialCredits ); 
+       < p >Credits:  { optimisticCredits } </ p > 
+       < button   onClick = { ()  =>   handleUseCredits ( 10 ) } > 
+Comparing Approaches: When to Use What 
+One-Time Payments 
+Best for:  Digital products, courses, lifetime licenses, e-commerce
+Pros: 
+Simple implementation 
+One and done 
+No ongoing maintenance 
+ 
+Cons: 
+No recurring revenue 
+Harder to predict income 
+ 
+Subscriptions 
+Best for:  SaaS products, memberships, ongoing services
+Pros: 
+Predictable recurring revenue 
+Customer retention metrics 
+Automatic renewals 
+ 
+Cons: 
+More complex (status management) 
+Churn is a constant battle 
+Requires ongoing value delivery 
+ 
+Credit Systems 
+Best for:  APIs, AI tools, usage-based services
+Pros: 
+Flexible for different usage patterns 
+No risk of unpaid usage 
+Simple for users to understand 
+Better cash flow than post-paid 
+ 
+Cons: 
+Requires credit balance tracking 
+Need to prevent abuse 
+Users might forget to top up 
+ 
+Hybrid approach (recommended for SaaS): 
+Base subscription  for access ($9/month)Credits included  (500/month)Buy more credits  when needed ($10 for 1000) 
+This gives you recurring revenue + usage revenue!
+Real-World Example: Complete Checkout Flow 
+Let’s put it all together with a realistic example:
+import  {  createSubscriptionCheckout ,  purchaseCredits  }  from   '@/app/actions/checkout' ; 
+     priceId :  'price_starter' , 
+     features : [ '500 API calls/month' ,  'Email support' ,  'Basic analytics' ], 
+     features : [ '2000 API calls/month' ,  'Priority support' ,  'Advanced analytics' ], 
+   {  name :  '1000 Credits' ,  price :  '$10' ,  credits :  1000 ,  packageId :  'pack_1k'  }, 
+   {  name :  '5000 Credits' ,  price :  '$40' ,  credits :  5000 ,  packageId :  'pack_5k'  }, 
+export   default   function   PricingPage () { 
+     < div   className = "max-w-6xl mx-auto p-8" > 
+       < h1   className = "text-4xl font-bold mb-8" > Pricing </ h1 > 
+       { /* Subscription Plans */ } 
+       < div   className = "grid md:grid-cols-2 gap-6 mb-12" > 
+           < div   key = {plan. priceId }  className = "border rounded-lg p-6" > 
+             < h2   className = "text-2xl font-bold mb-2" > {plan. name } </ h2 > 
+             < p   className = "text-3xl font-bold mb-4" > {plan. price } </ p > 
+             < ul   className = "mb-6 space-y-2" > 
+               { plan . features . map (( feature )  =>  ( 
+                 < li   key = { feature }  className = "flex items-center" > 
+                   < span   className = "mr-2" > ✓ </ span >  { feature } 
+             < form   action = {() =>  createSubscriptionCheckout (plan.priceId)} > 
+                 className = "w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700" 
+       < div   className = "border-t pt-8" > 
+         < h2   className = "text-2xl font-bold mb-4" > Need   More   Credits ? </ h2 > 
+         < div   className = "grid md:grid-cols-3 gap-4" > 
+           {CREDIT_PACKS.map((pack) => ( 
+             <div  key = {pack. packageId }  className = "border rounded-lg p-4" > 
+               <p  className = "font-bold" > {pack. name } </ p > 
+               <p  className = "text-2xl font-bold my-2" > {pack. price } </ p > 
+               <form  action = {() =>  purchaseCredits (pack.packageId)} > 
+                   className = "w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-900" 
+This single page: 
+✅ Handles subscriptions AND credit purchases 
+✅ No API routes 
+✅ Type-safe Server Actions 
+✅ Progressive enhancement (works without JS) 
+✅ Clean, maintainable code 
+ 
+Conclusion 
+We’ve covered a lot, but here’s what matters:
+What we built: 
+✅ One-time payment checkout with Server Actions 
+✅ Subscription system with Customer Portal 
+✅ Pre-paid credit system with atomic operations 
+✅ Secure webhook handling for all events 
+✅ Production-ready patterns 
+ 
+Key takeaways: 
+Server Actions eliminate API route boilerplate  - 60% less code for payment flowsWebhooks are non-negotiable  - Never rely on success pages aloneSignature verification is critical  - Always verify webhook signaturesAtomic operations prevent race conditions  - Use database constraints wiselyIdempotency prevents duplicate processing  - Check before processing webhooksMetadata is your friend  - Store context in checkout sessionsTest mode is your playground  - Use Stripe CLI for local testing 
+Next steps: 
+Read the deep-dive articles for specific topics:
+ 
+Join the Stripe Discord  for help 
+Follow Stripe’s changelog  for updates 
+Test everything in test mode before going live 
+ 
+Building payments is complex, but with Next.js 15 + Stripe + Server Actions, it’s more manageable than ever. You’ve got this! 🚀
+I’m a product engineer who works on payment and subscription systems (Stripe, Paddle). Building something similar, or want to compare notes? Say hi .

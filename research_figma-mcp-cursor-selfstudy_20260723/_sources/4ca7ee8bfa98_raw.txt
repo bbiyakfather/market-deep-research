@@ -1,0 +1,571 @@
+Title: Cursor: AI coding agent
+
+URL Source: https://cursor.com/ko
+
+Markdown Content:
+[콘텐츠로 건너뛰기](https://cursor.com/ko#main)
+
+[[Video 2](https://cursor.com/marketing-static/logo/logo-light-theme.mov) Cursor](https://cursor.com/ko/home)
+
+*   [제품](https://cursor.com/product)↓
+
+    *   [에이전트](https://cursor.com/product)
+    *   [클라우드](https://cursor.com/cloud)
+    *   [모바일](https://cursor.com/mobile)
+    *   [자동화](https://cursor.com/automate)
+    *   [CLI](https://cursor.com/cli)
+    *   [마켓플레이스↗](https://cursor.com/marketplace)
+    *   [리뷰](https://cursor.com/bugbot)
+
+*   [기업](https://cursor.com/ko/enterprise)
+*   [요금제](https://cursor.com/ko/pricing)
+*   [리소스](https://cursor.com/changelog)↓
+
+    *   [Changelog](https://cursor.com/changelog)
+    *   [Blog](https://cursor.com/blog)
+    *   [문서](https://cursor.com/docs)
+    *   [커뮤니티](https://cursor.com/ko/community)
+    *   [도움말↗](https://cursor.com/help)
+    *   [워크숍](https://cursor.com/workshops)
+    *   [포럼↗](https://forum.cursor.com/)
+    *   [채용](https://cursor.com/careers)
+
+*   제품→
+*   [기업](https://cursor.com/ko/enterprise) 
+*   [요금제](https://cursor.com/ko/pricing) 
+*   리소스→
+
+[로그인](https://cursor.com/dashboard)[문의하기 영업팀에 문의하기](https://cursor.com/contact-sales?source=navbar)[다운로드](https://cursor.com/ko/download)
+
+# Cursor는 대담한 소프트웨어를 만드는 당신의 코딩 에이전트입니다.
+
+[Linux용 다운로드 ⤓](https://api2.cursor.sh/updates/download/golden/linux-x64-deb/cursor/3.12)
+
+[Get started →](https://cursor.com/login)
+
+[데모 요청 →](https://cursor.com/ko/contact-sales?source=hero_request_demo)
+
+![Image 4](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fmisc%2Fasset-cc24ca462279ca23250c.jpg&w=3840&q=70)
+
+This element contains an interactive demo for sighted users showing multiple Cursor interfaces: Cursor Desktop interface, Cursor CLI interface. The interface is displayed over a subtle, solid brand background.
+
+Cursor Desktop
+
+Cursor 시작하기
+
+진행 중 2
+
+Tab과 Agent 사용량 패턴 분석
+
+Fetching data
+
+Mission Control 계획
+
+Generating plan
+
+리뷰 준비 완료 4
+
+랜딩 페이지 만들기
+
+now
+
+완료했습니다. 폰트는 head에서 미리 로드되고, 핵심 CSS는 인라인 처리되며, 다크 모드가 깜빡임 없이 즉시 렌더링되도록 color-scheme meta 태그를 추가했습니다. 첫 페인트는 280ms입니다.
+
+PyTorch MNIST 실험
+
+10m
+
+PyTorch MNIST 실험
+
+대시보드용 Cursor Rules 설정
+
+30m
+
+대시보드용 Cursor Rules 설정
+
+생물정보학 도구
+
+45m
+
++135-21·생물정보학 도구
+
+http://localhost:3000
+
+Acme Labs
+
+Software creation is changing. We are a group of researchers, engineers, and technologists inventing at the edge of what's useful and possible.
+
+We have much to learn, try, and build.
+
+See projects[Join our team →](https://cursor.com/careers)
+
+2026 Secure codebase indexing Published
+2026 Semantic search Published
+2025 Reinforcement learning Published
+2024 Shadow workspaces Published
+2024 Multi-agent collaboration Published
+2023 Context-aware completions Published
+2023 Intelligent code navigation Published
+2022 Fast inference optimization Published
+2022 Language model fine-tuning Published
+
+Tagline · span
+
+랜딩 페이지 만들기
+
+첨부된 Docs를 바탕으로 우리가 하는 일을 설명하는 랜딩 페이지를 만들어 주세요
+
+about-acme.md 읽기
+
+brand-guidelines.pdf 읽기
+
+6초간 생각함
+
+브랜드 보이스에 맞는 미니멀한 세리프 기반 랜딩 페이지를 만들겠습니다.
+
+app/page.tsx+52-0
+
+app/globals.css+18-0
+
+완료했습니다. 폰트는 head에서 미리 로드되고, 핵심 CSS는 인라인 처리되며, 다크 모드가 깜빡임 없이 즉시 렌더링되도록 color-scheme meta 태그를 추가했습니다. 첫 페인트는 280ms입니다.
+
+Agent Composer 2.5
+
+Cursor CLI
+
+CLI 시작하기
+
+Cursor Agent
+
+~/cursor/cursor-web
+
+Tab과 Agent 사용량 패턴 분석
+
+워크스페이스 전반에서 팀이 Tab 보기와 에이전트 패널에 얼마나 집중하는지 파악할 수 있도록 도와주세요.
+
+⬢
+
+7 초 간 생 각 함
+
+⬢
+
+워 크 스 페 이 스 사 용 량 내 보 내 기 데 이 터 와 과 거 참 여 도 메 모 를 검 토 했 습 니 다
+
+탭 대비 에이전트 도입과 전환 행동을 강조하는 애널리틱스 툴킷을 만들겠습니다:
+
+summary.py+150-0
+
+다음으로 제품팀이 특정 코호트를 필터링할 수 있도록 상호작용 라벨을 정규화하고 세션 태깅을 추가하겠습니다:
+
+segmentation.py+94-0
+
+이제 핵심 지표를 결합하는 보고서 도우미로 모든 것을 하나로 묶겠습니다:
+
+report.py+40-0
+
+지난주 내보내기 데이터의 대표 샘플을 사용해 동작을 고정할 테스트를 추가하겠습니다:
+
+test_usage.py+90
+
+모두 완료되었습니다! 이제 PM이 몇 초 만에 Tab 중심 워크플로우와 에이전트 중심 워크플로우를 비교할 수 있도록 집중 점유율, 전환율, 롤링 참여도를 추적합니다.
+
+→
+
+Composer 2.5
+
+명령어는 / · 파일은 @를 사용하세요
+
+## 세계적 수준의 소프트웨어를 만드는 팀들이 매일 Cursor를 신뢰합니다
+
+### [에이전트가 아이디어를 코드로 구현합니다 의사결정에 집중하는 동안 작업은 Cursor에 맡기고 개발 속도를 높이세요. 에이전트 기반 개발 살펴보기 →](https://cursor.com/product)
+
+This element contains an interactive demo for sighted users. It's a demonstration of Cursor's IDE showing AI-powered coding assistance features. The interface is displayed over a subtle, solid brand background.
+
+Cursor
+
+Cursor 시작하기
+
+feature-prd.md
+
+presence.ts
+
+Plans feature-prd.md
+
+Composer 2.5 Build
+
+## Mission Control Interface
+
+A grid view of all open windows as scaled previews, allowing quick selection to bring any window to front.
+
+## Trigger
+
+Menu item in MenuBar.tsx (View > Mission Control), hotkey F3, or double-tap desktop.
+
+## View Behavior
+
+Overlay existing windows into a grid of live previews with spring-based layout animations and shared element transitions.
+
+3 Tasks
+
+Add multiplayer mode to useAppStore.ts
+
+Create a new MissionControlView.tsx component
+
+Update AppManager.tsx to apply expose modes.
+
+Add a task, ⌘K to generate...
+
+Mission Control 계획
+
+macOS의 Exposé 스타일 윈도우 관리자와 유사한 Mission Control 인터페이스를 만들어 봅시다
+
+질문
+
+How should Mission Control be triggered?
+
+1 Gesture (swipe up with 3 fingers)2 Keyboard shortcut (e.g., F3 or Cmd+F3)3 Both keyboard and button
+
+건너뛰기 계속
+
+Plan Composer 2.5
+
+### 자율적으로 동작하고 병렬로 실행됩니다
+
+에이전트는 자체 컴퓨터를 사용해 기능을 처음부터 끝까지 만들고, 테스트하고, 데모를 진행해 리뷰할 수 있도록 합니다.
+
+[클라우드 Agent 살펴보기 →](https://cursor.com/docs/cloud-agent)
+
+cursor.com/agent
+
+This Week
+
+Acme Research Dashboard
+
+Live Telemetry Pipeline
+
+Zero-Downtime Deploys
+
+This Month
+
+Binary Protocol Parser
+
+Edge Cache Invalidation
+
+Auth Token Rotation
+
+Acme Research Dashboard
+
+let's build a dashboard to make our research findings interactive
+
+Explored 12 files, 4 searches
+
+On it. I'll build the dashboard using your theme config, wire up the research data, and add interactive charts with public access controls.
+
+Worked for 14m 22s
+
+Processed screen recording
+
+Done! Here's a walkthrough of the dashboard.
+
+![Image 5](https://cursor.com/marketing-static/demos/cursor-wallpaper.png)
+
+Acme Labs
+
+Summary
+
+Built the interactive dashboard with realtime charts, data from Snowflake, and shadcn components. Deployed to staging via Vercel.
+
+Add a follow up...
+
+Agent
+
+Opus 4.8
+
+### 모든 도구에서, 모든 단계에 걸쳐
+
+Cursor는 터미널에서 실행되고, Slack에서 협업하며, GitHub에서 PR을 검토합니다.
+
+`curl https://cursor.com/install -fsS | bash`
+
+![Image 6](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fmisc%2Fasset-85923e7fafe00c9c0d1f.jpg&w=3840&q=70)
+
+![Image 7](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fmisc%2Fasset-85923e7fafe00c9c0d1f.jpg&w=3840&q=70)
+
+This element contains an interactive demo for sighted users showing multiple Cursor interfaces: the CLI with command-line assistance, Slack integration for team communication. The interface is displayed over a scenic painted landscape wallpaper, giving the demo an artistic backdrop.
+
+Slack
+
+Slack용 Cursor 시작하기
+
+## #feature-realtime-sync
+
+멤버 8명
+
+![Image 8: member-1](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Fusers%2Fswhitmore.png&w=48&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9)![Image 9: member-2](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Fusers%2Feric.jpeg&w=48&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9)![Image 10: member-3](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Fusers%2Frikki.jpg&w=48&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9)![Image 11: member-4](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Fusers%2Fryo.png&w=48&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9)
+
+![Image 12: swhitmore avatar](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Fusers%2Fswhitmore.png&w=64&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9)
+
+swhitmore 5m
+
+1.0 changelog를 볼 수 있게 cursor.com/changelog#1.0으로 바로 갈 수 있으면 좋겠어요
+
+![Image 13: eric avatar](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Fusers%2Feric.jpeg&w=64&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9)
+
+eric 4m
+
+문제없어 보여요
+
+@cursor can you take a stab?
+
+![Image 14: Cursor avatar](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Ficon-192x192.png&w=64&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9)
+
+Cursor APP 2m
+
+Changelog 항목에 대한 직접 링크를 추가하고, 유지보수성을 높이기 위해 프로젝트 전반의 Node.js 버전 제약 조건을 업데이트했습니다.
+
+[PR 보기](https://cursor.com/ko)[Cursor에서 열기](https://cursor.com/ko)[Web에서 열기](https://cursor.com/ko)
+
+cursor-agent
+
+CLI 시작하기
+
+>agent
+
+Cursor Agent
+
+~/anysphere/research · main
+
+plan mission control interface
+
+⬢Thought 3s
+
+⬢Read 3 files, 1 search 1s
+
+⬢Planning
+
+→Add a follow-up
+
+esc to stop
+
+◉Plan (shift+tab to cycle)
+
+GPT-5.6 Sol Extra High Fast·4%
+
+/ commands ·@ files ·! shell
+
+### 반복 작업 자동화
+
+일정이나 트리거에 따라 실행되는 상시 에이전트를 설정해 소프트웨어를 개발하고, 유지 관리하고, 문제를 해결하세요.
+
+[자동화 살펴보기 →](https://cursor.com/automations)
+
+![Image 15: Abstract waves background](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Finternal-brand%2Finternal-brand-023-3291bb4c.jpg&w=3840&q=70)
+
+![Image 16: Abstract waves background](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Finternal-brand%2Finternal-brand-023-3291bb4c.jpg&w=3840&q=70)
+
+This element contains an interactive demo for sighted users. It's a demonstration of Cursor's IDE showing AI-powered coding assistance features. The interface is displayed over a scenic painted landscape wallpaper, giving the demo an artistic backdrop.
+
+Cursor
+
+자동화 만들기
+
+Fix CI failures on main
+
+Inactive
+
+site
+
+main
+
+Triggers
+
+Add trigger
+
+Agent Instructions
+
+Enter prompt text... (type @ for tools & MCPs, / for skills and commands)
+
+Your task is to fix CI failures on main. Avoid racing other agents. Root cause by checking logs. Report with /apply-report-format
+
+Enter prompt text... (type @ for tools & MCPs, / for skills and commands)
+
+Composer 2.5
+
+Tools
+
+Add Tool or MCP
+
+## 소프트웨어를 만드는 새로운 방식.
+
+> “어느 순간 완전히 판이 바뀌었어요. 도입률이 한 자릿수에서 80%를 넘겼죠. 순식간에 들불처럼 퍼졌고, 최고의 빌더들은 모두 Cursor를 쓰고 있었습니다.”
+
+![Image 17](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fdiana-hu-avatar.png&w=96&q=70)
+
+Diana Hu General Partner, Y Combinator
+
+> “제가 가장 선호하는 기업용 AI 서비스는 Cursor입니다. 현재 약 4만 명에 달하는 저희 엔지니어 모두가 AI의 도움을 받고 있으며, 생산성도 놀라울 만큼 향상되었습니다.”
+
+![Image 18](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fmisc%2Fasset-b7d40eac35d910f3448b.png&w=96&q=70)
+
+Jensen Huang President & CEO, NVIDIA
+
+> “최고의 LLM 애플리케이션에는 자율성 슬라이더가 있습니다. AI에 얼마나 많은 자율성을 줄지 직접 제어할 수 있다는 뜻이죠. Cursor에서는 Tab 자동 완성을 쓰거나, Cmd+K로 특정 편집을 하거나, 완전 자율적인 agentic 모드로 맡길 수도 있습니다.”
+
+![Image 19](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fandrej-karpathy-avatar.png&w=96&q=70)
+
+Andrej Karpathy CEO, Eureka Labs
+
+> “Cursor는 수백 명의 열성적인 Stripe 직원들 사이에서 빠르게 수천 명 규모로 확산되었습니다. 우리는 다른 어떤 분야보다도 R&D와 소프트웨어 개발에 더 많이 투자하고 있으며, 그 과정을 더 효율적으로 만들면 경제적 효과도 상당합니다.”
+
+![Image 20](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fpatrick-collison-avatar.png&w=96&q=70)
+
+Patrick Collison Co‑Founder & CEO, Stripe
+
+> “제가 지금 돈을 내고 쓰는 AI 도구 가운데 단연 가장 유용한 건 Cursor입니다. 빠르고, 필요할 때 필요한 곳에서 자동 완성을 해주고, 괄호도 제대로 처리하고, 키보드 단축키도 합리적이고, 자체 모델도 사용할 수 있고... 모든 게 정말 잘 갖춰져 있습니다.”
+
+![Image 21](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fshadcn-avatar.png&w=96&q=70)
+
+shadcn Creator of shadcn/ui
+
+> “프로그래머라는 일은 분명 더 재미있어지고 있습니다. 우리는 아직 가능한 것의 1% 지점에 있고, GPT-5 같은 모델은 Cursor 같은 대화형 경험에서 가장 빛을 발합니다.”
+
+![Image 22](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fgreg-brockman-avatar.jpg&w=96&q=70)
+
+Greg Brockman President, OpenAI
+
+## 최첨단을 유지하세요
+
+### 모든 작업에 가장 적합한 모델을 사용하세요
+
+OpenAI, Anthropic, Gemini, SpaceXAI, Cursor의 모든 최첨단 모델 중에서 선택하세요.
+
+[모델 살펴보기 ↗](https://cursor.com/docs/models)
+
+Cursor에게 무엇이든 계획하거나 만들도록 요청하세요
+
+Agent
+
+GPT-5.6 Sol
+
+Auto 추천 Composer 2.5 GPT-5.6 Sol✓Opus 4.8 Gemini 3.1 Pro Grok 4.5
+
+### 완전한 코드베이스 이해
+
+Cursor는 규모나 복잡성과 관계없이 코드베이스가 어떻게 동작하는지 학습합니다.
+
+[코드베이스 인덱싱 살펴보기 ↗](https://cursor.com/docs/context/semantic-search)
+
+![Image 23](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fmisc%2Fasset-fd9b3b4cd7d670f9f7d8.png&w=3840&q=70)![Image 24](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fmisc%2Fasset-3cb319c263fd5a76115b.png&w=3840&q=70)
+
+이 메뉴 라벨 색상은 어디에서 정의되어 있나요?
+
+*   "Choose a model"을 grep함 
+*   모델 선택 UI가 어디에 구현되어 있는지 검색했습니다 
+*   검색 중 
+
+### 지속 가능한 소프트웨어 개발
+
+Fortune 500 기업의 절반 이상이 안전하게 대규모 개발을 가속화하기 위해 신뢰하는 솔루션입니다.
+
+[기업 플랜 살펴보기 →](https://cursor.com/ko/enterprise)
+
+![Image 25](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fhomepage%2Fhomepage-team-photo-1.jpg&w=1920&q=70)
+
+## Changelog
+
+[2026년 7월 22일 Cursor Router](https://cursor.com/changelog/router)
+
+[2026년 7월 17일 Slack의 Cursor 개선 사항](https://cursor.com/changelog/slack-improvements)
+
+[3.11 2026년 7월 10일 사이드 채팅과 대화 검색](https://cursor.com/changelog/side-chat)
+
+[3.10 2026년 6월 30일 팀 마켓플레이스의 MCP 및 조직 그룹](https://cursor.com/changelog/team-marketplace-updates)
+
+[Cursor의 새로운 기능 확인하기 →](https://cursor.com/changelog)
+
+### Cursor는 소프트웨어 개발의 미래를 만드는 데 집중하는 응용 연구 팀입니다.
+
+[함께하세요 →](https://cursor.com/careers)
+
+![Image 26](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Fhomepage%2Fhomepage-team-photo.jpg&w=1920&q=70)
+
+## 최신 주요 업데이트
+
+[2026년 3월 27일·리서치 Composer 2 기술 보고서 ![Image 27](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fsasha-rush.jpeg&w=48&q=70) Sasha Rush · 읽는 데 3분](https://cursor.com/ko/blog/composer-2-technical-report)
+
+[2026년 7월 8일·연구 Grok 4.5 소개 ![Image 28](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Favatar-circle-2d-dark.png&w=48&q=70)![Image 29](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Favatar-circle-2d-white.png&w=48&q=70) Cursor Team · 읽는 데 3분](https://cursor.com/ko/blog/grok-4-5)
+
+[2026년 6월 29일·제품 Cursor for iOS로 어디서나 개발하세요 ![Image 30](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Favatars.slack-edge.com%2F2026-04-27%2F11006579904322_8cc5cfeb3c8a21bb79db_original.jpg&w=48&q=70) ![Image 31](https://cursor.com/marketing-static/_next/image?url=%2Fmarketing-static%2Fusers%2Frikki.jpg&w=48&q=70&dpl=dpl_CxWCuhpYd7fYuNNocdtV8dhSCnV9) ![Image 32](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fkevin-niparko.png&w=48&q=70) Chris, Rikki & Kevin · 읽는 데 6분](https://cursor.com/ko/blog/ios-mobile-app)
+
+[2026년 6월 5일·제품 Design Mode에서 시각적 프롬프트로 에이전트 지시하기 ![Image 33](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Ferik-nilsson-v2.png&w=48&q=70) ![Image 34](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fian-huang-v3.jpeg&w=48&q=70) ![Image 35](https://cursor.com/marketing-static/_next/image?url=https%3A%2F%2Fptht05hbb1ssoooe.public.blob.vercel-storage.com%2Fassets%2Favatars%2Fryo-lu.png&w=48&q=70) Erik, Ian & Ryo · 읽는 데 5분](https://cursor.com/ko/blog/design-mode)
+
+[모든 Blog 게시물 보기 →](https://cursor.com/ko/blog)
+
+## 지금 Cursor를 시작해 보세요.
+
+[Linux용 다운로드 ⤓](https://api2.cursor.sh/updates/download/golden/linux-x64-deb/cursor/3.12)
+
+[Get started →](https://cursor.com/login)
+
+### 제품
+
+*   [에이전트](https://cursor.com/ko/product)
+*   [Teams](https://cursor.com/ko/business/teams)
+*   [기업](https://cursor.com/ko/enterprise)
+*   [요금제](https://cursor.com/ko/pricing)
+*   [코드 리뷰](https://cursor.com/ko/bugbot)
+*   [CLI](https://cursor.com/ko/cli)
+*   [클라우드 Agent](https://cursor.com/agents)
+*   [Composer](https://cursor.com/ko/composer)
+*   [마켓플레이스↗](https://cursor.com/marketplace)
+
+### 리소스
+
+*   [다운로드](https://cursor.com/ko/download)
+*   [Changelog](https://cursor.com/ko/changelog)
+*   [문서](https://cursor.com/docs)
+*   [알아보기↗](https://cursor.com/learn)
+*   [포럼↗](https://forum.cursor.com/)
+*   [도움말↗](https://cursor.com/help)
+*   [워크숍](https://cursor.com/ko/workshops)
+*   [상태↗](https://status.cursor.com/)
+
+### 기업
+
+*   [채용](https://cursor.com/ko/careers)
+*   [Blog](https://cursor.com/ko/blog)
+*   [커뮤니티](https://cursor.com/ko/community)
+*   [학생](https://cursor.com/ko/students)
+*   [브랜드](https://cursor.com/ko/brand)
+*   [미래](https://cursor.com/ko/future)
+*   [Anysphere↗](https://anysphere.inc/)
+
+### 법률
+
+*   [서비스 약관](https://cursor.com/ko/terms-of-service)
+*   [개인정보 처리방침](https://cursor.com/ko/privacy)
+*   [데이터 사용](https://cursor.com/ko/data-use)
+*   [보안](https://cursor.com/ko/security)
+
+### 연결하다
+
+*   [X↗](https://x.com/cursor_ai)
+*   [LinkedIn↗](https://www.linkedin.com/company/cursorai)
+*   [YouTube↗](https://www.youtube.com/@cursor_ai)
+
+© 2026 [Anysphere, Inc.](https://anysphere.inc/)🛡 [SOC 2 인증](https://cursor.com/ko/security)
+
+🖥☉☾
+
+🌐한국어↓
+
+*   English
+*   简体中文
+*   日本語
+*   繁體中文
+*   Español
+*   Français
+*   Português
+*   한국어✓
+*   Deutsch
+*   हिन्दी

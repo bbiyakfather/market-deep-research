@@ -1,0 +1,537 @@
+{
+ "axis": "A2-cursor",
+ "facts": [
+  {
+   "statement": "Windows에서는 설치 파일(installer)을 실행하고 화면의 안내(prompt)를 따르면 설치가 완료된다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/help/getting-started/install",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "title": "Download and install Cursor | Cursor Docs",
+     "quote": "Windows: Run the installer and follow the prompts",
+     "locator": "How do I install Cursor?",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Mac에서는 다운로드한 Cursor 아이콘을 Applications 폴더로 드래그하면 설치가 완료된다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/help/getting-started/install",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "title": "Download and install Cursor | Cursor Docs",
+     "quote": "Mac: Drag Cursor into your Applications folder",
+     "locator": "How do I install Cursor?",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Cursor를 쓰려면 사전에 무료 Cursor 계정을 만들어야 하고, 설치 후 첫 실행 시 안내에 따라 로그인해야 한다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/help/getting-started/install",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "title": "Download and install Cursor | Cursor Docs",
+     "quote": "A Cursor account. Sign up free at cursor.com if you don't have one",
+     "locator": "What do I need before installing?",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "title": "Download and install Cursor | Cursor Docs",
+     "quote": "Sign in with your Cursor account when prompted",
+     "locator": "How do I install Cursor?",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Cursor 공식 웹사이트(cursor.com)는 한국어 등 여러 언어로 제공되지만, 에디터 앱 자체의 인터페이스(UI) 언어를 한국어로 바꾸는 공식 설정은 공식 문서(설치/도움말 페이지)에서 확인되지 않는다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/ko",
+   "evidence": [
+    {
+     "url": "https://cursor.com/ko",
+     "title": "Cursor (한국어 웹페이지)",
+     "quote": "언어 선택 메뉴에 '한국어'가 포함된 다국어 웹사이트 (9개 언어 중 선택 가능)",
+     "locator": "페이지 하단 언어 선택 메뉴",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/help/getting-started/install",
+     "title": "Download and install Cursor | Cursor Docs",
+     "quote": "(설치·로그인 안내 전체에 UI 언어/한국어 관련 문구 없음)",
+     "locator": "How do I install Cursor?",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Tab은 Cursor의 AI 자동완성 기능으로, 최근 편집 이력·주변 코드·린터 오류를 근거로 타이핑 중 코드를 제안한다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/tab/overview",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/tab/overview",
+     "title": "Tab | Cursor Docs",
+     "quote": "Tab is Cursor's AI-powered autocomplete. It suggests code as you type, based on your recent edits, surrounding code, and linter errors.",
+     "locator": "Tab overview",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Cmd/Ctrl+K(Inline Edit)는 채팅 패널을 열지 않고 선택한 코드 범위를 즉시, 국소적으로 수정하는 기능이다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/inline-edit/overview",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/inline-edit/overview",
+     "title": "Inline edit | Cursor Docs",
+     "quote": "Inline edit lets you make quick, targeted code changes without opening the chat panel.",
+     "locator": "Inline edit overview",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Chat(Ask 모드)는 코드를 변경하지 않고 코드베이스를 이해·탐색하며 질문에 답하는 읽기 전용(read-only) 모드다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/help/ai-features/ask-mode",
+   "evidence": [
+    {
+     "url": "https://cursor.com/help/ai-features/ask-mode",
+     "title": "Ask mode | Cursor Docs",
+     "quote": "Ask mode is a read-only mode for understanding your codebase. Agent answers questions and explores code without making any edits.",
+     "locator": "Ask mode",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/help/ai-features/ask-mode",
+     "title": "Ask mode | Cursor Docs",
+     "quote": "For questions that lead to code changes, switch back to Agent mode",
+     "locator": "Ask mode",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Agent 모드는 기능을 처음부터 만들고, 리팩터링하고, 버그를 고치고, 테스트를 작성하고, 셸 명령을 실행하는 등 복잡한 코딩 작업을 독립적으로 수행하는 Cursor의 어시스턴트다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/agent/overview",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/agent/overview",
+     "title": "Overview | Cursor Docs",
+     "quote": "Cursor's assistant that can complete complex coding tasks independently, run terminal commands, and edit code. Access in sidepane with Cmd+I.",
+     "locator": "Agent overview",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/help/ai-features/agent",
+     "title": "Agent mode | Cursor Docs",
+     "quote": "Agent can build features from scratch, refactor existing code, fix bugs, write tests, and run shell commands.",
+     "locator": "What can Agent mode do?",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/help/ai-features/agent",
+     "title": "Agent mode | Cursor Docs",
+     "quote": "Use Agent for most tasks. Switch to Ask when you want answers without changes.",
+     "locator": "Which mode should I use?",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Cursor Rules는 Agent에게 주는 시스템 수준 지시문으로, 프롬프트·스크립트 등을 하나로 묶어 팀 전체가 워크플로를 관리·공유할 수 있게 한다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/rules",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/rules",
+     "title": "Rules | Cursor Docs",
+     "quote": "Rules provide system-level instructions to Agent. They bundle prompts, scripts, and more together, making it easy to manage and share workflows across your team.",
+     "locator": "Rules overview",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "프로젝트 규칙(Project Rules)은 프로젝트 폴더 안 .cursor/rules 경로에 .mdc 확장자 파일로 저장되며 버전관리(git) 대상이 된다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/rules",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/rules",
+     "title": "Rules | Cursor Docs",
+     "quote": "Project rules live in `.cursor/rules` as `.mdc` files and are version-controlled.",
+     "locator": "Project Rules",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/docs/rules",
+     "title": "Rules | Cursor Docs",
+     "quote": "Each rule is an `.mdc` file that you can name anything you want.",
+     "locator": "Project Rules",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "AGENTS.md는 메타데이터 없이 순수 마크다운으로 에이전트 지시사항을 정의하는 파일로, 프로젝트 루트에 두며 .cursor/rules의 대안으로 쓸 수 있다. 현재 공식 문서에는 .cursorrules(구 단일 파일)에 대한 언급이 없고 .cursor/rules(.mdc)와 AGENTS.md만 공식 형식으로 안내된다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/rules",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/rules",
+     "title": "Rules | Cursor Docs",
+     "quote": "`AGENTS.md` is a simple markdown file for defining agent instructions. Place it in your project root as an alternative to `.cursor/rules`",
+     "locator": "AGENTS.md",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "MCP 서버는 (1) Customize 화면의 Cursor Marketplace에서 원클릭 설치, (2) Cursor Settings UI, (3) mcp.json 파일 수동 작성 중 하나로 등록할 수 있다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/mcp",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "title": "Model Context Protocol (MCP) | Cursor Docs",
+     "quote": "Browse the Cursor Marketplace for official plugins with one-click install from Customize",
+     "locator": "Installing MCP servers",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "mcp.json은 프로젝트 전용이면 프로젝트 폴더의 .cursor/mcp.json, 모든 프로젝트에서 공용으로 쓰려면 홈 디렉터리의 ~/.cursor/mcp.json에 두며, mcpServers 객체 아래 서버 이름별로 command/args/env(로컬) 또는 url/headers(원격)를 지정하는 JSON 형식을 쓴다.",
+   "risk": "normal",
+   "primary_source": "https://cursor.com/docs/mcp",
+   "evidence": [
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "title": "Model Context Protocol (MCP) | Cursor Docs",
+     "quote": ".cursor/mcp.json in your project for project-specific tools",
+     "locator": "Configuration locations",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/docs/mcp",
+     "title": "Model Context Protocol (MCP) | Cursor Docs",
+     "quote": "~/.cursor/mcp.json in your home directory for tools available everywhere",
+     "locator": "Configuration locations",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "2026년 7월 현재 Hobby 플랜은 신용카드 없이 무료로 가입 가능하며, 'Limited Agent requests'와 'Limited Tab completions'로만 한도가 표시될 뿐 공식 페이지에 정확한 숫자 한도는 공개돼 있지 않다.",
+   "risk": "high",
+   "value": "무료, 요청 한도는 계정별 상이(숫자 비공개)",
+   "primary_source": "https://cursor.com/pricing",
+   "evidence": [
+    {
+     "url": "https://cursor.com/pricing",
+     "title": "Cursor · Pricing",
+     "quote": "No credit card required",
+     "locator": "Hobby plan",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/pricing",
+     "title": "Cursor · Pricing",
+     "quote": "Limited Agent requests",
+     "locator": "Hobby plan",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/pricing",
+     "title": "Cursor · Pricing",
+     "quote": "Limited Tab completions",
+     "locator": "Hobby plan",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": "다른 표현('Cursor Hobby plan free limits 2026 monthly agent requests')으로 재검색한 결과도 동일 결론: 'Cursor's public page does not state one universal numeric quota... Limits can vary as Cursor changes product packaging'. 인터넷에 자주 인용되는 '월 2,000회 Tab / 50회 프리미엄 요청'은 2025년 6월 사용량 기반 과금(usage-based billing) 전환 이전 수치로, 2026년 현재 공식 페이지 어디에도 이 숫자가 없다는 점을 재확인함(2차 검색에서도 반박 근거 없이 동일 결론 재확인)."
+  },
+  {
+   "statement": "2026년 7월 현재 Pro(Individual) 플랜은 월 $20이며, Tab 자동완성은 무제한, Agent 사용 한도는 확장(extended)되고 Bugbot·Cloud Agents 접근이 포함되지만, 공식 문서는 하루/월 단위의 구체적 요청 횟수를 숫자로 명시하지 않고 'Cursor Models 풀'과 'Other Models(3rd-party) 풀' 두 사용량 풀 구조로만 설명한다.",
+   "risk": "high",
+   "value": "$20/월, Tab 무제한·Agent는 확장 한도(정확한 숫자 비공개)",
+   "primary_source": "https://cursor.com/docs/account/pricing",
+   "evidence": [
+    {
+     "url": "https://cursor.com/pricing",
+     "title": "Cursor · Pricing",
+     "quote": "$20 / mo.",
+     "locator": "Individual (Pro) plan",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/docs/account/pricing",
+     "title": "Pricing | Cursor Docs",
+     "quote": "unlimited tab completions, extended agent usage limits on all models, access to Bugbot, and access to Cloud Agents",
+     "locator": "Pro plan",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://cursor.com/docs/account/pricing",
+     "title": "Pricing | Cursor Docs",
+     "quote": "When you exceed your included monthly usage, you can either: Add on-demand usage: Continue at the same API rates with pay-as-you-go billing",
+     "locator": "사용량 초과 시",
+     "source_role": "원출처",
+     "publisher": "Cursor (Anysphere)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": "반박검색 결과 Pro 플랜도 정확한 일일/월간 요청 개수가 공식 페이지에 없다는 점이 공통적으로 확인됨. 여러 3자 블로그(2026)는 '$0/$20/$60/$200' 4단 구조(Hobby/Pro/Pro+/Ultra)로 설명하지만, 본 조사에서 직접 원문 열람한 cursor.com/pricing에는 Pro+ · Ultra 플랜 카드가 명확히 노출되지 않아(Individual 카드만 확인) 3자 요약과 완전히 일치하지 않음 — 요금 체계가 세션 시점에 따라 UI에 다르게 노출될 수 있으므로, 정확한 현재 플랜 구성은 방문 시점의 cursor.com/pricing 원문을 재확인해야 함."
+  }
+ ],
+ "resources": [
+  {
+   "title": "Cursor Docs — Rules (프로젝트 규칙 공식 문서)",
+   "url": "https://cursor.com/docs/rules",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "MCP 등록 이전에 알아야 할 .cursor/rules와 AGENTS.md 설정법을 원문으로 확인할 수 있는 1차 자료.",
+   "published_or_updated": "2026-07-23 확인"
+  },
+  {
+   "title": "Cursor Docs — Model Context Protocol (MCP)",
+   "url": "https://cursor.com/docs/mcp",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Figma MCP 등록 실습 전, mcp.json 위치와 JSON 형식을 정확히 확인해야 할 때 참조할 공식 1차 자료.",
+   "published_or_updated": "2026-07-23 확인"
+  },
+  {
+   "title": "Cursor · Pricing (공식 요금 페이지)",
+   "url": "https://cursor.com/pricing",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Hobby/Pro 요금과 한도 문구를 학습 시작 전 반드시 본인 계정 대시보드와 함께 확인해야 할 원문.",
+   "published_or_updated": "2026-07-23 확인"
+  },
+  {
+   "title": "[지금 무료][연재형] WE CAN Cursor AI!",
+   "url": "https://www.inflearn.com/en/course/we-can-cusor-ai",
+   "type": "무료강의",
+   "difficulty": "입문",
+   "language": "ko",
+   "related_part": "공통",
+   "free": true,
+   "reason": "코딩 지식이 전혀 없어도 된다고 명시된 완전 무료 한국어 강의(12강·5시간55분, 평점 4.9/2,556명 수강)로, 설치부터 실습 프로젝트까지 비개발자 눈높이로 구성됨.",
+   "published_or_updated": "확인 시점(2026-07-23) 기준 수강생/리뷰 수 반영"
+  },
+  {
+   "title": "왕초보도 개발 가능 | 커서 AI 설치부터 기본 사용법 강의",
+   "url": "https://www.youtube.com/watch?v=he0gEZ5wg0Q",
+   "type": "YouTube",
+   "difficulty": "입문",
+   "language": "ko",
+   "related_part": "공통",
+   "free": true,
+   "reason": "검색결과 스니펫 기준 설치~기본 사용법을 완전 초보자 대상으로 다루는 한국어 영상으로 확인됨(본문 미열람, 팀리드 재검증 필요).",
+   "published_or_updated": "search-snippet 기준, 정확한 게시일 미확인"
+  },
+  {
+   "title": "이제 코딩 3배 빨라진다고? 커서 AI 실화? (25분 완벽 정리)",
+   "url": "https://www.youtube.com/watch?v=_oEhh8666pA",
+   "type": "YouTube",
+   "difficulty": "입문",
+   "language": "ko",
+   "related_part": "공통",
+   "free": true,
+   "reason": "검색결과 스니펫 기준 25분 분량으로 Cursor 전반을 정리하는 한국어 입문 영상으로 확인됨(본문 미열람, 팀리드 재검증 필요).",
+   "published_or_updated": "search-snippet 기준, 정확한 게시일 미확인"
+  }
+ ],
+ "glossary": [
+  {
+   "term": "Tab",
+   "plain_ko": "타이핑 중 다음 코드를 회색 글씨로 미리 보여주고 Tab 키로 받아들이는 Cursor의 자동완성 기능.",
+   "detail_url": "https://cursor.com/docs/tab/overview"
+  },
+  {
+   "term": "Cmd/Ctrl+K (Inline Edit)",
+   "plain_ko": "코드 일부를 선택하고 단축키를 눌러 채팅창 없이 그 자리에서 바로 수정 지시를 내리는 기능.",
+   "detail_url": "https://cursor.com/docs/inline-edit/overview"
+  },
+  {
+   "term": "Ask 모드 (Chat)",
+   "plain_ko": "코드를 고치지 않고 질문·설명만 받는 읽기 전용 대화 모드.",
+   "detail_url": "https://cursor.com/help/ai-features/ask-mode"
+  },
+  {
+   "term": "Agent 모드",
+   "plain_ko": "여러 파일을 스스로 찾아 고치고 터미널 명령까지 실행하며 작업을 끝까지 수행하는 자율 모드.",
+   "detail_url": "https://cursor.com/docs/agent/overview"
+  },
+  {
+   "term": "MCP (Model Context Protocol)",
+   "plain_ko": "Cursor가 Figma·GitHub 같은 외부 도구·데이터에 연결해 쓸 수 있게 해주는 표준 연결 규격.",
+   "detail_url": "https://cursor.com/docs/mcp"
+  },
+  {
+   "term": "mcp.json",
+   "plain_ko": "어떤 MCP 서버를 어떻게 실행할지 적어두는 설정 파일(프로젝트용 .cursor/mcp.json 또는 전체 공용 ~/.cursor/mcp.json).",
+   "detail_url": "https://cursor.com/docs/mcp"
+  },
+  {
+   "term": "Cursor Rules (.mdc)",
+   "plain_ko": "AI에게 '우리 프로젝트는 이렇게 코딩해줘'라고 미리 적어두는 규칙 파일(.cursor/rules 폴더 안 .mdc 파일).",
+   "detail_url": "https://cursor.com/docs/rules"
+  },
+  {
+   "term": "AGENTS.md",
+   "plain_ko": ".cursor/rules보다 더 단순하게, 프로젝트 최상단에 여는 마크다운 한 장으로 AI 작업 지침을 적는 방식.",
+   "detail_url": "https://cursor.com/docs/rules"
+  },
+  {
+   "term": "Hobby / Pro 플랜",
+   "plain_ko": "Cursor의 무료 등급(Hobby)과 월 $20 유료 등급(Pro). 등급별로 Agent 요청·Tab 자동완성 사용량 한도가 다르지만 정확한 숫자는 공식적으로 비공개.",
+   "detail_url": "https://cursor.com/pricing"
+  }
+ ],
+ "faq": [
+  {
+   "q": "Cursor 에디터 화면(메뉴, 버튼)을 한국어로 바꿀 수 있나요?",
+   "a_hint": "공식 설치/도움말 문서에는 에디터 UI 한국어 설정에 대한 언급이 없음. Cursor 웹사이트(cursor.com)는 다국어 지원이지만 이는 에디터 앱 자체와 별개이므로, 처음에는 영어 UI로 시작한다고 가정하고 학습 자료를 준비하는 것이 안전함.",
+   "source_url": "https://cursor.com/help/getting-started/install"
+  },
+  {
+   "q": "Cmd/Ctrl+K와 Chat(Ask 모드)는 뭐가 다른가요?",
+   "a_hint": "Cmd/Ctrl+K는 선택한 코드 범위를 그 자리에서 바로 고치는 것이고, Ask 모드는 코드를 고치지 않고 질문·탐색만 하는 읽기 전용 대화임.",
+   "source_url": "https://cursor.com/help/ai-features/ask-mode"
+  },
+  {
+   "q": "Ask 모드와 Agent 모드 중 언제 뭘 써야 하나요?",
+   "a_hint": "코드를 실제로 바꿔야 하면 Agent, 그냥 이해하거나 궁금한 걸 물어보고 싶으면 Ask로 전환하라고 공식 문서가 안내함.",
+   "source_url": "https://cursor.com/help/ai-features/agent"
+  },
+  {
+   "q": ".cursorrules를 지금도 써도 되나요? .cursor/rules랑 AGENTS.md 중 뭘 써야 하나요?",
+   "a_hint": "현재 공식 문서에는 .cursorrules라는 옛 방식에 대한 언급 자체가 없고, .cursor/rules 폴더 안 .mdc 파일이나 프로젝트 루트의 AGENTS.md 중 하나를 쓰도록 안내함. 간단한 지침이면 AGENTS.md, 파일별로 세밀하게 적용 범위를 나누고 싶으면 .mdc 규칙을 권장.",
+   "source_url": "https://cursor.com/docs/rules"
+  },
+  {
+   "q": "Cursor 무료(Hobby) 플랜으로 하루에 몇 번이나 AI를 쓸 수 있나요?",
+   "a_hint": "공식 요금 페이지에는 'Limited Agent requests / Limited Tab completions'라는 정성적 표현만 있고 정확한 숫자는 공개돼 있지 않음. 인터넷에 도는 '월 2,000회/50회' 같은 숫자는 2025년 6월 과금 방식 변경 이전 수치라 지금은 근거가 없으므로, 본인 계정 대시보드의 사용량 화면을 직접 확인해야 함.",
+   "source_url": "https://cursor.com/pricing"
+  },
+  {
+   "q": "MCP 서버를 등록하면 설정 파일이 어디에 저장되나요?",
+   "a_hint": "이 프로젝트에서만 쓰려면 프로젝트 폴더 안 .cursor/mcp.json, 모든 프로젝트에서 공통으로 쓰려면 사용자 홈 폴더의 ~/.cursor/mcp.json에 저장됨. Cursor Settings UI에서 '+ Add New MCP Server'로 넣거나 이 파일을 직접 편집해도 됨.",
+   "source_url": "https://cursor.com/docs/mcp"
+  }
+ ],
+ "expand_leads": [
+  {
+   "lead": "forum.cursor.com에서 Hobby 플랜 실사용자들이 보고하는 최신(2026년 하반기) 실제 한도 사례 수집",
+   "why": "공식 페이지가 숫자를 공개하지 않으므로, 노션 가이드에 '대략 이 정도'라는 체감치를 실사용자 리포트로 보강할 수 있음(단, 비공식이므로 fact가 아닌 참고용으로만).",
+   "angle": "forum.cursor.com Hobby limit 2026 실사용자 리포트"
+  },
+  {
+   "lead": "cursor.com/changelog에서 Agent/Tab/MCP 관련 최근 변경 이력 확인",
+   "why": "이 분야는 변화가 매우 빠르므로, 노션 가이드 발행 직전에 changelog로 기능·요금 변경 여부를 한 번 더 점검할 필요.",
+   "angle": "cursor.com/changelog 최신 릴리즈 노트"
+  },
+  {
+   "lead": "Cursor 공식 Settings UI 스크린샷/경로(Settings > Tools & MCP 등)를 실제 앱에서 직접 캡처해 MCP 등록 절차를 그림으로 보강",
+   "why": "공식 문서 텍스트에는 정확한 메뉴명(Settings > Tools & MCP 등)이 명시되지 않아, 비개발자용 가이드에는 스크린샷 기반 스텝이 필요함.",
+   "angle": "실제 Cursor 앱 설치 후 Settings 메뉴 캡처"
+  }
+ ],
+ "dead_ends": [
+  "https://docs.cursor.com/en/get-started/installation 는 308로 https://cursor.com/docs 로 리다이렉트되지만, 해당 페이지는 JS로 렌더링되는 SPA 쉘이라 WebFetch로는 타이틀 외 본문 콘텐츠를 가져올 수 없었음 — 설치 관련 사실은 https://cursor.com/help/getting-started/install 에서 대체 확보함.",
+  "https://cursor.com/docs/chat/overview 및 https://cursor.com/docs/agent/chat/overview 두 경로 모두 404 — Chat/Ask 모드 공식 설명은 https://cursor.com/help/ai-features/ask-mode 에서 대체 확보함.",
+  "Cursor 요금제의 정확한 숫자 한도(Hobby/Pro 각각 월 몇 회)는 2회 반박검색에도 불구하고 공식 소스에서 끝내 확인 불가 — 2025년 6월 usage-based billing 전환 이후 공식적으로 숫자를 비공개하는 것으로 보이며, 이는 사실이 아니라 '확인 불가' 상태 자체가 결론임."
+ ],
+ "failed_urls": [
+  "https://docs.cursor.com/en/get-started/installation",
+  "https://cursor.com/docs/chat/overview",
+  "https://cursor.com/docs/agent/chat/overview",
+  "https://wikidocs.net/278669"
+ ],
+ "summary": "Cursor 공식 문서(cursor.com/docs, cursor.com/help) 기준으로 설치(Windows: installer 실행, Mac: Applications로 드래그, 로그인 필수)와 4대 핵심 기능(Tab 자동완성, Cmd/Ctrl+K 인라인 편집, Ask 모드=읽기전용 Chat, Agent=자율 작업 모드)을 원문 인용으로 확인했다. Cursor Rules는 .cursor/rules 폴더의 .mdc 파일 또는 프로젝트 루트의 AGENTS.md로 설정하며, 공식 문서에는 옛 .cursorrules 단일 파일에 대한 언급이 없다. MCP 서버는 Marketplace 원클릭 설치, Settings UI, 또는 .cursor/mcp.json(프로젝트) / ~/.cursor/mcp.json(전역) 수동 작성 중 하나로 등록하며 JSON 형식(mcpServers 키 아래 command/args/env 또는 url/headers)도 확인했다. 요금제(risk:high)는 Hobby=무료(카드 불필요, Limited Agent/Tab), Pro=$20/월(Tab 무제한, Agent 확장 한도)까지는 공식 페이지에서 확인했지만, 정확한 숫자 요청 한도는 2회의 반박검색에도 불구하고 공식 소스 어디에도 공개돼 있지 않음을 재확인했다 — 인터넷에 도는 '월 2,000/50회' 등의 숫자는 2025년 6월 과금 방식 변경 이전의 오래된 정보로 현재 공식 문서와 불일치한다. 비개발자용 무료 한국어 학습 자료로는 인프런의 완전 무료 강의 \"WE CAN Cursor AI!\"(비개발자 대상 명시, 평점 4.9)를 원문 확인했고, YouTube 영상 2건은 검색 스니펫 기준으로만 자원 목록에 올리고 fact에는 반영하지 않았다(팀리드 재검증 필요). 에디터 UI의 한국어 지원 여부는 공식 문서에 명시가 없어 결론을 내리지 못했다(cursor.com 웹사이트 자체는 다국어이나 앱 UI와는 별개)."
+}

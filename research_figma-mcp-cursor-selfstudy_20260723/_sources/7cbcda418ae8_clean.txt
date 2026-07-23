@@ -1,0 +1,214 @@
+Title: How AI credits work
+
+URL Source: https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work
+
+Markdown Content:
+AI features across the Figma platform help teams riff, refine, and ship faster than ever. Figma’s AI features use a credit system. To ensure everyone can try these features, AI credits are included with every seat on every plan.
+
+In this article, you’ll learn:
+
+*   [**How seat credit limits vary by plan**](https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work#seatcredits) — Learn what AI credits are and how many credits each seat type includes.
+*   [**How credit consumption works**](https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work#consumption) — See an estimate of how many credits each AI feature uses and what factors affect usage.
+*   [**How to track your individual credit usage**](https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work#trackusage) — View your remaining credits and reset date.
+
+Note: If you’re an admin and want to track usage across your team or purchase additional AI credits, see [**Manage AI credits**](https://help.figma.com/hc/en-us/articles/35865276858647).
+
+## AI credits by plan and seat
+
+AI credits are used to run[AI actions](https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work#consumption)in Figma, including tools like Figma Make, AI image editing, and AI-powered workflows across the platform.
+
+Every seat in Figma includes AI credits. The number of AI credits and what features you can use them with depends on your plan and seat type.
+
+Seat credits:
+
+*   Are assigned to an individual user
+*   Reset monthly
+*   Don’t roll over
+*   Can’t be shared or transferred to other users
+
+Credits do not represent legal tender, currency, or stored value, and are not redeemable for monetary value. They can only be used for Figma AI features.
+
+|  | Starter plan* | Professional plan | Organization plan | Enterprise plan |
+| --- | --- | --- | --- | --- |
+| Full seats | 500 credits per month | 3,000 credits per month | 3,500 credits per month | 4,250 credits per month |
+| Dev, Collab, and View* seats | 500 credits per month | 500 credits per month | 500 credits per month |
+
+_*Starter plan users or users with a View seat also have a daily limit of 150 credits. If you reach your daily limit, you can continue using AI features the following day._
+
+## Credit consumption
+
+Each time you run an AI action, it consumes a number of credits based on factors such as the type of AI action, complexity of your request, and the model used.
+
+### **AI credit consumption by feature**
+
+For AI image features like background removal, resolution enhancement, or image generation, credit usage is fixed. If multiple models are available, you can choose which one to use. Some models consume more credits but produce higher-quality images, while others are optimized to use fewer credits.
+
+For agentic AI features like Figma Make, credit usage varies. See [**Understanding credit consumption for agentic AI features**](https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work#h_01K8NSGRZC3B7VNYMJBZ4HQ4NK) for more details.
+
+| AI feature | Credits per use |
+| --- | --- |
+| AI search | Free |
+| Rename layers | Free |
+| Summarize stickies, Cluster stickies, Update visual (FigJam) | Free |
+| Generate templates and diagrams (FigJam) | 2-24 per prompt |
+| Remove background | 1-5 per image |
+| Vectorize image | 2-5 per image |
+| Boost image resolution | 5-10 per image |
+| Erase object | 5-10 per image |
+| Isolate object | 5-10 per image |
+| Expand image | 5-10 per image |
+| Make image | 2 per image for ChatGPT Images 2.0 6 per image for Nano Banana 2 Lite 8 per image for Nano Banana 16 per image for Nano Banana 2 |
+| Edit image | 2 per image for ChatGPT Images 2.0 6 per image for Nano Banana 2 Lite 8 per image for Nano Banana 16 per image for Nano Banana 2 |
+| Add interactions | 20 credits per use |
+| Generate Figma files in ChatGPT for Figma Slides _(Generating FigJam files in ChatGPT does not consume credits at this time)_ | Varies (see agentic AI examples below) |
+| Figma Make | Varies (see agentic AI examples below) |
+| _*These are the credit consumption rates as of July 2, 2026. Costs for each feature may change as models are optimized or new models become available._ |
+
+**Note**: As Figma launches more AI features, we’ll add them to this page once they have an associated cost.
+
+### Understanding credit consumption for agentic AI features
+
+For agentic AI features like Figma Make, credit consumption varies based on the underlying model, the complexity of the task, and the context materials given to the model to complete the task successfully. Below we break down each of those components.
+
+Agentic AI features run on underlying language models. Figma sets pricing for both the model and the feature it’s used in based on factors like the model’s cost to Figma, the value it provides to customers, and the consumption patterns of that model. If more than one model is available, like in Figma Make, you can choose which model to use. Some models consume significantly more credits than others.
+
+Task complexity can also impact credit usage. Each time you prompt, the model decides which actions it will take to complete the task. A more complex prompt will result in more actions, which increases the amount of credits consumed.
+
+Context like attached files, design libraries, or chat history require additional processing. Credit consumption increases as the quantity, size, or complexity of those context materials grows.
+
+Figma also continually works to optimize how our agentic AI features process requests of varying complexity or volume of context, in addition to other efforts aimed at improving the overall user experience. This optimization work can have an impact on credit consumption.
+
+**Examples by agentic AI feature**
+
+**Note**: Due to the non-deterministic nature of AI models, all credit consumption example figures should be considered approximate. Credit consumption may vary, and general approximations may evolve over time.
+
+Use the examples below to get a general sense of potential credit usage. Your own usage history will provide the most accurate estimate of expected credit consumption.
+
+**Figma Make**
+
+The credit consumption examples below are calculated using our default model as of February of 2026.[Other models are available in Figma Make](https://help.figma.com/hc/en-us/articles/36400680326551), each with their own varying underlying pricing structure based on complexity of the task.
+
+*   **Example task**: Change the font
+    *   **Action the AI may take:** Updates fonts
+    *   **Approximate credit consumption:** Approximately 30+ credits.
+
+*   **Example task:** Make the attached design interactive
+    *   **Action the AI may take:** Adds interactivity between screens and components, applies transitions and animations
+    *   **Approximate credit consumption:** Approximately 75+ credits.
+
+*   **Example task:** Generate an app from scratch
+    *   **Action the AI may take:** Creates a layout and visual theme, generates placeholder content and imagery, adds interactivity, sets up a backend with key value storage
+    *   **Approximate credit consumption:** Approximately 100+ credits. Applications with more complex logic or interactivity require more tasks to be completed, which results in higher credit usage.
+
+**Note:** Processing more context can help produce better outputs and can also increase credit consumption, especially in chats with extensive history.
+
+When you use [plan mode](https://help.figma.com/hc/en-us/articles/40830441709719), Make generates a structured plan before any code is written. This planning step is a separate action from building—after you approve the plan and click **Build**, the build itself consumes additional credits.
+
+Plan mode can consume more credits than a standard build prompt, but worth considering in the full context of your project: a well-scoped plan tends to produce better results on the first build, which means fewer correction prompts afterward. [Learn more about best practices for optimizing AI credits](https://help.figma.com/hc/en-us/articles/40097793879191-Best-practices-for-optimizing-AI-credits-in-Figma-Make).
+
+**Generate Figma Files from ChatGPT**
+
+When you [generate a Figma file through ChatGPT](https://help.figma.com/hc/en-us/articles/35326636109975-Use-ChatGPT-with-Figma), Figma AI credits are consumed. After a file is generated in ChatGPT, you can see how many AI credits were consumed.
+
+*    Example task: Generate a Figma Slides presentation 
+    *    Approximate credit consumption: 28-72+ credits. Larger, image-heavy decks consume more credits. 
+
+Generating FigJam diagrams through ChatGPT does not consume Figma AI credits at this time.
+
+### Managing your credit consumption for agentic AI features
+
+There are three main ways to manage credit consumption when using agentic AI features:
+
+*   **Model selection**: For features that let you choose between models, such as Figma Make, the model you use can impact your credit usage. Each model in Figma Make has its own pricing.
+*   **Task complexity**: More complex requests typically require more processing and use more credits. Longer or more detailed prompts can lead to additional actions being taken, which can increase credit consumption. In some cases, even a short prompt may use more credits if the task itself is demanding, such as making changes across a large or intricate file.
+*   **Context materials**: Processing more context can help produce better outputs and can also increase credit consumption, especially in chats with extensive history. In general, using more context materials or context that requires more processing—such as attached files or design libraries—will consume more credits. For example, when you attach a file to a Figma Make prompt, the model reads and processes the file's contents as part of its working context—similar to how a longer prompt uses more credits than a shorter one. Larger or more content-dense files require more processing, which increases credit consumption.
+
+Figma also may run experiments, including a variety of efforts and updates aimed at optimizing the user experience (such as adjusting processing techniques), that may potentially impact credit consumption.
+
+[Learn more about best practices for optimizing AI credits in Figma Make](https://help.figma.com/hc/en-us/articles/40097793879191).
+
+### Understand your own unique use of agentic AI features
+
+Because the model determines what actions it needs to perform to complete a task, we can’t predict exactly how many credits a request will use in advance.
+
+After a task completes, you can see how many AI credits were consumed for that feature by hovering over the**AI credits**icon below the completed prompt.
+
+![Image 1: Hover over the AI credits icon in Figma Make to see how many credits a previous prompt consumed.](https://help.figma.com/hc/article_attachments/38962230479767)
+## Track how many credits you have left
+
+An individual can view how many seat credits they have left at any time.
+
+1.   Open a file where you have edit access. If you have a View seat, select a file in your drafts.
+2.   Open the **Main menu** of the file.
+3.   Select the **AI balance** option to see how many credits you’ve used, how many credits you have remaining, and when they’ll reset.
+
+![Image 2: The AI balance menu from the file main menu shows your current credit balance](https://help.figma.com/hc/article_attachments/38970352282135)
+### What happens when you run out of credits
+
+When you’re out of credits, you’ll see an in-product message letting you know. If you have no credits, you will be unable to complete any additional AI actions.
+
+If your admin has not yet added any additional AI credits for your team, you will have the option to request more credits. Your admin will be notified and can decide whether to add additional credits for your team.
+
+![Image 3: Users can request more AI credits from their admin when they run out.png](https://help.figma.com/hc/article_attachments/38992641508375)
+If additional credits are added, you’ll be unblocked right away. If not, you’ll need to wait until your credits reset on the next reset date.
+
+## Frequently asked questions
+
+**How do AI credits work?**
+
+Figma AI uses a credit system shared across AI features and products. Every seat includes a monthly allocation of AI credits. The number of credits depends on your plan and seat type. If usage exceeds included credits, [admins can purchase additional credits](https://help.figma.com/hc/en-us/articles/35865276858647) through subscription or pay-as-you-go billing.
+
+**Who can use each AI feature?**
+
+Access to different AI products or features depends on your plan and seat.
+
+*   Figma Make is our prompt-to-app product. Your seat and plan determine [how you can use Figma Make](https://help.figma.com/hc/en-us/articles/31722591905559-Figma-Make-FAQs#h_01JZQX7SQ7RX4SJ65DHDTYS2EK).
+*   Figma AI image, text, and workflow tools can be found across Figma’s platform and are available to paid plans only. Your seat and plan determine [which Figma AI tools you can use](https://help.figma.com/hc/en-us/articles/24039793359767-About-Figma-AI#h_01J0WC1BETFPCSZZEAFBXQEG7R).
+
+**Why is AI greyed out or not working?**
+
+Users who exceed their included credits will not be able to continue using paid AI features until their credits reset or an admin adds more. Admins can review usage and add more credits in the dashboard.
+
+If an admin has disabled AI for your plan, you won’t be able to use AI capabilities like Figma Make or image editing tools.
+
+**When do AI credits reset?**
+
+Credits reset automatically. Full, Collab, and Dev seats reset monthly. View seats and Starter plan reset monthly and also have a daily limit. If you hit your daily limit, you can resume use of your remaining credits the next day. If you reach your monthly limit, your credits will refresh on your next monthly reset date.
+
+You can [see how many credits you have left](https://help.figma.com/hc/en-us/articles/33459875669015-How-AI-credits-work#trackusage) and when your credits refresh from the AI balance option in the Figma menu.
+
+**Do AI credits roll over?**
+
+No. AI credits expire monthly and do not roll over.
+
+**Do credits stack if I’m in multiple teams or organizations?**
+
+No. Credits are tied to a specific plan. Users with multiple plans will have separate credit allocations for each plan, and those credits don’t combine or stack.
+
+**Can I undo an AI action and recover credits?**
+
+Undoing an AI action reverts changes in your file but does not refund credits, since the task has already been processed.
+
+**How do I get more AI credits?**
+
+If you're on a View, Collab, or Dev seat, you can request an upgrade to a Full seat, which comes with a higher allocation of included credits.
+
+Admins can also buy additional AI credits that can be used by anyone on the team or organization unless blocked by the admin.
+
+**Can I see the cost of a prompt in Figma Make before I run it?**
+
+Because the AI determines what actions it needs to perform in order to complete the task, we can’t predict exactly how many credits it will use. Once a task has completed, you can see how many credits that prompt consumed by hovering over the AI credits icon below the completed prompt.
+
+**Are credits used in conversation mode?**
+
+Yes, interacting with Figma Make through conversation mode will use credits. Once a task has completed, you can see how many credits that prompt consumed by hovering over the AI credits icon below the completed prompt.
+
+**Do Auto fix or Fix for me actions use AI credits?**
+
+Error correction features (such as **Auto fix** and **Fix for me**) do not use additional AI credits. These actions work within the context of your existing prompt, meaning the model is adjusting what’s already there rather than generating a new request.
+
+If you instead try to fix an issue by submitting a new prompt, that action will use AI credits.
+
+**Will credit costs change as AI evolves?**
+
+Credit consumption is calculated based on factors that can change over time, including but not limited to the underlying model, cost to Figma, work done to optimize the product for the best possible outputs, and new and evolving features and capabilities. Changes to those factors, such as a change to the underlying model to increase output quality as AI technology evolves, can change credit consumption due to increased costs to perform the action requested.

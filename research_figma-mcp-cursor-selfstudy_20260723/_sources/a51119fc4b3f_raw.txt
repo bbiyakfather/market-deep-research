@@ -1,0 +1,217 @@
+Title: Cursor · Pricing
+
+URL Source: https://cursor.com/pricing
+
+Markdown Content:
+[Skip to content](https://cursor.com/pricing#main)
+
+[[Video 2](https://cursor.com/marketing-static/logo/logo-light-theme.mov) Cursor](https://cursor.com/home)
+
+*   [Product](https://cursor.com/product)↓
+
+    *   [Agents](https://cursor.com/product)
+    *   [Cloud](https://cursor.com/cloud)
+    *   [Mobile](https://cursor.com/mobile)
+    *   [Automations](https://cursor.com/automate)
+    *   [CLI](https://cursor.com/cli)
+    *   [Marketplace↗](https://cursor.com/marketplace)
+    *   [Review](https://cursor.com/bugbot)
+
+*   [Enterprise](https://cursor.com/enterprise)
+*   [Pricing](https://cursor.com/pricing)
+*   [Resources](https://cursor.com/changelog)↓
+
+    *   [Changelog](https://cursor.com/changelog)
+    *   [Blog](https://cursor.com/blog)
+    *   [Docs](https://cursor.com/docs)
+    *   [Community](https://cursor.com/community)
+    *   [Help↗](https://cursor.com/help)
+    *   [Workshops](https://cursor.com/workshops)
+    *   [Forum↗](https://forum.cursor.com/)
+    *   [Careers](https://cursor.com/careers)
+
+*   Product→
+*   [Enterprise](https://cursor.com/enterprise) 
+*   [Pricing](https://cursor.com/pricing) 
+*   Resources→
+
+[Sign in](https://cursor.com/dashboard)[Contact Contact sales](https://cursor.com/contact-sales?source=navbar)[Download](https://cursor.com/download)
+
+# Pricing
+
+Monthly Yearly 
+
+### Hobby
+
+For the tinkerer
+
+Free
+
+Includes:
+
+*   ✓ No credit card required
+*   ✓ Limited Agent requests
+*   ✓ Limited Tab completions
+
+[Try Cursor](https://cursor.com/download)
+
+### Individual
+
+For the agent-curious
+
+$20 / mo.
+
+Pro Pro+ Ultra 
+
+Everything in Hobby, plus:
+
+*   ✓ Extended limits on Agent
+*   ✓ Generous limits for Grok & Composer
+*   ✓ Access to frontier models
+*   ✓ MCPs, skills, and hooks
+*   ✓ Cloud agents
+*   ✓ Bugbot on usage-based billing
+
+[Get Pro](https://cursor.com/api/auth/checkoutDeepControl?yearly=false)
+
+### Teams
+
+For teams that ship together
+
+$40 / user / mo.
+
+Standard Premium 
+
+Everything on Individual, plus:
+
+*   ✓ Centralized team billing and administration
+*   ✓ Team marketplace for internal rules, skills, and plugins
+*   ✓ Agentic code reviews with Bugbot
+*   ✓ Cloud agents and automations with shared team context
+*   ✓ Usage analytics to understand team behavior
+*   ✓ Team-wide privacy mode
+*   ✓ SAML/OIDC SSO
+
+[Get Teams](https://cursor.com/team/new-team?yearly=false)
+
+### Enterprise
+
+For scaled organizations
+
+Custom
+
+Everything on Teams, plus:
+
+*   ✓ Pooled usage
+*   ✓ Invoice/PO billing
+*   ✓ SCIM seat management
+*   ✓ Repository, model, and MCP access controls
+*   ✓ Auto-run, browser, and network controls
+*   ✓ Audit logs and service accounts
+*   ✓ AI code tracking API
+*   ✓ Priority support and account management
+
+[Contact sales](https://cursor.com/contact-sales?source=pricing_enterprise)
+
+## Trusted every day by teams that build world-class software.
+
+## Questions & Answers
+
+### What is the right plan for me?↓↑
+
+We recommend Pro+ for daily agent users, and Ultra for agent power users. The Teams plan is recommended for professionals collaborating with others, and larger organizations that need invoicing, pooled usage, or advanced security should choose Enterprise.
+
+### What are my payment options?↓↑
+
+Self-serve plans support all major credit and debit cards. For invoice-based billing and wire transfers, please [contact us](https://cursor.com/contact-sales?source=pricing_faq) to discuss the Enterprise plan.
+
+### How does usage-based pricing work?↓↑
+
+Every plan includes a set amount of model usage. On-demand usage allows you to continue using models after your included amount is consumed, billed in arrears. See [our docs](https://cursor.com/docs/account/pricing) for more details.
+
+### Are prices inclusive of taxes?↓↑
+
+All prices are exclusive of any applicable taxes. See our [Terms of Service](https://cursor.com/terms-of-service) for more information.
+
+### How can I see and manage Cursor's usage in my organization?↓↑
+
+Admins can access usage information and key metrics through the [Admin Dashboard](https://cursor.com/docs/account/teams/dashboard).
+
+### How does Cursor use my data?↓↑
+
+Privacy mode can be enabled in settings or by a team admin. When it is enabled, we guarantee that code data is not used for training by us or our model providers. You can learn more on our [Security](https://cursor.com/security) page.
+
+### Can I buy Cursor from a reseller or third party?↓↑
+
+No. Cursor subscriptions are only sold directly through [cursor.com](https://cursor.com/). We do not authorize any resellers or third-party sellers. Subscriptions purchased from any other source are unauthorized and may be fraudulent, insecure, or obtained through abuse of our systems. These accounts may be suspended or terminated at any time. To protect your access and security, purchase Cursor only through our official website.
+
+### Where can I ask more questions?↓↑
+
+You're welcome to join [our forum](https://forum.cursor.com/) and share your thoughts! If you prefer a private conversation, feel free to email us directly at [hi@cursor.com](mailto:hi@cursor.com).
+
+## Get started with Cursor.
+
+[Download ⤓](https://cursor.com/download)[Contact Sales](https://cursor.com/contact-sales?source=pricing_footer)
+
+### Product
+
+*   [Agents](https://cursor.com/en-US/product)
+*   [Teams](https://cursor.com/en-US/business/teams)
+*   [Enterprise](https://cursor.com/en-US/enterprise)
+*   [Pricing](https://cursor.com/en-US/pricing)
+*   [Code Review](https://cursor.com/en-US/bugbot)
+*   [CLI](https://cursor.com/en-US/cli)
+*   [Cloud Agents](https://cursor.com/agents)
+*   [Composer](https://cursor.com/en-US/composer)
+*   [Marketplace↗](https://cursor.com/marketplace)
+
+### Resources
+
+*   [Download](https://cursor.com/en-US/download)
+*   [Changelog](https://cursor.com/en-US/changelog)
+*   [Docs](https://cursor.com/docs)
+*   [Learn↗](https://cursor.com/learn)
+*   [Forum↗](https://forum.cursor.com/)
+*   [Help↗](https://cursor.com/help)
+*   [Workshops](https://cursor.com/en-US/workshops)
+*   [Status↗](https://status.cursor.com/)
+
+### Company
+
+*   [Careers](https://cursor.com/en-US/careers)
+*   [Blog](https://cursor.com/en-US/blog)
+*   [Community](https://cursor.com/en-US/community)
+*   [Students](https://cursor.com/en-US/students)
+*   [Brand](https://cursor.com/en-US/brand)
+*   [Future](https://cursor.com/en-US/future)
+*   [Anysphere↗](https://anysphere.inc/)
+
+### Legal
+
+*   [Terms of Service](https://cursor.com/en-US/terms-of-service)
+*   [Privacy Policy](https://cursor.com/en-US/privacy)
+*   [Data Use](https://cursor.com/en-US/data-use)
+*   [Security](https://cursor.com/en-US/security)
+
+### Connect
+
+*   [X↗](https://x.com/cursor_ai)
+*   [LinkedIn↗](https://www.linkedin.com/company/cursorai)
+*   [YouTube↗](https://www.youtube.com/@cursor_ai)
+
+© 2026 [Anysphere, Inc.](https://anysphere.inc/)🛡 [SOC 2 Certified](https://cursor.com/en-US/security)
+
+🖥☉☾
+
+🌐English↓
+
+*   English✓
+*   简体中文
+*   日本語
+*   繁體中文
+*   Español
+*   Français
+*   Português
+*   한국어
+*   Deutsch
+*   हिन्दी

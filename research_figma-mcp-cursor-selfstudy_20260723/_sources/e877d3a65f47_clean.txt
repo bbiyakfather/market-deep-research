@@ -1,0 +1,26 @@
+New CLI Features and Improved CLI Performance
+This release introduces new CLI controls for models, MCP management, rules and commands, alongside major hooks performance improvements and bug fixes.
+Model list and selection
+Use the new agent models command, --list-models flag, or /models slash command to list all available models and quickly switch between them.
+Rules generation and management
+Create new rules and edit existing ones directly from the CLI with the /rules command.
+Enabling MCP servers
+Enable and disable MCP servers on the fly with /mcp enable and /mcp disable commands.
+- Tabs are now automatically named based on chats.
+- New agentcommand is now the primary CLI entrypoint.cursor-agentremains as a backward-compatible alias.
+- Added agent modelscommand,-list-modelsflag, and/modelsslash command to list all available models.
+- Added /mcp enable,/mcp disablecommands to manage MCP servers.
+- Added /rulesto create new rules and edit existing rules.
+- Added /commandsto create new commands and edit existing commands.
+- Executed subcommands are now recorded in command history.
+- MCP server names with spaces are now supported in all /mcpcommands.
+- Hooks now execute in parallel with merged responses, improving performance for projects with multiple hook scripts.
+- Hooks execution latency reduced by 10x.
+- afterFileEdithook now correctly provides- old_stringwith the file's previous content for proper diff capture.
+- Ctrl+Dnow follows standard shell behavior, requiring a double-press to exit.
+- Shift+Enternow inserts a newline instead of submitting, making it easier to write multi-line prompts.
+- Fixed ghost line rendering bug where deleted lines would leave visual artifacts on screen.
+- Fixed race condition where conversation state could be overwritten during turn completion.
+- Fixed "Cannot find module" error related to node-pty on some platforms.
+- Fixed chat name generation.
+- Fixed several bugs with follow-up messages.

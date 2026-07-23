@@ -1,0 +1,59 @@
+Title: Quickstart | Cursor Docs
+
+URL Source: https://cursor.com/docs/get-started/quickstart
+
+Markdown Content:
+This guide gets you from install to your first useful change in Cursor. You'll sign in, ask Cursor to explain your codebase, make a small edit, and review the result.
+
+1
+
+### Install Cursor and sign in
+
+Download Cursor. Open the app and sign in. Then pick a folder and start with a small task.
+
+2
+
+### Ask Cursor to explain your codebase
+
+After you pick a folder, open Agent with Cmd I Ctrl I. Ask Cursor to explain the codebase and point out the main areas to read first.
+
+Cursor will search your repo, read relevant files, and summarize how the project fits together. This is one of the fastest ways to get oriented in an unfamiliar codebase.
+
+Want a deeper walkthrough? See [Understand your codebase](https://cursor.com/learn/understanding-your-codebase).
+
+3
+
+### Make one small change
+
+Once you understand the project, ask Cursor to suggest a few safe improvements. Pick one and ask it to make the change.
+
+Good first tasks are low risk, like improving some copywriting or fixing small UI issues.
+
+If you already know what you want to change, ask for it directly and describe the result you want.
+
+4
+
+### Review the diff and verify the result
+
+Now you can watch Cursor work. The diff view shows changes made by the agent.
+
+When it finishes, review the diff and ask Cursor to run the checks your project already uses. That can mean tests, the type checker, linting, or a local build.
+
+Want a stronger review workflow? See [Reviewing and testing code](https://cursor.com/learn/reviewing-testing).
+
+5
+
+### Use Plan Mode for bigger changes
+
+Now that you know the basics, use Plan Mode for bigger changes. It works well when the task spans multiple files, needs research, or needs approval before coding.
+
+Press Shift+Tab in the agent input to toggle **Plan Mode**. Instead of writing code right away, Cursor will:
+
+1.   Research your codebase to find relevant files
+2.   Ask clarifying questions about your requirements
+3.   Create a detailed implementation plan
+4.   Wait for your approval before building
+
+For a deeper walkthrough, see [Build new features](https://cursor.com/learn/creating-features).
+
+## [Next steps](https://cursor.com/docs/get-started/quickstart#next-steps)

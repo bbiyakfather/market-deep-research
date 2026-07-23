@@ -1,0 +1,154 @@
+Title: New CLI Features and Improved CLI Performance · Cursor
+
+URL Source: https://cursor.com/changelog/cli-jan-08-2026
+
+Markdown Content:
+[Skip to content](https://cursor.com/changelog/cli-jan-08-2026#main)
+
+[[Video 4](https://cursor.com/marketing-static/logo/logo-light-theme.mov) Cursor](https://cursor.com/home)
+
+*   [Product](https://cursor.com/product)↓
+
+    *   [Agents](https://cursor.com/product)
+    *   [Cloud](https://cursor.com/cloud)
+    *   [Mobile](https://cursor.com/mobile)
+    *   [Automations](https://cursor.com/automate)
+    *   [CLI](https://cursor.com/cli)
+    *   [Marketplace↗](https://cursor.com/marketplace)
+    *   [Review](https://cursor.com/bugbot)
+
+*   [Enterprise](https://cursor.com/enterprise)
+*   [Pricing](https://cursor.com/pricing)
+*   [Resources](https://cursor.com/changelog)↓
+
+    *   [Changelog](https://cursor.com/changelog)
+    *   [Blog](https://cursor.com/blog)
+    *   [Docs](https://cursor.com/docs)
+    *   [Community](https://cursor.com/community)
+    *   [Help↗](https://cursor.com/help)
+    *   [Workshops](https://cursor.com/workshops)
+    *   [Forum↗](https://forum.cursor.com/)
+    *   [Careers](https://cursor.com/careers)
+
+*   Product→
+*   [Enterprise](https://cursor.com/enterprise) 
+*   [Pricing](https://cursor.com/pricing) 
+*   Resources→
+
+[Sign in](https://cursor.com/dashboard)[Contact Contact sales](https://cursor.com/contact-sales?source=navbar)[Download](https://cursor.com/download)
+
+Jan 8, 2026 · [Changelog](https://cursor.com/changelog)
+
+[Changelog](https://cursor.com/changelog)
+
+# New CLI Features and Improved CLI Performance
+
+This release introduces new CLI controls for models, MCP management, rules and commands, alongside major hooks performance improvements and bug fixes.
+
+### [#](https://cursor.com/changelog/cli-jan-08-2026#model-list-and-selection)Model list and selection
+
+Use the new **`agent models`** command, **`--list-models`** flag, or **`/models`** slash command to list all available models and quickly switch between them.
+
+[Video 5](https://ptht05hbb1ssoooe.public.blob.vercel-storage.com/assets/uploads/models-final.mp4)
+
+### [#](https://cursor.com/changelog/cli-jan-08-2026#rules-generation-and-management)Rules generation and management
+
+Create new rules and edit existing ones directly from the CLI with the **`/rules`** command.
+
+[Video 6](https://ptht05hbb1ssoooe.public.blob.vercel-storage.com/assets/uploads/rules-clean-2.mov)
+
+### [#](https://cursor.com/changelog/cli-jan-08-2026#enabling-mcp-servers)Enabling MCP servers
+
+Enable and disable MCP servers on the fly with **`/mcp enable`** and **`/mcp disable`** commands.
+
+### New Features (7)↓↑
+
+*   Tabs are now automatically named based on chats.
+*   New **`agent`** command is now the primary CLI entrypoint. **`cursor-agent`** remains as a backward-compatible alias.
+*   Added **`agent models`** command, **`-list-models`** flag, and **`/models`** slash command to list all available models.
+*   Added **`/mcp enable`**, **`/mcp disable`** commands to manage MCP servers.
+*   Added **`/rules`** to create new rules and edit existing rules.
+*   Added **`/commands`** to create new commands and edit existing commands.
+*   Executed subcommands are now recorded in command history.
+*   MCP server names with spaces are now supported in all **`/mcp`** commands.
+
+### Hooks (3)↓↑
+
+*   Hooks now execute in parallel with merged responses, improving performance for projects with multiple hook scripts.
+*   Hooks execution latency reduced by 10x.
+*   **`afterFileEdit`** hook now correctly provides **`old_string`** with the file's previous content for proper diff capture.
+
+### Improvements & Bug Fixes (7)↓↑
+
+*   **`Ctrl+D`** now follows standard shell behavior, requiring a double-press to exit.
+*   **`Shift+Enter`** now inserts a newline instead of submitting, making it easier to write multi-line prompts.
+*   Fixed ghost line rendering bug where deleted lines would leave visual artifacts on screen.
+*   Fixed race condition where conversation state could be overwritten during turn completion.
+*   Fixed "Cannot find module" error related to node-pty on some platforms.
+*   Fixed chat name generation.
+*   Fixed several bugs with follow-up messages.
+
+[← Previous post CLI Agent Modes and Cloud Handoff](https://cursor.com/changelog/cli-jan-16-2026)[Next post →Layout Customization and Stability Improvements](https://cursor.com/changelog/2-3)
+
+### Product
+
+*   [Agents](https://cursor.com/en-US/product)
+*   [Teams](https://cursor.com/en-US/business/teams)
+*   [Enterprise](https://cursor.com/en-US/enterprise)
+*   [Pricing](https://cursor.com/en-US/pricing)
+*   [Code Review](https://cursor.com/en-US/bugbot)
+*   [CLI](https://cursor.com/en-US/cli)
+*   [Cloud Agents](https://cursor.com/agents)
+*   [Composer](https://cursor.com/en-US/composer)
+*   [Marketplace↗](https://cursor.com/marketplace)
+
+### Resources
+
+*   [Download](https://cursor.com/en-US/download)
+*   [Changelog](https://cursor.com/en-US/changelog)
+*   [Docs](https://cursor.com/docs)
+*   [Learn↗](https://cursor.com/learn)
+*   [Forum↗](https://forum.cursor.com/)
+*   [Help↗](https://cursor.com/help)
+*   [Workshops](https://cursor.com/en-US/workshops)
+*   [Status↗](https://status.cursor.com/)
+
+### Company
+
+*   [Careers](https://cursor.com/en-US/careers)
+*   [Blog](https://cursor.com/en-US/blog)
+*   [Community](https://cursor.com/en-US/community)
+*   [Students](https://cursor.com/en-US/students)
+*   [Brand](https://cursor.com/en-US/brand)
+*   [Future](https://cursor.com/en-US/future)
+*   [Anysphere↗](https://anysphere.inc/)
+
+### Legal
+
+*   [Terms of Service](https://cursor.com/en-US/terms-of-service)
+*   [Privacy Policy](https://cursor.com/en-US/privacy)
+*   [Data Use](https://cursor.com/en-US/data-use)
+*   [Security](https://cursor.com/en-US/security)
+
+### Connect
+
+*   [X↗](https://x.com/cursor_ai)
+*   [LinkedIn↗](https://www.linkedin.com/company/cursorai)
+*   [YouTube↗](https://www.youtube.com/@cursor_ai)
+
+© 2026 [Anysphere, Inc.](https://anysphere.inc/)🛡 [SOC 2 Certified](https://cursor.com/en-US/security)
+
+🖥☉☾
+
+🌐English↓
+
+*   English✓
+*   简体中文
+*   日本語
+*   繁體中文
+*   Español
+*   Français
+*   Português
+*   한국어
+*   Deutsch
+*   हिन्दी

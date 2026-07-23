@@ -1,0 +1,141 @@
+Title: Cursor Docs — Agent, Rules, MCP, Skills & CLI
+
+URL Source: https://docs.cursor.com/get-started/installation
+
+Markdown Content:
+[Skip to main content](https://docs.cursor.com/get-started/installation#main-content)
+
+[](https://docs.cursor.com/docs)[Docs](https://docs.cursor.com/docs)[API](https://docs.cursor.com/docs/api)[Learn](https://docs.cursor.com/learn)[Help](https://docs.cursor.com/help)
+
+Search docs...⌘K
+
+Ask AI⌘I
+
+[Sign in](https://cursor.com/dashboard)[Download](https://cursor.com/downloads)
+
+## Command Palette
+
+Search for a command to run...
+
+## Get Started
+
+[Welcome](https://docs.cursor.com/docs)[Quickstart](https://docs.cursor.com/docs/get-started/quickstart)
+
+Models & Pricing
+
+[Changelog](https://cursor.com/changelog)
+
+## Agent
+
+[Overview](https://docs.cursor.com/docs/agent/overview)[Agents Window](https://docs.cursor.com/docs/agent/agents-window)[Agent Review](https://docs.cursor.com/docs/agent/agent-review)[Planning](https://docs.cursor.com/docs/agent/plan-mode)[Prompting](https://docs.cursor.com/docs/agent/prompting)[Debugging](https://docs.cursor.com/docs/agent/debug-mode)[Design Mode](https://docs.cursor.com/docs/agent/design-mode)
+
+Tools
+
+Security
+
+## Customize
+
+[Overview](https://docs.cursor.com/docs/customize-cursor)[Plugins](https://docs.cursor.com/docs/plugins)[Rules](https://docs.cursor.com/docs/rules)[Skills](https://docs.cursor.com/docs/skills)[Subagents](https://docs.cursor.com/docs/subagents)[Hooks](https://docs.cursor.com/docs/hooks)[MCP](https://docs.cursor.com/docs/mcp)
+
+## Cloud Agents
+
+[Overview](https://docs.cursor.com/docs/cloud-agent)[Setup](https://docs.cursor.com/docs/cloud-agent/setup)[Capabilities](https://docs.cursor.com/docs/cloud-agent/capabilities)[Best Practices](https://docs.cursor.com/docs/cloud-agent/best-practices)[Automations](https://docs.cursor.com/docs/cloud-agent/automations)[Mobile](https://docs.cursor.com/docs/cloud-agent/mobile)[Bugbot](https://docs.cursor.com/docs/bugbot)[Security Agents](https://docs.cursor.com/docs/security-agents)[Approval Agents](https://docs.cursor.com/docs/approval-agents)
+
+Security
+
+[Settings](https://docs.cursor.com/docs/cloud-agent/settings)[API](https://docs.cursor.com/docs/cloud-agent/api/endpoints)
+
+## Integrations
+
+[Slack](https://docs.cursor.com/docs/integrations/slack)[Microsoft Teams](https://docs.cursor.com/docs/integrations/microsoft-teams)[Jira](https://docs.cursor.com/docs/integrations/jira)[Linear](https://docs.cursor.com/docs/integrations/linear)[Notion](https://docs.cursor.com/docs/integrations/notion)[GitHub](https://docs.cursor.com/docs/integrations/github)[GitLab](https://docs.cursor.com/docs/integrations/gitlab)[Azure DevOps](https://docs.cursor.com/docs/integrations/azure-devops)[Bitbucket](https://docs.cursor.com/docs/integrations/bitbucket)[JetBrains](https://docs.cursor.com/docs/integrations/jetbrains)[Xcode](https://docs.cursor.com/docs/integrations/xcode)[Deeplinks](https://docs.cursor.com/docs/reference/deeplinks)
+
+## SDK
+
+[TypeScript](https://docs.cursor.com/docs/sdk/typescript)[Python](https://docs.cursor.com/docs/sdk/python)[Changelog](https://docs.cursor.com/docs/sdk/changelog)
+
+## CLI
+
+[Overview](https://docs.cursor.com/docs/cli/overview)[Installation](https://docs.cursor.com/docs/cli/installation)[Capabilities](https://docs.cursor.com/docs/cli/using)[Changelog](https://docs.cursor.com/docs/cli/changelog)[Shell Mode](https://docs.cursor.com/docs/cli/shell-mode)[ACP](https://docs.cursor.com/docs/cli/acp)[Headless / CI](https://docs.cursor.com/docs/cli/headless)
+
+Reference
+
+## Teams & Enterprise
+
+Teams
+
+Enterprise
+
+Get Started
+
+# Cursor Documentation
+
+Cursor is a coding agent for building ambitious software. Use it to understand your codebase, plan and build features, fix bugs, review changes, and work with the tools you already use.
+
+![Image 1: Welcome to Cursor, the AI editor and coding agent](https://docs.cursor.com/docs-static/_next/image?url=%2Fdocs-static%2Fimages%2Fagent%2Fhomepage-hero.png&w=1920&q=75&dpl=dpl_ESdqi5i5QdS7uHq5B3vWkCM7PWX8)
+## [Start here](https://docs.cursor.com/get-started/installation#start-here)
+
+[Get started Go from install to your first useful change in Cursor](https://docs.cursor.com/docs/get-started/quickstart)[Models & Pricing Compare models, usage pools, and plan pricing](https://docs.cursor.com/docs/models-and-pricing)[Changelog Stay up to date with the latest features and improvements](https://www.cursor.com/changelog)
+
+## [What you can do with Cursor](https://docs.cursor.com/get-started/installation#what-you-can-do-with-cursor)
+
+[Understand your code Trace how a repo fits together and find the right places to start](https://docs.cursor.com/learn/understanding-your-codebase)[Plan and build features Scope changes, use Plan Mode, and ship bigger work with confidence](https://docs.cursor.com/learn/creating-features)[Find and fix bugs Reproduce issues, narrow the root cause, and verify the fix](https://docs.cursor.com/learn/finding-fixing-bugs)[Review changes Inspect diffs, run checks, and catch problems before you merge](https://docs.cursor.com/learn/reviewing-testing)[Customize Cursor Add plugins, skills, MCPs, and rules from one place](https://docs.cursor.com/docs/customize-cursor)[Connect your workflow Work with GitHub, GitLab, Azure DevOps, Bitbucket, JetBrains, Slack, Linear, and more](https://docs.cursor.com/docs/integrations/github)
+
+## [Models](https://docs.cursor.com/get-started/installation#models)
+
+See all model attributes on the [Models & Pricing](https://docs.cursor.com/docs/models-and-pricing) page.
+
+| Name | Default Context | Max Context | Capabilities |
+| --- | --- | --- | --- |
+| ![Image 2: Anthropic](https://docs.cursor.com/docs-static/images/providers/anthropic-dark.svg)![Image 3: Anthropic](https://docs.cursor.com/docs-static/images/providers/anthropic-light.svg) [Claude Fable 5](https://docs.cursor.com/docs/models/claude-fable-5) | 300k | 1M |  |
+| ![Image 4: Anthropic](https://docs.cursor.com/docs-static/images/providers/anthropic-dark.svg)![Image 5: Anthropic](https://docs.cursor.com/docs-static/images/providers/anthropic-light.svg) [Claude Opus 4.8](https://docs.cursor.com/docs/models/claude-opus-4-8) | 300k | 1M |  |
+| ![Image 6: Anthropic](https://docs.cursor.com/docs-static/images/providers/anthropic-dark.svg)![Image 7: Anthropic](https://docs.cursor.com/docs-static/images/providers/anthropic-light.svg) [Claude Sonnet 5](https://docs.cursor.com/docs/models/claude-sonnet-5) | 200k | 1M |  |
+| ![Image 8: Cursor](https://docs.cursor.com/docs-static/images/providers/cursor.svg) [Composer 2.5](https://docs.cursor.com/docs/models/cursor-composer-2-5) | 200k | - |  |
+| ![Image 9: Google](https://docs.cursor.com/docs-static/images/providers/google.svg) [Gemini 3.1 Pro](https://docs.cursor.com/docs/models/gemini-3-1-pro) | 200k | 1M |  |
+| ![Image 10: Google](https://docs.cursor.com/docs-static/images/providers/google.svg) [Gemini 3.6 Flash](https://docs.cursor.com/docs/models/gemini-3-6-flash) | 200k | 1M |  |
+| ![Image 11: OpenAI](https://docs.cursor.com/docs-static/images/providers/openai-dark.svg)![Image 12: OpenAI](https://docs.cursor.com/docs-static/images/providers/openai-light.svg) [GPT-5.6 Luna](https://docs.cursor.com/docs/models/gpt-5-6-luna) | 272k | - |  |
+| ![Image 13: OpenAI](https://docs.cursor.com/docs-static/images/providers/openai-dark.svg)![Image 14: OpenAI](https://docs.cursor.com/docs-static/images/providers/openai-light.svg) [GPT-5.6 Sol](https://docs.cursor.com/docs/models/gpt-5-6-sol) | 272k | 1M |  |
+| ![Image 15: OpenAI](https://docs.cursor.com/docs-static/images/providers/openai-dark.svg)![Image 16: OpenAI](https://docs.cursor.com/docs-static/images/providers/openai-light.svg) [GPT-5.6 Terra](https://docs.cursor.com/docs/models/gpt-5-6-terra) | 272k | - |  |
+| ![Image 17: Cursor](https://docs.cursor.com/docs-static/images/providers/cursor.svg) [Grok 4.5](https://docs.cursor.com/docs/models/grok-4-5) | 256k | - |  |
+
+Show more models
+
+## [More resources](https://docs.cursor.com/get-started/installation#more-resources)
+
+[Downloads Get Cursor for your computer](https://cursor.com/downloads)[Help Find answers to common questions and troubleshooting guides](https://docs.cursor.com/help)
+
+Support
+
+For account and billing questions, contact our support team
+
+English
+
+*   English
+*   简体中文
+*   日本語
+*   繁體中文
+*   Español
+*   Français
+*   Português
+*   한국어
+*   Русский
+*   Türkçe
+*   Bahasa Indonesia
+*   Deutsch
+*   हिन्दी
+
+*   [Start here](https://docs.cursor.com/get-started/installation#start-here)
+*   [What you can do with Cursor](https://docs.cursor.com/get-started/installation#what-you-can-do-with-cursor)
+*   [Models](https://docs.cursor.com/get-started/installation#models)
+*   [More resources](https://docs.cursor.com/get-started/installation#more-resources)
+
+Copy page
+
+Share feedback
+
+Explain more
+
+Agent
+
+Tokenizer Off Context: 0/200k (0%)
+
+Open chat

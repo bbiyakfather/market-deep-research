@@ -1,0 +1,554 @@
+{
+ "axis": "A1-figma-mcp",
+ "summary": "Figma Dev Mode MCP Server는 2026-07-23 기준 원격(remote, https://mcp.figma.com/mcp, OAuth 로그인)과 데스크톱(desktop, Figma 데스크톱 앱 Dev Mode에서 켜면 http://127.0.0.1:3845/mcp) 두 방식으로 제공되며 Figma 공식은 기능이 더 많은 원격 서버를 권장한다. 무료 Starter 플랜에서도 원격 서버는 켤 수 있지만 월 6회 호출로 매우 제한적이고, 유료 플랜에서도 View/Collab 시트는 동일하게 월 6회로 묶인다 — 실질적으로 쓸만한 호출량(Professional 200/day, Organization 200/day·15/min, Enterprise 600/day)을 받으려면 Dev 또는 Full 시트가 필요하며, Figma 파일에 실제로 쓰기(write to canvas)까지 하려면 그중에서도 Full 시트가 있어야 한다(Dev 시트는 읽기 전용). Professional 플랜 가격은 공식 페이지 기준 연간 청구 시 Full $16/mo·Dev $12/mo이며(제3자 소스들은 월간 청구 시 Full $20/mo·Dev $15/mo라고 일관되게 보도하나 이 세션에서 원문 verbatim 확인은 연간값만 가능했음). Cursor 연결은 원격 서버는 에이전트 채팅에 `/add-plugin figma` 입력 후 Cursor Settings에서 Connect하는 원클릭에 가까운 방식이 있고, 데스크톱 서버는 mcp.json에 `{\"mcpServers\":{\"figma-desktop\":{\"url\":\"http://127.0.0.1:3845/mcp\"}}}`를 수동으로 넣는 방식이 있다. 무료 사용자를 위한 대표 커뮤니티 대체재는 Framelink Figma MCP(=npm 패키지 figma-developer-mcp, GitHub GLips/Figma-Context-MCP, 스타 15,481개·2026-07-03 최근 커밋으로 활성도 높음)인데, 이 도구도 결국 Figma 개인 액세스 토큰으로 Figma REST API를 호출하므로 Starter 플랜 파일에는 공식 MCP와 동일하게 월 6회 제한이 그대로 적용된다 — \"커뮤니티 도구를 쓰면 무료 플랜 제한을 피할 수 있다\"는 통념은 사실이 아니다. 디자인→코드 생성의 best practice는 컴포넌트화·Code Connect 연결·변수(variable) 사용·시맨틱 레이어 이름·Auto Layout 사용이며, 대형 프레임을 통째로 선택하면 느려지거나 응답이 끊기므로 작은 컴포넌트 단위로 나눠 요청하는 것이 핵심 한계이자 권장 회피법이다.",
+ "facts": [
+  {
+   "statement": "Figma 데스크톱 앱에서 MCP 서버를 켜는 절차는 앱을 최신 버전으로 업데이트 → Figma Design 파일을 열고 하단 툴바에서 Dev Mode로 전환(단축키 Shift+D) → Inspect 패널의 MCP server 섹션에서 'Enable desktop MCP server' 클릭이며, 이때 로컬 서버 주소는 http://127.0.0.1:3845/mcp 로 고정 표시된다.",
+   "risk": "normal",
+   "value": "http://127.0.0.1:3845/mcp",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+     "title": "Set up the desktop server (using desktop app) | Developer Docs",
+     "quote": "Open the Figma desktop app and make sure you've updated to the latest version. Create or open a Figma Design file. In the toolbar at the bottom, toggle to Dev Mode or use the keyboard shortcut ⇧D In the MCP server section of the inspect panel, click Enable desktop MCP server. ... Note: The desktop server runs locally at http://127.0.0.1:3845/mcp. Keep this address handy for your configuration file in the next step.",
+     "locator": "Step 1: Enable the desktop MCP Server",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Figma가 공식적으로 권장하는 방식은 데스크톱 앱 설치 없이 쓸 수 있는 원격(remote) MCP 서버이며, 엔드포인트는 https://mcp.figma.com/mcp 이고 접속 시 Figma OAuth 로그인 절차를 거쳐야 한다.",
+   "risk": "normal",
+   "value": "https://mcp.figma.com/mcp",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "title": "Set up the remote server (recommended) | Developer Docs",
+     "quote": "Figma's remote MCP server makes it possible to connect directly to your Figma files without needing to install Figma's desktop app. ... To use this server, you'll need to sign in through Figma's OAuth authentication flow.",
+     "locator": "Set up the remote server (recommended)",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Figma MCP 서버는 아무 편집기나 연결되는 것이 아니라 Figma MCP Catalog에 등재된 클라이언트(VS Code, Cursor, Claude Code 등)만 연결이 허용된다.",
+   "risk": "normal",
+   "value": "",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "title": "Rate limits & access | Developer Docs",
+     "quote": "Only clients listed in the Figma MCP Catalog are able to connect to the Figma MCP Server. If you're a developer interested in connecting a new MCP client, you can join the waitlist.",
+     "locator": "Which MCP clients are supported?",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "무료 Starter 플랜에서도 Figma MCP 서버(원격) 자체는 켤 수 있지만 월 6회 호출로 제한되며, 이 제한을 풀려면 유료 플랜(Pro/Organization/Enterprise)으로 업그레이드하면서 Dev 또는 Full 시트를 받아야 한다.",
+   "risk": "high",
+   "value": "무료(Starter), MCP 호출 최대 6회/월",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "title": "Rate limits & access | Developer Docs",
+     "quote": "If you're on a Starter plan (6 tool calls per month), upgrade to a Pro, Organization, or Enterprise plan. Ensure you have a Full or Dev seat on the new plan.",
+     "locator": "What if I'm rate-limited?",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://www.figma.com/pricing/",
+     "title": "Plans & Pricing | Figma",
+     "quote": "Starter — Free — Free limited access to Figma products",
+     "locator": "Starter plan card",
+     "source_role": "원출처",
+     "publisher": "Figma (figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": "developers.figma.com/docs/rest-api/rate-limits/ 원문에서도 'if you use a personal access token to get the content of a file in a Starter plan, requests to that file are limited to up to 6 per month even if you have a Full seat in a different plan'이라고 명시해, Starter 플랜의 월 6회 제한이 MCP 전용이 아니라 Figma REST API 전반의 구조적 제한임을 재확인함(같은 결론으로 교차검증)."
+  },
+  {
+   "statement": "MCP 서버 접근에는 유료 플랜의 Dev 또는 Full 시트가 필요하며, 그중에서도 Figma 파일에 실제로 쓰기(write to canvas, use_figma 도구)까지 하려면 Full 시트가 있어야 한다 — Dev 시트는 드래프트 밖에서는 읽기 전용(디자인 컨텍스트·스크린샷·메타데이터·변수 정의 등)만 가능하다.",
+   "risk": "high",
+   "value": "쓰기 기능=Full 시트 필수, 읽기 기능=Dev 또는 Full 시트",
+   "primary_source": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs",
+   "evidence": [
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server",
+     "title": "Guide to the Figma MCP server – Figma Learn - Help Center",
+     "quote": "The desktop server is available on a Dev or Full seat for all paid plans. The remote server is available on all seats and plans.",
+     "locator": "Requirements",
+     "source_role": "원출처",
+     "publisher": "Figma (help.figma.com)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs",
+     "title": "Figma MCP server FAQs – Figma Learn - Help Center",
+     "quote": "Do I need a Full Seat to use use_figma's write functionality? A Full Seat is required to write to Figma files outside of drafts. Dev Seats get read-only access outside of their drafts — design context, screenshots, metadata, variable definitions, and use-figma read APIs.",
+     "locator": "Write to canvas > Do I need a Full Seat to use use_figma's write functionality?",
+     "source_role": "원출처",
+     "publisher": "Figma (help.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Figma Professional 플랜 가격은 공식 페이지 정적 렌더링 기준(연간 청구가 기본 선택된 상태) Full seat $16/mo, Dev seat $12/mo이다.",
+   "risk": "high",
+   "value": "Full seat $16/mo(연간 청구), Dev seat $12/mo(연간 청구)",
+   "primary_source": "https://www.figma.com/pricing/",
+   "evidence": [
+    {
+     "url": "https://www.figma.com/pricing/",
+     "title": "Plans & Pricing | Figma",
+     "quote": "Professional ... Show annual billing prices: Annual selected ... Full seat $16/mo ... Dev seat $12/mo",
+     "locator": "Professional plan card (Annual toggle default)",
+     "source_role": "원출처",
+     "publisher": "Figma (figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": "재검색 결과 projectmanagers.net, comparedge.com, userjot.com, toolradar.com 등 제3자 가격비교 소스가 모두 '월간(비연간) 청구 시 Full seat $20/mo, Dev seat $15/mo, 연간 청구 시 $16/mo·$12/mo'로 일관 보도함. 다만 figma.com/pricing의 Monthly/Annual 토글은 클라이언트 JS로 값이 바뀌는 구조라 이 세션에서 확보한 정적 HTML에는 연간값($16/$12)만 텍스트로 존재했고, 월간값($20/$15)은 공식 페이지에서 verbatim으로 직접 재확인하지 못했다."
+  },
+  {
+   "statement": "Figma MCP 서버 호출 한도는 시트·플랜별로 표로 정해져 있다: 모든 플랜의 View/Collab 시트와 Starter 플랜은 시트 종류와 무관하게 월 6회, Professional Dev/Full 시트는 1일 200회(분당 10회), Organization Dev/Full 시트는 1일 200회(분당 15회), Enterprise Dev/Full 시트는 1일 600회(분당 20회)까지 허용된다.",
+   "risk": "high",
+   "value": "Starter/View,Collab=6/월, Professional Dev,Full=200/일·10/분, Organization Dev,Full=200/일·15/분, Enterprise Dev,Full=600/일·20/분",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "title": "Rate limits & access | Developer Docs",
+     "quote": "<table id=\"rate-limits-tier-table\"><thead><tr><th>Seat</th><th>Starter</th><th>Professional</th><th>Organization</th><th>Enterprise</th></tr></thead><tbody><tr><td>View, Collab</td><td rowspan=\"2\">Up to 6/month</td><td>Up to 6/month</td><td>Up to 6/month</td><td>Up to 6/month</td></tr><tr><td>Dev, Full</td><td>Up to 200/day 10/min</td><td>Up to 200/day 15/min</td><td>Up to 600/day 20/min</td></tr></tbody></table>",
+     "locator": "Who can access the MCP server?",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+     "title": "Rate limits & access | Developer Docs",
+     "quote": "If you have a Full or Dev seat on an Organization plan (200 tool calls per day), upgrade to an Enterprise plan (600 tool calls per day).",
+     "locator": "What if I'm rate-limited?",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": "\"Figma MCP rate limit 200/day Professional Dev seat\" 재검색 결과 Figma 포럼 게시물 및 제3자 요약 다수가 Professional/Organization Dev,Full=200/day, Enterprise=600/day로 동일하게 보도해 표 해석이 맞음을 확인함."
+  },
+  {
+   "statement": "Cursor에서 원격 MCP 서버를 붙이는 공식 권장 방법은 Cursor 에이전트 채팅창에 `/add-plugin figma`를 입력해 Figma 플러그인(설정+Agent Skills 포함)을 설치한 뒤 Cursor Settings > Tools & MCP > Installed MCP Servers에서 Connect를 눌러 인증하는 것이다.",
+   "risk": "normal",
+   "value": "/add-plugin figma",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "title": "Set up the remote server (recommended) | Developer Docs",
+     "quote": "The recommended way to set up the Figma MCP server in Cursor is by installing the Figma plugin, which includes MCP server settings as well as Agent Skills for common workflows. Install the plugin by typing the following command in Cursor's agent chat: /add-plugin figma",
+     "locator": "Cursor > Using the Figma plugin for Cursor (preferred)",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+     "title": "Cursor and Figma: Set up the MCP server – Figma Learn - Help Center",
+     "quote": "Enter `/add-plugin figma` in the chat prompt and hit Submit. Click Add Plugin to begin installation. ... Under Installed MCP Servers, click Connect to authenticate.",
+     "locator": "Set up the remote Figma MCP server (preferred)",
+     "source_role": "원출처",
+     "publisher": "Figma (help.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Figma 데스크톱 서버를 Cursor에 수동으로 붙일 때는 mcp.json에 {\"mcpServers\": {\"figma-desktop\": {\"url\": \"http://127.0.0.1:3845/mcp\"}}} 를 그대로 넣으면 되며, 이는 VS Code가 같은 상황에서 \"servers\" 키를 쓰는 것과 최상위 키 이름이 다르다.",
+   "risk": "normal",
+   "value": "{\"mcpServers\":{\"figma-desktop\":{\"url\":\"http://127.0.0.1:3845/mcp\"}}}",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+     "title": "Set up the desktop server (using desktop app) | Developer Docs",
+     "quote": "Cursor: Open Cursor → Settings → Cursor Settings. Go to the MCP tab. Click + Add new global MCP server. Enter the following configuration and save: { \"mcpServers\": { \"figma-desktop\": { \"url\": \"http://127.0.0.1:3845/mcp\" } } }",
+     "locator": "Step 2: Set up your MCP client > Cursor",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+     "title": "Set up the desktop server (using desktop app) | Developer Docs",
+     "quote": "VS Code ... you'll see a configuration like this in your mcp.json file: { \"servers\": { \"figma-desktop\": { \"type\": \"http\", \"url\": \"http://127.0.0.1:3845/mcp\" } } }",
+     "locator": "Step 2: Set up your MCP client > VS Code",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Cursor에서 원격 서버를 수동으로 붙이는 방법도 별도로 있는데, Figma가 제공하는 'Figma MCP server deep link'를 클릭해 Cursor 안에서 MCP 설정을 열고 Install → Connect → Allow access 순으로 진행하는 방식이다.",
+   "risk": "normal",
+   "value": "",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "title": "Set up the remote server (recommended) | Developer Docs",
+     "quote": "Manual setup for Cursor: Click the Figma MCP server deep link. This will open the MCP configuration in Cursor. Click Install under 'Install MCP Server?' Click Connect next to Figma to begin the authentication process. Click Open. Allow access",
+     "locator": "Cursor > Manual setup for Cursor",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "무료 플랜 사용자를 위한 대표적 커뮤니티 대체재는 Framelink Figma MCP(npm 패키지명 figma-developer-mcp, GitHub 저장소 GLips/Figma-Context-MCP)이며, GitHub 실측 기준 스타 15,481개·포크 1,219개·오픈 이슈 21건·최근 커밋 2026-07-03로 활발히 유지보수되고 있다.",
+   "risk": "normal",
+   "value": "stars 15,481 / forks 1,219 / open issues 21 / last push 2026-07-03T14:24:36Z",
+   "primary_source": "https://github.com/GLips/Figma-Context-MCP",
+   "evidence": [
+    {
+     "url": "https://github.com/GLips/Figma-Context-MCP",
+     "title": "GitHub - GLips/Figma-Context-MCP: MCP server to provide Figma layout information to AI coding agents like Cursor",
+     "quote": "MCP server to provide Figma layout information to AI coding agents like Cursor",
+     "locator": "저장소 설명(About) + GitHub REST API(repos/GLips/Figma-Context-MCP) 실측: stargazers_count 15481, forks_count 1219, open_issues_count 21, pushed_at 2026-07-03T14:24:36Z",
+     "source_role": "원출처",
+     "publisher": "GitHub (GLips/Figma-Context-MCP repo + GitHub REST API)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Framelink Figma MCP(figma-developer-mcp) 같은 커뮤니티 대체재도 내부적으로 Figma 개인 액세스 토큰(personal access token)으로 Figma REST API를 호출하므로, Starter(무료) 플랜의 파일에 대해서는 공식 MCP와 동일하게 월 6회 요청 제한이 그대로 적용된다 — 커뮤니티 도구를 쓴다고 해서 무료 플랜의 요청 한도를 우회할 수 있는 것은 아니다.",
+   "risk": "high",
+   "value": "Starter 플랜 파일: 개인 액세스 토큰 사용 시에도 최대 6회/월",
+   "primary_source": "https://developers.figma.com/docs/rest-api/rate-limits/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/rest-api/rate-limits/",
+     "title": "Rate Limits | Developer Docs",
+     "quote": "For example, if you use a personal access token to get the content of a file in a Starter plan, requests to that file are limited to up to 6 per month even if you have a Full seat in a different plan.",
+     "locator": "Rate Limits (세 가지 제한 요인 설명 문단)",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://github.com/GLips/Figma-Context-MCP",
+     "title": "GitHub - GLips/Figma-Context-MCP",
+     "quote": "You will need to create a Figma access token to use this server.",
+     "locator": "README > Setup",
+     "source_role": "원출처",
+     "publisher": "GitHub (GLips/Figma-Context-MCP repo)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": "Framelink/figma-developer-mcp README 자체는 Starter 플랜 제한을 별도로 언급하지 않지만, 이 도구가 호출하는 하위 API(Figma REST API GET file 등, Tier 1 엔드포인트)에 대한 공식 rate-limit 문서를 직접 재확인해 위 결론(우회 불가)이 맞음을 검증함."
+  },
+  {
+   "statement": "Figma 공식(figma/mcp-server-guide 저장소)이 제시하는 디자인→코드 품질 향상 best practice는 버튼·카드·인풋처럼 재사용되는 요소를 컴포넌트로 만들고, 그 컴포넌트를 Code Connect로 실제 코드베이스와 연결하고, 간격·색상·라운드·타이포그래피를 변수(variable)로 관리하고, 레이어 이름을 'Group 5' 대신 'CardContainer'처럼 시맨틱하게 짓고, Auto Layout으로 반응형 의도를 표현하는 것이다.",
+   "risk": "normal",
+   "value": "",
+   "primary_source": "https://github.com/figma/mcp-server-guide",
+   "evidence": [
+    {
+     "url": "https://github.com/figma/mcp-server-guide",
+     "title": "GitHub - figma/mcp-server-guide: A guide on how to use the Figma MCP server",
+     "quote": "Use components for anything reused (buttons, cards, inputs, etc.) ... Link components to your codebase via Code Connect. This is the best way to get consistent component reuse in code. ... Use variables for spacing, color, radius, and typography ... Name layers semantically (e.g. CardContainer, not Group 5) ... Use Auto layout to communicate responsive intent",
+     "locator": "Structuring Figma Files for Better Code",
+     "source_role": "원출처",
+     "publisher": "GitHub (figma 공식 조직 계정, mcp-server-guide repo)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Figma MCP 서버의 핵심 한계는 한 번에 너무 큰 화면(대형 프레임)을 통째로 선택해서 코드 생성을 요청하면 느려지거나 오류가 나거나 응답이 불완전해질 수 있다는 것이며, 공식 권장 대응은 화면을 컴포넌트·논리적 단위로 잘게 쪼개서 요청하는 것이다.",
+   "risk": "normal",
+   "value": "",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/",
+     "title": "Avoid selecting large, heavy frames | Developer Docs",
+     "quote": "Break screens into smaller parts (like components or logical chunks) for faster, more reliable results. Large selections can slow the tools down, cause errors, or result in incomplete responses, especially when there's too much context for the model to process.",
+     "locator": "Avoid selecting large, heavy frames",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Figma MCP의 'write to canvas'(코드/에이전트가 Figma 캔버스에 직접 컴포넌트·변수·프레임을 쓰는 기능, use_figma 도구)는 2026-07-23 기준 베타 기간 동안 무료로 제공되지만, Figma는 이 기능을 향후 사용량 기반(usage-based) 유료 기능으로 전환할 계획이라고 공식적으로 밝히고 있다.",
+   "risk": "high",
+   "value": "현재 무료(베타), 추후 사용량 기반 유료 전환 예정",
+   "primary_source": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+   "evidence": [
+    {
+     "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+     "title": "Set up the remote server (recommended) | Developer Docs",
+     "quote": "Note: We're quickly improving how Figma supports AI agents. This will eventually be a usage-based paid feature, but is currently available for free during the beta period.",
+     "locator": "Write to canvas",
+     "source_role": "원출처",
+     "publisher": "Figma (developers.figma.com)",
+     "observed_at": "2026-07-23"
+    },
+    {
+     "url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs",
+     "title": "Figma MCP server FAQs – Figma Learn - Help Center",
+     "quote": "Note: We're quickly improving how Figma supports AI agents. This will eventually be a usage-based paid feature, but is currently available for free during the beta period.",
+     "locator": "Write to canvas (섹션 상단 안내문)",
+     "source_role": "원출처",
+     "publisher": "Figma (help.figma.com)",
+     "observed_at": "2026-07-23"
+    }
+   ],
+   "counter": "\"Figma MCP write to canvas beta free usage-based paid feature\" 재검색 결과 Figma 공식 블로그(the-figma-canvas-is-now-open-to-agents) 및 제3자 기술 블로그(bitovi.com 등) 다수가 동일하게 '현재 베타 무료, 추후 유료 전환 예정'으로 보도해 원문 내용과 완전히 일치함을 확인."
+  }
+ ],
+ "resources": [
+  {
+   "title": "Introduction | Figma MCP Server Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Figma MCP 서버 전체 구조(원격/데스크톱, 핵심 기능, 지원 클라이언트)를 한눈에 보여주는 공식 시작점으로, 다른 모든 하위 문서로 가는 목차 역할을 한다.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "Set up the remote server (recommended) | Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Cursor·VS Code·Claude Code·Codex·Xcode별로 원격 MCP 연결 단계와 실제 mcp.json 예시 코드를 그대로 제공해, 비개발자도 그대로 따라 칠 수 있는 수준의 실전 가이드.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "Set up the desktop server (using desktop app) | Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Figma 데스크톱 앱에서 Dev Mode로 전환해 MCP 서버를 켜는 정확한 클릭 순서와 서버 주소(127.0.0.1:3845)를 스크린샷 없이도 따라갈 수 있게 텍스트로 설명한다.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "Rate limits & access | Developer Docs",
+   "url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "무료 Starter 플랜과 각 유료 시트별 실제 호출 한도를 표로 정리해, 강의 실습 전에 '내 계정으로 몇 번까지 써볼 수 있는지'를 미리 확인할 수 있는 필수 페이지.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "Plans & Pricing | Figma",
+   "url": "https://www.figma.com/pricing/",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Dev seat/Full seat 가격과 Starter 무료 플랜 조건을 최신 상태로 확인할 수 있는 유일한 1차 소스. 강의 신청 전 '내가 어떤 플랜을 사야 MCP를 쓸 수 있는지' 판단 기준이 된다.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "Cursor and Figma: Set up the MCP server – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/39889260656407-Cursor-and-Figma-Set-up-the-MCP-server",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Cursor 전용 절차만 따로 정리된 Figma 공식 헬프센터 문서로, /add-plugin 명령어부터 Connect 버튼 클릭까지 강의 실습 순서와 거의 1:1로 대응된다.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "Figma MCP server FAQs – Figma Learn - Help Center",
+   "url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs",
+   "type": "공식문서",
+   "difficulty": "중급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "write to canvas(use_figma)의 시트 요건, 알려진 한계(20kb 응답 제한, 이미지 미지원 등), 도구가 안 보일 때 체크리스트까지 실습 중 막히는 지점을 그대로 다룬 공식 FAQ.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "GitHub - figma/mcp-server-guide",
+   "url": "https://github.com/figma/mcp-server-guide",
+   "type": "GitHub",
+   "difficulty": "중급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Figma가 직접 관리하는 조직(org) 계정의 저장소로, 파일 구조·프롬프트 작성·Code Connect 등 best practice와 실전 예시가 한 곳에 정리되어 있어 요금 페이지 다음으로 신뢰도 높은 실습용 자료.",
+   "published_or_updated": ""
+  },
+  {
+   "title": "GitHub - GLips/Figma-Context-MCP (Framelink Figma MCP / npm figma-developer-mcp)",
+   "url": "https://github.com/GLips/Figma-Context-MCP",
+   "type": "GitHub",
+   "difficulty": "중급",
+   "language": "en",
+   "related_part": "공통",
+   "free": true,
+   "reason": "무료 플랜 사용자가 가장 많이 쓰는 커뮤니티 대체 MCP 서버로, 스타 1.5만 개 이상·최근 커밋 활발해 신뢰할 만하며 Figma 개인 액세스 토큰만 있으면 바로 연결할 수 있다.",
+   "published_or_updated": "2026-07-03 (최근 커밋)"
+  },
+  {
+   "title": "2026 피그마 MCP 완벽 가이드: use_figma로 캔버스 직접 수정하기 (Claude Code 연동 후기)",
+   "url": "https://litmers.com/blog/%ED%94%BC%EA%B7%B8%EB%A7%88-mcp-%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80-%EA%B5%AC%ED%98%84-%ED%81%B4%EB%A1%9C%EB%93%9C-%EC%BD%94%EB%93%9C-%EC%97%B0%EB%8F%99-%ED%9B%84%EA%B8%B0",
+   "type": "블로그",
+   "difficulty": "중급",
+   "language": "ko",
+   "related_part": "공통",
+   "free": true,
+   "reason": "generate_figma_design과 use_figma(캔버스 쓰기)의 차이를 실사용 후기로 설명한 몇 안 되는 2026년 최신 한국어 자료. 완전 입문자보다는 기본 개념을 익힌 뒤 읽으면 좋다.",
+   "published_or_updated": "2026-03-30"
+  }
+ ],
+ "glossary": [
+  {
+   "term": "MCP (Model Context Protocol)",
+   "plain_ko": "AI 에이전트가 Figma 같은 외부 도구/데이터에 표준화된 방식으로 접근하게 해주는 통신 규격.",
+   "detail_url": "https://developers.figma.com/docs/figma-mcp-server/"
+  },
+  {
+   "term": "Dev Mode",
+   "plain_ko": "Figma 디자인 파일을 개발자가 코드로 옮기기 쉽게 스펙·수치·컴포넌트 정보를 보여주는 전용 보기 모드.",
+   "detail_url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/"
+  },
+  {
+   "term": "Dev seat / Full seat / View,Collab seat",
+   "plain_ko": "Figma 유료 플랜에서 사용자에게 부여하는 접근 등급(좌석). Full은 전체 기능, Dev는 Dev Mode 중심 개발자용, View/Collab은 보기·댓글만 가능.",
+   "detail_url": "https://www.figma.com/pricing/"
+  },
+  {
+   "term": "Remote MCP server vs Desktop MCP server",
+   "plain_ko": "원격 서버는 Figma가 직접 운영하는 서버(https://mcp.figma.com/mcp)이고, 데스크톱 서버는 내 컴퓨터의 Figma 데스크톱 앱이 켜주는 로컬 서버(http://127.0.0.1:3845/mcp)다.",
+   "detail_url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/"
+  },
+  {
+   "term": "Code Connect",
+   "plain_ko": "Figma의 디자인 컴포넌트와 실제 코드베이스의 컴포넌트를 서로 연결해, AI가 새 코드를 만드는 대신 이미 있는 컴포넌트를 재사용하게 해주는 기능.",
+   "detail_url": "https://github.com/figma/mcp-server-guide"
+  },
+  {
+   "term": "Rate limit (요청 제한)",
+   "plain_ko": "일정 기간(월/일/분) 동안 허용되는 API·MCP 도구 호출 횟수의 상한선.",
+   "detail_url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/"
+  },
+  {
+   "term": "Personal access token (개인 액세스 토큰)",
+   "plain_ko": "Figma 계정 설정에서 발급받아, 코드나 커뮤니티 MCP 서버가 내 Figma 데이터에 접근할 수 있게 해주는 인증용 키.",
+   "detail_url": "https://developers.figma.com/docs/rest-api/rate-limits/"
+  },
+  {
+   "term": "mcp.json",
+   "plain_ko": "Cursor, VS Code 같은 에디터에서 '어떤 MCP 서버에 어떻게 접속할지'를 적어두는 설정 파일.",
+   "detail_url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/"
+  },
+  {
+   "term": "write to canvas (use_figma)",
+   "plain_ko": "AI 에이전트가 코드를 만드는 것을 넘어 Figma 파일 안에 컴포넌트·프레임을 직접 새로 그리거나 수정하는 쓰기 기능.",
+   "detail_url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs"
+  }
+ ],
+ "faq": [
+  {
+   "q": "무료(Starter) 플랜에서도 Figma MCP를 쓸 수 있나요?",
+   "a_hint": "원격 서버는 켤 수 있지만 월 6회 호출로 사실상 맛보기 수준이며, Dev/Full 시트가 있는 유료 플랜(Professional 이상)이어야 실습을 이어갈 만한 호출량(예: Professional 1일 200회)을 받는다.",
+   "source_url": "https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/"
+  },
+  {
+   "q": "Framelink Figma MCP 같은 커뮤니티 도구를 쓰면 무료 플랜의 6회/월 제한을 피할 수 있나요?",
+   "a_hint": "아니다. 이 도구도 결국 Figma 개인 액세스 토큰으로 동일한 Figma REST API를 호출하므로, Starter 플랜 파일에는 똑같이 월 6회 제한이 걸린다.",
+   "source_url": "https://developers.figma.com/docs/rest-api/rate-limits/"
+  },
+  {
+   "q": "데스크톱 서버와 원격 서버 중 어느 것을 먼저 세팅해야 하나요?",
+   "a_hint": "Figma 공식이 기능이 더 많다는 이유로 원격 서버(https://mcp.figma.com/mcp)를 우선 권장하며, 데스크톱 서버는 특정 엔터프라이즈 상황에만 쓰라고 안내한다.",
+   "source_url": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/"
+  },
+  {
+   "q": "Cursor의 mcp.json 설정이 VS Code와 다르게 안 먹히는데 왜 그런가요?",
+   "a_hint": "VS Code는 mcp.json 최상위 키가 \"servers\"이고 Cursor는 \"mcpServers\"라서, 편집기를 바꿔 설정 파일을 그대로 복붙하면 인식되지 않는다.",
+   "source_url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/"
+  },
+  {
+   "q": "화면 전체를 한 번에 선택해서 코드를 뽑으면 안 되나요?",
+   "a_hint": "크게 선택할수록 처리할 컨텍스트가 많아져 느려지거나 응답이 끊기거나 오류가 날 수 있으므로, 카드·헤더 같은 작은 컴포넌트 단위로 나눠서 요청하는 것이 공식 권장 방식이다.",
+   "source_url": "https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/"
+  },
+  {
+   "q": "AI가 Figma 캔버스에 직접 디자인을 그려주는 기능(write to canvas)도 무료인가요?",
+   "a_hint": "지금은 베타 기간이라 무료지만, Figma가 공식적으로 '추후 사용량 기반 유료 기능으로 전환할 예정'이라고 밝혔으므로 나중에 요금이 붙을 수 있다.",
+   "source_url": "https://help.figma.com/hc/en-us/articles/39252411778583-Figma-MCP-server-FAQs"
+  }
+ ],
+ "expand_leads": [
+  {
+   "lead": "Cursor 자체 공식문서(docs.cursor.com)의 MCP 일반 설정법과 Figma 플러그인 상세 페이지",
+   "why": "이번 조사는 Figma 쪽 공식문서를 기준으로 Cursor 연결 절차를 확인했지만, docs.cursor.com/tools/mcp 같은 Cursor 자체 문서는 스니펫만 확인했고 원문 verbatim은 못 열어봤다.",
+   "angle": "site:docs.cursor.com MCP 또는 Figma plugin add-plugin"
+  },
+  {
+   "lead": "Figma AI credits(크레딧) 소모 구조와 MCP 도구 호출이 이 크레딧을 쓰는지 여부",
+   "why": "요금 페이지에 시트별 'AI credits/mo'가 별도로 표시되는데, MCP 도구 호출(get_design_context 등)이 이 크레딧을 별도로 소모하는지 이번 조사에서는 확인하지 못했다.",
+   "angle": "Figma AI credits MCP tool call consumption help center"
+  },
+  {
+   "lead": "Code Connect를 비개발자/기획자가 실제로 설정할 수 있는 난이도인지",
+   "why": "best practice 문서에서 반복적으로 Code Connect 연결을 강조하지만, 이 강의의 타깃(코드 모르는 기획자·디자이너)이 직접 설정 가능한 수준인지, 아니면 개발자가 미리 세팅해줘야 하는 영역인지는 별도 확인이 필요하다.",
+   "angle": "Figma Code Connect setup guide beginner non-developer"
+  }
+ ],
+ "dead_ends": [
+  "npmjs.com/package/figma-developer-mcp는 WebFetch 403으로 막혀 주간 다운로드 수 등 npm 통계를 원문으로 확인하지 못함(대신 GitHub API 실측 스타 수로 대체).",
+  "temkit.kr의 한국어 블로그(피그마 MCP 핵심 총정리)는 WebFetch 403으로 열람 불가해 신뢰성 확인을 못 하고 resources에서 제외함.",
+  "help.figma.com의 데스크톱 MCP 서버 대체 가이드 문서(article 35281186390679)는 접근 시 Zendesk 로그인 페이지로 302 리다이렉트되어 원문 확보 실패 — 동일 내용을 developers.figma.com/docs/figma-mcp-server/local-server-installation/의 curl 원문에서 대체 확보해 정보 손실은 없음.",
+  "developers.figma.com/docs/figma-mcp-server/best-practices/ 라는 URL은 실제로 존재하지 않는(404) 추정 경로였음 — 실제로는 structure-figma-file/, write-effective-prompts/, avoid-large-frames/ 등 여러 하위 페이지로 나뉘어 있어 이 중 avoid-large-frames/와 figma 공식 GitHub 가이드로 대체함.",
+  "GitHub org 'framelink-ai'로 gh api 조회 시 404 — Framelink는 별도 GitHub 조직이 아니라 GLips/Figma-Context-MCP 저장소의 제품 브랜드명(웹사이트만 framelink.ai)이라는 점을 확인함."
+ ]
+}

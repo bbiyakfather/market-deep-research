@@ -1,0 +1,248 @@
+Title: 안내서 | 개인정보보호위원회 > > 정책 · 법령>법령정보
+
+URL Source: https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=10375
+
+Markdown Content:
+_![Image 1: 전자정부 누리집 로고](https://www.pipc.go.kr/np/resources/images/common/icon2.jpg)_ 이 누리집은 대한민국 공식 전자정부 누리집입니다.
+
+*   [Home](https://www.pipc.go.kr/np)
+*   언어
+
+*   [KOR](https://www.pipc.go.kr/np)
+*   [ENG](https://www.pipc.go.kr/eng/index.do)
+
+*    위원회 소식 [위원회 소식](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS061&mCode=C010010000)
+
+    1.   [새소식](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS061&mCode=C010010000)
+        1.   [공지사항](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS061&mCode=C010010000)
+        2.   [채용](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS208&mCode=C010020000)
+        3.   [공시송달](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS262&mCode=C010030000)
+        4.   [결과의 공표](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS258&mCode=C010040000)
+
+    2.   [보도‧해명](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS074&mCode=C020010000)
+        1.   [보도자료](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS074&mCode=C020010000)
+        2.   [해명자료](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS210&mCode=C020020000)
+
+    3.   [정책홍보](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS211&mCode=C040020000)
+        1.   [사진뉴스](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS211&mCode=C040020000)
+        2.   [카드뉴스](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS212&mCode=C040030000)
+        3.   [정보그림(인포그래픽)](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS213&mCode=C040050000)
+        4.   [동영상뉴스](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS215&mCode=C040060000)
+
+    4.   [개인정보 보호 캠페인](https://www.pipc.go.kr/np/default/page.do?mCode=C050000000)
+        1.   [내정보지킴이 캠페인](https://www.pipc.go.kr/np/default/page.do?mCode=C050010000)
+
+*    정책 · 법령 [정책 · 법령](https://www.pipc.go.kr/np/default/page.do?mCode=D010010000)
+
+    1.   [법령정보](https://www.pipc.go.kr/np/default/page.do?mCode=D010010000)
+        1.   [법령](https://www.pipc.go.kr/np/default/page.do?mCode=D010010000)
+        2.   [훈령‧예규‧고시](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS216&mCode=D010020010)
+        3.   [안내서](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030000)
+
+    2.   [국민정책](https://www.pipc.go.kr/np/default/page.do?mCode=D030010000)
+        1.   [개인정보 열람 등 요구정책](https://www.pipc.go.kr/np/default/page.do?mCode=D030010000)
+        2.   [전송요구권(마이데이터 제도)](https://www.pipc.go.kr/np/default/page.do?mCode=D030020010)
+        3.   [개인정보 분쟁조정제도](https://www.pipc.go.kr/np/default/page.do?mCode=D030030010)
+        4.   [개인정보 유출신고제도](https://www.pipc.go.kr/np/default/page.do?mCode=D030040000)
+        5.   [개인정보 침해신고제도](https://www.pipc.go.kr/np/default/page.do?mCode=D030050000)
+        6.   [국민정책 자료실](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS288&&mCode=D030060000)
+
+    3.   [기업정책](https://www.pipc.go.kr/np/default/page.do?mCode=D040010000)
+        1.   [가명처리‧가명정보 결합제도](https://www.pipc.go.kr/np/default/page.do?mCode=D040010000)
+        2.   [인증제도(ISMS-P)](https://www.pipc.go.kr/np/default/page.do?mCode=D040020000)
+        3.   [기술 R&D · 표준화 로드맵(’26~’30)](https://www.pipc.go.kr/np/default/page.do?mCode=D040050000)
+        4.   [기업정책 자료실](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS289&mCode=D040070000)
+
+    4.   [공공정책](https://www.pipc.go.kr/np/default/page.do?mCode=D050010010)
+        1.   [기본계획‧시행계획](https://www.pipc.go.kr/np/default/page.do?mCode=D050010010)
+        2.   [개인정보 영향평가제도](https://www.pipc.go.kr/np/default/page.do?mCode=D050020000)
+        3.   [개인정보 침해요인 평가제도](https://www.pipc.go.kr/np/default/page.do?mCode=D050030000)
+        4.   [공공기관 개인정보보호수준 평가제도](https://www.pipc.go.kr/np/default/page.do?mCode=D050040000)
+        5.   [공공정책 자료실](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS290&mCode=D050050000)
+
+    5.   [글로벌정책](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS105&mCode=D060010000)
+        1.   [국가별 정보](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS105&mCode=D060010000)
+        2.   [해외 개인정보 감독기구 · 협의체](https://www.pipc.go.kr/np/default/page.do?mCode=D060020010)
+        3.   [해외 개인정보 자료실](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS271&mCode=D060030010)
+        4.   [동등성 인정 침해신고](https://www.pipc.go.kr/np/default/page.do?mCode=D060040000)
+
+    6.   [자료실](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS231&mCode=D070010010)
+        1.   [결정문‧사례집](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS231&mCode=D070010010)
+        2.   [연차보고서](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS079&mCode=D070020000)
+        3.   [통계정보](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS273&mCode=D070020010)
+        4.   [세미나자료](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS120&mCode=D070030000)
+        5.   [연구보고서](https://www.prism.go.kr/ "연구보고서 새창이동")
+
+    7.   [업무계획·국회](https://www.pipc.go.kr/np/default/page.do?mCode=D080010010)
+        1.   [업무계획](https://www.pipc.go.kr/np/default/page.do?mCode=D080010010)
+        2.   [국회 관련 정보](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS261&mCode=D080020000)
+
+*    국정과제 [국정과제](https://www.pipc.go.kr/np/default/page.do?mCode=G010020000)
+
+    1.   [국정성과](https://www.pipc.go.kr/np/default/page.do?mCode=G010020000)
+        1.   [전체 목록](https://www.pipc.go.kr/np/default/page.do?mCode=G010010000)
+        2.   [대표성과](https://www.pipc.go.kr/np/default/page.do?mCode=G010020000)
+
+*    심의 · 의결 [심의 · 의결](https://www.pipc.go.kr/np/default/page.do?mCode=E010010010)
+
+    1.   [심의‧의결 안내](https://www.pipc.go.kr/np/default/page.do?mCode=E010010010)
+        1.   [신청대상 및 방법](https://www.pipc.go.kr/np/default/page.do?mCode=E010010010)
+        2.   [심의‧의결 절차](https://www.pipc.go.kr/np/default/page.do?mCode=E010020000)
+        3.   [방청안내](https://www.pipc.go.kr/np/default/page.do?mCode=E010030000)
+
+    2.   [위원회 일정](https://www.pipc.go.kr/np/default/minutes.do?mCode=E020010000&schTypeCd=1)
+        1.   [보호위원회](https://www.pipc.go.kr/np/default/minutes.do?mCode=E020010000&schTypeCd=1)
+        2.   [제1소위원회](https://www.pipc.go.kr/np/default/minutes.do?mCode=E020020000&schTypeCd=2)
+        3.   [제2소위원회](https://www.pipc.go.kr/np/default/minutes.do?mCode=E020030000&schTypeCd=3)
+        4.   [구 위원회](https://www.pipc.go.kr/np/default/minutes.do?mCode=E020040000&schTypeCd=4)
+
+    3.   [위원회 결정](https://www.pipc.go.kr/np/default/agenda.do?mCode=E030010000)
+        1.   [위원회 결정문](https://www.pipc.go.kr/np/default/agenda.do?mCode=E030010000)
+        2.   [구 위원회](https://www.pipc.go.kr/np/default/agenda.do?mCode=E030020000&isPre=Y)
+
+*    정보공개 [정보공개](https://www.pipc.go.kr/np/default/page.do?mCode=A010010000)
+
+    1.   [정보공개제도](https://www.pipc.go.kr/np/default/page.do?mCode=A010010000)
+        1.   [정보공개 안내](https://www.pipc.go.kr/np/default/page.do?mCode=A010010000)
+        2.   [비공개 기준](https://www.pipc.go.kr/np/default/page.do?mCode=A010020010)
+        3.   [정보목록](https://www.pipc.go.kr/np/default/openInfo.do?mCode=A010030000)
+        4.   [정보공개 청구](https://www.open.go.kr/com/login/memberLogin.do "정보공개 청구 새창이동")
+
+    2.   [사전정보공표](https://www.pipc.go.kr/np/default/anInfo.do?mCode=A030015000)
+        1.   [사전정보 공표목록](https://www.pipc.go.kr/np/default/anInfo.do?mCode=A030015000)
+        2.   [업무추진비](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS201&mCode=A030020000)
+        3.   [감사결과](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS202&mCode=A030030000)
+        4.   [반부패‧청렴자료](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS203&mCode=A030040000)
+        5.   [금지물품 현황](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS204&mCode=A030050000)
+        6.   [부패행위자 정보](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS205&mCode=A030060000)
+        7.   [공무용차량 이용현황](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS206&mCode=A030070000)
+        8.   [세입‧세출예산 운용현황](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS207&mCode=A030080000)
+        9.   [계약현황](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS252&mCode=A030100000)
+        10.   [행정기관 소속 위원회 현황](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS264&mCode=A030110000)
+        11.   [주요 평가 결과](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS295&mCode=A030120000)
+
+    3.   [공공데이터](https://www.pipc.go.kr/np/default/page.do?mCode=A040010000)
+        1.   [공공데이터 개방](https://www.pipc.go.kr/np/default/page.do?mCode=A040010000)
+
+    4.   [정책실명제](https://www.pipc.go.kr/np/default/page.do?mCode=A050010000)
+        1.   [정책실명제 안내](https://www.pipc.go.kr/np/default/page.do?mCode=A050010000)
+        2.   [국민신청실명제](https://www.pipc.go.kr/np/default/page.do?mCode=A050020000)
+
+*    국민참여 [국민참여](https://www.pipc.go.kr/np/default/page.do?mCode=B010020000)
+
+    1.   [개인정보 미래포럼](https://www.pipc.go.kr/np/default/page.do?mCode=B010020000)
+        1.   [미래포럼 소개](https://www.pipc.go.kr/np/default/page.do?mCode=B010020000)
+        2.   [2026 미래포럼 위원 소개](https://www.pipc.go.kr/np/default/page.do?mCode=B010030000)
+        3.   [2026 미래포럼 활동계획](https://www.pipc.go.kr/np/default/page.do?mCode=B010040000)
+        4.   [2021-2025 미래포럼 주요활동](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS255&mCode=B010060000)
+        5.   [2026 미래포럼 주요활동](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS294&mCode=B010081000)
+        6.   [미래포럼 현장영상](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS254&mCode=B010090000)
+
+    2.   [민원마당](https://www.pipc.go.kr/np/default/page.do?mCode=B020010010)
+        1.   [온라인 민원](https://www.pipc.go.kr/np/default/page.do?mCode=B020010010)
+        2.   [국민행복제안](https://www.pipc.go.kr/np/default/page.do?mCode=B020020010)
+        3.   [정책참여](https://www.pipc.go.kr/np/default/page.do?mCode=B020030010)
+        4.   [적극행정](https://www.pipc.go.kr/np/default/page.do?mCode=B020040010)
+        5.   [개인정보 분야 국민제안센터](https://www.pipc.go.kr/np/default/page.do?mCode=B020060000)
+
+    3.   [규제혁신](https://www.pipc.go.kr/np/default/page.do?mCode=B040010000)
+        1.   [규제합리화 과제현황](https://www.better.go.kr/project.NewProjectTaskSlPL "규제합리화 과제현황 새창이동")
+        2.   [심사중인 규제법안](https://www.pipc.go.kr/np/default/page.do?mCode=B040020000)
+        3.   [규제법령 정보](https://www.better.go.kr/ba.rgst.MiniRegulNLawSlPL "규제법령 정보 새창이동")
+        4.   [규제건의](https://www.sinmungo.go.kr/ "규제건의 새창이동")
+        5.   [규제정보포털](https://www.better.go.kr/ "규제정보포털 새창이동")
+        6.   [규제입증 요청](https://www.pipc.go.kr/np/default/page.do?mCode=B040060000)
+
+    4.   [신고센터](https://www.pipc.go.kr/np/default/page.do?mCode=B050010000)
+        1.   [공익신고](https://www.pipc.go.kr/np/default/page.do?mCode=B050010000)
+        2.   [부패행위신고](https://ncp.clean.go.kr/cmn/secCtfcKMC.do?menuCode=acs&mapAcs=Y&insttCd=1790365 "부패행위신고 새창이동")
+        3.   [청탁금지법위반 채용·비리 신고](https://www.clean.go.kr/menu.es?mid=a10203000000 "청탁금지법위반 채용·비리 신고 새창이동")
+        4.   [행동강령위반 신고](https://www.clean.go.kr/menu.es?mid=a10206000000 "행동강령위반 신고 새창이동")
+        5.   [보조금 부조리 신고센터](https://www.pipc.go.kr/np/default/page.do?mCode=B050050000)
+        6.   [공공재정 부정청구 등 신청](https://www.clean.go.kr/menu.es?mid=a10204000000 "공공재정 부정청구 등 신청 새창이동")
+        7.   [예산낭비 신고센터](https://www.pipc.go.kr/np/default/page.do?mCode=B050070000)
+        8.   [안전신문고](https://www.safetyreport.go.kr/ "안전신문고 새창이동")
+
+*    기업참여 [기업참여](https://www.pipc.go.kr/np/default/page.do?mCode=I010010000)
+
+    1.   [혁신지원 원스톱 서비스](https://www.pipc.go.kr/np/default/page.do?mCode=I010010000)
+        1.   [혁신지원 원스톱 서비스](https://www.pipc.go.kr/np/default/page.do?mCode=I010010000)
+
+    2.   [사전적정성 검토제](https://www.pipc.go.kr/np/default/page.do?mCode=I020010000)
+        1.   [사전적정성 검토제 개요](https://www.pipc.go.kr/np/default/page.do?mCode=I020010000)
+        2.   [신청 대상 및 신청 방법](https://www.pipc.go.kr/np/default/page.do?mCode=I020020000)
+
+    3.   [개인정보 지식센터](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS292&&mCode=I040010000)
+        1.   [개인정보 지식센터](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS292&&mCode=I040010000)
+
+*    위원회 소개 [위원회 소개](https://www.pipc.go.kr/np/default/page.do?mCode=F010010010)
+
+    1.   [개인정보보호위원회](https://www.pipc.go.kr/np/default/page.do?mCode=F010010010)
+        1.   [기관소개](https://www.pipc.go.kr/np/default/page.do?mCode=F010010010)
+        2.   [국정과제](https://www.pipc.go.kr/np/default/page.do?mCode=F010020000)
+        3.   [위원장](https://www.pipc.go.kr/np/default/page.do?mCode=F010040010)
+        4.   [부위원장](https://www.pipc.go.kr/np/default/page.do?mCode=F010050010)
+        5.   [위원](https://www.pipc.go.kr/np/default/intCommit.do?mCode=F010060000&typeCd=1)
+        6.   [오시는 길](https://www.pipc.go.kr/np/default/page.do?mCode=F010070000)
+
+    2.   [조직구성](https://www.pipc.go.kr/np/default/page.do?mCode=F060010000)
+        1.   [조직도](https://www.pipc.go.kr/np/default/page.do?mCode=F060010000)
+        2.   [직원찾기](https://www.pipc.go.kr/np/default/intOrg.do?op=list&mCode=F060020000&page=1&schType=memNm&schStr=++)
+
+    3.   [분쟁조정위원회](https://www.pipc.go.kr/np/default/page.do?mCode=F080010000)
+        1.   [분쟁조정위원회 소개](https://www.pipc.go.kr/np/default/page.do?mCode=F080010000)
+        2.   [분쟁조정위원 소개](https://www.pipc.go.kr/np/default/intCommit.do?mCode=F080020000&typeCd=2)
+
+*   [누리집안내](https://www.pipc.go.kr/np/default/sitemap.do?mCode=H040000000 "누리집안내")
+
+*   [유튜브](https://www.youtube.com/pipcpr "유튜브 새창이동")
+*   [인스타그램](https://www.instagram.com/pipc.go.kr/ "인스타그램 새창이동")
+*   [페이스북](https://www.facebook.com/pipc.go.kr "페이스북 새창이동")
+*   [네이버블로그](https://blog.naver.com/pipcpr "네이버블로그 새창이동")
+*   [X(트위터)](https://x.com/PIPC_PR "X(트위터) 새창이동")
+
+*   ![Image 2: 홈](https://www.pipc.go.kr/np/resources/images/subCommon/icon_nv_home.svg)
+*   정책 · 법령"접기,펼치기"
+
+*   법령정보"접기,펼치기"
+
+*   안내서"접기,펼치기"
+
+*   [전체](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030000 "선택됨")
+*   [현재 안내서](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030020&etc1=%ED%98%84%EC%9E%AC%20%EC%95%88%EB%82%B4%EC%84%9C)
+*   [과거 안내서](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030030&etc1=%EA%B3%BC%EA%B1%B0%20%EC%95%88%EB%82%B4%EC%84%9C)
+*   [기타 자료](https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030040&etc1=%EA%B8%B0%ED%83%80%20%EC%9E%90%EB%A3%8C)
+
+안내서 게시판 상세 페이지 
+안내서 게시판 상세페이지로 제목, 작성부서, 작성자, 작성일, 조회수, 내용, 첨부파일의 정보를 제공
+
+| 제목 | [현재 안내서] 인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서 |
+| --- |
+| 작성부서 | 개인정보보호위원회 | 작성자 | 관리자 |
+| 작성일 | 2024-07-19 | 조회수 | 33046 |
+| 첨부파일 목록 | ![Image 3: 첨부파일](https://www.pipc.go.kr/np/resources/images/board/file.png) 인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서(디자인).pdf [다운로드](https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=10375#LINK "첨부파일 다운로드") |
+| 인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서입니다. |
+
+*   이전글 합성데이터 생성 참조모델('24.5.) 
+*   다음글 교육분야 가명·익명정보 처리 가이드라인(2024.8.) 
+
+해당 페이지의 만족도와 소중한 의견 남겨주세요.
+
+*   [개인정보처리방침](https://www.pipc.go.kr/np/default/page.do?mCode=H010000000 "개인정보처리방침 새창열림")
+*   [찾아오시는 길](https://www.pipc.go.kr/np/default/page.do?mCode=F010070000 "찾아오시는 길 새창열림")
+*   [도움말](https://www.pipc.go.kr/np/default/page.do?mCode=H030000000 "도움말 새창열림")
+*   [누리집 안내](https://www.pipc.go.kr/np/default/sitemap.do?mCode=H040000000 "누리집 안내 새창열림")
+
+주소 : (우)03171 서울특별시 종로구 세종대로 209 정부서울청사 개인정보보호위원회
+
+*   개인정보침해신고 : 국번없이 118
+*   대표전화 : 02-2100-3025
+*   개인정보분쟁조정위원회 : 1833-6972
+*   법령해석지원센터 : 02-2100-3043
+*   월~금 9:00~18:00, 공휴일 제외
+
+[![Image 4: (사)한국장애인단체총연합회 한국웹접근성인증평가원 웹 접근성 우수사이트 인증마크(WA인증마크)](https://www.pipc.go.kr/np/resources/images/common/w3c.png)](https://www.wa.or.kr/board/list.asp?search=link_url&SearchString=www.pipc.go.kr&BoardID=0006 "웹접근성 인증평가원 새창으로 바로가기")
+
+Copyright ⓒ Personal Information Protection Commission. All right reserved.
+
+[맨위로 이동](https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=10375#wrap)

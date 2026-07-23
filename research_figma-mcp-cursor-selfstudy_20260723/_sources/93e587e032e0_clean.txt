@@ -1,0 +1,172 @@
+Master Next.js 14 by exploring its out-of-the-box features for building full stack apps, including server components and server actions, with practical setup in VS Code and essential LTS node installation.
+Learn Next.js 14 with a comprehensive TypeScript tutorial covering routing, server components, and server actions in detail, then proceed to a project without revisiting tutorial topics.
+Bootstraps a brand new Next.js 14 project using npm create next app at latest, selecting TypeScript, ESLint, Tailwind, and app router, then opens the project in a code editor.
+Explore the Next.js project structure, including the app folder, node_modules, public assets, gitignore, config files, and package.json scripts for dev, build, and start.
+Scaffold the home page in Next.js 14 by creating a server component in a page tsx, applying tailwind css, exporting a default component, and previewing on localhost 3000.
+Create pages in the Next.js app folder by adding a page.tsx inside a folder; the folder name becomes the page. Navigate to /about or /info to render it.
+Learn to navigate between pages in a Next.js 14 project by importing the link component from next/link and using href to point to /about, with tailwind styling for the link.
+Learn to build nested routes in Next.js 14 by creating a parent info route with a child contact page at info/contact, using page.tsx and noting 404 when parent is missing.
+Discover how css integrates with Next.js 14 using Tailwind by default, with a preconfigured global css setup. Vanilla css remains an option, while upcoming videos focus on Tailwind classes.
+Explore tailwind CSS fundamentals by applying utility classes directly in JSX as a design system for colors, spacing, sizing, hover effects, and responsive breakpoints, with docs for specific topics.
+Implement a route layout in Next.js 14 using a TSX file to wrap pages, share a common navigation, and pass the children prop, with globals.css imported and proper html structure.
+Create a navbar component in Next.js 14 for Airbnb clone, import the link component, render home, counter, tours, and actions, and align page content with the navbar in the layout.
+Learn to add fonts to a Next.js 14 project by self-hosting Google fonts with next/font. Import Inter and Roboto, configure subsets and weights, and apply fonts to the body class.
+Configure Next.js metadata in the layout using a metadata object to define title, description, and keywords with type-safe TypeScript.
+Explore the server vs client component architecture in Next.js 14, differentiate server components from client components, and learn when to use browser APIs and the use client directive.
+Set up a basic client counter in Next.js 14 using useState, an increment button, and Tailwind, while learning to nest a client component inside a server component.
+Fetch data on the server with a Next.js server component using TypeScript to load a tours array with id, name, info, image, price from a url and render seo-friendly html.
+Refactor the tours data fetch by moving the logic to a separate file and calling an async fetchTours function with a deliberate 3-second delay to simulate loading.
+Navigate between pages to illustrate data fetching with a client loading component in Next.js 14, disable cache, refresh, and observe the loading text while tours data loads.
+Learn to implement a custom error component in Next.js 14, handle loading and fetch errors on a dynamic page TSX, and apply global or page-specific error state.
+Learn how to implement a nested layout in Next.js 14 by creating a tours layout that wraps all pages under the tours route, renders children, and adds a shared header.
+Create dynamic routes in Next.js 14 by using square-bracket ids in a nested tours path, access the url parameters, and render a placeholder page that displays the id.
+Use the Next.js image component to render local and remote images, optimize size with width, height, and object cover, and preload with priority to avoid layout shifts.
+Learn to render remote images in Next.js by supplying the remote URL, setting width and height, and configuring next.config.js with remote patterns to prevent layout shifts.
+Learn to implement responsive images in a two-column tour grid using Next.js image with fill, object cover, and sizes prop to adapt image sizes across mobile and desktop.
+Mastering next.js 14 teaches advanced routing options, including private folders using underscore, grouped routes with parentheses, catch-all and optional catch-all segments, and dynamic routes with parameter access.
+Master Next.js 14 server actions by wiring form submissions to server-side code from both server and client components, using async actions, use server, and a dedicated actions file.
+Create the actions page with a form and a users list, implementing server actions for local testing. Save users to a json file during development and style with tailwind.
+Move the create user logic into a dedicated server actions file and convert the form into a client component, then access form data with formData.get using a TypeScript type assertion.
+Showcases backend logic in Next.js route by using fs promises to fetch and save users to a users.json file. TypeScript defines a user with id, first name, and last name.
+Fetch users, map over them in a TypeScript Next.js app, display user first and last names, and save new users to a JSON file with an empty state message.
+Explore why Next.js aggressively caches resources and how to use revalidate path and redirect to show the latest values on dynamic routes and actions.
+Convert the form to a client component and use use form status and use form state to show pending state and success or error messages, disabling the button during submission.
+Use the use form state hook to show a success or error message after submitting a form. Save the user in users JSON and handle errors on the front end.
+Create a delete button that passes a user id to a server action to remove the user from the users JSON in a Next.js 14 Airbnb clone.
+Learn how to implement a delete user action in Next.js 14 with a hidden input to pass the user id, filter the list, save to json, and revalidate the path.
+Explore passing an id to a server action with the bind method, replacing hidden inputs, and wiring remove user actions via form data and TypeScript typing.
+Discover how route handlers in Next.js create serverless endpoints to handle database operations from the client, and test them efficiently using thunder client.
+Learn to implement Next.js route handlers by creating an api/ directory, exporting get and post functions that fetch and save users, returning json.
+Access route parameters with next request and next response, extract id from URL search params, and redirect using an absolute URL constructed with the URL constructor.
+Explore route handlers for post requests in Next.js, receiving json with first name and last name, creating a user, and returning a confirmation response.
+Implement middleware in Next.js to run code before each request, configure route matchers, log activity, and redirect authenticated users, including nested routes.
+Build and run a local production Next.js Airbnb clone, clean middleware, fix the users list with tailwind, and start on localhost 3000 using npm run build and npm start.
+Discover how Next.js caches content, balancing static pre-rendered pages with dynamic lambdas for instant page delivery. Explore build time caching, revalidation, and behavior to optimize performance in a Next.js app.
+Build an Airbnb clone called Home Away with Next.js 14, Prisma, Tailwind css, Shazza user interface, Clerk authentication, and Supabase for data. Host on Vercel and enable Stripe payments.
+Install a new Next.js 14 app, configure TypeScript, ESLint, and Tailwind, enable the app router, and run the development server to see the Next.js welcome screen.
+Remove boilerplate code, create a home page with an h1, set metadata to home away with description feel at home, away from home, and reference the readme for faster setup.
+Create and organize pages for a Next.js 14 Airbnb clone, including bookings, checkout, favorites, profile, properties, rentals, and reviews, with public routes and a single property page.
+Install the Shazza UI component library to speed up Next.js 14 development with accessible, reusable components. Explore the install steps, theme options, and importing components into JSX.
+Install the shadcn/ui button component, explore its props including variant, size, and icon, customize via tsx, and use button variants to render links as buttons and adapt to themes.
+Install more shadcn/ui components and organize them into dedicated folders (card, form, home, nav bar, properties), then set up nav bar components and Tailwind custom classes for structure.
+Build a navbar component in Next.js 14 using a custom tailwind container, integrating logo, nav search, dark mode, and a links dropdown to align navbar with page content.
+Create the logo and nav search components for the navbar using react icons, npm i react-icons, and a text input with a home link and dark mode styling.
+Learn to switch themes with css variables in shadcn/ui. Pick a color, copy the code, and apply light and dark values to update primary and muted styles.
+Create a providers tsx file, wrap the app with a next-themes theme provider, and implement a dark mode toggle using shadcn/ui components to switch light, dark, or system themes.
+Set up the links dropdown in the navbar with a user icon, a trigger, and a links array from utils; prepare for Clark auth to show login or profile links.
+Add authentication to a Next.js 14 app using Clark, wrapping the layout with the Clark provider, configuring env vars and dotenv, and protecting routes with middleware and sign-in with GitHub.
+Set up a toaster provider, leverage the use toast hook, and implement a client sign-out button that logs out and redirects users to the home page.
+Import signed out and signed in components, set sign in and sign up buttons as modals, and display links when signed in while showing login options when signed out.
+Set up the create profile page in Next.js 14, configure sign-in and sign-up fallback redirects, and implement a server action to handle form data with reusable input components.
+Create a reusable form input component in TypeScript for Next.js, encapsulating label and input with configurable name, type, label, default value, and placeholder; leverage dynamic props and optional label fallback.
+Create a reusable submit button in Next.js that uses use form status to show a loading spinner during pending requests, with a Redux UI reload icon.
+Build a reusable form container in Next.js 14 that uses use form state, use effect, and use toast with an action function and children to handle inputs and server actions.
+Refactor the create profile page using reusable form components, with inputs for first name, last name, and username, wired to a local action and showing success or error messages.
+Learn to use the zod library for form validation in a Next.js 14 project, defining profile schema for first name, last name, and username, and wiring a create profile action.
+Set up your database with Prisma and connect to Postgres or MongoDB using Supabase, a type-safe hosting option, while exploring alternatives like render, planet scale, Atlas and env setup.
+Install prisma and prisma client, run npx prisma init, and configure schema.prisma with a postgres database url. Create db.ts to reuse a single prisma instance and prepare for supabase connection.
+Connect Prisma and Supabase by configuring env vars for database url and direct url, set up the test profile model in schema.prisma, and push with prisma db push.
+Master prisma CRUD in a Next.js project by creating, reading, updating, upserting, and deleting profile records with type-safe operations by id or email.
+Create a Prisma profile model with a UUID id, connect it to the Clerk user, and implement createProfileAction to persist the profile and update Clerk metadata, with redirect on success.
+Create a fetch profile image action to retrieve the current user's profile image by id and display it in the user icon, otherwise return null to show the icon.
+Extend create profile by converting to update-capable flow with default values and image upload. Redirect users who already have a profile to the home page and reuse the same schema.
+Fetch user profile demonstrates building a protected profile update flow with server actions, a fetch profile helper, and an update profile action using Clerk authentication and TypeScript checks.
+Complete the update profile page using reusable components, fetch the current profile for defaults, and implement the update profile action with form inputs for first name, last name, and username.
+Master Zod safe parse to validate fields, returning success and data or errors. Learn to handle errors with custom messages to guide users on first name, last name, and username.
+Create a generic validate with Zod schema helper that takes a schema and data, validates and returns the sanitized data or throws detailed errors for profile updates and creations.
+Create a reusable update profile image component with a toggleable form and universal image input. Validate image size, save to a Supabase bucket, and update the profile model.
+Build an image input container in a Next.js 14 app, using a form container, Next.js image, and an action prop to update the profile image.
+Create a reusable image schema in Zod to validate file type, max size, and image status for profile uploads. Implement form data handling and prep for Supabase storage.
+Create a public Supabase storage bucket, set an upload policy, then fetch the API URL and public key and store them in env as SUPABASE_URL and SUPABASE_KEY.
+Install the supabase-js package, initialize a client with env vars, and upload images to a bucket named temp home away using a timestamped file name, returning the public URL.
+Learn to implement a complete update profile image action in next.js with supabase, including get auth user, upload image, prisma update, path revalidation, and error handling.
+Configure a Prisma property model and relate it to profiles, implement a large rental form with image upload, and display properties on the home page for favorites and bookings.
+Set up the property schema and placeholder, then build the create property page. Implement a form using input components and a create property action with basic schema validation.
+Set up a dedicated price input component for a number field named price, with a label and dollar value, supporting a default value and optional Prisma retrieval for the page.
+Create a categories input using a readme-provided categories list with labels and icons from react-icons, wired into a select component with default values for create and edit.
+Build a description input using the chassis text area, with label, name, default value, and five rows. Implement zod-based length validation and ensure required default description.
+Integrate a country input in a Next.js 14 project using the World Countries package, format data, and build a select input with flag and name alongside an image input.
+Implement a reusable counter input component for accommodation details (guests, bedrooms, beds, baths) as a client component using useState to prevent negatives, with a hidden input for form submission.
+Create an amenities input with checkboxes from conservative or funny amenity lists, manage selected states, and a hidden input that stringifies selections for database storage in a Next.js Airbnb clone.
+Create a property in a Next.js 14 Airbnb clone by validating form data with Zod, uploading image to a Supabase bucket, and saving the record linked to the user profile.
+Fetch and display properties on the home page using Prisma in Next.js 14, render property cards, implement category filters and search by name or tagline, and support favorites.
+Create a home page with four components—categories list, empty list, properties container, and properties list—and learn to use URL search params to fetch properties while preserving category and search state.
+Iterate over categories to build a clickable categories list that navigates home with a combined category and search query parameter. Highlight the active category to reflect the current filters.
+Create a reusable empty list component for the properties container with customizable heading, message, and button text, typed in TypeScript, rendering a back home link using next/link and a button.
+Develop a properties container that fetches properties by category and search, handles empty results with an empty list, and passes data to the properties list via type-safe props.
+Set up the property card system by building country flag/name, favorites toggle, and loading cards, then render typed property cards in the properties list.
+Build a Next.js property card with a currency formatter, image hover zoom, dynamic link to a property page, and a responsive grid for listing properties.
+Create a reusable property rating component with property ID and in page flag, hardcode 4.7 rating and 100 reviews, adapt text size by context, and include a star icon.
+Implement a heart toggle by rendering a heart icon from React Icons inside an outline variant button, using a string property id and icon-sized padding.
+Display a country flag and name in the final card component by using a country code, shortening names to 20 characters with an ellipsis, and rendering in a span.
+Display loading cards for a Next.js 14 Airbnb clone by implementing a skeleton component from the chassis and wrapping the home content in React suspense for targeted fallbacks.
+Build a debounced nav bar search that updates url query params, filters properties by category and search term, and navigates back to the home page with edge-case handling.
+Implement a favorites toggle by adding a Prisma favorite model linked to users and properties, and gate it with a sign-in modal on the public route.
+Uses actions to fetch the user's favorite ID, determine if a property is in favorites, render the correct icon, and set up a reusable toggle for a client component.
+Build a favorites toggle form for the Next.js 14 Airbnb clone, with a card submit button that toggles icons based on is favorite and shows a loading spinner during pending.
+Implement toggle favorites to add or remove properties in the favorites list, using try-catch for database updates, user authentication, and revalidating routes to reflect changes.
+Master Next.js 14: build a favorites page that fetches user favorites, joins to property data, shows loading skeletons, handles empty lists, and updates on removal.
+Create a dynamic property details page that fetches details by id with profile data, shows a loading skeleton, and supports navigation, plus future map, booking, reviews, and share features.
+Create a breadcrumbs component for a property page in a Next.js 14 Airbnb clone. Display the home link, the property name, and a header with a tagline and action buttons.
+Create a share button component using chassis popover and react-share to enable Twitter, LinkedIn, and email sharing for properties, with a production-ready share link built from NEXT_PUBLIC_WEBSITE_URL.
+Create an image container component in Next.js 14, display a responsive main image with alt text, and build a two-column layout with eight and four column sections including a calendar.
+Set up a booking calendar component using a date range picker in range mode, with useState for range state, a default month from the current date, and undefined bookings.
+Build a property details component in Next.js 14, displaying bedrooms, bathrooms, guests, and beds with a reusable format quantity function; pass a details object via props.
+Create a user info component UserInfo TSX in a Next.js 14 Airbnb clone that accepts a profile prop with first name and profile image, then render them in a grid.
+Master a reusable description component in a Next.js 14 project by implementing a long text toggle, a reusable title component, and props defined with TypeScript using useState for interactive content.
+Parse the amenities JSON string, map over the list to display only selected items with a generic icon and name in a responsive two-column grid.
+Build an interactive property map component using react-leaflet and leaflet in Next.js, rendering on the client with a custom tile layer, marker icon, and a dynamic map with SSR disabled.
+Deploy your Next.js 14 Airbnb clone to Vercel by creating a GitHub repo, updating build commands with prisma generate, setting environment variables, and validating the production URL after redeploys.
+Define a Prisma reviews schema linked to profile and property, and build placeholder actions and components for creating, fetching, and deleting reviews on the property page.
+Create a rating input in Next.js 14 by building a 1–5 select using chassis, wiring name and label text, and generating a reversed 5-item options list with a default value.
+Toggle the submit review form with a button to reveal a rating input and a comment text area, using property ID prop.
+Create a submit review flow by defining a create review schema, validating rating and comment, saving the review with the user profile, and refreshing property details page to display reviews.
+Fetch property reviews by property id, selecting id, rating, and comment, and include the reviewer's first name and profile image; order by createdAt descending and return the reviews.
+Fetch and render property reviews using a two-column responsive grid, passing the property id and displaying each review's comment, rating, and user details via a review card.
+Develop and integrate a review card component with a header image, user name, rating stars, and expandable comments, using a rating subcomponent and a client-side toggle for long text.
+Build a reviews page in a Next.js 14 Airbnb clone by fetching property reviews by user, displaying property images, and deleting reviews with revalidation of the page.
+Build an icon button for edit and delete actions, importing trash and pen icons, rendering icon via a switch on action type, and handling pending state with a reload icon.
+Navigate to the reviews page and display property reviews in a two-column grid with review cards and a form container, using a delete action and icon button.
+Create a client-side reviews loading component using skeleton elements to mimic review cards, organize them in a responsive two-column grid, and compose with card header and content skeletons.
+Learn to fetch property ratings with Prisma, compute the average rating and count by property ID, and handle no reviews in the property rating component.
+Learn to conditionally render the leave review button in a Next.js 14 Airbnb clone by checking login, ownership, and existing reviews with Prisma.
+Build a booking feature with a calendar date range, and create a Prisma booking model linked to profiles and properties. Track cost, nights, and check-in/out, and verify with Prisma Studio.
+Explore Next.js 14 by building a bookings calendar for a property page: fetch property details with bookings, define date range and booking types, and scaffold client-side booking components.
+Implement zustand state management to store property booking data: id, price, bookings, and date range, and wire a client booking wrapper and calendar on the property details page.
+Set up the booking container and calendar, create date utilities, and wire state with use property and use effect to manage a date range for bookings.
+Implement booking container logic to show the booking form and confirm only for a valid date range, and build calculate totals to compute nights, subtotal, cleaning, service, tax, and total.
+Build a dynamic booking form that uses range and price from state to calculate and display subtotals, fees, taxes, and the grand total with formatted currency.
+Implement the confirm booking component with the booking form inside the button, gated by a login modal. Create a client-side create booking action using property ID and date range.
+Implement the create booking action by validating the property ID, fetching its price, calculating totals for check-in and check-out, and creating a booking with profile ID and property ID.
+Block past dates and dates already booked, ensure start of booking from today, and generate blocked periods from bookings to disable those dates in the booking calendar.
+Learn to prevent selecting booked dates by implementing generate disabled dates, unavailable dates checks, toast alerts, and range validation in a useEffect with helper functions.
+Fetch bookings for the current user, display them in a table on the bookings page with a delete option, and order by created at descending to show the latest first.
+Build the bookings page in a Next.js 14 Airbnb clone, fetch bookings, and add a format date utility, currency formatter, and a table showing check-in, check-out, and totals.
+Implement delete booking functionality by wiring the delete booking action to a booking id, passing the id via bind in a form container, and triggering it with an icon button.
+Create a reusable loading table component in the bookings section, with an optional rows prop (default five), rendering skeleton rows via array.from, as a client component.
+Mastering Next.js 14: fetch and delete rentals on the my rentals page by linking property and bookings models, computing total nights and total income from bookings.
+Set up the rentals page with a loading state, fetch rentals, and render a table of properties showing nightly rate, total nights, and income, with edit and delete actions.
+Build the edit rental page by fetching rental details, populating a form with default values, and implementing separate update actions for text fields and the rental image.
+Create the edit rentals page in a Next.js 14 Airbnb clone, with dynamic id routing, fetch rental details, and a form for name, tagline, price, category, country, description, and accommodations.
+Learn how to manage amenities input in a Next.js 14 Airbnb clone, handle icons not saved in the database, and restore icons via default values, mapping, and optional chaining.
+Learn to implement update rental functionality in a Next.js 14 app by handling form data, validating with a schema, updating property data and image, and revalidating the rentals page.
+Create a fetch reservations function that queries bookings by property profile id, orders by created at descending, and includes property details such as id, name, price, and country.
+Build a reservations page in a Next.js 14 Airbnb clone by fetching reservations, handling empty lists, and rendering a table with property name, country, nights, and formatted dates and currency.
+Build an admin page to display total users, total properties, and bookings plus a monthly bookings chart, while enforcing admin-only access and setting up related components.
+Configure next.js middleware to restrict admin access by defining public and admin routes with matchers, authenticate via clerk, and enforce admin checks using env-stored user id and redirects.
+Learn to build the admin page with suspense-based loading, implementing stats and charts loading containers, skeletons, and loading cards to optimize the admin experience.
+Master the admin stats page in Next.js 14 by fetching total users, properties, and bookings, rendering a stats card grid, and safeguarding admin access with a get admin user check.
+Implement an admin-guarded async fetch charts data function, gather six months of bookings by month, and reduce results to a month and count format using a refactored date formatter.
+Fetch bookings data and render a responsive bar chart using recharts in the admin chart container, displaying date keys and counts, with null output when no data.
+Integrate stripe as the payment gateway and reset bookings to zero in admin for a display. Configure dotenv keys and pass booking id to checkout to set payment status true.
+Build a secure Stripe checkout flow in Next.js by obtaining a client secret from the backend, posting to a payment API route, and integrating an embedded checkout with booking updates.
+Learn to implement a Stripe payment route in a Next.js API route, create a checkout session with booking details and line items, handle origin, and return the client secret.
+Learn to implement a Stripe confirm route in a Next.js 14 Airbnb clone, validating payment via session ID, confirming booking existence, updating payment status, and redirecting to bookings.
+Refactor queries to filter by payment status true after Stripe integration, removing bookings with payment status false and updating bookings, reservations, stats, and charts data accordingly.
+Add a reservations stats card on the reservations page of the Next.js Airbnb clone, computing properties owned, total nights booked, and total amount via a fetch reservation stats query.
+Create a MongoDB Atlas account, verify email, configure a read-write user, whitelist IP, obtain the connection string, and store it as a Mongo URL in dotenv for your project.
+Start your path to becoming a proficient web developer with our detailed video course on building apps using Next JS 14. Designed specifically for beginners and intermediate developers, this course will help you develop high-level skills. Begin by creating a Next.js application from scratch, understanding its structure, and mastering advanced routing techniques, including link components and dynamic paths.
+Delve into front-end design using TailwindCSS and Shadcn/ui, mastering responsive design, theme management, and consistent styling with layout components. Learn the fundamentals of backend development, including the distinctions between server and client components, how to fetch data, manage loading states, and implement error handling along with nested layouts.
+Enhance your app with CRUD functionalities through Server Actions, improve user interaction, and ensure data integrity with the Zod library. You will also integrate a database using Supabase, handle image uploads, and implement crucial functionalities like authentication with CLERK Service.
+Conclude the course with the skills to deploy your NextJS app on Vercel, and incorporate features such as prompt handling, response management, and image generation.
+This course offers a practical approach, including numerous challenges to apply what you've learned. Transform your web development skills and gain the confidence to create sophisticated web applications.

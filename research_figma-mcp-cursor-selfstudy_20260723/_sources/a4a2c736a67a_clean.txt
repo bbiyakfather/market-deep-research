@@ -1,0 +1,28 @@
+Use Supabase Auth with Next.js
+Learn how to configure Supabase Auth for the Next.js App Router.
+Create a new Supabase project
+Head over to database.new and create a new Supabase project.
+Your new database has a table for storing your users. You can see that this table is currently empty by running some SQL in the SQL Editor.
+SQL_EDITOR
+1select * from auth.users;Create a Next.js app
+Use the create-next-app command and the with-supabase template, to create a Next.js app pre-configured with:
+- 
+Explore drop-in UI components for your Supabase app.UI components built on shadcn/ui that connect to Supabase via a single command. Explore Components
+Terminal
+1npx create-next-app -e with-supabaseDeclare Supabase Environment Variables
+Rename .env.example to .env.local and populate with your Supabase connection variables:
+Project URL
+Publishable key
+.env.local
+1NEXT_PUBLIC_SUPABASE_URL=your-project-url2NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_... keyGet API details#
+To interact with data in database tables, you use the client libraries that wrap the auto-generated Data API endpoints, authenticating using the Project URL and key from the project Connect dialog.
+Project URL
+Publishable key
+Read the API keys docs for a full explanation of all key types, their uses, and where to find them.
+Start the app
+Start the development server, go to http://localhost:3000 in a browser, and you should see the contents of app/page.tsx.
+To sign up a new user, navigate to http://localhost:3000/auth/sign-up, and click Sign up.
+Terminal
+1npm run devLearn more#
+- Setting up Server-Side Auth for Next.js for a Next.js deep dive
+- Supabase Auth docs for more Supabase authentication methods

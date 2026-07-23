@@ -1,0 +1,69 @@
+Starter
+Free
+Free limited access to Figma products
+Why choose Starter?
+Includes:
+- Unlimited drafts
+- UI kits and templates
+- 150 AI credits/day, up to 500 AI credits/mo
+Skip to main content
+Prices in USD
+Free limited access to Figma products
+Includes:
+$16/mo
++ 3,000 AI credits/mo
+$12/mo
++ 500 AI credits/mo
+$3/mo
++ 500 AI credits/mo
+Choose Professional if you:
+Key features:
+Billed annually
+$55/mo
++ 3,500 AI credits/mo
+$25/mo
++ 500 AI credits/mo
+$5/mo
++ 500 AI credits/mo
+Choose Organization if you:
+Key features:
+Want more information?
+Billed annually
+$90/mo
++ 4,250 AI credits/mo
+$35/mo
++ 500 AI credits/mo
+$5/mo
++ 500 AI credits/mo
+Choose Enterprise if you:
+Key features:
+If you're on a paid plan, you can let others view and comment on your files without purchasing extra seats.
+Figma Motion beta is available on Full seats.
+Figma Sites beta is available on Full seats.
+Figma Buzz beta is available on all seats.
+Customize your plan with optional add-ons
+Purchase additional AI credits for your whole team to share—enable pay-as-you-go for flexibility and/or subscribe to save.
+Manage your organization’s unique security requirements with advanced access, sharing, and compliance tools.
+Only available on Enterprise plan
+Seats give users access to Figma’s products. The different seats are designed to support different user workflows.
+The Full seat includes full access to all Figma products, including Figma Design, Figma Make, Figma Draw, Figma Sites, Dev Mode, FigJam, Figma Slides and Figma Buzz.
+The Dev seat full access to Dev Mode, FigJam, Figma Slides, and Figma Buzz. It also gives users view and comment access in Figma Design files.
+The Collab seat includes full access to FigJam, Figma Slides, and Figma Buzz. It also gives users view and comment access in Figma Design files. It only includes basic inspection on Dev Mode.
+If you’re on a paid plan, you can also let others view and comment on your files without purchasing extra seats. This view and comment access only includes basic inspection on Dev Mode.
+Only organization admins and billing group admins are able to view and manage billing. You can view a breakdown of your bill and manage seats from the Admin Dashboard in product. Learn more about billing
+This depends on which plan you’re on.
+If you’re on a Professional plan, if you add new paid seats to your team during your annual subscription term, Figma charges you a separate monthly subscription for those seats at the monthly price.
+Once an admin approves a new seat, it will be automatically added to your next monthly invoice. The cost of the seat will be prorated based on the day it was approved until the end of your current monthly billing term.
+You will continue to get monthly invoices for newly added seats unless you proactively add those seats to your annual subscription or remove the seats.
+If you’re on an Organization or Enterprise plan, admins need to approve new seats that incur costs. By default, approved seats are included in your next invoice with prorated pricing, based on the date they were approved until the end of the annual subscription term. You’ll be invoiced quarterly for new seats added during your annual subscription term.
+We don’t offer the option to purchase products individually, but you can choose a plan and seats based on the products you’d like to use.
+Yes, you can access inspect information as a free viewer. While you will have view-only access, you will be able to view measurements and property values, copy CSS, iOS, and Android code, export assets, comment on files, and collaborate via cursor chat. Learn more
+Figma AI uses a credit system that is shared across all Figma AI features and products. Every seat in Figma includes a monthly allotment of AI credits. The number of credits and which features you can use them with depends on your plan and seat type.
+Full seats include:
+All other seats (Collab, Dev, and View) and users on the Starter plan receive 500 credits/month.
+If you need more credits, you can purchase additional AI credits on your plan. For more details, check out our Help Center article on how AI credits work.
+The agent is free to use during the beta. AI credits are not consumed for any prompts or actions. This allows you to explore and experiment without worrying about credit usage. Once the AI agent becomes generally available, standard AI credit usage will apply.
+Yes! You can learn more on figma.com/government.
+If you’re on the Professional plan, you can downgrade or cancel your plan your Admin Dashboard. If you’re on an Organization or Enterprise plan, please contact our Sales team to downgrade or cancel your plan. Learn more
+We follow extensive security practices to to protect your data and privacy. All plans meet recognized international security, privacy, and compliance standards. Learn more on figma.com/security.
+Yes! Learn more on figma.com/education.

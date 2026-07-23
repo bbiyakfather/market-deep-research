@@ -1,0 +1,42 @@
+This is a starter template for building a SaaS application using Next.js with support for authentication, Stripe integration for payments, and a dashboard for logged-in users.
+Demo: https://next-saas-start.vercel.app/
+- Marketing landing page (/) with animated Terminal element
+- Pricing page (/pricing) which connects to Stripe Checkout
+- Dashboard pages with CRUD operations on users/teams
+- Basic RBAC with Owner and Member roles
+- Subscription management with Stripe Customer Portal
+- Email/password authentication with JWTs stored to cookies
+- Global middleware to protect logged-in routes
+- Local middleware to protect Server Actions or validate Zod schemas
+- Activity logging system for any user events
+git clone https://github.com/nextjs/saas-starter
+cd saas-starter
+pnpm installInstall and log in to your Stripe account:
+stripe loginUse the included setup script to create your .env file:
+pnpm db:setupRun the database migrations and seed the database with a default user and team:
+pnpm db:migrate
+pnpm db:seedThis will create the following user and team:
+- User: test@test.com
+- Password: admin123
+You can also create new users through the /sign-up route.
+Finally, run the Next.js development server:
+pnpm devOpen http://localhost:3000 in your browser to see the app in action.
+You can listen for Stripe webhooks locally through their CLI to handle subscription change events:
+stripe listen --forward-to localhost:3000/api/stripe/webhookTo test Stripe payments, use the following test card details:
+- Card Number: 4242 4242 4242 4242
+- Expiration: Any future date
+- CVC: Any 3-digit number
+When you're ready to deploy your SaaS application to production, follow these steps:
+- Go to the Stripe Dashboard and create a new webhook for your production environment.
+- Set the endpoint URL to your production API route (e.g., https://yourdomain.com/api/stripe/webhook).
+- Select the events you want to listen for (e.g., checkout.session.completed,customer.subscription.updated).
+- Push your code to a GitHub repository.
+- Connect your repository to Vercel and deploy it.
+- Follow the Vercel deployment process, which will guide you through setting up your project.
+In your Vercel project settings (or during deployment), add all the necessary environment variables. Make sure to update the values for the production environment, including:
+- BASE_URL: Set this to your production domain.
+- STRIPE_SECRET_KEY: Use your Stripe secret key for the production environment.
+- STRIPE_WEBHOOK_SECRET: Use the webhook secret from the production webhook you created in step 1.
+- POSTGRES_URL: Set this to your production database URL.
+- AUTH_SECRET: Set this to a random string.- openssl rand -base64 32will generate one.
+While this template is intentionally minimal and to be used as a learning resource, there are other paid versions in the community which are more full-featured:

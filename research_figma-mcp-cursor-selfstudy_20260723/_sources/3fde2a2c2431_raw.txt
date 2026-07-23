@@ -1,0 +1,28 @@
+Title: Customize Cursor · Cursor
+
+URL Source: https://cursor.com/changelog/customize
+
+Markdown Content:
+Plugins, skills, and MCPs let you customize Cursor for your workflows. The new Customize page brings them into one place.
+
+You can now add and manage plugins, skills, MCPs, subagents, rules, commands, and hooks at the user, team, or workspace level, and even bring your own custom MCPs.
+
+## [](https://cursor.com/changelog/customize#marketplace-leaderboard)Marketplace leaderboard
+
+Cursor now shows you a leaderboard of the most popular plugins, skills, and MCPs across your team.
+
+Add any to your setup with one click from the new Customize page and extend Cursor for your workflow.
+
+## [](https://cursor.com/changelog/customize#plugin-canvases)Plugin canvases
+
+Plugins now support prebuilt canvases: shared setup templates your team can open and reuse.
+
+Use the Hex Canvas to build data visualizations.
+
+Use the Atlassian Canvas to see a realtime view of all our issues, projects, and documents.
+
+## [](https://cursor.com/changelog/customize#new-team-marketplaces)New Team Marketplaces
+
+[Team marketplaces](https://cursor.com/docs/plugins#team-marketplaces) now support imports of plugin repositories from GitLab, BitBucket, or Azure DevOps so you easily add plugins and distribute them to your team.
+
+Learn more in our [docs](https://cursor.com/docs/customize-cursor).

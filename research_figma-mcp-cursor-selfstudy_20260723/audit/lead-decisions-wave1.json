@@ -1,0 +1,41 @@
+{
+  "_comment": "팀리드 판정 (2026-07-23). verdict: confirm | discard. note = 재검증 근거/수정 사항",
+  "discards": {
+    "A1-figma-mcp#9": "중복 — A1#7(권장 /add-plugin 절차)·A1#8(수동 mcp.json)로 충분. deep link 상세는 가이드 불필요",
+    "A6-resources#7": "저장 스냅샷이 다른 저장소(calebnance/expo-netflix)로 확인, 대상(Lordhacker756/Netflix) About-README 불일치 주장 검증 불가. 리소스에서도 제외",
+    "A6-resources#10": "인용 URL(guides/payment-widget/integration)이 404. v2 문서 체계(W2-2 조사분)로 대체"
+  },
+  "corrections": {
+    "A3-supabase#10": {
+      "statement": "Supabase 공식 MCP 서버를 Cursor에 연결하는 현재 공식 방법은 .cursor/mcp.json에 {\"mcpServers\":{\"supabase\":{\"url\":\"https://mcp.supabase.com/mcp\"}}} 를 넣는 URL 방식이며, 지원 클라이언트 목록에 Cursor가 명시돼 있다.",
+      "note": "조사원 수집분(npx 실행 방식)은 구버전 절차. 팀리드 재열람(supabase.com/docs/guides/getting-started/mcp) 기준으로 URL 방식으로 수정 등재"
+    },
+    "A6-resources#3": {
+      "statement": "노마드코더의 자바스크립트 무료 강의('자바스크립트로 웹 서비스 만들기')는 60개 영상·총 8시간 분량이며, 선수지식으로 '초급 이상의 HTML·CSS 이해도'를 요구한다.",
+      "note": "선수지식 문구 정정(원문: '초급 이상의 HTML. CSS 이해도가 필요합니다') — 팀리드 재열람 기준"
+    },
+    "A4-n8n#3": {
+      "evidence_url_replace": {
+        "from": "https://docs.n8n.io/deploy/host-n8n/install-options/install-with-docker.md",
+        "to": "https://docs.n8n.io/deploy/host-n8n/install-options/install-with-docker/"
+      },
+      "note": "문서 경로 개편 — 신규 경로에서 docker volume create n8n_data + docker run -p 5678:5678 -v n8n_data:/home/node/.n8n 명령·localhost:5678 접속 팀리드 재열람 확인"
+    }
+  },
+  "lead_reread_confirms": [
+    "A1-figma-mcp#3", "A1-figma-mcp#5", "A1-figma-mcp#6", "A1-figma-mcp#7", "A1-figma-mcp#8",
+    "A1-figma-mcp#12", "A2-cursor#0", "A2-cursor#1", "A2-cursor#2", "A2-cursor#3",
+    "A2-cursor#9", "A2-cursor#11", "A2-cursor#14", "A3-supabase#1", "A3-supabase#3",
+    "A3-supabase#4", "A3-supabase#5", "A3-supabase#7", "A3-supabase#8", "A3-supabase#9",
+    "A4-n8n#0", "A4-n8n#1", "A4-n8n#3", "A4-n8n#5",
+    "A6-resources#0", "A6-resources#1", "A6-resources#2", "A6-resources#3"
+  ],
+  "notes": {
+    "A1-figma-mcp#5": "WebFetch 재열람으로 Full $16/mo·Dev $12/mo 확인(공식 페이지 기본 표시). 월간 청구 가격($20/$15)은 제3자 소스만 확인 → 가이드에는 '연간 청구 기준, 월간 청구 시 더 높음'으로 표기",
+    "A1-figma-mcp#6": "재열람 표: View/Collab 및 Starter=월 6회, Professional Dev/Full=200/day·10/min, Organization=200/day·15/min, Enterprise=600/day·20/min",
+    "A2-cursor#3": "negative 확인 — 설치 문서에 UI 언어(한국어) 설정 언급 없음(재열람)",
+    "A3-supabase#8": "재열람 확인: 2 active projects·500MB DB·50K MAU·5GB egress·1GB storage + '1주 미사용 시 프로젝트 일시정지' 추가 확인(FAQ용)",
+    "A6-resources#0": "재열람 확인: 유료·191개 영상·30시간+·중급·기능(검색/예약/후기/소셜로그인 등)",
+    "A6-resources#1": "재열람 확인: 유료·148+개 영상·21.5시간+·Next.js 14·Supabase 포함 스택"
+  }
+}

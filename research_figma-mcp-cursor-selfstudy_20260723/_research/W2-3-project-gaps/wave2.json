@@ -1,0 +1,371 @@
+{
+ "axis": "W2-3-project-gaps",
+ "facts": [
+  {
+   "statement": "토스페이먼츠 개발자센터 공식 블로그의 '구독 결제 서비스 구현하기 (1)(2)'는 빌링키 발급→DB 관리→스케줄링(cron)으로 이어지는 구독 결제 로직을 다루지만, 예시 코드는 Next.js가 아닌 Express+EJS 기반이며 발행일은 2023년으로 요청된 2024~2026 범위 밖이다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://docs.tosspayments.com/blog/subscription-service-1",
+     "title": "구독 결제 서비스 구현하기 (1) 빌링키 발급 | 토스페이먼츠 개발자센터",
+     "quote": "2023년 9월 6일 / 빌링키를 발급받은 뒤 빌링키와 고객 정보, 구독 정보를 데이터베이스에서 관리",
+     "locator": "본문 상단 작성일 표기 + 빌링키 발급 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "토스페이먼츠"
+    },
+    {
+     "url": "https://docs.tosspayments.com/blog/subscription-service-2",
+     "title": "구독 결제 서비스 구현하기 (2) 스케줄링 | 토스페이먼츠 개발자센터",
+     "quote": "하나의 플랜을 가지고 정기결제를 내는 로직만 구현 / node-cron '0 0 1 * *'로 월간 플랜을 매달 1일에 실행",
+     "locator": "스케줄링 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "토스페이먼츠"
+    }
+   ]
+  },
+  {
+   "statement": "velog '토스 페이먼츠 API를 이용한 결제 위젯 구현하기 (Feat. NextJS, TypeScript)'(2024-01-11)는 Next.js 환경에서 토스페이먼츠 결제위젯 SDK로 requestPayment() 단건결제를 구현하는 예시이며, 정기결제/구독 로직은 다루지 않는다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://velog.io/@sanghyeon/토스-페이먼츠-API를-이용한-결제-위젯-구현하기-Feat.-NextJS-TypeScript",
+     "title": "토스 페이먼츠 API를 이용한 결제 위젯 구현하기 (Feat. NextJS, TypeScript)",
+     "quote": "2024년 1월 11일 (작성일자) / requestPayment() 기반 단건결제 승인 플로우, 정기결제 언급 없음",
+     "locator": "본문 작성일 및 코드 예제",
+     "observed_at": "2026-07-23",
+     "source_role": "재인용",
+     "publisher": "velog(@sanghyeon)"
+    }
+   ]
+  },
+  {
+   "statement": "Vercel 공식 Next.js+Stripe 구독 SaaS 템플릿(vercel/nextjs-subscription-payments)은 2025-01-23 아카이브 처리되었고, 후속 템플릿 nextjs/saas-starter가 Stripe Checkout/Customer Portal 기반 구독 관리 기능을 이어받아 현재도 유지되고 있다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://github.com/vercel/nextjs-subscription-payments",
+     "title": "vercel/nextjs-subscription-payments",
+     "quote": "This repo has been sunset and replaced by a new template: https://github.com/nextjs/saas-starter",
+     "locator": "README 상단 공지",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Vercel(GitHub)"
+    },
+    {
+     "url": "https://github.com/nextjs/saas-starter",
+     "title": "nextjs/saas-starter",
+     "quote": "Subscription management with Stripe Customer Portal / Pricing page (/pricing) which connects to Stripe Checkout",
+     "locator": "README 기능 목록",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Vercel/Next.js(GitHub)"
+    }
+   ]
+  },
+  {
+   "statement": "pedroalonso.net의 'Stripe + Next.js 15: The Complete 2025 Guide'는 Stripe Checkout mode:'subscription', 웹훅, 고객 포털을 포함한 Next.js 구독 결제 전체 플로우를 다루며 2025-10-12 게시, 2026-06-07 업데이트된 최신 자료다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.pedroalonso.net/blog/stripe-nextjs-complete-guide-2025/",
+     "title": "Stripe + Next.js 15: The Complete 2025 Guide",
+     "quote": "October 12, 2025 • Updated: June 7, 2026 / One-time payments are great, but recurring revenue is what scales a SaaS / mode: 'subscription' — tells Stripe this is recurring",
+     "locator": "게시일 메타데이터 + Part 2: Subscriptions 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Pedro Alonso(개인 기술 블로그)"
+    }
+   ]
+  },
+  {
+   "statement": "Supabase 공식 문서 'Build a Social Auth App with Expo React Native'는 Expo Router의 protected routes로 네비게이션을 보호하고, Supabase Auth로 Apple/Google 소셜 로그인을 구현하는 방법을 원문에서 명시적으로 다룬다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth",
+     "title": "Build a Social Auth App with Expo React Native | Supabase Docs",
+     "quote": "Using Expo Router's protected routes, you can secure navigation / Supabase Auth enables users to log in through social authentication providers (Apple and Google)",
+     "locator": "가이드 개요 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Supabase(공식 문서)"
+    }
+   ]
+  },
+  {
+   "statement": "GitHub Gist 'Expo Router + Supabase Auth + NativeWind Tutorial'(최종 활동 2025-08-09)은 supabase.auth.signUp()/signInWithPassword()로 회원가입·로그인 페이지를 만들고, 세션 유무에 따라 보호된 라우트로 리다이렉트하는 로그인 플로우를 원문에서 구체적으로 다룬다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://gist.github.com/TortoiseWolfe/119b16a4c27c559ede0ddec71a9f7786",
+     "title": "Expo Router + Supabase Auth + NativeWind Tutorial",
+     "quote": "Last active August 9, 2025 / Create Sign-Up & Login Pages / if (!data.session) { router.replace(\"/(auth)/signIn\"); }",
+     "locator": "문서 상단 활동일 + 7~8. Sign-Up & Login Pages 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "재인용",
+     "publisher": "GitHub Gist(TortoiseWolfe)"
+    }
+   ]
+  },
+  {
+   "statement": "Vercel 공식 템플릿 페이지는 'Deploy to Vercel' 버튼 클릭 한 번으로 Supabase 계정/프로젝트 생성을 안내하고 Supabase Integration 설치 후 관련 환경변수를 자동으로 프로젝트에 할당해, 비개발자가 별도 수동 설정 없이 배포까지 도달하는 최단 경로를 제공한다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://vercel.com/templates/next.js/supabase",
+     "title": "Supabase & Next.js App Router Starter Template for Auth - Vercel",
+     "quote": "Vercel deployment will guide you through creating a Supabase account and project. After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.",
+     "locator": "Deploy to Vercel 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Vercel(공식)"
+    }
+   ]
+  },
+  {
+   "statement": "Supabase 공식 문서 'Vercel Marketplace'는 Next.js+Supabase 배포 시 POSTGRES_URL, SUPABASE_URL 등 환경변수 자동 동기화를 설명하지만, Marketplace를 통한 구체적 설치 단계 섹션은 'Details coming soon..'으로 아직 미완성 상태이며 템플릿 기반 배포가 현재 권장 경로로 제시된다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/integrations/vercel-marketplace",
+     "title": "Vercel Marketplace | Supabase Docs",
+     "quote": "Details coming soon..",
+     "locator": "Installing via the Vercel Marketplace 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Supabase(공식 문서)"
+    }
+   ]
+  },
+  {
+   "statement": "@supabase/auth-ui-react(로그인 화면 기성 컴포넌트)를 담은 supabase-community/auth-ui 저장소는 2025-10-23 소유자에 의해 아카이브(read-only)되었으며, README에는 2024-02-07부로 Supabase 팀이 더 이상 유지보수하지 않는다는 공지가 있다. npm 패키지 자체가 공식적으로 'deprecated' 태그가 붙은 것은 아니지만 사실상 유지보수 중단 상태다.",
+   "risk": "high",
+   "counter": "'supabase auth-ui-react still works 2026 alternative maintained fork' 반박 검색 결과, 유지보수 중인 포크나 대체 공식 패키지는 확인되지 않았고 Supabase 팀이 Auth Helpers/커스텀 UI 구현을 대안으로 권고하는 정황만 확인됨(활성 포크 없음).",
+   "evidence": [
+    {
+     "url": "https://github.com/supabase-community/auth-ui",
+     "title": "supabase-community/auth-ui",
+     "quote": "This repository was archived by the owner on Oct 23, 2025. It is now read-only. / As of 7th Feb 2024, this repository is no longer maintained by the Supabase Team.",
+     "locator": "저장소 상단 Archived 배너 + README 공지 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Supabase Community(GitHub)"
+    },
+    {
+     "url": "https://registry.npmjs.org/@supabase/auth-ui-react",
+     "title": "@supabase/auth-ui-react npm registry metadata",
+     "quote": "dist-tags 최신 버전 0.4.7",
+     "locator": "registry.npmjs.org JSON 응답 dist-tags 필드",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "npm registry"
+    }
+   ]
+  },
+  {
+   "statement": "Supabase 공식 'Storage Quickstart' 문서는 대시보드/SQL/JS 클라이언트로 버킷 생성 및 파일 업로드하는 방법을 현재도 안내하는 활성 문서이며, deprecated 표시나 경고 문구는 확인되지 않는다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/storage/quickstart",
+     "title": "Storage Quickstart | Supabase Docs",
+     "quote": "insert into storage.buckets (id, name) values ('avatars', 'avatars'); / supabase.storage.from('avatars').upload('public/avatar1.png', avatarFile)",
+     "locator": "Create a bucket / Upload a file 섹션",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "Supabase(공식 문서)"
+    }
+   ]
+  },
+  {
+   "statement": "개인정보보호위원회가 2024-07-19 공개한 「인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서」는 위키백과·블로그·커먼크롤 등 웹사이트에 공개된 데이터를 대규모로 수집(웹 스크래핑)하는 방식을 AI 학습의 현실적 데이터 수집 방식으로 인정하고, 개인정보 보호법 제15조 제1항 제6호(정당한 이익)를 적법 근거로 제시한다. 단 이는 AI 개발·서비스 맥락에 한정된 안내서이며, 일반 목적의 독립된 '웹크롤링/스크레이핑 가이드라인'은 아니다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=10375",
+     "title": "인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서",
+     "quote": "주로 위키백과, 블로그, 커먼 크롤 등 다양한 웹사이트에 공개된 데이터가 학습에 이용되고 있습니다. / 공개된 개인정보는 굉장히 많은 대규모 웹 스크래핑을 전제로 하기 때문에",
+     "locator": "안내서 본문 및 Q&A 부분",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "개인정보보호위원회"
+    }
+   ]
+  },
+  {
+   "statement": "개인정보보호위원회 공식 안내서 게시판(bbsId=BS217) 목록 및 KISA 관련 검색 어디에서도 '웹크롤링' 또는 '스크래핑'을 표제로 한 별도의 종합 가이드라인·해설서는 확인되지 않았다 — 없음 확인. Fact 11의 AI 안내서를 제외하면 크롤링의 법적 허용 기준은 공식 지침이 아닌 법무법인 등 3자 해설에 의존하는 상태다.",
+   "risk": "normal",
+   "evidence": [
+    {
+     "url": "https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030000",
+     "title": "안내서 | 개인정보보호위원회",
+     "quote": "안내서들은 개인정보 전송요구권, 보건의료데이터 활용, 개인정보 처리방침, 가명정보 처리, 생성형 인공지능(AI) 개발·활용 등을 다루고 있으며, 웹 데이터 수집 기법에 관한 안내서는 목록에 포함되어 있지 않습니다.",
+     "locator": "안내서 게시판 목록 전체",
+     "observed_at": "2026-07-23",
+     "source_role": "원출처",
+     "publisher": "개인정보보호위원회"
+    }
+   ]
+  }
+ ],
+ "resources": [
+  {
+   "title": "구독 결제 서비스 구현하기 (1)(2) - 토스페이먼츠 개발자센터",
+   "url": "https://docs.tosspayments.com/blog/subscription-service-1",
+   "type": "official-blog",
+   "difficulty": "intermediate",
+   "language": "ko",
+   "related_part": "OTT 결제(구독) - 백엔드 로직 참고용, Next.js 아님",
+   "free": true,
+   "reason": "빌링키 발급부터 스케줄링까지 구독결제 백엔드 로직의 공식 레퍼런스. Next.js 프로젝트에도 개념을 그대로 이식 가능."
+  },
+  {
+   "title": "토스 페이먼츠 API를 이용한 결제 위젯 구현하기 (Feat. NextJS, TypeScript)",
+   "url": "https://velog.io/@sanghyeon/토스-페이먼츠-API를-이용한-결제-위젯-구현하기-Feat.-NextJS-TypeScript",
+   "type": "blog-tutorial",
+   "difficulty": "beginner",
+   "language": "ko",
+   "related_part": "OTT 결제 - Next.js 프론트엔드 결제위젯 연동",
+   "free": true,
+   "reason": "Next.js+TypeScript로 토스 결제위젯 SDK를 붙이는 실제 예시. 정기결제는 아니지만 결제창 연동의 뼈대로 사용 가능."
+  },
+  {
+   "title": "Stripe + Next.js 15: The Complete 2025 Guide",
+   "url": "https://www.pedroalonso.net/blog/stripe-nextjs-complete-guide-2025/",
+   "type": "blog-tutorial",
+   "difficulty": "intermediate",
+   "language": "en",
+   "related_part": "OTT 결제(구독) - Stripe 대안 풀 튜토리얼",
+   "free": true,
+   "reason": "국내 자료 공백을 메우는 Next.js+Stripe 구독결제 풀 사이클(체크아웃~웹훅~고객포털) 최신 가이드."
+  },
+  {
+   "title": "nextjs/saas-starter",
+   "url": "https://github.com/nextjs/saas-starter",
+   "type": "official-template",
+   "difficulty": "intermediate",
+   "language": "en",
+   "related_part": "OTT 결제(구독) - Vercel 공식 스타터",
+   "free": true,
+   "reason": "Vercel 공식 Next.js+Stripe 구독 SaaS 스타터. Deploy 버튼으로 바로 구독 결제 골격을 체험 가능."
+  },
+  {
+   "title": "Build a Social Auth App with Expo React Native",
+   "url": "https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth",
+   "type": "official-docs",
+   "difficulty": "intermediate",
+   "language": "en",
+   "related_part": "Expo 로그인 - Expo Router + Supabase Auth",
+   "free": true,
+   "reason": "Expo Router 보호 라우트와 Supabase 소셜 로그인을 함께 다루는 유일한 공식 문서."
+  },
+  {
+   "title": "Expo Router + Supabase Auth + NativeWind Tutorial",
+   "url": "https://gist.github.com/TortoiseWolfe/119b16a4c27c559ede0ddec71a9f7786",
+   "type": "community-tutorial",
+   "difficulty": "beginner",
+   "language": "en",
+   "related_part": "Expo 로그인 - 이메일 회원가입/로그인",
+   "free": true,
+   "reason": "2025-08 최종활동, 이메일 기반 회원가입/로그인 전체 코드를 단계별로 제공."
+  },
+  {
+   "title": "Supabase & Next.js App Router Starter Template for Auth",
+   "url": "https://vercel.com/templates/next.js/supabase",
+   "type": "official-template",
+   "difficulty": "beginner",
+   "language": "en",
+   "related_part": "배포 - Vercel+Supabase 원클릭 배포",
+   "free": true,
+   "reason": "Deploy 버튼 한 번으로 Supabase 프로젝트 생성부터 환경변수 설정까지 자동화되는 비개발자용 최단 경로."
+  },
+  {
+   "title": "Storage Quickstart",
+   "url": "https://supabase.com/docs/guides/storage/quickstart",
+   "type": "official-docs",
+   "difficulty": "beginner",
+   "language": "en",
+   "related_part": "Supabase 편의 기능 - Storage",
+   "free": true,
+   "reason": "버킷 생성/파일 업로드를 대시보드·SQL·JS 세 가지 방식으로 보여주는 현재 활성 공식 퀵스타트."
+  }
+ ],
+ "glossary": [
+  {
+   "term": "빌링키(Billing Key)",
+   "plain_ko": "카드번호를 매번 다시 입력하지 않도록, 결제 시스템이 고객 카드 정보를 암호화해 대신 보관해 두는 '열쇠' 같은 값. 이걸로 매달 자동 결제를 요청함.",
+   "detail_url": "https://docs.tosspayments.com/blog/subscription-service-1"
+  },
+  {
+   "term": "웹훅(Webhook)",
+   "plain_ko": "결제 성공·구독 취소 같은 이벤트가 생기면 Stripe/토스 같은 결제사가 우리 서버로 '이런 일이 생겼어요'라고 먼저 알림을 보내주는 방식. 서버가 계속 확인하러 갈 필요 없이 통보를 받는 구조.",
+   "detail_url": "https://www.pedroalonso.net/blog/stripe-nextjs-complete-guide-2025/"
+  },
+  {
+   "term": "Expo Router Protected Routes",
+   "plain_ko": "로그인 안 한 사용자가 앱의 특정 화면(예: 마이페이지)에 못 들어가도록 막고, 로그인 화면으로 돌려보내는 자동 문지기 기능.",
+   "detail_url": "https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth"
+  },
+  {
+   "term": "원클릭 배포(Deploy 버튼)",
+   "plain_ko": "코드를 직접 서버에 올리는 대신, 웹페이지의 버튼 하나만 눌러서 내 서비스를 인터넷에 공개하는 방식. 저장소 복제, 데이터베이스 생성, 환경변수 설정까지 자동으로 처리됨.",
+   "detail_url": "https://vercel.com/templates/next.js/supabase"
+  },
+  {
+   "term": "아카이브(Archived) 저장소",
+   "plain_ko": "깃허브에서 더 이상 새 코드가 올라오지 않도록 '읽기 전용'으로 잠근 상태. 기존 코드는 계속 쓸 수 있지만 버그가 생겨도 공식적으로 고쳐주지 않음.",
+   "detail_url": "https://github.com/supabase-community/auth-ui"
+  }
+ ],
+ "faq": [
+  {
+   "q": "Next.js로 넷플릭스 같은 구독형 서비스를 만들 때, 토스페이먼츠 정기결제를 한 번에 알려주는 완성형 튜토리얼이 있나요?",
+   "a_hint": "2026-07-23 기준 한국어로는 딱 맞는 단일 자료가 없음. 토스 공식 '구독 결제 서비스 구현하기' 가이드(백엔드 로직, Express 예시)와 Next.js+Toss 결제위젯 연동 예시(단건결제)를 조합해야 하며, 영어 자료로는 Next.js+Stripe 조합의 완성도 높은 2025~2026 가이드가 있음.",
+   "source_url": "https://www.pedroalonso.net/blog/stripe-nextjs-complete-guide-2025/"
+  },
+  {
+   "q": "Expo 앱에 로그인 기능을 넣으려면 꼭 Expo Router를 써야 하나요?",
+   "a_hint": "필수는 아니지만, Expo Router의 protected routes를 쓰면 '로그인 안 하면 특정 화면 접근 차단'을 훨씬 쉽게 구현할 수 있어 공식 문서도 이 조합을 권장함.",
+   "source_url": "https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth"
+  },
+  {
+   "q": "@supabase/auth-ui-react로 로그인 화면을 만들어도 괜찮나요?",
+   "a_hint": "패키지는 설치·사용 가능하지만 저장소가 2025-10-23 아카이브되어 새 업데이트/버그 수정이 없는 상태. 새 프로젝트라면 직접 UI를 만들거나 Auth Helpers 기반 커스텀 구현을 고려하는 게 안전함.",
+   "source_url": "https://github.com/supabase-community/auth-ui"
+  },
+  {
+   "q": "내 서비스가 다른 웹사이트 정보를 자동으로 긁어와도(크롤링) 법적으로 괜찮나요?",
+   "a_hint": "한국에는 일반 목적의 전용 '웹크롤링 가이드라인'은 없음(없음 확인). PIPC가 2024-07 낸 안내서는 'AI 학습용 공개 개인정보 수집'이라는 좁은 맥락만 다루므로, 일반 크롤링은 여전히 저작권법·개인정보보호법 제15조·robots.txt 준수 등을 개별 검토해야 함.",
+   "source_url": "https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=10375"
+  }
+ ],
+ "expand_leads": [
+  {
+   "lead": "PortOne(구 아임포트) V2를 경유한 Next.js+토스페이먼츠 정기결제 튜토리얼(blog.kweiza.com/35)",
+   "why": "검색 스니펫상 '정기결제' 언급이 있었으나 SSL 인증서 만료로 원문 열람 실패. Wayback Machine이나 재열람으로 확인되면 Q1의 가장 근접한 한국어 자료가 될 수 있음.",
+   "angle": "OTT 결제"
+  },
+  {
+   "lead": "인프런/노마드코더/코드잇 등 국내 유료 강의 플랫폼의 'Next.js+토스페이먼츠 구독' 강의 존재 여부",
+   "why": "저작권 문제로 강의 페이지 직접 인용은 금지되지만, 강의 존재 자체(제목·커리큘럼 공개 정보)는 별도 라이트 서치로 확인 가치 있음.",
+   "angle": "OTT 결제"
+  },
+  {
+   "lead": "PIPC가 향후 '일반 웹크롤링/스크레이핑' 전용 가이드라인을 낼 계획이 있는지 보도자료 모니터링",
+   "why": "현재는 AI 맥락 안내서(2024-07)만 있어 일반 크롤링 특히 상업적 스크레이핑에 대한 공백이 있음. 정책 동향 추적 필요.",
+   "angle": "국내 법규"
+  }
+ ],
+ "dead_ends": [
+  "'Next.js + 토스페이먼츠' 순정 조합의 OTT/구독 클론 튜토리얼(한국어, 2024~2026)은 검색으로 확인되지 않음",
+  "KISA(한국인터넷진흥원)의 전용 웹크롤링/스크레이핑 가이드라인은 검색으로 확인되지 않음",
+  "인프런/노마드코더 등 국내 강의 플랫폼에서 'Next.js+토스페이먼츠 정기결제 OTT 클론'을 표제로 한 강의는 검색으로 확인되지 않음"
+ ],
+ "failed_urls": [
+  "https://www.npmjs.com/package/@supabase/auth-ui-react",
+  "https://blog.kweiza.com/35"
+ ],
+ "summary": "5개 질문 중 4개는 원문 확인된 공식/커뮤니티 자료로 결론이 나왔고, 1개(Q1)는 명확한 자료 갭으로 확인됐다. (1) Next.js+토스페이먼츠 정기결제를 한 번에 담은 한국어 OTT 클론 튜토리얼은 2024~2026 범위에서 존재하지 않으며, 토스 공식 구독결제 가이드(2023, Express)와 Next.js+Toss 결제위젯 예시(2024, 단건결제)를 조합하거나 영어권 Next.js+Stripe 2025~2026 가이드로 대체해야 한다. (2) Expo Router+Supabase Auth 로그인이 확실히 포함된 자료는 Supabase 공식 소셜 로그인 퀵스타트와 2025-08 커뮤니티 가이드 2건으로 확보됐다(단, Supabase의 'with-expo-react-native' 공식 튜토리얼은 Expo Router를 쓰지 않아 제외). (3) Vercel-Supabase 배포는 템플릿 기반 원클릭 배포가 현재 최단 경로이며, 공식 Vercel Marketplace 통합 문서는 아직 '공개 알파'로 설치 섹션이 미완성 상태다. (4) @supabase/auth-ui-react는 npm에 여전히 존재하나 저장소가 2025-10-23 아카이브되어 사실상 유지보수 중단 상태(risk high)이고, Storage Quickstart는 정상 활성 상태다. (5) PIPC/KISA에 일반 목적의 '웹크롤링/스크레이핑' 전용 가이드라인은 없음(없음 확인)이며, PIPC의 2024-07 AI 안내서만 'AI 학습용 공개 개인정보 수집' 맥락에서 웹 스크래핑을 다룬다."
+}

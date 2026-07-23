@@ -1,0 +1,192 @@
+Title: 구독 결제 서비스 구현하기 (1) 빌링키 발급 | 토스페이먼츠 개발자센터
+URL Source: https://docs.tosspayments.com/blog/subscription-service-1
+Markdown Content:
+목차
+* [이해하기](https://docs.tosspayments.com/blog/subscription-service-1#%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0)
+* [1. 빌링키 발급하기](https://docs.tosspayments.com/blog/subscription-service-1#1-%EB%B9%8C%EB%A7%81%ED%82%A4-%EB%B0%9C%EA%B8%89%ED%95%98%EA%B8%B0)
+* [2. 빌링키 저장하기](https://docs.tosspayments.com/blog/subscription-service-1#2-%EB%B9%8C%EB%A7%81%ED%82%A4-%EC%A0%80%EC%9E%A5%ED%95%98%EA%B8%B0)
+2023년 9월 6일 ・ 읽는 시간 7분
+[![Image 1: 빌링키 발급 메인 이미지](https://static.toss.im/assets/payments/contents/subs-thumb.jpg)](https://static.toss.im/assets/payments/contents/subs-thumb.jpg)
+구독 결제 서비스는 정기적인 구매를 통해 기업의 매출을 안정시키고, 고객이 우리 서비스를 계속 사용하게 유도할 수 있다는 장점이 있어요. 구독 서비스에 고객이 결제수단을 등록하고 자동으로 결제하도록 하면, 고객이 구매할 때마다 우리 서비스에 재방문하게 만드는 것보다 훨씬 쉽게 결제가 이루어지죠. 고객 입장에서도 장점이 있는데요. 결제 수단을 등록해 두면 매번 결제 과정을 거칠 필요 없이 편리하게 결제할 수 있어요.
+이렇게 장점이 많은 구독 서비스, 토스페이먼츠의 결제창 SDK와 빌링키 발급 API를 이용해서 구현할 수 있어요. 토스페이먼츠에서는 결제를 일으킬 수 있는 빌링키 발급까지 제공하고, 그 외 구독 서비스 시스템은 직접 만들어야 하는데요. 이 시리즈에서는 빌링키를 발급한 후 간단한 구독 서비스를 구현하는 방법을 알려드려요.
+### [![Image 2: 링크 복사](https://static.toss.im/icons/svg/icon-link-mono.svg)](https://docs.tosspayments.com/blog/subscription-service-1#%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0)이해하기
+구독 서비스를 구현하려면 다음 세 가지가 꼭 필요해요.
+* [빌링키](https://docs.tosspayments.com/common/glossary/billing#%EB%B9%8C%EB%A7%81%ED%82%A4-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0) (결제 수단 정보)
+* 고객 정보 및 구독 정보 (고객 키, 결제 주기, 결제 금액, 결제 상품 등)
+* 스케줄링 로직 (결제 주기에 따른 결제 실행 로직)
+구독 서비스에서 가장 중요한 빌링키를 한 마디로 정의하자면 “암호화된 고객의 결제 정보”예요. 가맹점이 고객 대신 특정 시점에 결제하려면 고객의 결제 정보가 필요하죠. 하지만 결제 수단 정보를 그대로 저장해서 사용할 수 없기 때문에 고객의 카드번호, 유효기간, CVC 등 **카드 정보를 암호화한 빌링키**를 대신 사용해요. 이 빌링키가 고객을 식별하는 고객키와 매핑되어 어떤 고객의 결제인지 알 수 있어요. 빌링키는 카드사에서 직접 발행하고, 토스페이먼츠는 카드사가 발행한 빌링키를 전달해 줘요.
+구독 정보는 월간, 연간 같은 결제 주기 정보와 결제 금액, 결제 상품 등의 정보를 포함해요. 스케줄링은 이 구독 정보에 따라 맞게 반복해서 결제를 실행하는 로직이라고 이해하면 돼요.
+즉, 구독 서비스 구현은 다음과 같은 순서로 이루어져요.
+1. 고객의 결제 수단 정보를 대체하는 빌링키를 발급받은 뒤
+2. 빌링키와 고객 정보, 구독 정보를 데이터베이스에서 관리하고
+3. 그 정보에 따라 동적으로 스케줄링된 결제를 실행하고 결과 확인
+우리는 **매달 1일에 같은 제품을 결제**하는 구독 서비스를 가정하고 구현해 볼 건데요, 이 포스트에서는 2번까지 진행하고 [다음 포스트](https://docs.tosspayments.com/blog/subscription-service-2)에서 3번을 구현해볼게요.
+EJS + Express 프로젝트 구조는 다음과 같아요. GitHub에서 [샘플 프로젝트](https://github.com/tosspayments/tosspayments-sample-v1/tree/main/payment/billing/node)로 시작해보세요.
+```
+routes/index.js // 빌링키 발급, 저장, 스케줄링 로직이 있는 서버 코드
+client
+ㄴ index.ejs // 카드 정보 등록을 위한 페이지
+ㄴ success.ejs // 카드 정보 등록 성공 페이지
+ㄴ fail.ejs // 카드 정보 등록 실패 페이지
+app.js. // 기본 서버 설정
+```
+### [![Image 3: 링크 복사](https://static.toss.im/icons/svg/icon-link-mono.svg)](https://docs.tosspayments.com/blog/subscription-service-1#1-%EB%B9%8C%EB%A7%81%ED%82%A4-%EB%B0%9C%EA%B8%89%ED%95%98%EA%B8%B0)1. 빌링키 발급하기
+먼저 다음과 같은 카드 등록창을 추가할게요. 카드 등록창으로 고객의 카드 정보를 인증하고 등록하면 그 카드 정보를 대신하는 빌링키를 발급할 수 있어요.
+[![Image 4: 빌링키 발급창 이미지](https://core-cdn-fe.toss.im/image/optimize/?src=https://static.toss-internal.com/ipd-tcs/toss_core/live/991b0532-0f36-4a0b-b21b-c8ab710dc861?&w=3840&q=75)](https://core-cdn-fe.toss.im/image/optimize/?src=https://static.toss-internal.com/ipd-tcs/toss_core/live/991b0532-0f36-4a0b-b21b-c8ab710dc861?&w=3840&q=75)
+아래 클라이언트 코드(`client/index.ejs`)에 결제창 SDK를 추가한 뒤 클라이언트 키로 객체를 초기화해 주세요. 초기화된 객체로 [`requestBillingAuth('카드')`](https://docs.tosspayments.com/sdk/payment-js#requestbillingauth-%EC%B9%B4%EB%93%9C-%EA%B2%B0%EC%A0%9C-%EC%A0%95%EB%B3%B4)를 실행하면 카드 등록창이 떠요. 약관에 동의하고, 카드 정보를 입력해요. 테스트 환경에서는 카드번호의 첫 6자리만으로 카드를 등록할 수 있어요.
+**`customerKey`에는 가맹점에서 가지고 있는 고객 식별키를 넣어주세요.** 다른 사용자가 이 값을 알게 되면 악의적으로 사용할 수 있어 자동 증가하는 숫자는 안전하지 않아요. [UUID](https://ko.wikipedia.org/wiki/%EB%B2%94%EC%9A%A9_%EA%B3%A0%EC%9C%A0_%EC%8B%9D%EB%B3%84%EC%9E%90)와 같이 **충분히 무작위적인 고유 값으로 생성해주세요.**
+client/index.ejs
+```
+결제하기
+```
+고객이 카드 등록창에 카드 정보를 입력하고 휴대폰 본인인증을 성공적으로 마치면 `successUrl`로 이동합니다. `successUrl`에는 다음과 같이 **`customerKey`, `authKey`가 쿼리 파라미터로 포함되어 있어요.**
+`http://{ORIGIN}/success?customerKey=test_customer_key&authKey=bln_Dk0NGXzdDmB`
+돌아온 [`authKey`](https://docs.tosspayments.com/reference#v1billingauthorizationsissuepost-authkey), [`customerKey`](https://docs.tosspayments.com/reference#v1billingauthorizationsissuepost-customerkey) 파라미터를 요청 본문에 포함해 다음과 같이 빌링키 발급 API를 호출하면 [빌링키가 발급돼요.](https://docs.tosspayments.com/guides/billing/integration#3-%EB%B9%8C%EB%A7%81%ED%82%A4-%EB%B0%9C%EA%B8%89%ED%95%98%EA%B8%B0) 서버 코드는 이렇게 쓸 수 있어요.
+routes/index.js
+```
+// 서버 구성을 위한 기본 설정
+var express = require("express");
+var got = require("got");
+var cron = require('node-cron');
+var uuid = require("uuid").v4;
+var router = express.Router();
+var querystring = require("querystring");
+// 첫 화면
+router.get('/', function (req, res) {
+res.render('index');
+});
+// 빌링키 발급
+router.get('/success', function (req, res) {
+got
+.post('https://api.tosspayments.com/v1/billing/authorizations/issue', {
+headers: {
+Authorization:
+// 시크릿 키 뒤에 :을 추가하고 base64로 인코딩합니다. :을 빠트리지 않도록 주의하세요.
+'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
+'Content-Type': 'application/json',
+},
+json: {
+authKey: req.query.authKey,
+customerKey: req.query.customerKey,
+},
+responseType: 'json',
+})
+.then(function (response) {
+console.log(response.body);
+res.render('success', { responseJson: response.body });
+})
+.catch(function (error) {
+res.redirect(`/fail?${querystring.stringify(error.response.body)}`);
+});
+});
+// 빌링키 발급 실패
+router.get('/fail', function (req, res) {
+res.render('fail', {
+message: req.query.message,
+code: req.query.code,
+});
+});
+module.exports = router;
+```
+돌아온 응답에 다음과 같이 `billingKey`가 돌아왔는지 확인해 보세요. 이 값으로 결제를 실행할 수 있어요.
+```
+{
+"mId": "tosspayments",
+"customerKey": "m00UK4pxaKUdX0RkqWCyA",
+"authenticatedAt": "2021-01-01T10:00:00+09:00",
+"method": "카드",
+"billingKey": "Z_t5vOvQxrj4499PeiJcjen28-V2RyqgYTwN44Rdzk0=",
+"card": {
+"issuerCode": "61",
+"acquirerCode": "31",
+"number": "43301234****123*",
+"cardType": "신용",
+"ownerType": "개인"
+}
+}
+```
+### [![Image 5: 링크 복사](https://static.toss.im/icons/svg/icon-link-mono.svg)](https://docs.tosspayments.com/blog/subscription-service-1#2-%EB%B9%8C%EB%A7%81%ED%82%A4-%EC%A0%80%EC%9E%A5%ED%95%98%EA%B8%B0)2. 빌링키 저장하기
+이제 발급한 빌링키를 고객을 특정하는 `customerKey`와 연결해 저장해 볼게요. **빌링키는 고객의 카드 정보를 대신하는 정보예요. 그래서 `customerKey`와 매핑되어야 어떤 고객의 결제수단으로 결제했는지 알 수 있어요.**
+간단한 데이터베이스로 사용할 SQLite를 추가할게요.
+routes/index.js
+```
+var express = require('express');
+var got = require('got');
+var cron = require('node-cron');
+var uuid = require('uuid').v4;
+var querystring = require('querystring');
+var sqlite3 = require('sqlite3').verbose(); // SQLite 패키지
+var router = express.Router();
+var secretKey = '{SECRET_KEY}';
+// SQLite 데이터베이스 초기화
+let db = new sqlite3.Database('./subscriptions.db', (err) => {
+if (err) {
+console.error(err.message);
+}
+console.log('Connected to the subscriptions database.');
+});
+db.serialize(() => {
+db.run('CREATE TABLE IF NOT EXISTS user (customerKey TEXT, billingKey TEXT)');
+});
+// 초기 화면
+router.get('/', function (req, res) {
+res.render('index');
+});
+// 빌링키 발급 성공
+router.get('/success', function (req, res) {
+got
+.post('https://api.tosspayments.com/v1/billing/authorizations/issue', {
+headers: {
+Authorization:
+'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
+'Content-Type': 'application/json',
+},
+json: {
+authKey: req.query.authKey,
+customerKey: req.query.customerKey,
+},
+responseType: 'json',
+})
+.then(function (response) {
+console.log(response.body);
+// billingKey를 데이터베이스에 저장하는 로직
+const billingKey = response.body.billingKey;
+const customerKey = req.query.customerKey;
+db.run(
+'INSERT INTO user (customerKey, billingKey) VALUES (?, ?)',
+[customerKey, billingKey],
+(error) => {
+if (error) {
+console.log('Database error: ', error);
+res.redirect(`/fail?${querystring.stringify(error.response.body)}`);
+}
+res.render('success', { responseJson: response.body });
+}
+);
+})
+.catch(function (error) {
+res.redirect(`/fail?${querystring.stringify(error.response.body)}`);
+});
+});
+router.get('/fail', function (req, res) {
+res.render('fail', {
+message: req.query.message,
+code: req.query.code,
+});
+});
+module.exports = router;
+```
+데이터베이스에 구독 정보가 잘 들어왔는지 조회해 볼게요.
+SQLite3 커맨드를 이용해서 `subscriptions` 데이터베이스에 접근해요.
+`sqlite3 subscriptions.db`
+`user` 테이블의 모든 데이터를 조회하기 위해 다음의 SQL 쿼리를 실행해 주세요.
+`SELECT * FROM user;`
+그럼 아래와 같은 정보가 나와요.
+`test_customer_key|eey7018Xwxsh9HTkkPkzGXzLPlTewY8zP72ZvcSPtXE=`
+`customerKey`와 `billingKey`가 저장된 것을 확인할 수 있어요.
+지금까지 구독 서비스를 만드는 첫 단계인 빌링키를 만들고 저장하는 과정을 함께 해봤어요. [다음 포스트](https://docs.tosspayments.com/blog/subscription-service-2)에서는 설정한 구독 정보에 맞게 결제를 실행하는 법을 알려드릴게요!
+**Writer** 한주연 **Graphic** 이은호, 이나눔
+* * *
+📍 **함께 읽으면 좋을 콘텐츠**
+* [구독 결제 서비스 구현하기 (2) 스케줄링](https://docs.tosspayments.com/blog/subscription-service-2)
+* [자동결제(빌링) 가이드](https://docs.tosspayments.com/guides/billing/overview)

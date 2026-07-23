@@ -1,0 +1,232 @@
+Title: 에어비앤비 클론코딩 | Django, REST Framework, Chakra UI 강의 – 노마드 코더 Nomad Coders
+
+URL Source: https://nomadcoders.co/airbnb-clone
+
+Markdown Content:
+[![Image 1](https://nomadcoders.co/m.svg)![Image 2](https://nomadcoders.co/m.svg)](https://nomadcoders.co/)
+
+중급
+
+## 에어비앤비 클론코딩
+
+### Django, REST Framework, Chakra UI
+
+![Image 3](https://nomadcoders.co/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fpython.d8f6f4de.png&w=640&q=75)
+
+![Image 4](https://nomadcoders.co/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fdjango.3e017fb6.png&w=1920&q=75)
+
+![Image 5](https://nomadcoders.co/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Freact.662b022a.png&w=1920&q=75)
+
+![Image 6](https://nomadcoders.co/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fchakraui.9a13fd40.png&w=1920&q=75)
+
+120+개의 강의 엔터프라이즈급 Django 서비스 빌드하기 유망 스타트업의 인기 기술 스택으로 풀스택 구현하기
+
+동영상
+
+191
+
+개
+
+강의 분량
+30시간+
+
+레벨
+중급
+
+## 실전형 코딩을 시작하세요
+
+#### 왜 직접 만들면서 배워야. 진짜 지식이 될까요?
+
+#클론코딩#현업중심#자기주도학습
+
+![Image 7](https://nomadcoders.co/freeCourse01.svg)
+
+우리는 그동안
+
+딱딱한 이론과 문법 중심의
+
+한국식 코딩을 배워왔어요.
+
+![Image 8](https://nomadcoders.co/freeCourse02.svg)
+
+이렇게 배운 지식은
+
+현업에서 바로 활용하기 어려워요.
+
+![Image 9](https://nomadcoders.co/freeCourse03.svg)
+
+하지만 존재하는 서비스와 기능을
+
+따라 만들면서 배우면,
+
+온전히 나의 기술로 습득할 수 있어요.
+
+## 노마드코더’s 클론코딩 교육
+
+#### 주입식 코딩만 하면 실력은 늘지않아요.
+
+![Image 10](blob:http://localhost/b9a31d3949b1882a09ed2f8508d538f3)
+
+### 코딩 챌린지 란?
+
+코딩은 직접 스스로 만들어봐야 온전한 자신의 지식이 됩니다.
+
+수강생들은 직접 기능을 구현하고,**본인의 졸업작품**을 만들며
+
+제대로 배우게 됩니다!
+
+![Image 11](blob:http://localhost/b9a31d3949b1882a09ed2f8508d538f3)
+
+### 무엇을 만드나요?
+
+에어비앤비 (Airbnb) 웹사이트를 클론 코딩 합니다. 백엔드는 Python, Django, Django REST Framework, Strawberry GraphQL를 사용하고, 프론트엔드로 ReactJS 를 사용합니다. 마켓플레이스의 기능을 구현하여, 유저들은 원하는 숙소를 검색하고, 즐겨찾기에 찜하고, 예약할 수 있으며, 후기를 남기고 이를 확인할 수 있습니다.
+
+또한 숙소 주인은 이미지를 업로드 하고, 숙소의 디테일을 작성하고, 이를 대시보드로 확인할 수 있습니다.
+
+## 배우고, 직접 구현합니다
+
+구현 기능
+
+Django 는 핀터레스트. 인스타그램과 같은 유명한 웹 서비스를 구현하는데 쓰이는 파이썬 웹 프레임워크 입니다.현 강의에서는 세계적인 Django 기능 중 하나인 어드민 패널, ORM 및 유저 매니지먼트 기능을 활용합니다.Django + React 조합은 스타트업 업계에서 인기가 많은 스택 중 하나이기도 합니다!
+
+[Video 10](https://nomadcoders.co/courses/airbnb-clone/screenshots/django.mp4)
+
+## REST
+
+REST 는 API 의 표준이라 할 수 있습니다. 대부분의 iOS 및 Android 애플리케이션은 REST API를 사용하여 백엔드와 통신합니다.현 강의에서는 대부분의 유명 스타트업이 사용하는 Django REST Framework를 활용하여, REST API를 빌드합니다.
+
+[Video 11](https://nomadcoders.co/courses/airbnb-clone/screenshots/rest.mp4)
+
+## GraphQL
+
+API 는 빠르게 발전하고 있고, 이에 따라 더더욱 많은 팀들이 GraphQL을 API로 사용하고 있습니다. 현 강의에서는 REST 뿐만 아니라, Strawberry 를 사용하여 GraphQL API 를 빌드합니다.
+
+[Video 12](https://nomadcoders.co/courses/airbnb-clone/screenshots/graphql.mp4)
+
+## React
+
+React 는 현재 프론트엔드 프레임워크의 제왕입니다. 인터랙티브하고 빠르고 아름다운 웹 어플리케이션을 구축하기 위해 React 를 사용하며, React 의 data fetching 그리고 styling 패키지를 활용합니다.
+
+[Video 13](https://nomadcoders.co/courses/airbnb-clone/screenshots/react.mp4)
+
+## 강의 미리보기
+
+## 제공합니다
+
+#### 이 강의에서는 아래 자료들을 제공합니다.
+
+강의 분량
+
+총 191 개의 동영상 강의
+
+총 30시간+분량.
+
+![Image 12](https://nomadcoders.co/courses/kr.svg)
+
+한국어도 OK
+
+영어 강의라고 겁먹지 마세요!
+
+강의에 한글 자막을 제공합니다.
+
+실시간 Q&A
+
+니꼴라스 선생님이 직접 100%
+
+답변합니다.
+
+활발한 슬랙 커뮤니티
+
+수만명의 수강생들과
+
+ 함께 공부하세요.
+
+## 수강생 후기
+
+#### 27만명 수강생이 증명합니다.
+
+마법 같은 강의였어요. 고마워요 니꼬쌤
+
+감사합니다. 좋은 작업물로 찾아뵐게요.
+
+本当にすごいですね〜 でも、先生が基礎から細かく説明してくれて、より理解しやすかったです。 ありがとうございます。
+
+2023-04-20 완강!!!!(GRAPHQL API 및 결제 필요한거 제외) 이제 복습할겸 생각해둔 앱을 만들어 봐야 겠네요ㅎㅎ 감사합니다.
+
+The way you explain the concept of the new framework, language, and knowledge is just amazing. It's super easy to understand and also very fun! You are not just a professional developer but a great teacher as well. Thank...더 보기
+
+It was really awesome class. Thank you so much!
+
+알고있습니다. 수업을 준비하고 진행하는 것이 피곤하고 지치는 일이라는 것. 하지만, 다시 찍어가면서까지 수강생의 입장을 생각해주시다니.... 정말 존경합니다.
+
+[![Image 13](https://d1telmomo28umc.cloudfront.net/media/public/avatars/ralo-1614943370.jpg)](https://nomadcoders.co/users/ralo)
+[ralo](https://nomadcoders.co/users/ralo)
+
+★★★★★
+
+2019년 airbnb 들었었는데 니코 쌤 강의 실력, 강의 내용 모두 맛있어 졌어요! 사랑해요! 니코! 니코!니코!니코!니코!
+
+https://dobbybnb.xyz 22.12.27 I finally made it!!!!!!!! thank you for this great lectures!!! your lectures are always fun and not boring at all!! Thank you once again for every lectures you made!!
+
+Christmas with the Nico's lecture is the best. The more I learn, the more interesting it is.thank you!
+
+Thank you my dear teacher. I am very happy to watch your video! but I wonder if I had to have reat-time chat service. In this case, is it okay if I choose django-channel or firebase realtime database with DRF? Anyway,...더 보기
+
+Thank you~~!! I love you, See you again, 김치, Awesome, Amazing
+
+마지막에 니꼬쌤이 어메이징!! 하실 때 함께 기분 업업이에요 ㅎㅎ 늘 좋은 에너지 감사해용!!
+
+2022-10-04 Thank you for these great lectures. I started with empty hands but got some clue now! 니꼬쌤 감사합니다! hello world 겨우 프린팅 하는 수준이었는데! 백엔드-프론트엔드를 만들 수 있게 되었어요!! 게다가 디플로이까지!! 감동이에요!!
+
+정말 충격적이네요 ..................... =ㅁ=! 수업 잘 듣고 있습니다. 감사해요 니꼬쌤!
+
+니꼬 들어올 때 노저어요 우버에 이어서 에어비앤비도~
+
+요즘 핫한 백엔드 언어를 이렇게 니꼬쌤이랑 들을 수 있다니 ㅎㅎ 돈값 제대로 뽑아먹겠습니다 ㅎㅎ
+
+업데이트 나오길 엄청 기다렸습니다 예전 니꼬샘의 강의를 기반으로 개인적으로 GeoDjango를 독학해서 지도관련 서비스를 만드는중인데 Django 너무 좋은 것 같습니다 ㅎㅎ
+
+wow... I was struggling with the combination of REACT.js and DJango while watching old version of AirBNB clone coding! Had hard time with other Youtube Videos explaining that!... It is such a great chance for me! Thank ...더 보기
+
+수업을 듣고 장고기반에 화상채팅과 실시간 동기화가 적용된 web ifc 뷰어를 제작할 수 있었습니다. 니꼬샘 감사합니다!
+
+## 상세 커리큘럼
+
+#### 수업 내용을 직접 들어보고 결정하세요!
+
+동영상 191 개
+
+총 30시간+
+
+전체 열기
+
+## 에어비앤비 클론 SUMMARY
+
+*   총 강의수: +191개 (30시간+). 한국어 자막 포함 + 제작 100% 완료!
+*   백엔드: Python, Django, Django REST Framework, Graphene GraphQL
+*   프론트엔드: ReactJS + Chakra UI + Render
+*   레벨: 중급
+*   구현하는 기능: 숙소 마켓플레이스.(숙소 검색. 즐겨찾기. 예약. 후기. 대시보드 기능 등)
+*   결과물: 나만의 '에어비앤비' 직접 구현!
+
+## 실전형 코딩을 시작하세요!
+
+#### 본인이 원하는 시간과 속도로, 언제든지 다시 반복하여 들을 수 있는 온라인 수업 입니다.
+
+또한 4주 동안 100% 완주할 수 있는 챌린지 프로그램까지 추가로 제공됩니다.
+
+### 에어비앤비 클론코딩
+
+강의 평생 소장
+
+4주 완성반 챌린지
+
+100% 한글자막
+
+니꼬쌤 질의응답
+
+#### 한번 결제하고 평생 소장하세요!
+
+에어비앤비 클론코딩 평생 소장
+
+6개월 할부 월  65,000 원

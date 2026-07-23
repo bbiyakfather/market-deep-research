@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko-KR" class="">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+		<link rel="pingback" href="https://triki.net/xmlrpc.php">
+		<title>[Supabase] 데이터베이스 테이블에 RLS 설정하기 &#8211; 모두의매뉴얼</title>
+<meta name='robots' content='max-image-preview:large' />
+<!-- Jetpack Site Verification Tags -->
+<meta name="google-site-verification" content="3esZLztDESMqf0dbaxsgXX6uZK4VYo2mWGs38wvnjOc">
+<link rel='dns-prefetch' href='//www.googletagmanager.com' />
+<link rel='dns-prefetch' href='//stats.wp.com' />
+<link rel='dns-prefetch' href='//v0.wordpress.com' />
+<link rel='dns-prefetch' href='//jetpack.wordpress.com' />
+<link rel='dns-prefetch' href='//s0.wp.com' />
+<link rel='dns-prefetch' href='//public-api.wordpress.com' />
+<link rel='dns-prefetch' href='//secure.gravatar.com' />
+<link rel='dns-prefetch' href='//pagead2.googlesyndication.com' />
+<link rel='preconnect' href='//c0.wp.com' />
+<link rel="alternate" type="application/rss+xml" title="모두의매뉴얼 &raquo; [Supabase] 데이터베이스 테이블에 RLS 설정하기 댓글 피드" href="https://triki.net/prgm/11626/feed" />
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://triki.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Ftriki.net%2Fprgm%2F11626" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://triki.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Ftriki.net%2Fprgm%2F11626&#038;format=xml" />
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<style id="wp-block-library-inline-css">
+:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}:root .has-text-align-center{text-align:center}:root .has-text-align-left{text-align:left}:root .has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style*=border-color]){border-style:solid}html :where([style*=border-top-color]){border-top-style:solid}html :where([style*=border-right-color]){border-right-style:solid}html :where([style*=border-bottom-color]){border-bottom-style:solid}html :where([style*=border-left-color]){border-left-style:solid}html :where([style*=border-width]){border-style:solid}html :where([style*=border-top-width]){border-top-style:solid}html :where([style*=border-right-width]){border-right-style:solid}html :where([style*=border-bottom-width]){border-bottom-style:solid}html :where([style*=border-left-width]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=/wp-includes/css/dist/block-library/common.min.css */
+</style>
+<style id="classic-theme-styles-inline-css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<link rel='stylesheet' id='triki2-css-css' href='https://triki.net/wp-content/themes/triki2wpt/style.css?ver=7.0.2' media='all' />
+<script id="jquery-core-js" src="https://c0.wp.com/c/7.0.2/wp-includes/js/jquery/jquery.min.js"></script>
+<script id="jquery-migrate-js" src="https://c0.wp.com/c/7.0.2/wp-includes/js/jquery/jquery-migrate.min.js"></script>
+<script id="script-triki2-js" src="https://triki.net/wp-content/plugins/triki2wpp/triki2.js?ver=7.0.2"></script>
+
+<!-- Site Kit에서 추가한 Google 태그(gtag.js) 스니펫 -->
+<!-- Site Kit에 의해 추가된 Google Analytics 스니펫 -->
+<script id="google_gtagjs-js" src="https://www.googletagmanager.com/gtag/js?id=GT-5RMLS64" async></script>
+<script id="google_gtagjs-js-after">
+window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}
+gtag("set","linker",{"domains":["triki.net"]});
+gtag("js", new Date());
+gtag("set", "developer_id.dZTNiMT", true);
+gtag("config", "GT-5RMLS64");
+ window._googlesitekit = window._googlesitekit || {}; window._googlesitekit.throttledEvents = []; window._googlesitekit.gtagEvent = (name, data) => { var key = JSON.stringify( { name, data } ); if ( !! window._googlesitekit.throttledEvents[ key ] ) { return; } window._googlesitekit.throttledEvents[ key ] = true; setTimeout( () => { delete window._googlesitekit.throttledEvents[ key ]; }, 5 ); gtag( "event", name, { ...data, event_source: "site-kit" } ); }; 
+//# sourceURL=google_gtagjs-js-after
+</script>
+<link rel="https://api.w.org/" href="https://triki.net/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://triki.net/wp-json/wp/v2/posts/11626" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://triki.net/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 7.0.2" />
+<link rel="canonical" href="https://triki.net/prgm/11626" />
+<link rel='shortlink' href='https://triki.net/?p=11626' />
+<meta name="generator" content="Site Kit by Google 1.183.0" />	<style>img#wpstats{display:none}</style>
+		
+<!-- Site Kit에서 추가한 Google AdSense 메타 태그 -->
+<meta name="google-adsense-platform-account" content="ca-host-pub-2644536267352236">
+<meta name="google-adsense-platform-domain" content="sitekit.withgoogle.com">
+<!-- Site Kit에서 추가한 Google AdSense 메타 태그 종료 -->
+<meta name="description" content="공개 키를 이용해 슈퍼베이스 데이터 테이블에 접근하기 위한 RLS 정책 설정 방법" />
+
+<!-- Site Kit에 의해 추가된 Google AdSense 스니펫 -->
+<script async crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4798808391493666&#038;host=ca-host-pub-2644536267352236"></script>
+
+<!-- Site Kit에 의해 추가된 Google AdSense 스니펫 종료 -->
+
+<!-- Jetpack Open Graph Tags -->
+<meta property="og:type" content="article" />
+<meta property="og:title" content="[Supabase] 데이터베이스 테이블에 RLS 설정하기" />
+<meta property="og:url" content="https://triki.net/prgm/11626" />
+<meta property="og:description" content="공개 키를 이용해 슈퍼베이스 데이터 테이블에 접근하기 위한 RLS 정책 설정 방법" />
+<meta property="article:published_time" content="2025-07-30T02:48:16+00:00" />
+<meta property="article:modified_time" content="2025-07-30T02:51:29+00:00" />
+<meta property="og:site_name" content="모두의매뉴얼" />
+<meta property="og:image" content="https://triki.net/wp-content/uploads/2025/07/logo-supabase.png" />
+<meta property="og:image:width" content="320" />
+<meta property="og:image:height" content="320" />
+<meta property="og:image:alt" content="" />
+<meta property="og:locale" content="ko_KR" />
+<meta name="twitter:text:title" content="[Supabase] 데이터베이스 테이블에 RLS 설정하기" />
+<meta name="twitter:image" content="https://triki.net/wp-content/uploads/2025/07/logo-supabase.png?w=640" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<!-- End Jetpack Open Graph Tags -->
+<link rel="icon" href="https://triki.net/wp-content/uploads/2024/07/cropped-logo-triki2-32x32.png" sizes="32x32" />
+<link rel="icon" href="https://triki.net/wp-content/uploads/2024/07/cropped-logo-triki2-192x192.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://triki.net/wp-content/uploads/2024/07/cropped-logo-triki2-180x180.png" />
+<meta name="msapplication-TileImage" content="https://triki.net/wp-content/uploads/2024/07/cropped-logo-triki2-270x270.png" />
+		<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+		<style>html { font-family: 'IBM Plex Sans KR', sans-serif; font-weight: 400; font-size: 16px; }</style>
+		<!-- Google fonts MSO -->
+			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" />
+			<style>
+				.ff_mso 	{ font-family: 'Material Symbols Outlined'; font-size: large; line-height: 1; vertical-align: bottom; }
+				pre, code 	{ font-family: ui-monospace,"Cascadia Mono","Segoe UI Mono","Liberation Mono",Menlo,Monaco,Consolas,monospace; font-size: small; }
+			</style>
+		<!-- Adsense -->
+			<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4798808391493666" crossorigin="anonymous"></script>
+	<link rel='stylesheet' id='jetpack-swiper-library-css' href='https://c0.wp.com/p/jetpack/15.9/_inc/blocks/swiper.css' media='all' />
+<link rel='stylesheet' id='jetpack-carousel-css' href='https://c0.wp.com/p/jetpack/15.9/modules/carousel/jetpack-carousel.css' media='all' />
+
+</head>
+	<body class="wp-singular post-template-default single single-post postid-11626 single-format-standard wp-custom-logo wp-theme-triki2wpt">
+		<section class="site header">
+			<div class="inner">
+				<div class="buttonCont"><ul id="menu-header" class="menu"><li id="menu-item-8747" class="ff_mso menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-8747"><a href="https://triki.net">home</a></li>
+<li id="menu-item-10690" class="ff_mso menu-item menu-item-type-custom menu-item-object-custom menu-item-10690"><a href="/about">help</a></li>
+<li id="menu-item-10881" class="ff_mso menu-item menu-item-type-custom menu-item-object-custom menu-item-10881"><a href="/random.php">shuffle</a></li>
+</ul></div>							</div>
+		</section>
+		<section class="site body">
+			<div class="inner">
+				<main>
+												<article>
+								<header>
+									<h1>[Supabase] 데이터베이스 테이블에 RLS 설정하기</h1>																				<p class="meta">
+												<span class="flex">
+													<span class="ff_mso">folder</span>
+													<span>
+														프로그래밍													</span>
+												</span>
+												<span class="flex">
+													<span class="ff_mso">calendar_month</span>
+													<time>2025.07.30</time>
+												</span>
+												<span class="flex">
+													<span class="ff_mso">web_traffic</span>
+													<span>172</span>
+												</span>
+											</p>
+																	</header>
+																	<aside class="widgets bac"><div id="custom_html-4" class="widget_text widget widget_custom_html"><div class="textwidget custom-html-widget"><!-- triki-beforecontent-240712 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-4798808391493666"
+     data-ad-slot="4343561659"
+     data-ad-format="horizontal"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script></div></div><div id="google_translate_widget-2" class="widget widget_google_translate_widget"><div id="google_translate_element"></div></div></aside>
+																<div class="content">
+									<p><center>(아래는 2025년 7월 기준으로 작성된 자료입니다.)</center></p>
+<h2 id="problem">문제</h2>
+<p>PHP 에서 cURL을 이용해 슈퍼베이스의 데이터베이스 테이블에서 데이터를 가져 올 때, 안전하게 가져오기 위해 Public Key(공개 키) 를 사용해야 한다면 반드시 데이터를 가져올 테이블에 RLS(Row Level Security) 정책을 설정해야 합니다.</p>
+<p>RLS 의 역할을 간단하게 설명하자면, 해당 테이블에 접근하는 유저가 어떤 행동을 할 수 있을지 권한을 부여하는 것이죠. 예를 들면,</p>
+<ul>
+<li>모든 유저는 <code>Select</code> 쿼리를 실행 할 수 있음</li>
+<li>권한이 부여된 유저는 <code>Insert</code> 쿼리를 실행해 테이블에 데이터를 넣을 수 있음</li>
+<li>특정 유저는 <code>Delete</code> 쿼리를 실행 할 수 있음</li>
+</ul>
+<p>이런 개별 정책을 설정하는 것입니다.</p>
+<p>어디에서든 공개해도 되는 Public Key 를 사용해 접근 하는 유저에게는 접근 권한을 매우 한정적으로 주어 <code>Select</code> 쿼리를 통해 데이터 조회만 가능하도록 해야겠죠?</p>
+<h2 id="solution">해결</h2>
+<p>이제 본격적으로 슈퍼베이스 DB 테이블에 RLS 를 설정하는 방법을 알아 봅시다.</p>
+<p>일단 본인의 슈퍼베이스 프로젝트에서 RLS 정책을 설정할 테이블로 이동합니다.</p>
+<div id="attachment_11627" style="width: 613px" class="wp-caption aligncenter"><a href="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-1.png"><img loading="lazy" decoding="async" aria-describedby="caption-attachment-11627" data-attachment-id="11627" data-permalink="https://triki.net/prgm/11626/attachment/%ec%8a%88%ed%8d%bc%eb%b2%a0%ec%9d%b4%ec%8a%a4-rls_%ec%84%a4%ec%a0%95-1" data-orig-file="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-1.png" data-orig-size="603,211" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="슈퍼베이스-RLS_설정-1" data-image-description="" data-image-caption="&lt;p&gt;슈퍼베이스 DB 테이블에 RLS 설정하기&lt;/p&gt;
+" data-large-file="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-1.png" src="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-1.png" alt="" width="603" height="211" class="size-full wp-image-11627" srcset="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-1.png 603w, https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-1-300x105.png 300w" sizes="auto, (max-width: 603px) 100vw, 603px" /></a><p id="caption-attachment-11627" class="wp-caption-text">슈퍼베이스 DB 테이블에 RLS 설정하기</p></div>
+<p>테이블 화면의 오른쪽 상단을 보면 <strong>Add RLS policy</strong> 라는 버튼이 보이는데 이 버튼을 누르고, 전환된 화면에서 <strong>Create policy</strong> 버튼을 누르면,</p>
+<div id="attachment_11631" style="width: 1001px" class="wp-caption aligncenter"><a href="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1.png"><img loading="lazy" decoding="async" aria-describedby="caption-attachment-11631" data-attachment-id="11631" data-permalink="https://triki.net/prgm/11626/attachment/%ec%8a%88%ed%8d%bc%eb%b2%a0%ec%9d%b4%ec%8a%a4-rls_%ec%84%a4%ec%a0%95-2-1" data-orig-file="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1.png" data-orig-size="991,609" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="슈퍼베이스-RLS_설정-2-1" data-image-description="" data-image-caption="&lt;p&gt;슈퍼베이스 DB 테이블에 RLS 설정하기&lt;/p&gt;
+" data-large-file="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1.png" src="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1.png" alt="" width="991" height="609" class="size-full wp-image-11631" srcset="https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1.png 991w, https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1-300x184.png 300w, https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1-768x472.png 768w, https://triki.net/wp-content/uploads/2025/07/슈퍼베이스-RLS_설정-2-1-728x447.png 728w" sizes="auto, (max-width: 991px) 100vw, 991px" /></a><p id="caption-attachment-11631" class="wp-caption-text">슈퍼베이스 DB 테이블에 RLS 설정하기</p></div>
+<p>이런 화면이 나오는데, 이 화면이 바로 RLS 정책을 설정하는 화면입니다.</p>
+<p>좌측 <strong>Create &#8230;</strong> 부분을 잘 보면, 어떤 테이블(Table)의 어떤 명령을 실행할 권한(Policy Command)을 누구에게(Target Roles) 부여 할 것인지를 옵션 형태로 설정할 수 있음을 알 수 있습니다.</p>
+<p>너무 어렵다는 생각이 드신다면 화면의 오른쪽 <strong>Templates</strong> 에서 미리 만들어진 정책을 누르고 본인 입맛에 맞게 수정해도 됩니다.</p>
+<p>처음에 말했던 모든 Public Key 를 사용해 접근 하는 사람들에게 테이블의 데이터를 조회 할 수 있는 권한을 부여하기 위해 템플릿에서 가장 위에 있는 <strong>Enable read access for all users</strong> 를 눌러보았습니다.</p>
+<p>사전에 설정된 정책을 보니,</p>
+<ul>
+<li><strong>on &#8220;public&#8221;.&#8221;{테이블명}&#8221;</strong> : 해당 테이블에 대해</li>
+<li><strong>for SELECT</strong> : <code>SELECT</code> 문에 대한 권한을</li>
+<li><strong>to public</strong> : 모두에게 </li>
+<li><strong>using (true)</strong> : 부여한다</li>
+</ul>
+<p>는 것을 알 수 있습니다.</p>
+<p>이렇게 설정을 마친 뒤 하단에 있는 <strong>Save policy</strong> 버튼을 눌러 RLS 정책을 저장하고, 실제로 Public Key 를 이용해 데이터가 잘 조회되는지 확인하면 됩니다.</p>
+<p>끝.</p>
+								</div>
+								<footer>
+									<div class="tags"><a href="https://triki.net/tag/rls" rel="tag">RLS</a><a href="https://triki.net/tag/select" rel="tag">SELECT</a><a href="https://triki.net/tag/%ea%b3%b5%ea%b0%9c%ed%82%a4" rel="tag">공개키</a><a href="https://triki.net/tag/%eb%8d%b0%ec%9d%b4%ed%84%b0%eb%b2%a0%ec%9d%b4%ec%8a%a4" rel="tag">데이터베이스</a><a href="https://triki.net/tag/%ec%8a%88%ed%8d%bc%eb%b2%a0%ec%9d%b4%ec%8a%a4" rel="tag">슈퍼베이스</a><a href="https://triki.net/tag/%ed%85%8c%ec%9d%b4%eb%b8%94" rel="tag">테이블</a></div>								</footer>
+																	<aside class="widgets aac"><div id="text-2" class="widget widget_text"><p class="widget-title">관련 포스트</p>			<div class="textwidget"><ul class="related"><li><a href="https://triki.net/prgm/254" rel="bookmark">SQL 테이블에 속한 필드 이름을 조회하여 사용해 보자</a> <small>(1)</small></li><li><a href="https://triki.net/prgm/10587" rel="bookmark">[MS오피스] 액세스에서 뷰테이블 만들어 사용하는 방법</a> <small>(1)</small></li><li><a href="https://triki.net/apps/10722" rel="bookmark">[MS오피스] 액세스 DB 파일 데이터 테이블 분리와 정리 및 용량 최적화 방법</a> <small>(2)</small></li><li><a href="https://triki.net/apps/11602" rel="bookmark">[Supabase] 내 데이터 베이스 프로젝트의 API Key 를 확인하는 방법</a> <small>(3)</small></li><li><a href="https://triki.net/prgm/11600" rel="bookmark">[Supabase] PHP 에서 데이터를 조회해 가져오는 방법</a> <small>(1)</small></li></ul>
+</div>
+		</div></aside>
+																<div class="comments">
+	<ol>
+			</ol>
+	
+		<div id="respond" class="comment-respond">
+			<h3 id="reply-title" class="comment-reply-title">댓글 남기기<small><a rel="nofollow" id="cancel-comment-reply-link" href="/prgm/11626#respond" style="display:none;">응답 취소</a></small></h3>			<form id="commentform" class="comment-form">
+				<iframe
+					title="댓글 양식"
+					src="https://jetpack.wordpress.com/jetpack-comment/?blogid=235030631&#038;postid=11626&#038;comment_registration=0&#038;require_name_email=1&#038;stc_enabled=1&#038;stb_enabled=1&#038;show_avatars=0&#038;avatar_default=mystery&#038;greeting=%EB%8C%93%EA%B8%80+%EB%82%A8%EA%B8%B0%EA%B8%B0&#038;jetpack_comments_nonce=7cef5e77ad&#038;greeting_reply=%25s+%EC%97%90+%EC%9D%91%EB%8B%B5+%EB%82%A8%EA%B8%B0%EA%B8%B0&#038;color_scheme=transparent&#038;lang=ko_KR&#038;jetpack_version=15.9&#038;iframe_unique_id=1&#038;show_cookie_consent=10&#038;has_cookie_consent=0&#038;is_current_user_subscribed=0&#038;token_key=%3Bnormal%3B&#038;sig=e4e35911e461408a8129d17dc4a7851175989c69#parent=https%3A%2F%2Ftriki.net%2Fprgm%2F11626"
+											name="jetpack_remote_comment"
+						style="width:100%; height: 430px; border:0;"
+										class="jetpack_remote_comment"
+					id="jetpack_remote_comment"
+					sandbox="allow-same-origin allow-top-navigation allow-scripts allow-forms allow-popups"
+				>
+									</iframe>
+									<!--[if !IE]><!-->
+					<script>
+						document.addEventListener('DOMContentLoaded', function () {
+							var commentForms = document.getElementsByClassName('jetpack_remote_comment');
+							for (var i = 0; i < commentForms.length; i++) {
+								commentForms[i].allowTransparency = true;
+								commentForms[i].scrolling = 'no';
+							}
+						});
+					</script>
+					<!--<![endif]-->
+							</form>
+		</div>
+
+		
+		<input type="hidden" name="comment_parent" id="comment_parent" value="" />
+
+		</div>							</article>
+									</main>
+									<aside class="widgets sb">
+						<div class="sticky"><div id="search-2" class="widget widget_search"><p class="widget-title">검색</p><div class="searchCont">
+	<form role="search" method="get" action="/" class="searchform">
+		<input type="text" name="s" class="field" value="" placeholder=" search.. ">
+		<button type="submit" class="ff_mso submit">search</button>
+	</form>
+</div></div><div id="custom_html-5" class="widget_text widget widget_custom_html"><div class="textwidget custom-html-widget"><ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-4798808391493666"
+     data-ad-slot="1902065293"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script></div></div></div>
+					</aside>
+								<aside class="widgets sbe">
+					<div id="custom_html-3" class="widget_text widget widget_custom_html"><div class="textwidget custom-html-widget"><!-- triki-aftercontent-240712 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-4798808391493666"
+     data-ad-slot="9156780924"
+     data-ad-format="horizontal"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script></div></div>
+		<div id="recent-posts-2" class="widget widget_recent_entries">
+		<p class="widget-title">최근 발행된 포스트</p>
+		<ul>
+											<li>
+					<a href="https://triki.net/prgm/12612">[엑셀/VBA] 날짜 포맷을 간단하게 변경하는 방법</a>
+											<span class="post-date">2026.06.18</span>
+									</li>
+											<li>
+					<a href="https://triki.net/life/12565">[마우스] 다이소 모노큐브 충전식 무선 마우스 간단 사용법 및 후기</a>
+											<span class="post-date">2026.05.31</span>
+									</li>
+											<li>
+					<a href="https://triki.net/prgm/12553">[PHP] 어떤 숫자가 짝수인지 홀수인지 확인하는 방법</a>
+											<span class="post-date">2026.05.26</span>
+									</li>
+											<li>
+					<a href="https://triki.net/life/12533">[갤럭시] 얼굴인식으로 잠금 해제 할 때 잠금 화면을 유지하는 방법</a>
+											<span class="post-date">2026.05.20</span>
+									</li>
+											<li>
+					<a href="https://triki.net/prgm/12516">[CSS] 웹페이지의 요소를  좌우, 상하 반전 시키는 방법, transform</a>
+											<span class="post-date">2026.05.14</span>
+									</li>
+					</ul>
+
+		</div>				</aside>
+			</div> <!-- site body inner end -->
+		</section>
+		<section class="site footer">
+			<a href="https://triki.net/" class="custom-logo-link" rel="home"><img width="512" height="512" src="https://triki.net/wp-content/uploads/2024/07/logo-triki2.png" class="custom-logo" alt="모두의매뉴얼" decoding="async" fetchpriority="high" srcset="https://triki.net/wp-content/uploads/2024/07/logo-triki2.png 512w, https://triki.net/wp-content/uploads/2024/07/logo-triki2-300x300.png 300w, https://triki.net/wp-content/uploads/2024/07/logo-triki2-150x150.png 150w" sizes="(max-width: 512px) 100vw, 512px" data-attachment-id="8762" data-permalink="https://triki.net/logo-triki2" data-orig-file="https://triki.net/wp-content/uploads/2024/07/logo-triki2.png" data-orig-size="512,512" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="logo-triki2" data-image-description="" data-image-caption="" data-large-file="https://triki.net/wp-content/uploads/2024/07/logo-triki2.png" /></a>			<p class="copyright">&copy; 2026 모두의매뉴얼. </p>
+		</section>
+	</body>
+	<script>jQuery( document ).ready( function() { jQuery( "a.outlink" ).attr( "target", "_blank" ); } );</script>
+	<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/triki2wpt/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+		<div id="jp-carousel-loading-overlay">
+			<div id="jp-carousel-loading-wrapper">
+				<span id="jp-carousel-library-loading"><svg class="jetpack-spinner" width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="46" fill="none" stroke="#ddd" stroke-width="8"/><path d="M 50 4 A 46 46 0 0 1 96 50" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" dur="1.4s" from="0 50 50" to="360 50 50" repeatCount="indefinite"/></path></svg></span>
+			</div>
+		</div>
+		<div class="jp-carousel-overlay" style="display: none;">
+
+		<div class="jp-carousel-container">
+			<!-- The Carousel Swiper -->
+			<div
+				class="jp-carousel-wrap swiper jp-carousel-swiper-container jp-carousel-transitions"
+				itemscope
+				itemtype="https://schema.org/ImageGallery">
+				<div class="jp-carousel swiper-wrapper"></div>
+				<div class="jp-swiper-button-prev swiper-button-prev">
+					<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<mask id="maskPrev" mask-type="alpha" maskUnits="userSpaceOnUse" x="8" y="6" width="9" height="12">
+							<path d="M16.2072 16.59L11.6496 12L16.2072 7.41L14.8041 6L8.8335 12L14.8041 18L16.2072 16.59Z" fill="white"/>
+						</mask>
+						<g mask="url(#maskPrev)">
+							<rect x="0.579102" width="23.8823" height="24" fill="#FFFFFF"/>
+						</g>
+					</svg>
+				</div>
+				<div class="jp-swiper-button-next swiper-button-next">
+					<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<mask id="maskNext" mask-type="alpha" maskUnits="userSpaceOnUse" x="8" y="6" width="8" height="12">
+							<path d="M8.59814 16.59L13.1557 12L8.59814 7.41L10.0012 6L15.9718 12L10.0012 18L8.59814 16.59Z" fill="white"/>
+						</mask>
+						<g mask="url(#maskNext)">
+							<rect x="0.34375" width="23.8822" height="24" fill="#FFFFFF"/>
+						</g>
+					</svg>
+				</div>
+			</div>
+			<!-- The main close buton -->
+			<div class="jp-carousel-close-hint">
+				<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<mask id="maskClose" mask-type="alpha" maskUnits="userSpaceOnUse" x="5" y="5" width="15" height="14">
+						<path d="M19.3166 6.41L17.9135 5L12.3509 10.59L6.78834 5L5.38525 6.41L10.9478 12L5.38525 17.59L6.78834 19L12.3509 13.41L17.9135 19L19.3166 17.59L13.754 12L19.3166 6.41Z" fill="white"/>
+					</mask>
+					<g mask="url(#maskClose)">
+						<rect x="0.409668" width="23.8823" height="24" fill="#FFFFFF"/>
+					</g>
+				</svg>
+			</div>
+			<!-- Image info, comments and meta -->
+			<div class="jp-carousel-info">
+				<div class="jp-carousel-info-footer">
+					<div class="jp-carousel-pagination-container">
+						<div class="jp-swiper-pagination swiper-pagination"></div>
+						<div class="jp-carousel-pagination"></div>
+					</div>
+					<div class="jp-carousel-photo-title-container">
+						<h2 class="jp-carousel-photo-caption"></h2>
+					</div>
+					<div class="jp-carousel-photo-icons-container">
+						<a href="#" class="jp-carousel-icon-btn jp-carousel-icon-info" aria-label="사진 메타데이터 표시/숨기기 전환">
+							<span class="jp-carousel-icon">
+								<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<mask id="maskInfo" mask-type="alpha" maskUnits="userSpaceOnUse" x="2" y="2" width="21" height="20">
+										<path fill-rule="evenodd" clip-rule="evenodd" d="M12.7537 2C7.26076 2 2.80273 6.48 2.80273 12C2.80273 17.52 7.26076 22 12.7537 22C18.2466 22 22.7046 17.52 22.7046 12C22.7046 6.48 18.2466 2 12.7537 2ZM11.7586 7V9H13.7488V7H11.7586ZM11.7586 11V17H13.7488V11H11.7586ZM4.79292 12C4.79292 16.41 8.36531 20 12.7537 20C17.142 20 20.7144 16.41 20.7144 12C20.7144 7.59 17.142 4 12.7537 4C8.36531 4 4.79292 7.59 4.79292 12Z" fill="white"/>
+									</mask>
+									<g mask="url(#maskInfo)">
+										<rect x="0.8125" width="23.8823" height="24" fill="#FFFFFF"/>
+									</g>
+								</svg>
+							</span>
+						</a>
+											</div>
+				</div>
+				<div class="jp-carousel-info-extra">
+					<div class="jp-carousel-info-content-wrapper">
+						<div class="jp-carousel-photo-title-container">
+							<h2 class="jp-carousel-photo-title"></h2>
+						</div>
+						<div class="jp-carousel-comments-wrapper">
+													</div>
+						<div class="jp-carousel-image-meta">
+							<div class="jp-carousel-title-and-caption">
+								<div class="jp-carousel-photo-info">
+									<h3 class="jp-carousel-caption" itemprop="caption description"></h3>
+								</div>
+
+								<div class="jp-carousel-photo-description"></div>
+							</div>
+							<ul class="jp-carousel-image-exif" style="display: none;"></ul>
+							<a class="jp-carousel-image-download" href="#" target="_blank" style="display: none;">
+								<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="3" y="3" width="19" height="18">
+										<path fill-rule="evenodd" clip-rule="evenodd" d="M5.84615 5V19H19.7775V12H21.7677V19C21.7677 20.1 20.8721 21 19.7775 21H5.84615C4.74159 21 3.85596 20.1 3.85596 19V5C3.85596 3.9 4.74159 3 5.84615 3H12.8118V5H5.84615ZM14.802 5V3H21.7677V10H19.7775V6.41L9.99569 16.24L8.59261 14.83L18.3744 5H14.802Z" fill="white"/>
+									</mask>
+									<g mask="url(#mask0)">
+										<rect x="0.870605" width="23.8823" height="24" fill="#FFFFFF"/>
+									</g>
+								</svg>
+								<span class="jp-carousel-download-text"></span>
+							</a>
+							<div class="jp-carousel-image-map" style="display: none;"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		</div>
+		<script id="jetpack-stats-js-before">
+_stq = window._stq || [];
+_stq.push([ "view", {"v":"ext","blog":"235030631","post":"11626","tz":"9","srv":"triki.net","j":"1:15.9"} ]);
+_stq.push([ "clickTrackerInit", "235030631", "11626" ]);
+//# sourceURL=jetpack-stats-js-before
+</script>
+<script data-wp-strategy="defer" defer id="jetpack-stats-js" src="https://stats.wp.com/e-202630.js"></script>
+<script id="google-translate-init-js-extra">
+var _wp_google_translate_widget = {"lang":"ko_KR","layout":"0"};
+//# sourceURL=google-translate-init-js-extra
+</script>
+<script id="google-translate-init-js" src="https://c0.wp.com/p/jetpack/15.9/_inc/build/widgets/google-translate/google-translate.min.js"></script>
+<script id="google-translate-js" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit&#038;ver=15.9"></script>
+<script id="jetpack-carousel-js-extra">
+var jetpackSwiperLibraryPath = {"url":"https://triki.net/wp-content/plugins/jetpack/_inc/blocks/swiper.js"};
+var jetpackCarouselStrings = {"widths":[370,700,1000,1200,1400,2000],"is_logged_in":"","lang":"ko","ajaxurl":"https://triki.net/wp-admin/admin-ajax.php","nonce":"f724841c29","display_exif":"1","display_comments":"0","single_image_gallery":"1","single_image_gallery_media_file":"","background_color":"black","comment":"\ub313\uae00","post_comment":"\ub313\uae00 \ub2ec\uae30","write_comment":"\ub313\uae00 \ub2ec\uae30...","loading_comments":"\ub313\uae00 \ub85c\ub4dc\uc911...","image_label":"\uc804\uccb4 \ud654\uba74\uc5d0\uc11c \uc774\ubbf8\uc9c0\ub97c \uc5fd\ub2c8\ub2e4.","download_original":"\uc804\uccb4 \ud06c\uae30 \u003Cspan class=\"photo-size\"\u003E{0}\u003Cspan class=\"photo-size-times\"\u003E\u00d7\u003C/span\u003E{1}\u003C/span\u003E \ubcf4\uae30","no_comment_text":"\ub313\uae00\ub85c \uba87\uac1c\uc758 \uae00\uc790\ub97c \uaf2d \uc62c\ub824\uc8fc\uc138\uc694.","no_comment_email":"\ub313\uae00\uc5d0 \uc774\uba54\uc77c \uc8fc\uc18c\ub97c \ub123\uc5b4\uc8fc\uc138\uc694.","no_comment_author":"\ub313\uae00\uc5d0 \uc774\ub984\uc744 \ub123\uc5b4\uc8fc\uc138\uc694.","comment_post_error":"\uc8c4\uc1a1\ud569\ub2c8\ub2e4. \ub313\uae00\uc744 \uc62c\ub9ac\ub294\ub370 \uc5d0\ub7ec\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4. \ub098\uc911\uc5d0 \ub2e4\uc2dc \ud574\uc8fc\uc138\uc694.","comment_approved":"\ub313\uae00\uc774 \uc2b9\uc778\ub410\uc2b5\ub2c8\ub2e4.","comment_unapproved":"\ub313\uae00\uc774 \uc2b9\uc778 \uad00\ub9ac \uc911\uc785\ub2c8\ub2e4.","camera":"\uce74\uba54\ub77c","aperture":"\uc870\ub9ac\uac1c","shutter_speed":"\uc154\ud130 \uc18d\ub3c4","focal_length":"\ucd1b\uc810 \uac70\ub9ac","copyright":"\uc800\uc791\uad8c","comment_registration":"0","require_name_email":"1","login_url":"https://triki.net/wp-login.php?redirect_to=https%3A%2F%2Ftriki.net%2Fprgm%2F11626","blog_id":"1","meta_data":["camera","aperture","shutter_speed","focal_length","copyright"]};
+//# sourceURL=jetpack-carousel-js-extra
+</script>
+<script id="jetpack-carousel-js" src="https://c0.wp.com/p/jetpack/15.9/_inc/build/carousel/jetpack-carousel.min.js"></script>
+<script defer id="akismet-frontend-js" src="https://triki.net/wp-content/plugins/akismet/_inc/akismet-frontend.js?ver=1778381179"></script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://triki.net/wp-includes/js/wp-emoji-release.min.js?ver=7.0.2"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+const a=JSON.parse(document.getElementById("wp-emoji-settings").textContent),o=(window._wpemojiSettings=a,"wpEmojiSettingsSupports"),s=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const a=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===a[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,a){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!a(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,a){let r;const o=(r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),s=(o.textBaseline="top",o.font="600 32px Arial",{});return e.forEach(e=>{s[e]=t(o,e,n,a)}),s}function r(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}a.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(s),u.toString(),c.toString(),p.toString()].join(",")+"));",a=new Blob([e],{type:"text/javascript"});const r=new Worker(URL.createObjectURL(a),{name:"wpTestEmojiSupports"});return void(r.onmessage=e=>{i(n=e.data),r.terminate(),t(n)})}catch(e){}i(n=f(s,u,c,p))}t(n)}).then(e=>{for(const n in e)a.supports[n]=e[n],a.supports.everything=a.supports.everything&&a.supports[n],"flag"!==n&&(a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&a.supports[n]);var t;a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&!a.supports.flag,a.supports.everything||((t=a.source||{}).concatemoji?r(t.concatemoji):t.wpemoji&&t.twemoji&&(r(t.twemoji),r(t.wpemoji)))});
+//# sourceURL=https://triki.net/wp-includes/js/wp-emoji-loader.min.js
+</script>
+		<script type="text/javascript">
+			(function () {
+				const iframe = document.getElementById( 'jetpack_remote_comment' );
+								const watchReply = function() {
+					// Check addComment._Jetpack_moveForm to make sure we don't monkey-patch twice.
+					if ( 'undefined' !== typeof addComment && ! addComment._Jetpack_moveForm ) {
+						// Cache the Core function.
+						addComment._Jetpack_moveForm = addComment.moveForm;
+						const commentParent = document.getElementById( 'comment_parent' );
+						const cancel = document.getElementById( 'cancel-comment-reply-link' );
+
+						function tellFrameNewParent ( commentParentValue ) {
+							const url = new URL( iframe.src );
+							if ( commentParentValue ) {
+								url.searchParams.set( 'replytocom', commentParentValue )
+							} else {
+								url.searchParams.delete( 'replytocom' );
+							}
+							if( iframe.src !== url.href ) {
+								iframe.src = url.href;
+							}
+						};
+
+						cancel.addEventListener( 'click', function () {
+							tellFrameNewParent( false );
+						} );
+
+						addComment.moveForm = function ( _, parentId ) {
+							tellFrameNewParent( parentId );
+							return addComment._Jetpack_moveForm.apply( null, arguments );
+						};
+					}
+				}
+				document.addEventListener( 'DOMContentLoaded', watchReply );
+				// In WP 6.4+, the script is loaded asynchronously, so we need to wait for it to load before we monkey-patch the functions it introduces.
+				document.querySelector('#comment-reply-js')?.addEventListener( 'load', watchReply );
+
+								
+				const commentIframes = document.getElementsByClassName('jetpack_remote_comment');
+
+				window.addEventListener('message', function(event) {
+					if (event.origin !== 'https://jetpack.wordpress.com') {
+						return;
+					}
+
+					if (!event?.data?.iframeUniqueId && !event?.data?.height) {
+						return;
+					}
+
+					const eventDataUniqueId = event.data.iframeUniqueId;
+
+					// Change height for the matching comment iframe
+					for (let i = 0; i < commentIframes.length; i++) {
+						const iframe = commentIframes[i];
+						const url = new URL(iframe.src);
+						const iframeUniqueIdParam = url.searchParams.get('iframe_unique_id');
+						if (iframeUniqueIdParam == event.data.iframeUniqueId) {
+							iframe.style.height = event.data.height + 'px';
+							return;
+						}
+					}
+				});
+			})();
+		</script>
+				
+</html>
+<!-- Dynamic page generated in 1.577 seconds. -->
+<!-- Cached page generated by WP-Super-Cache on 2026-07-23 22:50:25 -->
+
+<!-- Compression = gzip -->

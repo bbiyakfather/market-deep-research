@@ -1,0 +1,421 @@
+{
+ "axis": "A3-supabase",
+ "facts": [
+  {
+   "statement": "Supabase 대시보드에서 새 프로젝트를 만드는 첫 단계는 조직(organization)의 Dashboard에서 New project를 생성하는 것이다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+     "title": "Use Supabase with Next.js | Supabase Docs",
+     "quote": "Create a new Supabase project from the Dashboard of any organization",
+     "locator": "Create a Supabase project",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "테이블은 코드 없이 대시보드의 Table Editor에서 New Table로 이름을 정해 만들고, New Column으로 컬럼명과 데이터 타입(예: text)을 지정해 추가한다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/database/tables",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/database/tables",
+     "title": "Tables | Supabase Docs",
+     "quote": "Go to the Table Editor page in the Dashboard. Click New Table and create a table with the name todos. Click Save. Click New Column and create a column with the name task and type text. Click Save.",
+     "locator": "Creating tables",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "테이블 생성 시 각 컬럼의 데이터 타입을 반드시 지정해야 하며, 생성 후에도 언제든 컬럼을 추가/삭제할 수 있다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/database/tables",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/database/tables",
+     "title": "Tables | Supabase Docs",
+     "quote": "You must define the \"data type\" of each column when it is created; You can add and remove columns at any time after creating a table",
+     "locator": "Creating tables",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Supabase Next.js quickstart는 프로젝트 생성 → instruments 테이블·샘플 데이터 생성 및 Row Level Security(RLS) 활성화 → Next.js 앱에서 데이터를 조회해 화면에 렌더링하는 순서로 진행된다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+     "title": "Use Supabase with Next.js | Supabase Docs",
+     "quote": "create an instruments table with some sample data; enable Row Level Security (RLS) for enhanced security; This selects all the rows from the instruments table you created and renders them on the page",
+     "locator": "Set up your database / Query Supabase data from Next.js",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Supabase Auth는 이메일/비밀번호 방식의 회원가입·로그인을 공식 기능으로 제공하며, Google을 포함한 소셜 로그인(Social Auth)을 별도 가이드로 지원한다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/auth",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth",
+     "title": "Auth | Supabase Docs",
+     "quote": "Auth with email and password: Sign up and sign in users with email and password.",
+     "locator": "Get started",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Google 소셜 로그인을 붙이려면 Google Auth Platform 콘솔에서 Web application 유형 OAuth 클라이언트를 만들어 Authorized redirect URIs에 Supabase 콜백 URL(로컬은 http://127.0.0.1:54321/auth/v1/callback)을 등록하고, 발급된 Client ID/Secret을 Supabase Dashboard의 Google provider 설정에 입력한다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/auth/social-login/auth-google",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/social-login/auth-google",
+     "title": "Login with Google | Supabase Docs",
+     "quote": "Authorized redirect URIs...http://127.0.0.1:54321/auth/v1/callback; Client ID and Client Secret...to the Google provider page in the Supabase Dashboard",
+     "locator": "Project setup / Web application",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Next.js용 Auth quickstart는 프로젝트 생성 → Next.js 앱 생성 → .env.example을 .env.local로 바꿔 Supabase 연결 변수 채우기 → 개발 서버 실행 후 /auth/sign-up 페이지에서 회원가입하는 절차로 구성된다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/auth/quickstarts/nextjs",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/quickstarts/nextjs",
+     "title": "Use Supabase Auth with Next.js | Supabase Docs",
+     "quote": "Rename .env.example to .env.local and populate with your Supabase connection variables; To sign up a new user, navigate to http://localhost:3000/auth/sign-up, and click Sign up",
+     "locator": "Declare Supabase Environment Variables / Start the app",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "React Native/Expo용 Auth quickstart는 프로젝트 생성 → create-expo-app으로 앱 생성 → supabase-js 등 의존성 설치 → lib/supabase.ts 헬퍼 파일 작성 → App.tsx에 Auth 컴포넌트 추가 순서로 진행되며, 로그인 후 사용자 id를 화면에 표시하는 예제를 포함한다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/auth/quickstarts/react-native",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/auth/quickstarts/react-native",
+     "title": "Use Supabase Auth with React Native | Supabase Docs",
+     "quote": "Create a React app using the create-expo-app command.; Create a helper file lib/supabase.ts that exports a Supabase client; Add the Auth component to your App.tsx file.; If the user is logged in, print the user id to the screen.",
+     "locator": "프로젝트 생성부터 인증 통합까지 섹션",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "Supabase 무료(Free) 플랜 한도는 활성 프로젝트 최대 2개, 데이터베이스 500MB, 월간 활성 사용자(MAU) 50,000명, egress 5GB(+캐시된 egress 5GB), 파일 저장소 1GB이며, 1주일간 API 요청이 없으면 프로젝트가 자동 일시정지된다.",
+   "risk": "high",
+   "primary_source": "https://supabase.com/pricing",
+   "evidence": [
+    {
+     "url": "https://supabase.com/pricing",
+     "title": "Pricing & Fees | Supabase",
+     "quote": "Limit of 2 active projects; 500 MB database size (Shared CPU • 500 MB RAM); 50,000 monthly active users; 5 GB egress; 5 GB cached egress; 1 GB file storage; Free projects are paused after 1 week of inactivity",
+     "locator": "Free 플랜 카드",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": "반박검색(2차 쿼리: \"Supabase\" free plan \"2 organizations\" OR \"active projects\" limit 2026 site:supabase.com) 결과, Supabase 공식 트러블슈팅 문서 요지 \"You are entitled to two active free projects... applies across all organizations where you are an Owner or Administrator\"와 타 요약(500MB DB, 1GB storage, 5GB egress, 50,000 MAU, 2 active projects)이 pricing 페이지 원문 수치와 완전히 일치. 상충 없음, 수치 확정."
+  },
+  {
+   "statement": "Supabase는 Cursor 등 AI 에디터가 Supabase 프로젝트와 직접 대화할 수 있게 하는 공식 MCP(Model Context Protocol) 서버를 제공하며, Cursor에서는 .cursor/mcp.json 파일에 서버 설정을 추가해 연동한다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/getting-started/mcp",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/getting-started/mcp",
+     "title": "Model context protocol (MCP) | Supabase Docs",
+     "quote": "Add this configuration to .cursor/mcp.json:",
+     "locator": "IDE > Cursor",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "MCP(Model Context Protocol)는 대형 언어 모델(LLM)이 Supabase 같은 플랫폼과 대화하는 방식을 표준화한 프로토콜이며, Cursor 연동 시 npx로 실행하는 방식은 개인 액세스 토큰(personal access token)이 필요하고 Windows에서는 명령어 앞에 cmd /c를 붙여야 한다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/blog/mcp-server",
+   "evidence": [
+    {
+     "url": "https://supabase.com/blog/mcp-server",
+     "title": "Supabase MCP Server",
+     "quote": "MCP stands for Model Context Protocol. It standardizes how Large Language Models (LLMs) talk to platforms like Supabase.; Some clients expect a slightly modified JSON format, and Windows users will have to prefix this command with cmd /c",
+     "locator": "게시일 2025-04-04",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  },
+  {
+   "statement": "RLS(Row Level Security)는 노출된(exposed) 스키마의 모든 테이블에 반드시 켜야 하며, 켜져 있으면 정책(policy)이 모든 쿼리에 자동으로 WHERE절을 추가하는 것과 같은 방식으로 동작한다고 이해하면 된다.",
+   "risk": "normal",
+   "primary_source": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+   "evidence": [
+    {
+     "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+     "title": "Row Level Security | Supabase Docs",
+     "quote": "Supabase allows convenient and secure data access from the browser, as long as you enable RLS.; RLS *must* always be enabled on any tables stored in an exposed schema.; You can just think of them as adding a WHERE clause to every query.",
+     "locator": "Row Level Security / Policies",
+     "source_role": "원출처",
+     "observed_at": "2026-07-23",
+     "publisher": "Supabase"
+    }
+   ],
+   "counter": ""
+  }
+ ],
+ "resources": [
+  {
+   "title": "Use Supabase with Next.js (Quickstart)",
+   "url": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "공통",
+   "free": true,
+   "reason": "프로젝트 생성부터 테이블·샘플데이터·RLS 활성화·데이터 조회까지 한 흐름으로 보여주는 공식 quickstart라 전체 그림을 잡기 좋다."
+  },
+  {
+   "title": "Tables | Supabase Docs (Table Editor로 테이블 만들기)",
+   "url": "https://supabase.com/docs/guides/database/tables",
+   "type": "공식문서",
+   "difficulty": "입문",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "공통",
+   "free": true,
+   "reason": "코드 없이 대시보드 클릭만으로 테이블/컬럼을 만드는 절차가 스텝별로 정리돼 있어 비개발자에게 가장 적합하다."
+  },
+  {
+   "title": "Auth | Supabase Docs (Auth 개요)",
+   "url": "https://supabase.com/docs/guides/auth",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "P3로그인",
+   "free": true,
+   "reason": "이메일/비밀번호, 소셜 로그인, SSR 등 Auth 전체 방식과 각 quickstart 링크를 한눈에 보여주는 출발점."
+  },
+  {
+   "title": "Use Supabase Auth with Next.js",
+   "url": "https://supabase.com/docs/guides/auth/quickstarts/nextjs",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "P3로그인",
+   "free": true,
+   "reason": "Next.js 프로젝트에 이메일/비밀번호 로그인을 붙이는 최소 단계 공식 가이드."
+  },
+  {
+   "title": "Use Supabase Auth with React Native",
+   "url": "https://supabase.com/docs/guides/auth/quickstarts/react-native",
+   "type": "공식문서",
+   "difficulty": "초급",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "P3로그인",
+   "free": true,
+   "reason": "React Native/Expo로 앱을 만드는 학습자를 위한 Auth 공식 quickstart."
+  },
+  {
+   "title": "Login with Google | Supabase Docs",
+   "url": "https://supabase.com/docs/guides/auth/social-login/auth-google",
+   "type": "공식문서",
+   "difficulty": "중급",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "P3로그인",
+   "free": true,
+   "reason": "Google Cloud/Google Auth Platform 설정부터 Supabase Dashboard 연결까지, 소셜 로그인에 필요한 전 단계를 다루는 유일한 공식 소스."
+  },
+  {
+   "title": "Model context protocol (MCP) | Supabase Docs",
+   "url": "https://supabase.com/docs/guides/getting-started/mcp",
+   "type": "공식문서",
+   "difficulty": "중급",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "공통",
+   "free": true,
+   "reason": "Cursor를 포함한 여러 AI 에디터별 MCP 연동 설정법을 공식적으로 정리한 페이지."
+  },
+  {
+   "title": "Supabase MCP with Cursor — Step-by-step Guide",
+   "url": "https://www.youtube.com/watch?v=wa9-d63velk",
+   "type": "YouTube",
+   "difficulty": "중급",
+   "language": "en",
+   "published_or_updated": "확인 못함",
+   "related_part": "공통",
+   "free": true,
+   "reason": "검색 스니펫 기준, 개인 액세스 토큰 발급부터 .cursor/mcp.json 설정, Cursor로 To-Do 앱과 Auth를 실제로 붙이는 과정을 화면으로 보여준다는 설명. locator: search-snippet, 본문 미열람이라 팀리드 재검증 필요."
+  },
+  {
+   "title": "Row Level Security | Supabase Docs",
+   "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+   "type": "공식문서",
+   "difficulty": "중급",
+   "language": "en",
+   "published_or_updated": "확인 못함(최신 유지 문서)",
+   "related_part": "P3로그인",
+   "free": true,
+   "reason": "RLS를 'WHERE절이 자동으로 붙는다'는 비유로 설명하고 실제 정책 예시를 보여주는 공식 개념 문서."
+  },
+  {
+   "title": "[Supabase] 데이터베이스 테이블에 RLS 설정하기 – 모두의매뉴얼",
+   "url": "https://triki.net/prgm/11626",
+   "type": "블로그",
+   "difficulty": "초급",
+   "language": "ko",
+   "published_or_updated": "2025-07-30",
+   "related_part": "P3로그인",
+   "free": true,
+   "reason": "\"해당 테이블에 접근하는 유저가 어떤 행동을 할 수 있을지 권한을 부여하는 것\"이라는 쉬운 비유로 RLS를 설명하는 한국어 자료(단, 실제 설정 단계의 세부 용어는 추가 설명 없이 등장해 중간 난이도)."
+  }
+ ],
+ "glossary": [
+  {
+   "term": "Project (프로젝트)",
+   "plain_ko": "Supabase에서 DB+Auth+API가 한 세트로 묶인 작업 단위. 대시보드에서 New project로 만든다.",
+   "detail_url": "https://supabase.com/docs/guides/getting-started/quickstarts/nextjs"
+  },
+  {
+   "term": "Table Editor",
+   "plain_ko": "SQL을 몰라도 스프레드시트처럼 클릭만으로 표(테이블)를 만들고 데이터를 넣는 대시보드 화면.",
+   "detail_url": "https://supabase.com/docs/guides/database/tables"
+  },
+  {
+   "term": "Auth",
+   "plain_ko": "회원가입·로그인·비밀번호 재설정 같은 로그인 관련 기능을 대신 처리해주는 Supabase 모듈.",
+   "detail_url": "https://supabase.com/docs/guides/auth"
+  },
+  {
+   "term": "RLS (Row Level Security)",
+   "plain_ko": "테이블의 행(row)마다 '누가 이 줄을 볼/고칠 수 있는지'를 DB 차원에서 강제하는 보안 규칙. 켜면 정책을 추가하기 전까지는 아무것도 안 보인다.",
+   "detail_url": "https://supabase.com/docs/guides/database/postgres/row-level-security"
+  },
+  {
+   "term": "MAU (Monthly Active Users)",
+   "plain_ko": "한 달 동안 실제로 로그인/활동한 사용자 수. 무료 플랜은 5만 명까지 무료.",
+   "detail_url": "https://supabase.com/pricing"
+  },
+  {
+   "term": "OAuth / 소셜 로그인",
+   "plain_ko": "구글 같은 다른 서비스 계정으로 '한 번 클릭'해서 로그인하게 해주는 방식.",
+   "detail_url": "https://supabase.com/docs/guides/auth/social-login/auth-google"
+  },
+  {
+   "term": "MCP (Model Context Protocol)",
+   "plain_ko": "Cursor 같은 AI 코드 에디터가 Supabase DB를 직접 읽고 쓸 수 있도록 연결해주는 표준 통신 규격.",
+   "detail_url": "https://supabase.com/docs/guides/getting-started/mcp"
+  },
+  {
+   "term": "@supabase/ssr",
+   "plain_ko": "Next.js처럼 서버에서 화면을 그리는 프레임워크에서 로그인 상태(세션)를 쿠키로 안전하게 다루게 해주는 Supabase 라이브러리.",
+   "detail_url": "https://supabase.com/docs/guides/auth"
+  }
+ ],
+ "faq": [
+  {
+   "q": "무료 플랜 프로젝트를 한동안 안 쓰면 어떻게 되나요?",
+   "a_hint": "1주일간 API 요청이 없으면 자동으로 일시정지(paused)된다. 데이터는 남아있지만 대시보드에서 수동으로 재개(resume)해야 다시 쓸 수 있다.",
+   "source_url": "https://supabase.com/pricing"
+  },
+  {
+   "q": "RLS를 켰더니 데이터가 하나도 안 보여요, 고장난 건가요?",
+   "a_hint": "정상이다. RLS를 켜면 정책(policy)을 추가하기 전까지 기본적으로 모든 접근이 막힌다(deny-all). '누가 어떤 행을 볼 수 있는지' 정책을 만들어야 데이터가 다시 보인다.",
+   "source_url": "https://supabase.com/docs/guides/database/postgres/row-level-security"
+  },
+  {
+   "q": "구글 로그인 버튼 하나 달려고 코드를 많이 짜야 하나요?",
+   "a_hint": "대부분은 Google Cloud(Google Auth Platform) 콘솔에서 OAuth 클라이언트를 만들고 Client ID/Secret을 Supabase Dashboard의 Google provider 화면에 붙여넣는 '설정' 작업이고, 앱 코드 쪽은 Supabase가 제공하는 소셜 로그인 함수를 호출하는 정도로 끝난다.",
+   "source_url": "https://supabase.com/docs/guides/auth/social-login/auth-google"
+  },
+  {
+   "q": "Next.js가 아니라 React Native(Expo)로 앱을 만들어도 Supabase Auth를 쓸 수 있나요?",
+   "a_hint": "가능하다. React Native/Expo 전용 공식 Auth quickstart가 따로 있고, lib/supabase.ts 헬퍼 파일과 App.tsx의 Auth 컴포넌트만 추가하면 된다.",
+   "source_url": "https://supabase.com/docs/guides/auth/quickstarts/react-native"
+  },
+  {
+   "q": "Cursor에서 Supabase를 쓰려면 무슨 프로그램을 따로 설치해야 하나요?",
+   "a_hint": "별도 프로그램 설치보다는 .cursor/mcp.json이라는 설정 파일에 Supabase MCP 서버 정보(주소 또는 access token)를 몇 줄 추가하면 된다.",
+   "source_url": "https://supabase.com/docs/guides/getting-started/mcp"
+  }
+ ],
+ "expand_leads": [
+  {
+   "lead": "Supabase Storage(파일 저장) 대시보드 quickstart",
+   "why": "로그인 이후 프로필 사진 업로드처럼 실습 확장 시 필요한데 이번 축에서는 다루지 않음.",
+   "angle": "Supabase Storage quickstart dashboard"
+  },
+  {
+   "lead": "Supabase Auth UI 컴포넌트(@supabase/auth-ui-react)로 로그인 화면을 코드 최소로 만드는 법",
+   "why": "비개발자가 처음부터 로그인 폼을 직접 그리지 않아도 되는 방법이라 Part1/Part2 학습 부담을 줄여줄 수 있음.",
+   "angle": "supabase auth-ui-react quickstart"
+  },
+  {
+   "lead": "Supabase CLI + 로컬 개발(supabase start)과 Cursor MCP 병행 사용법",
+   "why": "실제 서비스로 배포하기 전 로컬에서 안전하게 테스트하는 흐름이 이번 조사에서 빠져 있음.",
+   "angle": "supabase local development cli getting started"
+  },
+  {
+   "lead": "Next.js 앱을 Vercel에 배포해 Supabase와 연결하는 공식 가이드",
+   "why": "코스 최종 목표(실제 서비스 배포)와 직결되는데 이번 축 범위 밖이라 다루지 않음.",
+   "angle": "supabase vercel deployment guide"
+  }
+ ],
+ "dead_ends": [
+  "https://www.quickstart.md/quickstarts/supabase/ — 공식문서가 아닌 비공식 미러/집계 사이트로 판단되어 방문하지 않음(공식문서 우선 원칙에 따라 제외).",
+  "https://supabase.com/docs/guides/getting-started — quickstart 링크 모음 허브일 뿐 실제 절차 문장이 없어 fact 소스로 채택하지 않음.",
+  "https://supabase.com/features/row-level-security — 'Control access to individual rows based on user attributes or roles.' 한 문장짜리 마케팅 페이지라 RLS 공식 가이드(postgres/row-level-security)로 대체."
+ ],
+ "failed_urls": [
+  "https://supabase.com/docs/guides/getting-started/quickstarts/reactnative"
+ ],
+ "summary": "Supabase는 대시보드에서 New project → Table Editor의 New Table/New Column 클릭만으로 코드 없이 DB 테이블을 만들 수 있고(supabase.com/docs/guides/database/tables), Next.js quickstart는 이 흐름에 RLS 활성화까지 포함해 전체 그림을 보여준다. Auth는 이메일/비밀번호와 Google 등 소셜 로그인을 공식 지원하며, Next.js·React Native(Expo) 각각 별도 quickstart가 있고 Google 로그인은 Google Cloud 콘솔에서 OAuth 클라이언트를 만들어 Supabase Dashboard의 Google provider에 연결하는 절차가 핵심이다. 무료 플랜은 활성 프로젝트 2개, DB 500MB, MAU 5만 명, egress 5GB, 파일저장소 1GB이며 1주 비활성 시 자동 일시정지되는데, 이 수치는 공식 pricing 페이지 원문과 반박검색 모두 일치해 신뢰도가 높다(risk:high, counter 완료). Cursor 연동은 Supabase가 공식 MCP 서버를 제공해 .cursor/mcp.json 설정 몇 줄로 가능하며, YouTube 실습 튜토리얼(zazencodes, 본문 미열람·search-snippet)도 참고할 만하다. RLS는 '모든 쿼리에 WHERE절이 자동으로 붙는다'는 공식 비유로 설명되며, 국문 보조 자료(triki.net)도 개념 설명 수준에서는 비개발자에게 유용하나 실제 설정 단계 용어는 추가 설명이 필요하다. fact 12건 모두 WebFetch 원문 확인 후 등재했고, Getting Started 허브·features/row-level-security 페이지는 실질 내용 부족으로 dead_ends 처리했다."
+}

@@ -1,0 +1,34 @@
+2.6 · Changelog
+MCP Apps and Team Marketplaces for Plugins
+This release introduces interactive UIs in agent chats, a way for teams to share private plugins, and improvements to core capabilities like Debug mode.
+MCP Apps
+MCP Apps support interactive user interfaces like charts from Amplitude, diagrams from Figma, and whiteboards from tldraw directly inside Cursor.
+Team marketplaces for plugins
+On Teams and Enterprise plans, Admins can now create team marketplaces to share private plugins internally. Go to the settings page to manage and distribute plugins with central governance and access controls.
+- Added support for multiple parallel Debug mode sessions.
+- Debug mode now cleans up stale code after every turn.
+- Debug mode now adapts the number of instrumentation logs based on the complexity.
+- Added a right-click context menu and zoom support to the browser tool.
+- The content from your plan files are now included in autocomplete suggestions as you type in the agent chat input.
+- When you attach multiple images to a chat message, they now display as a gallery instead of a flat list.
+- Added multiline support for Plan mode questions.
+- Modals load faster.
+- Agent workflows are faster and more predictable for multi-file edits and PR-heavy tasks.
+- Improved PR and review context with more accurate file/line anchoring and clearer diff/hunk rendering.
+- Smoother tool-use flows across terminal, web, and integration actions, with better handling for long multi-step runs.
+- More reliable MCP setup and configuration, with cleaner tool-call UX during agent runs.
+- Clearer, more consistent team and enterprise policy and access controls.
+- Improved Slack integration with better linking and status behavior to make team workflows easier to follow.
+- Improved reliability for longer-running agent sessions.
+- Fixed web links in the plan editor.
+- Fixed refresh behavior so branch and PR status appear more reliably.
+- Fixed false blockers when branches diverge during review and merge flows.
+- Fixed review comments where file and line references could be incomplete or inconsistent.
+- Fixed diff display so add/delete and hunk line information is preserved more accurately.
+- Fixed MCP configuration dialogs that could get stuck or behave inconsistently.
+- Fixed model picker showing duplicate or mismatched entries for some users.
+- Fixed team permission and access control inconsistencies across organization setups.
+- Fixed reliability issues in long-running workflows (timeouts, retries, abort handling) for better completion rates.
+- Fixed port allocation conflicts across multiple Debug mode sessions.
+- Improved dashboard and account management with clearer visibility into overview, analytics, and collections.
+- Fixed layout issues in account management and analytics views on the dashboard.

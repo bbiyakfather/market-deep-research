@@ -1,0 +1,64 @@
+Full Stack Airbnb Clone with Next.js 13 Tailwind-css, Prisma, MongoDB, NextAuth, Framer-motionSocial, Login (Google and Facebook), Image upload, Cloudinary CDN, Location selection, Map component, Country autocomplete, Fetching listings with server components.
+- Reservation functionality & Description and Price, Listing creation, Listing card component
+- Searching functionality Favorite functionality, Individual Listing View, Listing reservation component
+Client
+Database
+- Install Node JS in your computer HERE
+- Sign up for a Cloudinary account HERE
+- Sign up for a Google Cloud Platform HERE
+- Sign up for a Meta for Developers HERE
+- Get Lookup APi Key HERE
+To run this project, you will need to add the following environment variables to your .env file
+DATABASE_URL
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+FACEBOOK_ID
+FACEBOOK_SECRET
+NEXTAUTH_SECRET
+NEXTAUTH_URL
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+NEXT_PUBLIC_LOOKUP_KEY
+This project was bootstrapped with Create React App.
+Install my-project with npm
+npx create-next-app@latest my-project --typescript --eslint
+cd my-project
+Install dependencies
+Install tailwindcss and its peer dependencies via npm, and then run the init command to generate both tailwind.config.js and postcss.config.js.
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+Add the paths to all of your template files in your tailwind.config.js file.
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    // Or if using `src` directory:
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};Add the @tailwind directives for each of Tailwind’s layers to your ./styles/globals.css file.
+@tailwind base;
+@tailwind components;
+@tailwind utilities;Install dependencies
+Clone the project
+  git clone https://github.com/SashenJayathilaka/Airbnb-Build.gitchange directory
+  cd Airbnb-BuildInstall dependencies
+  npm installStart the server
+  npm run devThis is a Next.js project bootstrapped with create-next-app.
+Open http://localhost:3000 with your browser to see the result.
+You can start editing the page by modifying pages/index.js. The page auto-updates as you edit the file.
+API routes can be accessed on http://localhost:3000/api/hello. This endpoint can be edited in pages/api/hello.js.
+The pages/api directory is mapped to /api/*. Files in this directory are treated as API routes instead of React pages.
+To learn more about Next.js, take a look at the following resources:
+- Next.js Documentation - learn about Next.js features and API.
+- Learn Next.js - an interactive Next.js tutorial.
+You can check out the Next.js GitHub repository - your feedback and contributions are welcome!
+To deploy this project run
+The easiest way to deploy your Next.js app is to use the Vercel Platform from the creators of Next.js.
+Check out our Next.js deployment documentation for more details.
+Sashen - @twitter_handle - sashenjayathilaka95@gmail.com
+Project Link: https://github.com/SashenJayathilaka/Airbnb-Build.git

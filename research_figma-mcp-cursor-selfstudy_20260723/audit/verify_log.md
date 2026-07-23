@@ -1,0 +1,126 @@
+# verify_log — 팀리드 전건 재검증 이력 (2026-07-23)
+
+검증 수단: (1) fetch 사다리 원문 스냅샷(_sources, sha256) + verbatim 자동대조 스크립트
+(2) 자동대조 MISS·high-risk 전건 팀리드 WebFetch 재열람 (3) GitHub raw README·PDF fitz 추출 대조
+
+- F001 [A1-figma-mcp#0] confirmed (reread-snapshot) Figma 데스크톱 앱에서 MCP 서버를 켜는 절차는 앱을 최신 버전으로 업데이트 → Figma Design 파일을 열고 하단
+- F002 [A1-figma-mcp#1] confirmed (reread-snapshot) Figma가 공식적으로 권장하는 방식은 데스크톱 앱 설치 없이 쓸 수 있는 원격(remote) MCP 서버이며, 엔드포인트는 
+- F003 [A1-figma-mcp#2] confirmed (reread-snapshot) Figma MCP 서버는 아무 편집기나 연결되는 것이 아니라 Figma MCP Catalog에 등재된 클라이언트(VS Code
+- F004 [A1-figma-mcp#3] confirmed (reread-webfetch) 무료 Starter 플랜에서도 Figma MCP 서버(원격) 자체는 켤 수 있지만 월 6회 호출로 제한되며, 이 제한을 풀려면
+- F005 [A1-figma-mcp#4] confirmed (reread-snapshot) MCP 서버 접근에는 유료 플랜의 Dev 또는 Full 시트가 필요하며, 그중에서도 Figma 파일에 실제로 쓰기(write 
+- F006 [A1-figma-mcp#5] confirmed (reread-webfetch) Figma Professional 플랜 가격은 공식 페이지 정적 렌더링 기준(연간 청구가 기본 선택된 상태) Full seat
+- F007 [A1-figma-mcp#6] confirmed (reread-webfetch) Figma MCP 서버 호출 한도는 시트·플랜별로 표로 정해져 있다: 모든 플랜의 View/Collab 시트와 Starter 
+- F008 [A1-figma-mcp#7] confirmed (reread-webfetch) Cursor에서 원격 MCP 서버를 붙이는 공식 권장 방법은 Cursor 에이전트 채팅창에 `/add-plugin figma`
+- F009 [A1-figma-mcp#8] confirmed (reread-webfetch) Figma 데스크톱 서버를 Cursor에 수동으로 붙일 때는 mcp.json에 {"mcpServers": {"figma-des
+- F010 [A1-figma-mcp#9] DISCARDED: 중복 — A1#7(권장 /add-plugin 절차)·A1#8(수동 mcp.json)로 충분. deep link 상세는 가이드 불필요
+- F011 [A1-figma-mcp#10] confirmed (reread-snapshot) 무료 플랜 사용자를 위한 대표적 커뮤니티 대체재는 Framelink Figma MCP(npm 패키지명 figma-develop
+- F012 [A1-figma-mcp#11] confirmed (reread-snapshot) Framelink Figma MCP(figma-developer-mcp) 같은 커뮤니티 대체재도 내부적으로 Figma 개인 액
+- F013 [A1-figma-mcp#12] confirmed (reread-webfetch) Figma 공식(figma/mcp-server-guide 저장소)이 제시하는 디자인→코드 품질 향상 best practice는
+- F014 [A1-figma-mcp#13] confirmed (reread-snapshot) Figma MCP 서버의 핵심 한계는 한 번에 너무 큰 화면(대형 프레임)을 통째로 선택해서 코드 생성을 요청하면 느려지거나 
+- F015 [A1-figma-mcp#14] confirmed (reread-snapshot) Figma MCP의 'write to canvas'(코드/에이전트가 Figma 캔버스에 직접 컴포넌트·변수·프레임을 쓰는 기능
+- F016 [A2-cursor#0] confirmed (reread-webfetch) Windows에서는 설치 파일(installer)을 실행하고 화면의 안내(prompt)를 따르면 설치가 완료된다.
+- F017 [A2-cursor#1] confirmed (reread-webfetch) Mac에서는 다운로드한 Cursor 아이콘을 Applications 폴더로 드래그하면 설치가 완료된다.
+- F018 [A2-cursor#2] confirmed (reread-webfetch) Cursor를 쓰려면 사전에 무료 Cursor 계정을 만들어야 하고, 설치 후 첫 실행 시 안내에 따라 로그인해야 한다.
+- F019 [A2-cursor#3] confirmed (reread-webfetch) Cursor 공식 웹사이트(cursor.com)는 한국어 등 여러 언어로 제공되지만, 에디터 앱 자체의 인터페이스(UI) 언어
+- F020 [A2-cursor#4] confirmed (reread-snapshot) Tab은 Cursor의 AI 자동완성 기능으로, 최근 편집 이력·주변 코드·린터 오류를 근거로 타이핑 중 코드를 제안한다.
+- F021 [A2-cursor#5] confirmed (reread-snapshot) Cmd/Ctrl+K(Inline Edit)는 채팅 패널을 열지 않고 선택한 코드 범위를 즉시, 국소적으로 수정하는 기능이다.
+- F022 [A2-cursor#6] confirmed (reread-snapshot) Chat(Ask 모드)는 코드를 변경하지 않고 코드베이스를 이해·탐색하며 질문에 답하는 읽기 전용(read-only) 모드다.
+- F023 [A2-cursor#7] confirmed (reread-snapshot) Agent 모드는 기능을 처음부터 만들고, 리팩터링하고, 버그를 고치고, 테스트를 작성하고, 셸 명령을 실행하는 등 복잡한 코
+- F024 [A2-cursor#8] confirmed (reread-snapshot) Cursor Rules는 Agent에게 주는 시스템 수준 지시문으로, 프롬프트·스크립트 등을 하나로 묶어 팀 전체가 워크플로를
+- F025 [A2-cursor#9] confirmed (reread-webfetch) 프로젝트 규칙(Project Rules)은 프로젝트 폴더 안 .cursor/rules 경로에 .mdc 확장자 파일로 저장되며 
+- F026 [A2-cursor#10] confirmed (reread-snapshot) AGENTS.md는 메타데이터 없이 순수 마크다운으로 에이전트 지시사항을 정의하는 파일로, 프로젝트 루트에 두며 .cursor
+- F027 [A2-cursor#11] confirmed (reread-webfetch) MCP 서버는 (1) Customize 화면의 Cursor Marketplace에서 원클릭 설치, (2) Cursor Sett
+- F028 [A2-cursor#12] confirmed (reread-snapshot) mcp.json은 프로젝트 전용이면 프로젝트 폴더의 .cursor/mcp.json, 모든 프로젝트에서 공용으로 쓰려면 홈 디렉
+- F029 [A2-cursor#13] confirmed (reread-snapshot) 2026년 7월 현재 Hobby 플랜은 신용카드 없이 무료로 가입 가능하며, 'Limited Agent requests'와 '
+- F030 [A2-cursor#14] confirmed (reread-webfetch) 2026년 7월 현재 Pro(Individual) 플랜은 월 $20이며, Tab 자동완성은 무제한, Agent 사용 한도는 확
+- F031 [A3-supabase#0] confirmed (reread-snapshot) Supabase 대시보드에서 새 프로젝트를 만드는 첫 단계는 조직(organization)의 Dashboard에서 New pr
+- F032 [A3-supabase#1] confirmed (reread-webfetch) 테이블은 코드 없이 대시보드의 Table Editor에서 New Table로 이름을 정해 만들고, New Column으로 컬럼
+- F033 [A3-supabase#2] confirmed (reread-snapshot) 테이블 생성 시 각 컬럼의 데이터 타입을 반드시 지정해야 하며, 생성 후에도 언제든 컬럼을 추가/삭제할 수 있다.
+- F034 [A3-supabase#3] confirmed (reread-webfetch) Supabase Next.js quickstart는 프로젝트 생성 → instruments 테이블·샘플 데이터 생성 및 Row
+- F035 [A3-supabase#4] confirmed (reread-webfetch) Supabase Auth는 이메일/비밀번호 방식의 회원가입·로그인을 공식 기능으로 제공하며, Google을 포함한 소셜 로그인
+- F036 [A3-supabase#5] confirmed (reread-webfetch) Google 소셜 로그인을 붙이려면 Google Auth Platform 콘솔에서 Web application 유형 OAuth
+- F037 [A3-supabase#6] confirmed (reread-snapshot) Next.js용 Auth quickstart는 프로젝트 생성 → Next.js 앱 생성 → .env.example을 .env.
+- F038 [A3-supabase#7] confirmed (reread-webfetch) React Native/Expo용 Auth quickstart는 프로젝트 생성 → create-expo-app으로 앱 생성 →
+- F039 [A3-supabase#8] confirmed (reread-webfetch) Supabase 무료(Free) 플랜 한도는 활성 프로젝트 최대 2개, 데이터베이스 500MB, 월간 활성 사용자(MAU) 5
+- F040 [A3-supabase#9] confirmed (reread-webfetch) Supabase는 Cursor 등 AI 에디터가 Supabase 프로젝트와 직접 대화할 수 있게 하는 공식 MCP(Model 
+- F041 [A3-supabase#10] confirmed (reread-snapshot) Supabase 공식 MCP 서버를 Cursor에 연결하는 현재 공식 방법은 .cursor/mcp.json에 {"mcpServ
+- F042 [A3-supabase#11] confirmed (reread-snapshot) RLS(Row Level Security)는 노출된(exposed) 스키마의 모든 테이블에 반드시 켜야 하며, 켜져 있으면 정
+- F043 [A4-n8n#0] confirmed (reread-webfetch) n8n Cloud는 연간 결제 기준 Starter 20€/월(2,500 executions), Pro 50€/월(10,000 
+- F044 [A4-n8n#1] confirmed (reread-webfetch) n8n Cloud는 Starter/Pro 플랜에 신용카드 없이 체험 가능하고, Business 플랜은 신용카드 등록이 필요한 
+- F045 [A4-n8n#2] confirmed (reread-snapshot) n8n의 self-hosted Community Edition은 GitHub에서 무료로 제공되는 표준 버전이다.
+- F046 [A4-n8n#3] confirmed (reread-webfetch) n8n을 Docker로 self-host하는 공식 절차는 `docker volume create n8n_data` 실행 후 `
+- F047 [A4-n8n#4] confirmed (reread-snapshot) HTTP Request 노드는 REST API를 가진 모든 앱/서비스에서 데이터를 조회하도록 요청을 보내는 n8n의 범용 노드
+- F048 [A4-n8n#5] confirmed (reread-webfetch) n8n의 HTML 노드(버전 0.213.0부터 이전 HTML Extract 노드를 대체)는 'Extract HTML Conte
+- F049 [A4-n8n#6] confirmed (reread-snapshot) n8n 공식 워크플로 템플릿 갤러리에는 HTTP Request 노드로 여러 공개 API를 매일 수집해 정규화한 뒤 Supaba
+- F050 [A4-n8n#7] confirmed (reread-snapshot) GitHub의 커뮤니티 저장소 awesome-n8n-templates는 280개 이상의 무료 n8n 자동화 템플릿을 모아두었고
+- F051 [A4-n8n#8] confirmed (reread-snapshot) robots.txt는 검색엔진 크롤러에게 접근 가능한 URL을 알려주는 파일이지만, Google Search Central 공
+- F052 [A4-n8n#9] confirmed (reread-snapshot) 유럽개인정보보호위원회(EDPB)가 2026년 7월 7일 채택한 가이드라인은 웹 스크래핑이 개인정보 처리(수집·저장·조직화·검색
+- F053 [A4-n8n#10] confirmed (reread-snapshot) 인포그랩(InfoGrab)이 자체 개발한 자동번역 프로그램으로 n8n 공식 문서의 한국어판을 국내 최초로 제공하며, Level
+- F054 [A5-tosspayments#0] confirmed (reread-snapshot) 테스트 환경에서는 카드 번호 등 실제 결제 정보를 입력해도 결제가 가상으로만 승인되며, 실제 결제수단에서 돈이 출금되지 않는다
+- F055 [A5-tosspayments#1] confirmed (reread-snapshot) 이메일·전화번호만으로 가입하는 '개발 연동 체험 상점' 단계에서는 사업자등록 없이도 API 로그 확인, 웹훅 설정·연결, 가상
+- F056 [A5-tosspayments#2] confirmed (reread-snapshot) 정산(실제 결제금이 사업자 계좌로 입금되는) 기록은 라이브 환경에서만 조회할 수 있어, 테스트 키만으로는 실제 정산 과정까지 
+- F057 [A5-tosspayments#3] confirmed (reread-snapshot) 테스트 환경에서 발급되는 가상계좌는 번호 앞에 'X'가 붙는 가짜 계좌라 실제로 입금할 수 없다.
+- F058 [A5-tosspayments#4] confirmed (reread-snapshot) 카카오페이는 테스트 키로 연동 자체가 불가능하며 전자결제 계약 체결 후 발급되는 상점 전용 MID 테스트 키로만 가능하고, 페
+- F059 [A5-tosspayments#5] confirmed (reread-snapshot) 자동결제(빌링)는 리스크 검토와 별도 계약을 완료해야 실제 서비스에 쓸 수 있고, 정기 구독형 서비스가 아니면 정책적으로 사용
+- F060 [A5-tosspayments#6] confirmed (reread-snapshot) 테스트 환경에서는 카드번호 앞 여섯 자리(BIN 번호)만 유효해도 자동결제(빌링키)가 등록되므로, 실계약 전에도 빌링키 발급~
+- F061 [A5-tosspayments#7] confirmed (reread-snapshot) 결제위젯은 주문서 페이지에 결제 UI 영역을 직접 넣는 '주문서형'과, 결제하기 버튼 클릭 시 팝업으로 호출하는 '결제창형' 
+- F062 [A5-tosspayments#8] confirmed (reread-snapshot) 결제위젯 연동은 상점관리자(어드민)의 '결제 UI 설정 메뉴'에서 UI를 만든 뒤, 해당 variantKey를 복사해 코드에 
+- F063 [A5-tosspayments#9] confirmed (reread-snapshot) 개발자센터는 결제위젯 연동을 시작하기 전, 내 상점의 업종이 입점 불가·제한 업종인지부터 확인하라고 안내한다.
+- F064 [A5-tosspayments#10] confirmed (reread-snapshot) 공식 GitHub의 SDK v1 샘플 저장소(payment-widget-sample)조차 README에서 더 편리한 연동을 위
+- F065 [A5-tosspayments#11] confirmed (reread-snapshot) 공식 GitHub 저장소 tosspayments-sample은 결제연동 샘플 프로젝트로, Express+React·Expres
+- F066 [A5-tosspayments#12] confirmed (reread-snapshot) 공식 블로그(토스페이먼츠 작성, 2023.03.06) 'React로 결제 페이지 개발하기'는 Vite 기반 React 프로젝트
+- F067 [A5-tosspayments#13] confirmed (reread-snapshot) 자동결제 승인은 구독 서비스의 결제 주기(결제일)마다 저장해둔 빌링키로 원하는 금액을 승인 요청하는 방식으로 이뤄지며, 이 승
+- F068 [A5-tosspayments#14] confirmed (reread-snapshot) 테스트 환경에서는 각 API가 분당 100건의 요청 제한을 두고 있어, 반복 실습 시 이 한도를 감안해야 한다.
+- F069 [A6-resources#0] confirmed (reread-webfetch) 노마드코더의 '에어비앤비 클론코딩'은 백엔드 Django/DRF, 프론트엔드 ReactJS/Chakra UI 스택의 유료 강의
+- F070 [A6-resources#1] confirmed (reread-webfetch) 노마드코더의 '캐럿마켓(당근마켓) 클론코딩'은 Next.js 14, TypeScript, Prisma, Tailwind, Zo
+- F071 [A6-resources#2] confirmed (reread-webfetch) 노마드코더의 Next.js 무료 입문강의는 App Router, Server Components, Dynamic Pages, 
+- F072 [A6-resources#3] confirmed (reread-webfetch) 노마드코더의 자바스크립트 무료 강의('자바스크립트로 웹 서비스 만들기')는 60개 영상·총 8시간 분량이며, 선수지식으로 '초
+- F073 [A6-resources#4] confirmed (reread-snapshot) 인프런 로펀 강사의 유료 강의 '[풀스택 완성] Supabase로 웹사이트 3개 클론하기'는 Next.js 14 + Supab
+- F074 [A6-resources#5] confirmed (reread-snapshot) 인프런 무료 강의 '1. 웹개발 기초 [HTML, CSS]'는 총 2시간 34분, 11개 강의로 구성된 입문 난이도의 무료 강
+- F075 [A6-resources#6] confirmed (reread-snapshot) notjust.dev의 'Build a Netflix Clone App with React Native and Expo' 튜토
+- F076 [A6-resources#7] DISCARDED: 저장 스냅샷이 다른 저장소(calebnance/expo-netflix)로 확인, 대상(Lordhacker756/Netflix) About-README 불일치 주장 검증 불가. 리소스에서도 제외
+- F077 [A6-resources#8] confirmed (reread-snapshot) Figma 공식 Help Center 문서에 따르면 Cursor에 Figma MCP 서버를 연결하는 권장 방법은 Figma 플
+- F078 [A6-resources#9] confirmed (reread-snapshot) Figma 공식 개발자 문서(원격 서버 설치 가이드)도 동일하게 Cursor 플러그인 설치를 권장 방법으로 안내하며, MCP 
+- F079 [A6-resources#10] DISCARDED: 인용 URL(guides/payment-widget/integration)이 404. v2 문서 체계(W2-2 조사분)로 대체
+- F080 [A6-resources#11] confirmed (reread-snapshot) 토스페이먼츠 공식 샘플 저장소(tosspayments-sample)의 README에는 Express+React/Vue/JS, 
+- F081 [A6-resources#12] confirmed (reread-snapshot) 브런치 글 '비개발자를 위한 Cursor-figma-MCP 사용법'(2025-03-24 게시)은 프로덕트 디자이너를 대상으로 
+- F082 [A6-resources#13] confirmed (reread-snapshot) 모비인사이드 기사(2025-06-25, 저자 유훈식)는 MCP를 'AI용 USB-C 단자'에 비유하며, Figma 디자인을 받
+- F083 [A6-resources#14] confirmed (reread-snapshot) Builder.io 블로그의 'Cursor for Designers Tutorial #3: Figma to Code and B
+- F084 [W2-1-cursor-figma-latest#0] confirmed (reread-webfetch) Cursor 공식문서 기준 MCP 서버 등록·관리는 'Settings' 메뉴가 아니라 'Customize' 페이지에서 이루어지
+- F085 [W2-1-cursor-figma-latest#1] confirmed (reread-webfetch) Cursor의 mcp.json은 프로젝트 범위(.cursor/mcp.json)와 전역 범위(~/.cursor/mcp.json)
+- F086 [W2-1-cursor-figma-latest#2] confirmed (reread-webfetch) Figma 공식 가이드(Cursor and Figma: Set up the MCP server)는 Cursor 내 연결 경로를
+- F087 [W2-1-cursor-figma-latest#3] confirmed (reread-webfetch) Cursor 설치 절차(공식 Help 문서)는 Windows에서 'Run the installer and follow the 
+- F088 [W2-1-cursor-figma-latest#4] confirmed (reread-webfetch) Cursor Quickstart 공식문서의 설치 관련 시스템 요구사항은 macOS 'macOS 12 (Monterey) and
+- F089 [W2-1-cursor-figma-latest#5] confirmed (reread-webfetch) Cursor changelog 2026-01-08 'New CLI Features and Improved CLI Perform
+- F090 [W2-1-cursor-figma-latest#6] confirmed (reread-snapshot) Cursor changelog 2026-03-03(v2.6) 'MCP Apps and Team Marketplaces for 
+- F091 [W2-1-cursor-figma-latest#7] confirmed (reread-snapshot) Cursor changelog 2026-06-04 'Custom stores, custom tools, and auto-rev
+- F092 [W2-1-cursor-figma-latest#8] confirmed (reread-snapshot) Cursor changelog 2026-06-22(v3.9) 'Customize Cursor'에서 플러그인·스킬·MCP·서브에
+- F093 [W2-1-cursor-figma-latest#9] confirmed (reread-webfetch) Figma AI credits는 요금제·시트 종류별로 월간 배정량이 다르며(Full seat 기준), Professional 
+- F094 [W2-1-cursor-figma-latest#10] confirmed (reread-webfetch) Figma MCP 서버(도구 호출) 자체가 AI credits를 소모하는지는 공식문서에서 명시적으로 확인되지 않는다 — hel
+- F095 [W2-1-cursor-figma-latest#11] confirmed (reread-webfetch) Figma Make는 'AI-driven, prompt-to-app tool'로, 아이디어와 기존 Figma 디자인을 기능하는
+- F096 [W2-2-toss-v2-mcp#0] confirmed (reread-webfetch) v2(@tosspayments/tosspayments-sdk) 설치는 script 태그(https://js.tosspaymen
+- F097 [W2-2-toss-v2-mcp#1] confirmed (reread-snapshot) v2 결제위젯 핵심 흐름은 loadTossPayments()(또는 TossPayments())로 초기화 → widgets({c
+- F098 [W2-2-toss-v2-mcp#2] confirmed (reread-webfetch) 결제 요청은 widgets.requestPayment({orderId, orderName, successUrl, failUrl
+- F099 [W2-2-toss-v2-mcp#3] confirmed (reread-webfetch) v1은 결제위젯·브랜드페이·결제창이 각각 별도 스크립트/SDK로 분리돼 있었으나 v2부터는 스크립트 하나(/v2/standar
+- F100 [W2-2-toss-v2-mcp#4] confirmed (reread-webfetch) 결제위젯 API 변경점: v1의 updateAmount()는 제거되고 setAmount()로 분리, renderPaymentM
+- F101 [W2-2-toss-v2-mcp#5] confirmed (reread-webfetch) v2는 아직 React Native·Flutter 등 모바일 네이티브 SDK를 지원하지 않아 모바일 앱 연동은 v1을 써야 하
+- F102 [W2-2-toss-v2-mcp#6] confirmed (reread-snapshot) 토스페이먼츠는 PG 업계 최초로 공식 MCP 서버 @tosspayments/integration-guide-mcp를 제공하며,
+- F103 [W2-2-toss-v2-mcp#7] confirmed (reread-webfetch) MCP 서버는 4개 도구를 제공한다: 버전 미지정 질문에 자동 검색되는 get-v2-documents(기본), "V1으로 작성
+- F104 [W2-2-toss-v2-mcp#8] confirmed (reread-webfetch) 토스페이먼츠 개발자센터는 AI 도구용 자원으로 LLM Quick Reference, MCP 서버, llms.txt(https:
+- F105 [W2-2-toss-v2-mcp#9] confirmed (reread-snapshot) MCP 서버 외에도 결제 연동 핵심을 압축한 영문 "LLM Quick Reference"(/guides/v2/get-start
+- F106 [W2-2-toss-v2-mcp#10] confirmed (reread-webfetch) v2 자동결제(빌링) 공식 가이드(/guides/v2/billing/integration)는 (1) payment.reques
+- F107 [W2-2-toss-v2-mcp#11] confirmed (reread-snapshot) 빌링 테스트(샌드박스) 환경에서는 본인인증 문자가 발송되지 않고 인증번호 000000 입력으로 대체되며 카드 앞 6자리(BIN
+- F108 [W2-3-project-gaps#0] confirmed (reread-webfetch) 토스페이먼츠 개발자센터 공식 블로그의 '구독 결제 서비스 구현하기 (1)(2)'는 빌링키 발급→DB 관리→스케줄링(cron)으
+- F109 [W2-3-project-gaps#1] confirmed (reread-webfetch) velog '토스 페이먼츠 API를 이용한 결제 위젯 구현하기 (Feat. NextJS, TypeScript)'(2024-01
+- F110 [W2-3-project-gaps#2] confirmed (reread-webfetch) Vercel 공식 Next.js+Stripe 구독 SaaS 템플릿(vercel/nextjs-subscription-paymen
+- F111 [W2-3-project-gaps#3] confirmed (reread-webfetch) pedroalonso.net의 'Stripe + Next.js 15: The Complete 2025 Guide'는 Strip
+- F112 [W2-3-project-gaps#4] confirmed (reread-webfetch) Supabase 공식 문서 'Build a Social Auth App with Expo React Native'는 Expo 
+- F113 [W2-3-project-gaps#5] confirmed (reread-webfetch) GitHub Gist 'Expo Router + Supabase Auth + NativeWind Tutorial'(최종 활동 
+- F114 [W2-3-project-gaps#6] confirmed (reread-snapshot) Vercel 공식 템플릿 페이지는 'Deploy to Vercel' 버튼 클릭 한 번으로 Supabase 계정/프로젝트 생성을
+- F115 [W2-3-project-gaps#7] confirmed (reread-snapshot) Supabase 공식 문서 'Vercel Marketplace'는 Next.js+Supabase 배포 시 POSTGRES_UR
+- F116 [W2-3-project-gaps#8] confirmed (reread-webfetch) @supabase/auth-ui-react(로그인 화면 기성 컴포넌트)를 담은 supabase-community/auth-ui
+- F117 [W2-3-project-gaps#9] confirmed (reread-webfetch) Supabase 공식 'Storage Quickstart' 문서는 대시보드/SQL/JS 클라이언트로 버킷 생성 및 파일 업로드
+- F118 [W2-3-project-gaps#10] confirmed (reread-webfetch) 개인정보보호위원회가 2024-07-19 공개한 「인공지능(AI) 개발·서비스를 위한 공개된 개인정보 처리 안내서」는 AI 개발
+- F119 [W2-3-project-gaps#11] confirmed (reread-webfetch) 개인정보보호위원회 공식 안내서 게시판(bbsId=BS217) 목록 및 KISA 관련 검색 어디에서도 '웹크롤링' 또는 '스크래
+
+합계: confirmed 116 · discarded 3 · 리소스 89(제외 1)

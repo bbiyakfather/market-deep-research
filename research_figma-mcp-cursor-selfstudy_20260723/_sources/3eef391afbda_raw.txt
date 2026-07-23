@@ -1,0 +1,100 @@
+Title: 시작하기 | 토스페이먼츠 개발자센터
+
+URL Source: https://docs.tosspayments.com/guides/v2/get-started
+
+Markdown Content:
+*   [![Image 2: 토스페이먼츠 개발자센터 로고](https://static.toss.im/icons/svg/logo_payments_developer_blue.svg)](https://developers.tosspayments.com/)
+*   [가이드](https://docs.tosspayments.com/guides/v2/get-started) 
+*   API & SDK     
+    *   [API 레퍼런스](https://docs.tosspayments.com/reference) 
+    *   [SDK 레퍼런스](https://docs.tosspayments.com/sdk/v2/js) 
+    *   [기관 및 ENUM 코드](https://docs.tosspayments.com/codes/org-codes) 
+
+*   [샌드박스](https://developers.tosspayments.com/sandbox) 
+*   커뮤니티·지원     
+    *   [시스템 상태](https://status.tosspayments.com/) 
+    *   [실시간 문의](https://techchat.tosspayments.com/) 
+    *   [용어사전](https://docs.tosspayments.com/resources/glossary/index) 
+    *   [자주 묻는 질문](https://docs.tosspayments.com/resources/faq) 
+    *   [릴리즈 노트](https://docs.tosspayments.com/resources/release-note) 
+
+*   [블로그](https://docs.tosspayments.com/blog) 
+
+*   로그인   
+
+[시작하기](https://docs.tosspayments.com/guides/v2/get-started)
+
+[환경 설정하기](https://docs.tosspayments.com/guides/v2/get-started/environment)
+
+*   결제 이해하기    [토스페이먼츠 결제제품](https://docs.tosspayments.com/guides/v2/get-started/payment-products)  [결제 흐름](https://docs.tosspayments.com/guides/v2/get-started/payment-flow)  [결제 A to Z](https://docs.tosspayments.com/resources/glossary/index)    
+
+결제 서비스
+
+*   결제위젯    [이해하기](https://docs.tosspayments.com/guides/v2/payment-widget)  [ㄴ 주문서형 연동하기 표준](https://docs.tosspayments.com/guides/v2/payment-widget/integration)  [ㄴ 결제창형 연동하기](https://docs.tosspayments.com/guides/v2/payment-widget/integration-window)  [어드민 설정하기](https://docs.tosspayments.com/guides/v2/payment-widget/admin)    
+
+[결제창](https://docs.tosspayments.com/guides/v2/payment-window)
+
+[자동결제(빌링)](https://docs.tosspayments.com/guides/v2/billing)
+
+[브랜드페이](https://docs.tosspayments.com/guides/v2/brandpay)
+
+[링크페이](https://docs.tosspayments.com/guides/v2/linkpay)
+
+[ARS결제](https://docs.tosspayments.com/guides/v2/ars-payment)
+
+더 알아보기
+
+[배포 체크리스트](https://docs.tosspayments.com/guides/v2/deploy-checklist)
+
+[웹훅 연결하기](https://docs.tosspayments.com/guides/v2/webhook)
+
+[결제 취소하기](https://docs.tosspayments.com/guides/v2/cancel-payment)
+
+[웹뷰 연동하기](https://docs.tosspayments.com/guides/v2/webview)
+
+[간편결제 응답 확인하기](https://docs.tosspayments.com/guides/v2/easypay-response)
+
+[지급대행하기](https://docs.tosspayments.com/guides/v2/payouts)
+
+[장애 인지 가이드](https://docs.tosspayments.com/guides/v2/status-page)
+
+*   기타 연동 케이스    [세금 처리](https://docs.tosspayments.com/guides/v2/learn/tax)  [결제 결과 안내](https://docs.tosspayments.com/guides/v2/learn/payment-results)    
+
+for AI
+
+[AI 도구로 결제 연동하기](https://docs.tosspayments.com/guides/v2/get-started/llms-guide)
+
+[LLM Quick Reference](https://docs.tosspayments.com/guides/v2/get-started/llms-quick-reference)
+
+* * *
+
+[Version 1 →](https://docs.tosspayments.com/guides/get-started)
+
+[가이드](https://docs.tosspayments.com/guides/v2/get-started)/[시작하기](https://docs.tosspayments.com/guides/v2/get-started)
+
+**Version 2**
+
+# 시작하기
+
+AI에게 질문
+
+토스페이먼츠 결제 연동하는 클라이언트, 서버 개발자가 꼭 읽어야할 문서를 추천해드려요. 빠르게 개발을 시작해보세요.*연동 전에 내 상점의 업종이 입점 불가 업종이거나 제한적으로 입점되는 업종인지 확인해 보세요.[입점 허용 업종 확인하기](https://tosspublic.notion.site/113ab653d9d849ac86748ea18834d806)
+
+어떤 결제 서비스를 연동하고 싶나요?
+
+![Image 3: 일반 결제](https://static.toss.im/illusts/img-payments-pg-03.png)일반 결제 카드, 간편결제, 퀵계좌이체, 가상계좌, 휴대폰, 상품권
+
+![Image 4: 브랜드페이](https://static.toss.im/3d-emojis/u1F4B3-alt-3.png)브랜드페이 카드, 계좌이체
+
+(회사 자체 간편결제)
+
+![Image 5: 자동결제(빌링)](https://static.toss.im/illusts/img-payments-pg-01.png)자동결제(빌링)카드
+
+(구독형 결제)
+
+![Image 6: 해외 결제](https://static.toss.im/illusts/img-payments-pg-04.png)해외 결제 페이팔 해외 간편결제
+
+*    더 궁금한 내용이 있나요? [자주 묻는 질문](https://docs.tosspayments.com/resources/faq) 
+*    코드 샘플을 참고하세요 [TossPayments GitHub](https://github.com/tosspayments?q=sample&type=all&language=&sort=) 
+*   기술지원이 필요한가요? [실시간 문의](https://techchat.tosspayments.com/)|[이메일 보내기](mailto:techsupport@tosspayments.com) 
+*    개발 문서를 AI에 연결하세요 [llms.txt](https://docs.tosspayments.com/llms.txt)

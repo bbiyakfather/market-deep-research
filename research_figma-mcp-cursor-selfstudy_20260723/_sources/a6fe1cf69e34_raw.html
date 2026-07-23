@@ -1,0 +1,2454 @@
+<!doctype html >
+<!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
+<!--[if IE 9]>    <html class="ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="ko-KR"> <!--<![endif]-->
+<head>
+    <title>[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음? - 모비인사이드 MOBIINSIDE</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="pingback" href="https://www.mobiinside.co.kr/xmlrpc.php" />
+    <meta name='robots' content='max-image-preview:large' />
+<meta property="og:image" content="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1.png" /><link rel="icon" type="image/png" href="https://s3.ap-northeast-2.amazonaws.com/mobiinsidecontent/favicon.png">
+	<!-- This site is optimized with the Yoast SEO plugin v15.4 - https://yoast.com/wordpress/plugins/seo/ -->
+	<meta name="description" content="[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음? - 테크/AI 모비인사이드 MOBIINSIDE" />
+	<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+	<link rel="canonical" href="https://www.mobiinside.co.kr/2025/06/25/mcp/" />
+	<meta property="og:locale" content="ko_KR" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음? - 모비인사이드 MOBIINSIDE" />
+	<meta property="og:description" content="[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음? - 테크/AI 모비인사이드 MOBIINSIDE" />
+	<meta property="og:url" content="https://www.mobiinside.co.kr/2025/06/25/mcp/" />
+	<meta property="og:site_name" content="모비인사이드 MOBIINSIDE" />
+	<meta property="article:publisher" content="https://www.facebook.com/mobiinside.co.kr" />
+	<meta property="article:published_time" content="2025-06-25T05:01:49+00:00" />
+	<meta property="article:modified_time" content="2025-06-25T05:01:51+00:00" />
+	<meta property="og:image" content="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1.png" />
+	<meta property="og:image:width" content="1280" />
+	<meta property="og:image:height" content="708" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:creator" content="@Mobidays_media" />
+	<meta name="twitter:site" content="@Mobidays_media" />
+	<meta name="twitter:label1" content="Written by">
+	<meta name="twitter:data1" content="유훈식">
+	<meta name="twitter:label2" content="Est. reading time">
+	<meta name="twitter:data2" content="1분">
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://www.mobiinside.co.kr/#organization","name":"Mobidays","url":"https://www.mobiinside.co.kr/","sameAs":["https://www.facebook.com/mobiinside.co.kr","https://www.instagram.com/mobiinside/","https://www.linkedin.com/company/\ubaa8\ube44\ub370\uc774\uc988/","https://blog.naver.com/mobiinside","https://www.youtube.com/channel/UC2S-6J6owqtUVMUn3Jd76qg/featured","https://brunch.co.kr/@mobiinside","https://ko.wikipedia.org/wiki/\ubaa8\ube44\ub370\uc774\uc988","https://twitter.com/Mobidays_media"],"logo":{"@type":"ImageObject","@id":"https://www.mobiinside.co.kr/#logo","inLanguage":"ko-KR","url":"https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2020/02/19113947/mobiinside_logo.png","width":272,"height":90,"caption":"Mobidays"},"image":{"@id":"https://www.mobiinside.co.kr/#logo"}},{"@type":"WebSite","@id":"https://www.mobiinside.co.kr/#website","url":"https://www.mobiinside.co.kr/","name":"\ubaa8\ube44\uc778\uc0ac\uc774\ub4dc MOBIINSIDE","description":"","publisher":{"@id":"https://www.mobiinside.co.kr/#organization"},"potentialAction":[{"@type":"SearchAction","target":"https://www.mobiinside.co.kr/?s={search_term_string}","query-input":"required name=search_term_string"}],"inLanguage":"ko-KR"},{"@type":"ImageObject","@id":"https://www.mobiinside.co.kr/2025/06/25/mcp/#primaryimage","inLanguage":"ko-KR","url":"https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1.png","width":1280,"height":708},{"@type":"WebPage","@id":"https://www.mobiinside.co.kr/2025/06/25/mcp/#webpage","url":"https://www.mobiinside.co.kr/2025/06/25/mcp/","name":"[\uc778\uacf5\uc9c0\ub2a5 \uc2dc\ub300\uc758 \ub514\uc790\uc778] MCP\ub85c CursorAI\uc640 Figma\uc5f0\uacb0\ud558\uba74 \ubb50\uac00\uc88b\uc74c? - \ubaa8\ube44\uc778\uc0ac\uc774\ub4dc MOBIINSIDE","isPartOf":{"@id":"https://www.mobiinside.co.kr/#website"},"primaryImageOfPage":{"@id":"https://www.mobiinside.co.kr/2025/06/25/mcp/#primaryimage"},"datePublished":"2025-06-25T05:01:49+00:00","dateModified":"2025-06-25T05:01:51+00:00","description":"[\uc778\uacf5\uc9c0\ub2a5 \uc2dc\ub300\uc758 \ub514\uc790\uc778] MCP\ub85c CursorAI\uc640 Figma\uc5f0\uacb0\ud558\uba74 \ubb50\uac00\uc88b\uc74c? - \ud14c\ud06c/AI \ubaa8\ube44\uc778\uc0ac\uc774\ub4dc MOBIINSIDE","inLanguage":"ko-KR","potentialAction":[{"@type":"ReadAction","target":["https://www.mobiinside.co.kr/2025/06/25/mcp/"]}]},{"@type":"Article","@id":"https://www.mobiinside.co.kr/2025/06/25/mcp/#article","isPartOf":{"@id":"https://www.mobiinside.co.kr/2025/06/25/mcp/#webpage"},"author":{"@id":"https://www.mobiinside.co.kr/#/schema/person/6e5783b31d162c0f707a017466c4019e"},"headline":"[\uc778\uacf5\uc9c0\ub2a5 \uc2dc\ub300\uc758 \ub514\uc790\uc778] MCP\ub85c CursorAI\uc640 Figma\uc5f0\uacb0\ud558\uba74 \ubb50\uac00\uc88b\uc74c?","datePublished":"2025-06-25T05:01:49+00:00","dateModified":"2025-06-25T05:01:51+00:00","mainEntityOfPage":{"@id":"https://www.mobiinside.co.kr/2025/06/25/mcp/#webpage"},"commentCount":0,"publisher":{"@id":"https://www.mobiinside.co.kr/#organization"},"image":{"@id":"https://www.mobiinside.co.kr/2025/06/25/mcp/#primaryimage"},"keywords":"AI UI \uc0dd\uc131\uae30,AI \uae30\ubc18 UX,ai \ub514\uc790\uc778,AI \ub514\uc790\uc778 \ud234,AI \ud234,Cursor AI,figma,Figma \uc790\ub3d9\ud654,MCP,MCP \ud504\ub85c\ud1a0\ucf5c,ui \ub514\uc790\uc778,ux \ub514\uc790\uc778,\uac1c\ubc1c\uc790 \ud578\ub4dc\uc624\ud504,\ub514\uc790\uc778 \uae30\uc220,\ub514\uc790\uc778 \uc2dc\uc2a4\ud15c,\ub514\uc790\uc778 \uc5c5\ubb34 \ud6a8\uc728\ud654,\ub514\uc790\uc778 \uc790\ub3d9\ud654,\ub514\uc790\uc778 \ud504\ub85c\uc138\uc2a4 \ud601\uc2e0,\ub514\uc790\uc778 \ud601\uc2e0,\ub514\uc790\uc778\uacfc \uac1c\ubc1c \ud611\uc5c5,\uc0dd\uc131\ud615 AI,\uc2a4\ub9c8\ud2b8 \ud578\ub4dc\uc624\ud504,\uc2a4\ud0c0\ud2b8\uc5c5 \uc6cc\ud06c\ud50c\ub85c\uc6b0,\uc2e4\uc2dc\uac04 \ud611\uc5c5,\uc778\ud130\ud398\uc774\uc2a4 \ub514\uc790\uc778,\uc790\uc5f0\uc5b4 \ub514\uc790\uc778 \uc0dd\uc131,\ucef4\ud3ec\ub10c\ud2b8 \uae30\ubc18 \ub514\uc790\uc778,\ucf54\ub4dc \uc790\ub3d9\ud654,\ud504\ub85c\ub355\ud2b8 \ub514\uc790\uc778,\ud504\ub860\ud2b8\uc5d4\ub4dc \uc790\ub3d9\ud654","articleSection":"\ud14c\ud06c/AI","inLanguage":"ko-KR","potentialAction":[{"@type":"CommentAction","name":"Comment","target":["https://www.mobiinside.co.kr/2025/06/25/mcp/#respond"]}]},{"@type":"Person","@id":"https://www.mobiinside.co.kr/#/schema/person/6e5783b31d162c0f707a017466c4019e","name":"\uc720\ud6c8\uc2dd","image":{"@type":"ImageObject","@id":"https://www.mobiinside.co.kr/#personlogo","inLanguage":"ko-KR","url":"https://secure.gravatar.com/avatar/12a51bdff320c753b54b86c72b3bfa40?s=96&d=mm&r=g","caption":"\uc720\ud6c8\uc2dd"},"description":"AI-Powered Design Lab\uc744 \uc6b4\uc601\ud558\uace0 \uc788\ub294 \uc720\ud6c8\uc2dd \uad50\uc218(\uc11c\uc6b8\ubbf8\ub514\uc5b4\ub300\ud559\uc6d0\ub300\ud559\uad50)\ub294 \uc778\uacf5\uc9c0\ub2a5 \ub300\uc804\ud658 \uc2dc\ub300\uc5d0 \ub514\uc790\uc778\uacfc \ub514\uc790\uc774\ub108\uac00 \uac00\uc57c\ud560 \ubbf8\ub798 \ube44\uc804\uc744 \uc81c\uc2dc\ud568\uacfc \ub3d9\uc2dc\uc5d0 \uc774\ub97c \ub3c4\uc640\uc904 \uc218 \uc788\ub294 \uad50\uc721\uc790\ub85c \ud65c\ub3d9\ud558\uace0 \uc788\ub2e4.","sameAs":["https://www.youtube.com/@aidesigntv"]}]}</script>
+	<!-- / Yoast SEO plugin. -->
+
+
+
+<!-- WordPress KBoard plugin 6.6 - https://www.cosmosfarm.com/products/kboard -->
+<link rel="alternate" href="https://www.mobiinside.co.kr/wp-content/plugins/kboard/rss.php" type="application/rss+xml" title="모비인사이드 MOBIINSIDE &raquo; KBoard 통합 피드">
+<!-- WordPress KBoard plugin 6.6 - https://www.cosmosfarm.com/products/kboard -->
+
+<link rel='dns-prefetch' href='//developers.kakao.com' />
+<link rel='dns-prefetch' href='//t1.daumcdn.net' />
+<link rel='dns-prefetch' href='//use.fontawesome.com' />
+<link rel="alternate" type="application/rss+xml" title="모비인사이드 MOBIINSIDE &raquo; 피드" href="https://www.mobiinside.co.kr/feed/" />
+<link rel="alternate" type="application/rss+xml" title="모비인사이드 MOBIINSIDE &raquo; 댓글 피드" href="https://www.mobiinside.co.kr/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="모비인사이드 MOBIINSIDE &raquo; [인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음? 댓글 피드" href="https://www.mobiinside.co.kr/2025/06/25/mcp/feed/" />
+<script type="text/javascript">
+/* <![CDATA[ */
+window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/www.mobiinside.co.kr\/wp-includes\/js\/wp-emoji-release.min.js?ver=6.4.3"}};
+/*! This file is auto-generated */
+!function(i,n){var o,s,e;function c(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function p(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data),r=(e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0),new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data));return t.every(function(e,t){return e===r[t]})}function u(e,t,n){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\uddfa\ud83c\uddf3","\ud83c\uddfa\u200b\ud83c\uddf3")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!n(e,"\ud83e\udef1\ud83c\udffb\u200d\ud83e\udef2\ud83c\udfff","\ud83e\udef1\ud83c\udffb\u200b\ud83e\udef2\ud83c\udfff")}return!1}function f(e,t,n){var r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):i.createElement("canvas"),a=r.getContext("2d",{willReadFrequently:!0}),o=(a.textBaseline="top",a.font="600 32px Arial",{});return e.forEach(function(e){o[e]=t(a,e,n)}),o}function t(e){var t=i.createElement("script");t.src=e,t.defer=!0,i.head.appendChild(t)}"undefined"!=typeof Promise&&(o="wpEmojiSettingsSupports",s=["flag","emoji"],n.supports={everything:!0,everythingExceptFlag:!0},e=new Promise(function(e){i.addEventListener("DOMContentLoaded",e,{once:!0})}),new Promise(function(t){var n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(s),u.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"}),a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=function(e){c(n=e.data),a.terminate(),t(n)})}catch(e){}c(n=f(s,u,p))}t(n)}).then(function(e){for(var t in e)n.supports[t]=e[t],n.supports.everything=n.supports.everything&&n.supports[t],"flag"!==t&&(n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&n.supports[t]);n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&!n.supports.flag,n.DOMReady=!1,n.readyCallback=function(){n.DOMReady=!0}}).then(function(){return e}).then(function(){var e;n.supports.everything||(n.readyCallback(),(e=n.source||{}).concatemoji?t(e.concatemoji):e.wpemoji&&e.twemoji&&(t(e.twemoji),t(e.wpemoji)))}))}((window,document),window._wpemojiSettings);
+/* ]]> */
+</script>
+<style id='wp-emoji-styles-inline-css' type='text/css'>
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+</style>
+<link rel='stylesheet' id='wp-block-library-css' href='https://www.mobiinside.co.kr/wp-includes/css/dist/block-library/style.min.css?ver=6.4.3' type='text/css' media='all' />
+<style id='font-awesome-svg-styles-default-inline-css' type='text/css'>
+.svg-inline--fa {
+  display: inline-block;
+  height: 1em;
+  overflow: visible;
+  vertical-align: -.125em;
+}
+</style>
+<link rel='stylesheet' id='font-awesome-svg-styles-css' href='https://www.mobiinside.co.kr/wp-content/uploads/font-awesome/v5.10.2/css/svg-with-js.css' type='text/css' media='all' />
+<style id='font-awesome-svg-styles-inline-css' type='text/css'>
+   .wp-block-font-awesome-icon svg::before,
+   .wp-rich-text-font-awesome-icon svg::before {content: unset;}
+</style>
+<style id='classic-theme-styles-inline-css' type='text/css'>
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+</style>
+<style id='global-styles-inline-css' type='text/css'>
+body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--color--central-palette-1: #050099;--wp--preset--color--central-palette-2: #2E75B6;--wp--preset--color--central-palette-3: #ED6653;--wp--preset--color--central-palette-4: #FCF8E3;--wp--preset--color--central-palette-5: #B8B8B8;--wp--preset--color--central-palette-6: #DD5F5F;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgba(252,185,0,1) 0%,rgba(255,105,0,1) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgba(255,105,0,1) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 11px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 32px;--wp--preset--font-size--x-large: 42px;--wp--preset--font-size--regular: 15px;--wp--preset--font-size--larger: 50px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgba(255, 255, 255, 1), 6px 6px rgba(0, 0, 0, 1);--wp--preset--shadow--crisp: 6px 6px 0px rgba(0, 0, 0, 1);}:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flow > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}body .is-layout-flow > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}body .is-layout-flow > .aligncenter{margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}body .is-layout-constrained > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}body .is-layout-constrained > .aligncenter{margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)){max-width: var(--wp--style--global--content-size);margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > .alignwide{max-width: var(--wp--style--global--wide-size);}body .is-layout-flex{display: flex;}body .is-layout-flex{flex-wrap: wrap;align-items: center;}body .is-layout-flex > *{margin: 0;}body .is-layout-grid{display: grid;}body .is-layout-grid > *{margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+.wp-block-navigation a:where(:not(.wp-element-button)){color: inherit;}
+:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}
+:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}
+.wp-block-pullquote{font-size: 1.5em;line-height: 1.6;}
+</style>
+<link rel='stylesheet' id='contact-form-7-css' href='https://www.mobiinside.co.kr/wp-content/plugins/contact-form-7/includes/css/styles.css?ver=5.3' type='text/css' media='all' />
+<link rel='stylesheet' id='likebtn_style-css' href='https://www.mobiinside.co.kr/wp-content/plugins/likebtn-like-button/public/css/style.css?ver=6.4.3' type='text/css' media='all' />
+<link rel='stylesheet' id='mc4wp-form-themes-css' href='https://www.mobiinside.co.kr/wp-content/plugins/mailchimp-for-wp/assets/css/form-themes.css?ver=4.12.1' type='text/css' media='all' />
+<link rel='stylesheet' id='td-plugin-multi-purpose-css' href='https://www.mobiinside.co.kr/wp-content/plugins/td-composer/td-multi-purpose/style.css?ver=b84e3fe0e71a6db065c5ace64f57167f' type='text/css' media='all' />
+<link rel='stylesheet' id='font-awesome-official-css' href='https://use.fontawesome.com/releases/v5.10.2/css/all.css' type='text/css' media='all' integrity="sha384-rtJEYb85SiYWgfpCr0jn174XgJTn4rptSOQsMroFBPQSGLdOC5IbubP6lJ35qoM9" crossorigin="anonymous" />
+<link rel='stylesheet' id='style_login_widget-css' href='https://www.mobiinside.co.kr/wp-content/plugins/miniorange-login-with-eve-online-google-facebook/css/style_login_widget.min.css?ver=6.26.18' type='text/css' media='all' />
+<link rel='stylesheet' id='cosmosfarm-share-buttons-css' href='https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/style.css?ver=1.9' type='text/css' media='all' />
+<link rel='stylesheet' id='td-theme-css' href='https://www.mobiinside.co.kr/wp-content/themes/Newspaper/style.css?ver=9.7.4' type='text/css' media='all' />
+<style id='td-theme-inline-css' type='text/css'>
+    
+        @media (max-width: 767px) {
+            .td-header-desktop-wrap {
+                display: none;
+            }
+        }
+        @media (min-width: 767px) {
+            .td-header-mobile-wrap {
+                display: none;
+            }
+        }
+    
+	
+</style>
+<link rel='stylesheet' id='kboard-comments-skin-default-css' href='https://www.mobiinside.co.kr/wp-content/plugins/kboard-comments/skin/default/style.css?ver=5.5' type='text/css' media='all' />
+<link rel='stylesheet' id='kboard-editor-media-css' href='https://www.mobiinside.co.kr/wp-content/plugins/kboard/template/css/editor_media.css?ver=6.6' type='text/css' media='all' />
+<link rel='stylesheet' id='kboard-skin-default-css' href='https://www.mobiinside.co.kr/wp-content/plugins/kboard/skin/default/style.css?ver=6.6' type='text/css' media='all' />
+<link rel='stylesheet' id='td-legacy-framework-front-style-css' href='https://www.mobiinside.co.kr/wp-content/plugins/td-composer/legacy/Newspaper/assets/css/td_legacy_main.css?ver=b84e3fe0e71a6db065c5ace64f57167f' type='text/css' media='all' />
+<link rel='stylesheet' id='td-theme-demo-style-css' href='https://www.mobiinside.co.kr/wp-content/plugins/td-composer/legacy/Newspaper/includes/demos/week/demo_style.css?ver=9.7.4' type='text/css' media='all' />
+<link rel='stylesheet' id='tdb_front_style-css' href='https://www.mobiinside.co.kr/wp-content/plugins/td-cloud-library/assets/css/tdb_less_front.css?ver=388b2d8ea1192f4a22a4fef9c5911ef0' type='text/css' media='all' />
+<link rel='stylesheet' id='font-awesome-official-v4shim-css' href='https://use.fontawesome.com/releases/v5.10.2/css/v4-shims.css' type='text/css' media='all' integrity="sha384-updXts+unDswrMsYxLc5R+HfSmF8CuEIOe48Rj3DoVoPUIImOT1fs26H/tr/H9gC" crossorigin="anonymous" />
+<style id='font-awesome-official-v4shim-inline-css' type='text/css'>
+@font-face {
+font-family: "FontAwesome";
+font-display: block;
+src: url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-brands-400.eot"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-brands-400.eot?#iefix") format("embedded-opentype"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-brands-400.woff2") format("woff2"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-brands-400.woff") format("woff"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-brands-400.ttf") format("truetype"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-brands-400.svg#fontawesome") format("svg");
+}
+
+@font-face {
+font-family: "FontAwesome";
+font-display: block;
+src: url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-solid-900.eot"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-solid-900.eot?#iefix") format("embedded-opentype"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-solid-900.woff2") format("woff2"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-solid-900.woff") format("woff"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-solid-900.ttf") format("truetype"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-solid-900.svg#fontawesome") format("svg");
+}
+
+@font-face {
+font-family: "FontAwesome";
+font-display: block;
+src: url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-regular-400.eot"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-regular-400.eot?#iefix") format("embedded-opentype"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-regular-400.woff2") format("woff2"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-regular-400.woff") format("woff"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-regular-400.ttf") format("truetype"),
+		url("https://use.fontawesome.com/releases/v5.10.2/webfonts/fa-regular-400.svg#fontawesome") format("svg");
+unicode-range: U+F004-F005,U+F007,U+F017,U+F022,U+F024,U+F02E,U+F03E,U+F044,U+F057-F059,U+F06E,U+F070,U+F075,U+F07B-F07C,U+F080,U+F086,U+F089,U+F094,U+F09D,U+F0A0,U+F0A4-F0A7,U+F0C5,U+F0C7-F0C8,U+F0E0,U+F0EB,U+F0F3,U+F0F8,U+F0FE,U+F111,U+F118-F11A,U+F11C,U+F133,U+F144,U+F146,U+F14A,U+F14D-F14E,U+F150-F152,U+F15B-F15C,U+F164-F165,U+F185-F186,U+F191-F192,U+F1AD,U+F1C1-F1C9,U+F1CD,U+F1D8,U+F1E3,U+F1EA,U+F1F6,U+F1F9,U+F20A,U+F247-F249,U+F24D,U+F254-F25B,U+F25D,U+F267,U+F271-F274,U+F279,U+F28B,U+F28D,U+F2B5-F2B6,U+F2B9,U+F2BB,U+F2BD,U+F2C1-F2C2,U+F2D0,U+F2D2,U+F2DC,U+F2ED,U+F328,U+F358-F35B,U+F3A5,U+F3D1,U+F410,U+F4AD;
+}
+</style>
+<style id="kt_central_palette_gutenberg_css" type="text/css">.has-central-palette-1-color{color:#050099}.has-central-palette-1-background-color{background-color:#050099}.has-central-palette-2-color{color:#2E75B6}.has-central-palette-2-background-color{background-color:#2E75B6}.has-central-palette-3-color{color:#ED6653}.has-central-palette-3-background-color{background-color:#ED6653}.has-central-palette-4-color{color:#FCF8E3}.has-central-palette-4-background-color{background-color:#FCF8E3}.has-central-palette-5-color{color:#B8B8B8}.has-central-palette-5-background-color{background-color:#B8B8B8}.has-central-palette-6-color{color:#DD5F5F}.has-central-palette-6-background-color{background-color:#DD5F5F}
+</style>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-includes/js/jquery/jquery.min.js?ver=3.7.1" id="jquery-core-js"></script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1" id="jquery-migrate-js"></script>
+<script type="text/javascript" id="likebtn_frontend-js-extra">
+/* <![CDATA[ */
+var likebtn_eh_data = {"ajaxurl":"https:\/\/www.mobiinside.co.kr\/wp-admin\/admin-ajax.php","security":"3c6a122cc2"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/likebtn-like-button/public/js/frontend.js?ver=6.4.3" id="likebtn_frontend-js"></script>
+<script type="text/javascript" src="https://developers.kakao.com/sdk/js/kakao.min.js?ver=1.9" id="kakao-sdk-js"></script>
+<link rel="https://api.w.org/" href="https://www.mobiinside.co.kr/wp-json/" /><link rel="alternate" type="application/json" href="https://www.mobiinside.co.kr/wp-json/wp/v2/posts/126272" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.mobiinside.co.kr/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 6.4.3" />
+<link rel='shortlink' href='https://www.mobiinside.co.kr/?p=126272' />
+<link rel="alternate" type="application/json+oembed" href="https://www.mobiinside.co.kr/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.mobiinside.co.kr%2F2025%2F06%2F25%2Fmcp%2F" />
+<link rel="alternate" type="text/xml+oembed" href="https://www.mobiinside.co.kr/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.mobiinside.co.kr%2F2025%2F06%2F25%2Fmcp%2F&#038;format=xml" />
+
+		<!-- GA Google Analytics @ https://m0n.co/ga -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-LQMS2MHXS0"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'G-LQMS2MHXS0');
+		</script>
+
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script><![endif]-->
+        <script>
+        window.tdb_globals = {"wpRestNonce":"88d2d4790d","wpRestUrl":"https:\/\/www.mobiinside.co.kr\/wp-json\/","permalinkStructure":"\/%year%\/%monthnum%\/%day%\/%postname%\/","isAjax":false,"isAdminBarShowing":false,"autoloadScrollPercent":50,"postAutoloadStatus":"off","origPostEditUrl":null};
+    </script>
+    			<script>
+				window.tdwGlobal = {"adminUrl":"https:\/\/www.mobiinside.co.kr\/wp-admin\/","wpRestNonce":"88d2d4790d","wpRestUrl":"https:\/\/www.mobiinside.co.kr\/wp-json\/","permalinkStructure":"\/%year%\/%monthnum%\/%day%\/%postname%\/"};
+			</script>
+			<style>.mc4wp-checkbox-wp-registration-form{clear:both;width:auto;display:block;position:static}.mc4wp-checkbox-wp-registration-form input{float:none;vertical-align:middle;-webkit-appearance:checkbox;width:auto;max-width:21px;margin:0 6px 0 0;padding:0;position:static;display:inline-block!important}.mc4wp-checkbox-wp-registration-form label{float:none;cursor:pointer;width:auto;margin:0 0 16px;display:block;position:static}</style>
+<!-- JS generated by theme -->
+
+<script>
+    
+    
+
+	    var tdBlocksArray = []; //here we store all the items for the current page
+
+	    //td_block class - each ajax block uses a object of this class for requests
+	    function tdBlock() {
+		    this.id = '';
+		    this.block_type = 1; //block type id (1-234 etc)
+		    this.atts = '';
+		    this.td_column_number = '';
+		    this.td_current_page = 1; //
+		    this.post_count = 0; //from wp
+		    this.found_posts = 0; //from wp
+		    this.max_num_pages = 0; //from wp
+		    this.td_filter_value = ''; //current live filter value
+		    this.is_ajax_running = false;
+		    this.td_user_action = ''; // load more or infinite loader (used by the animation)
+		    this.header_color = '';
+		    this.ajax_pagination_infinite_stop = ''; //show load more at page x
+	    }
+
+
+        // td_js_generator - mini detector
+        (function(){
+            var htmlTag = document.getElementsByTagName("html")[0];
+
+	        if ( navigator.userAgent.indexOf("MSIE 10.0") > -1 ) {
+                htmlTag.className += ' ie10';
+            }
+
+            if ( !!navigator.userAgent.match(/Trident.*rv\:11\./) ) {
+                htmlTag.className += ' ie11';
+            }
+
+	        if ( navigator.userAgent.indexOf("Edge") > -1 ) {
+                htmlTag.className += ' ieEdge';
+            }
+
+            if ( /(iPad|iPhone|iPod)/g.test(navigator.userAgent) ) {
+                htmlTag.className += ' td-md-is-ios';
+            }
+
+            var user_agent = navigator.userAgent.toLowerCase();
+            if ( user_agent.indexOf("android") > -1 ) {
+                htmlTag.className += ' td-md-is-android';
+            }
+
+            if ( -1 !== navigator.userAgent.indexOf('Mac OS X')  ) {
+                htmlTag.className += ' td-md-is-os-x';
+            }
+
+            if ( /chrom(e|ium)/.test(navigator.userAgent.toLowerCase()) ) {
+               htmlTag.className += ' td-md-is-chrome';
+            }
+
+            if ( -1 !== navigator.userAgent.indexOf('Firefox') ) {
+                htmlTag.className += ' td-md-is-firefox';
+            }
+
+            if ( -1 !== navigator.userAgent.indexOf('Safari') && -1 === navigator.userAgent.indexOf('Chrome') ) {
+                htmlTag.className += ' td-md-is-safari';
+            }
+
+            if( -1 !== navigator.userAgent.indexOf('IEMobile') ){
+                htmlTag.className += ' td-md-is-iemobile';
+            }
+
+        })();
+
+
+
+
+        var tdLocalCache = {};
+
+        ( function () {
+            "use strict";
+
+            tdLocalCache = {
+                data: {},
+                remove: function (resource_id) {
+                    delete tdLocalCache.data[resource_id];
+                },
+                exist: function (resource_id) {
+                    return tdLocalCache.data.hasOwnProperty(resource_id) && tdLocalCache.data[resource_id] !== null;
+                },
+                get: function (resource_id) {
+                    return tdLocalCache.data[resource_id];
+                },
+                set: function (resource_id, cachedData) {
+                    tdLocalCache.remove(resource_id);
+                    tdLocalCache.data[resource_id] = cachedData;
+                }
+            };
+        })();
+
+    
+    
+var td_viewport_interval_list=[{"limitBottom":767,"sidebarWidth":228},{"limitBottom":1018,"sidebarWidth":300},{"limitBottom":1140,"sidebarWidth":324}];
+var tdc_is_installed="yes";
+var td_ajax_url="https:\/\/www.mobiinside.co.kr\/wp-admin\/admin-ajax.php?td_theme_name=Newspaper&v=9.7.4";
+var td_get_template_directory_uri="https:\/\/www.mobiinside.co.kr\/wp-content\/plugins\/td-composer\/legacy\/common";
+var tds_snap_menu="snap";
+var tds_logo_on_sticky="show_header_logo";
+var tds_header_style="";
+var td_please_wait="Please wait...";
+var td_email_user_pass_incorrect="User or password incorrect!";
+var td_email_user_incorrect="Email or username incorrect!";
+var td_email_incorrect="Email incorrect!";
+var tds_more_articles_on_post_enable="";
+var tds_more_articles_on_post_time_to_wait="";
+var tds_more_articles_on_post_pages_distance_from_top=1000;
+var tds_theme_color_site_wide="#e05560";
+var tds_smart_sidebar="enabled";
+var tdThemeName="Newspaper";
+var td_magnific_popup_translation_tPrev="Previous (Left arrow key)";
+var td_magnific_popup_translation_tNext="Next (Right arrow key)";
+var td_magnific_popup_translation_tCounter="%curr% of %total%";
+var td_magnific_popup_translation_ajax_tError="The content from %url% could not be loaded.";
+var td_magnific_popup_translation_image_tError="The image #%curr% could not be loaded.";
+var tdBlockNonce="5c71a057b8";
+var tdDateNamesI18n={"month_names":["1\uc6d4","2\uc6d4","3\uc6d4","4\uc6d4","5\uc6d4","6\uc6d4","7\uc6d4","8\uc6d4","9\uc6d4","10\uc6d4","11\uc6d4","12\uc6d4"],"month_names_short":["1\uc6d4","2\uc6d4","3\uc6d4","4\uc6d4","5\uc6d4","6\uc6d4","7\uc6d4","8\uc6d4","9\uc6d4","10\uc6d4","11\uc6d4","12\uc6d4"],"day_names":["\uc77c\uc694\uc77c","\uc6d4\uc694\uc77c","\ud654\uc694\uc77c","\uc218\uc694\uc77c","\ubaa9\uc694\uc77c","\uae08\uc694\uc77c","\ud1a0\uc694\uc77c"],"day_names_short":["\uc77c","\uc6d4","\ud654","\uc218","\ubaa9","\uae08","\ud1a0"]};
+var td_ad_background_click_link="";
+var td_ad_background_click_target="";
+</script>
+
+
+<!-- Header style compiled by theme -->
+
+<style>
+    
+
+                                    @font-face {
+                                      font-family: "AppleSDGothicNeoH";
+                                      src: local("AppleSDGothicNeoH"), url("https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2022/12/02211836/AppleSDGothicNeoH.woff") format("woff");
+                                    }
+                                
+.td-header-wrap .black-menu .sf-menu > .current-menu-item > a,
+    .td-header-wrap .black-menu .sf-menu > .current-menu-ancestor > a,
+    .td-header-wrap .black-menu .sf-menu > .current-category-ancestor > a,
+    .td-header-wrap .black-menu .sf-menu > li > a:hover,
+    .td-header-wrap .black-menu .sf-menu > .sfHover > a,
+    .td-header-style-12 .td-header-menu-wrap-full,
+    .sf-menu > .current-menu-item > a:after,
+    .sf-menu > .current-menu-ancestor > a:after,
+    .sf-menu > .current-category-ancestor > a:after,
+    .sf-menu > li:hover > a:after,
+    .sf-menu > .sfHover > a:after,
+    .td-header-style-12 .td-affix,
+    .header-search-wrap .td-drop-down-search:after,
+    .header-search-wrap .td-drop-down-search .btn:hover,
+    input[type=submit]:hover,
+    .td-read-more a,
+    .td-post-category:hover,
+    .td-grid-style-1.td-hover-1 .td-big-grid-post:hover .td-post-category,
+    .td-grid-style-5.td-hover-1 .td-big-grid-post:hover .td-post-category,
+    .td_top_authors .td-active .td-author-post-count,
+    .td_top_authors .td-active .td-author-comments-count,
+    .td_top_authors .td_mod_wrap:hover .td-author-post-count,
+    .td_top_authors .td_mod_wrap:hover .td-author-comments-count,
+    .td-404-sub-sub-title a:hover,
+    .td-search-form-widget .wpb_button:hover,
+    .td-rating-bar-wrap div,
+    .td_category_template_3 .td-current-sub-category,
+    .dropcap,
+    .td_wrapper_video_playlist .td_video_controls_playlist_wrapper,
+    .wpb_default,
+    .wpb_default:hover,
+    .td-left-smart-list:hover,
+    .td-right-smart-list:hover,
+    .woocommerce-checkout .woocommerce input.button:hover,
+    .woocommerce-page .woocommerce a.button:hover,
+    .woocommerce-account div.woocommerce .button:hover,
+    #bbpress-forums button:hover,
+    .bbp_widget_login .button:hover,
+    .td-footer-wrapper .td-post-category,
+    .td-footer-wrapper .widget_product_search input[type="submit"]:hover,
+    .woocommerce .product a.button:hover,
+    .woocommerce .product #respond input#submit:hover,
+    .woocommerce .checkout input#place_order:hover,
+    .woocommerce .woocommerce.widget .button:hover,
+    .single-product .product .summary .cart .button:hover,
+    .woocommerce-cart .woocommerce table.cart .button:hover,
+    .woocommerce-cart .woocommerce .shipping-calculator-form .button:hover,
+    .td-next-prev-wrap a:hover,
+    .td-load-more-wrap a:hover,
+    .td-post-small-box a:hover,
+    .page-nav .current,
+    .page-nav:first-child > div,
+    .td_category_template_8 .td-category-header .td-category a.td-current-sub-category,
+    .td_category_template_4 .td-category-siblings .td-category a:hover,
+    #bbpress-forums .bbp-pagination .current,
+    #bbpress-forums #bbp-single-user-details #bbp-user-navigation li.current a,
+    .td-theme-slider:hover .slide-meta-cat a,
+    a.vc_btn-black:hover,
+    .td-trending-now-wrapper:hover .td-trending-now-title,
+    .td-scroll-up,
+    .td-smart-list-button:hover,
+    .td-weather-information:before,
+    .td-weather-week:before,
+    .td_block_exchange .td-exchange-header:before,
+    .td_block_big_grid_9.td-grid-style-1 .td-post-category,
+    .td_block_big_grid_9.td-grid-style-5 .td-post-category,
+    .td-grid-style-6.td-hover-1 .td-module-thumb:after,
+    .td-pulldown-syle-2 .td-subcat-dropdown ul:after,
+    .td_block_template_9 .td-block-title:after,
+    .td_block_template_15 .td-block-title:before,
+    div.wpforms-container .wpforms-form div.wpforms-submit-container button[type=submit] {
+        background-color: #e05560;
+    }
+
+    .td_block_template_4 .td-related-title .td-cur-simple-item:before {
+        border-color: #e05560 transparent transparent transparent !important;
+    }
+
+    .woocommerce .woocommerce-message .button:hover,
+    .woocommerce .woocommerce-error .button:hover,
+    .woocommerce .woocommerce-info .button:hover {
+        background-color: #e05560 !important;
+    }
+    
+    
+    .td_block_template_4 .td-related-title .td-cur-simple-item,
+    .td_block_template_3 .td-related-title .td-cur-simple-item,
+    .td_block_template_9 .td-related-title:after {
+        background-color: #e05560;
+    }
+
+    .woocommerce .product .onsale,
+    .woocommerce.widget .ui-slider .ui-slider-handle {
+        background: none #e05560;
+    }
+
+    .woocommerce.widget.widget_layered_nav_filters ul li a {
+        background: none repeat scroll 0 0 #e05560 !important;
+    }
+
+    a,
+    cite a:hover,
+    .td_mega_menu_sub_cats .cur-sub-cat,
+    .td-mega-span h3 a:hover,
+    .td_mod_mega_menu:hover .entry-title a,
+    .header-search-wrap .result-msg a:hover,
+    .td-header-top-menu .td-drop-down-search .td_module_wrap:hover .entry-title a,
+    .td-header-top-menu .td-icon-search:hover,
+    .td-header-wrap .result-msg a:hover,
+    .top-header-menu li a:hover,
+    .top-header-menu .current-menu-item > a,
+    .top-header-menu .current-menu-ancestor > a,
+    .top-header-menu .current-category-ancestor > a,
+    .td-social-icon-wrap > a:hover,
+    .td-header-sp-top-widget .td-social-icon-wrap a:hover,
+    .td-page-content blockquote p,
+    .td-post-content blockquote p,
+    .mce-content-body blockquote p,
+    .comment-content blockquote p,
+    .wpb_text_column blockquote p,
+    .td_block_text_with_title blockquote p,
+    .td_module_wrap:hover .entry-title a,
+    .td-subcat-filter .td-subcat-list a:hover,
+    .td-subcat-filter .td-subcat-dropdown a:hover,
+    .td_quote_on_blocks,
+    .dropcap2,
+    .dropcap3,
+    .td_top_authors .td-active .td-authors-name a,
+    .td_top_authors .td_mod_wrap:hover .td-authors-name a,
+    .td-post-next-prev-content a:hover,
+    .author-box-wrap .td-author-social a:hover,
+    .td-author-name a:hover,
+    .td-author-url a:hover,
+    .td_mod_related_posts:hover h3 > a,
+    .td-post-template-11 .td-related-title .td-related-left:hover,
+    .td-post-template-11 .td-related-title .td-related-right:hover,
+    .td-post-template-11 .td-related-title .td-cur-simple-item,
+    .td-post-template-11 .td_block_related_posts .td-next-prev-wrap a:hover,
+    .comment-reply-link:hover,
+    .logged-in-as a:hover,
+    #cancel-comment-reply-link:hover,
+    .td-search-query,
+    .td-category-header .td-pulldown-category-filter-link:hover,
+    .td-category-siblings .td-subcat-dropdown a:hover,
+    .td-category-siblings .td-subcat-dropdown a.td-current-sub-category,
+    .widget a:hover,
+    .td_wp_recentcomments a:hover,
+    .archive .widget_archive .current,
+    .archive .widget_archive .current a,
+    .widget_calendar tfoot a:hover,
+    .woocommerce a.added_to_cart:hover,
+    .woocommerce-account .woocommerce-MyAccount-navigation a:hover,
+    #bbpress-forums li.bbp-header .bbp-reply-content span a:hover,
+    #bbpress-forums .bbp-forum-freshness a:hover,
+    #bbpress-forums .bbp-topic-freshness a:hover,
+    #bbpress-forums .bbp-forums-list li a:hover,
+    #bbpress-forums .bbp-forum-title:hover,
+    #bbpress-forums .bbp-topic-permalink:hover,
+    #bbpress-forums .bbp-topic-started-by a:hover,
+    #bbpress-forums .bbp-topic-started-in a:hover,
+    #bbpress-forums .bbp-body .super-sticky li.bbp-topic-title .bbp-topic-permalink,
+    #bbpress-forums .bbp-body .sticky li.bbp-topic-title .bbp-topic-permalink,
+    .widget_display_replies .bbp-author-name,
+    .widget_display_topics .bbp-author-name,
+    .footer-text-wrap .footer-email-wrap a,
+    .td-subfooter-menu li a:hover,
+    .footer-social-wrap a:hover,
+    a.vc_btn-black:hover,
+    .td-smart-list-dropdown-wrap .td-smart-list-button:hover,
+    .td_module_17 .td-read-more a:hover,
+    .td_module_18 .td-read-more a:hover,
+    .td_module_19 .td-post-author-name a:hover,
+    .td-instagram-user a,
+    .td-pulldown-syle-2 .td-subcat-dropdown:hover .td-subcat-more span,
+    .td-pulldown-syle-2 .td-subcat-dropdown:hover .td-subcat-more i,
+    .td-pulldown-syle-3 .td-subcat-dropdown:hover .td-subcat-more span,
+    .td-pulldown-syle-3 .td-subcat-dropdown:hover .td-subcat-more i,
+    .td-block-title-wrap .td-wrapper-pulldown-filter .td-pulldown-filter-display-option:hover,
+    .td-block-title-wrap .td-wrapper-pulldown-filter .td-pulldown-filter-display-option:hover i,
+    .td-block-title-wrap .td-wrapper-pulldown-filter .td-pulldown-filter-link:hover,
+    .td-block-title-wrap .td-wrapper-pulldown-filter .td-pulldown-filter-item .td-cur-simple-item,
+    .td_block_template_2 .td-related-title .td-cur-simple-item,
+    .td_block_template_5 .td-related-title .td-cur-simple-item,
+    .td_block_template_6 .td-related-title .td-cur-simple-item,
+    .td_block_template_7 .td-related-title .td-cur-simple-item,
+    .td_block_template_8 .td-related-title .td-cur-simple-item,
+    .td_block_template_9 .td-related-title .td-cur-simple-item,
+    .td_block_template_10 .td-related-title .td-cur-simple-item,
+    .td_block_template_11 .td-related-title .td-cur-simple-item,
+    .td_block_template_12 .td-related-title .td-cur-simple-item,
+    .td_block_template_13 .td-related-title .td-cur-simple-item,
+    .td_block_template_14 .td-related-title .td-cur-simple-item,
+    .td_block_template_15 .td-related-title .td-cur-simple-item,
+    .td_block_template_16 .td-related-title .td-cur-simple-item,
+    .td_block_template_17 .td-related-title .td-cur-simple-item,
+    .td-theme-wrap .sf-menu ul .td-menu-item > a:hover,
+    .td-theme-wrap .sf-menu ul .sfHover > a,
+    .td-theme-wrap .sf-menu ul .current-menu-ancestor > a,
+    .td-theme-wrap .sf-menu ul .current-category-ancestor > a,
+    .td-theme-wrap .sf-menu ul .current-menu-item > a,
+    .td_outlined_btn,
+     .td_block_categories_tags .td-ct-item:hover {
+        color: #e05560;
+    }
+
+    a.vc_btn-black.vc_btn_square_outlined:hover,
+    a.vc_btn-black.vc_btn_outlined:hover,
+    .td-mega-menu-page .wpb_content_element ul li a:hover,
+    .td-theme-wrap .td-aj-search-results .td_module_wrap:hover .entry-title a,
+    .td-theme-wrap .header-search-wrap .result-msg a:hover {
+        color: #e05560 !important;
+    }
+
+    .td-next-prev-wrap a:hover,
+    .td-load-more-wrap a:hover,
+    .td-post-small-box a:hover,
+    .page-nav .current,
+    .page-nav:first-child > div,
+    .td_category_template_8 .td-category-header .td-category a.td-current-sub-category,
+    .td_category_template_4 .td-category-siblings .td-category a:hover,
+    #bbpress-forums .bbp-pagination .current,
+    .post .td_quote_box,
+    .page .td_quote_box,
+    a.vc_btn-black:hover,
+    .td_block_template_5 .td-block-title > *,
+    .td_outlined_btn {
+        border-color: #e05560;
+    }
+
+    .td_wrapper_video_playlist .td_video_currently_playing:after {
+        border-color: #e05560 !important;
+    }
+
+    .header-search-wrap .td-drop-down-search:before {
+        border-color: transparent transparent #e05560 transparent;
+    }
+
+    .block-title > span,
+    .block-title > a,
+    .block-title > label,
+    .widgettitle,
+    .widgettitle:after,
+    .td-trending-now-title,
+    .td-trending-now-wrapper:hover .td-trending-now-title,
+    .wpb_tabs li.ui-tabs-active a,
+    .wpb_tabs li:hover a,
+    .vc_tta-container .vc_tta-color-grey.vc_tta-tabs-position-top.vc_tta-style-classic .vc_tta-tabs-container .vc_tta-tab.vc_active > a,
+    .vc_tta-container .vc_tta-color-grey.vc_tta-tabs-position-top.vc_tta-style-classic .vc_tta-tabs-container .vc_tta-tab:hover > a,
+    .td_block_template_1 .td-related-title .td-cur-simple-item,
+    .woocommerce .product .products h2:not(.woocommerce-loop-product__title),
+    .td-subcat-filter .td-subcat-dropdown:hover .td-subcat-more, 
+    .td_3D_btn,
+    .td_shadow_btn,
+    .td_default_btn,
+    .td_round_btn, 
+    .td_outlined_btn:hover {
+    	background-color: #e05560;
+    }
+
+    .woocommerce div.product .woocommerce-tabs ul.tabs li.active {
+    	background-color: #e05560 !important;
+    }
+
+    .block-title,
+    .td_block_template_1 .td-related-title,
+    .wpb_tabs .wpb_tabs_nav,
+    .vc_tta-container .vc_tta-color-grey.vc_tta-tabs-position-top.vc_tta-style-classic .vc_tta-tabs-container,
+    .woocommerce div.product .woocommerce-tabs ul.tabs:before {
+        border-color: #e05560;
+    }
+    .td_block_wrap .td-subcat-item a.td-cur-simple-item {
+	    color: #e05560;
+	}
+
+
+    
+    .td-grid-style-4 .entry-title
+    {
+        background-color: rgba(224, 85, 96, 0.7);
+    }
+
+    
+    .td-theme-wrap .td-mega-span h3 a {
+        color: #111111;
+    }
+    
+    @media (max-width: 767px) {
+        body .td-header-wrap .td-header-main-menu {
+            background-color: #ffffff !important;
+        }
+    }
+
+
+    
+    @media (max-width: 767px) {
+        body #td-top-mobile-toggle i,
+        .td-header-wrap .header-search-wrap .td-icon-search {
+            color: #1b384d !important;
+        }
+    }
+
+    
+    .td-menu-background:before,
+    .td-search-background:before {
+        background: #000000;
+        background: -moz-linear-gradient(top, #000000 0%, #000000 100%);
+        background: -webkit-gradient(left top, left bottom, color-stop(0%, #000000), color-stop(100%, #000000));
+        background: -webkit-linear-gradient(top, #000000 0%, #000000 100%);
+        background: -o-linear-gradient(top, #000000 0%, #000000 100%);
+        background: -ms-linear-gradient(top, #000000 0%, #000000 100%);
+        background: linear-gradient(to bottom, #000000 0%, #000000 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#000000', GradientType=0 );
+    }
+
+    
+    .td-mobile-content .current-menu-item > a,
+    .td-mobile-content .current-menu-ancestor > a,
+    .td-mobile-content .current-category-ancestor > a,
+    #td-mobile-nav .td-menu-login-section a:hover,
+    #td-mobile-nav .td-register-section a:hover,
+    #td-mobile-nav .td-menu-socials-wrap a:hover i,
+    .td-search-close a:hover i {
+        color: #e05560;
+    }
+
+    
+    .td-footer-wrapper,
+    .td-footer-wrapper .td_block_template_7 .td-block-title > *,
+    .td-footer-wrapper .td_block_template_17 .td-block-title,
+    .td-footer-wrapper .td-block-title-wrap .td-wrapper-pulldown-filter {
+        background-color: #ffffff;
+    }
+
+    
+    .td-sub-footer-container {
+        background-color: #ffffff;
+    }
+
+    
+    .td-sub-footer-container,
+    .td-subfooter-menu li a {
+        color: #494949;
+    }
+
+    
+    .td-subfooter-menu li a:hover {
+        color: rgba(0,0,0,0.7);
+    }
+
+
+    
+    .top-header-menu > li > a,
+    .td-weather-top-widget .td-weather-now .td-big-degrees,
+    .td-weather-top-widget .td-weather-header .td-weather-city,
+    .td-header-sp-top-menu .td_data_time {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:14px;
+	line-height:40px;
+	font-weight:bold;
+	text-transform:uppercase;
+	
+    }
+    
+    .top-header-menu .menu-item-has-children li a {
+    	font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:12px;
+	font-weight:600;
+	text-transform:uppercase;
+	
+    }
+    
+    ul.sf-menu > .td-menu-item > a,
+    .td-theme-wrap .td-header-menu-social {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:20px;
+	line-height:60px;
+	font-weight:bold;
+	text-transform:uppercase;
+	
+    }
+    
+    .sf-menu ul .td-menu-item a {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:18px;
+	font-weight:600;
+	text-transform:uppercase;
+	
+    }
+	
+    .td_mod_mega_menu .item-details a {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:14px;
+	line-height:20px;
+	font-weight:bold;
+	
+    }
+    
+    .td_mega_menu_sub_cats .block-mega-child-cats a {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:16px;
+	font-weight:600;
+	text-transform:uppercase;
+	
+    }
+    
+    .td-mobile-content .td-mobile-main-menu > li > a {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+    
+    .td-mobile-content .sub-menu a {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+    
+    .td-header-wrap .td-logo-text-container .td-logo-text {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+    
+    .td-header-wrap .td-logo-text-container .td-tagline-text {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+
+
+
+	
+    .block-title > span,
+    .block-title > a,
+    .widgettitle,
+    .td-trending-now-title,
+    .wpb_tabs li a,
+    .vc_tta-container .vc_tta-color-grey.vc_tta-tabs-position-top.vc_tta-style-classic .vc_tta-tabs-container .vc_tta-tab > a,
+    .td-theme-wrap .td-related-title a,
+    .woocommerce div.product .woocommerce-tabs ul.tabs li a,
+    .woocommerce .product .products h2:not(.woocommerce-loop-product__title),
+    .td-theme-wrap .td-block-title {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:20px;
+	font-weight:bold;
+	
+    }
+    
+    .td_module_wrap .td-post-author-name a {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:20px;
+	line-height:40px;
+	font-weight:bold;
+	
+    }
+    
+    .td-post-date .entry-date {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+    
+    .td-module-comments a,
+    .td-post-views span,
+    .td-post-comments a {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+    
+    .td-big-grid-meta .td-post-category,
+    .td_module_wrap .td-post-category,
+    .td-module-image .td-post-category {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:20px;
+	line-height:40px;
+	font-weight:bold;
+	text-transform:capitalize;
+	
+    }
+    
+    .td-subcat-filter .td-subcat-dropdown a,
+    .td-subcat-filter .td-subcat-list a,
+    .td-subcat-filter .td-subcat-dropdown span {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+    
+    .td-excerpt,
+    .td_module_14 .td-excerpt {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+
+
+	
+	.td_module_wrap .td-module-title {
+		font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+	}
+     
+    .td_module_1 .td-module-title {
+    	font-size:18px;
+	line-height:38px;
+	font-weight:bold;
+	
+    }
+    
+    .td_module_2 .td-module-title {
+    	font-size:16px;
+	line-height:38px;
+	font-weight:bold;
+	
+    }
+    
+    .td_module_6 .td-module-title {
+    	font-size:20px;
+	line-height:24px;
+	font-weight:bold;
+	
+    }
+    
+    .td_module_8 .td-module-title {
+    	font-size:32px;
+	line-height:38px;
+	font-weight:bold;
+	
+    }
+    
+    .td_module_18 .td-module-title {
+    	font-size:30px;
+	line-height:56px;
+	font-weight:bold;
+	
+    }
+    
+    .td_module_19 .td-module-title {
+    	font-size:30px;
+	line-height:56px;
+	font-weight:bold;
+	
+    }
+
+
+
+
+	
+	.td_block_trending_now .entry-title,
+	.td-theme-slider .td-module-title,
+    .td-big-grid-post .entry-title {
+		font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+	}
+    
+    .td_module_mx18 .td-module-title {
+    	font-size:32px;
+	line-height:36px;
+	font-weight:bold;
+	
+    }
+    
+    .td_block_trending_now .entry-title {
+    	font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+    }
+    
+	#td-mobile-nav,
+	#td-mobile-nav .wpb_button,
+	.td-search-wrap-mob {
+		font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+	}
+
+
+	
+	.post .td-post-header .entry-title {
+		font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+	}
+    
+    .td-post-template-default .td-post-header .entry-title {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:15px;
+	
+    }
+    
+    .td-post-template-4 .td-post-header .entry-title {
+        font-size:25px;
+	line-height:32px;
+	font-weight:bold;
+	
+    }
+    
+    .td-post-content p,
+    .td-post-content {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:15px;
+	line-height:24px;
+	
+    }
+    
+    .post blockquote p,
+    .page blockquote p,
+    .td-post-text-content blockquote p {
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-weight:600;
+	
+    }
+    
+    .post .td-post-next-prev-content a {
+        font-family:"Work Sans";
+	font-size:20px;
+	line-height:24px;
+	font-weight:bold;
+	
+    }
+    
+    .td_block_related_posts .entry-title a {
+        font-family:"Work Sans";
+	font-size:20px;
+	line-height:24px;
+	font-weight:bold;
+	
+    }
+    
+    .td-page-title,
+    .woocommerce-page .page-title,
+    .td-category-title-holder .td-page-title {
+    	font-family:"Work Sans";
+	font-size:20px;
+	font-weight:600;
+	
+    }
+    
+	.footer-text-wrap {
+		font-family:"Work Sans";
+	font-size:16px;
+	line-height:20px;
+	font-weight:600;
+	
+	}
+	
+	.td-sub-footer-copy {
+		font-size:13px;
+	
+	}
+	
+	.td-sub-footer-menu ul li a {
+		font-size:15px;
+	
+	}
+
+
+
+
+	
+    .widget_archive a,
+    .widget_calendar,
+    .widget_categories a,
+    .widget_nav_menu a,
+    .widget_meta a,
+    .widget_pages a,
+    .widget_recent_comments a,
+    .widget_recent_entries a,
+    .widget_text .textwidget,
+    .widget_tag_cloud a,
+    .widget_search input,
+    .woocommerce .product-categories a,
+    .widget_display_forums a,
+    .widget_display_replies a,
+    .widget_display_topics a,
+    .widget_display_views a,
+    .widget_display_stats {
+    	font-family:"Work Sans";
+	font-size:20px;
+	line-height:24px;
+	font-weight:bold;
+	
+    }
+    
+    body, p {
+    	font-size:16px;
+	
+    }
+
+
+
+
+    
+    .top-header-menu > li,
+    .td-header-sp-top-menu,
+    #td-outer-wrap .td-header-sp-top-widget .td-search-btns-wrap,
+    #td-outer-wrap .td-header-sp-top-widget .td-social-icon-wrap {
+        line-height: 40px;
+    }
+
+    
+    @media (min-width: 768px) {
+        .td-header-style-4 .td-main-menu-logo img,
+        .td-header-style-5 .td-main-menu-logo img,
+        .td-header-style-6 .td-main-menu-logo img,
+        .td-header-style-7 .td-header-sp-logo img,
+        .td-header-style-12 .td-main-menu-logo img {
+            max-height: 60px;
+        }
+        .td-header-style-4 .td-main-menu-logo,
+        .td-header-style-5 .td-main-menu-logo,
+        .td-header-style-6 .td-main-menu-logo,
+        .td-header-style-7 .td-header-sp-logo,
+        .td-header-style-12 .td-main-menu-logo {
+            height: 60px;
+        }
+        .td-header-style-4 .td-main-menu-logo a,
+        .td-header-style-5 .td-main-menu-logo a,
+        .td-header-style-6 .td-main-menu-logo a,
+        .td-header-style-7 .td-header-sp-logo a,
+        .td-header-style-7 .td-header-sp-logo img,
+        .td-header-style-12 .td-main-menu-logo a,
+        .td-header-style-12 .td-header-menu-wrap .sf-menu > li > a {
+            line-height: 60px;
+        }
+        .td-header-style-7 .sf-menu,
+        .td-header-style-7 .td-header-menu-social {
+            margin-top: 0;
+        }
+        .td-header-style-7 #td-top-search {
+            top: 0;
+            bottom: 0;
+        }
+        .td-header-wrap .header-search-wrap #td-header-search-button .td-icon-search {
+            line-height: 60px;
+        }
+    }
+
+
+
+/* Style generated by theme for demo: week */
+
+.td-week .td-header-style-10 .sf-menu > li > a:hover,
+		.td-week .td-header-style-10 .sf-menu > .sfHover > a,
+		.td-week .td-header-style-10 .sf-menu > .current-menu-item > a,
+		.td-week .td-header-style-10 .sf-menu > .current-menu-ancestor > a,
+		.td-week .td-header-style-10 .sf-menu > .current-category-ancestor > a,
+		.td-week .td_module_1 .td-module-image .td-post-category,
+		.td-week .td_module_2 .td-module-image .td-post-category,
+		.td-week .td_module_8 .td-post-category,
+		.td-week .td_module_18 .td-post-category {
+           color: #e05560;
+        }
+    }
+</style>
+
+<script>
+var _croID = '5dd343d8e4b068537d323a76';
+function getMoreRecommend(e,n){"undefined"!=typeof globalCRO?new globalCRO.MoreRecommendData(e,n):
+("undefined"==typeof gCroRCData&&(window.gCroRCData=new Array),gCroRCData.push({config:e,callback:n}))}
+function createMoreRCView(e){"undefined"!=typeof globalCRO?new globalCRO.MoreRecommendView(e):
+("undefined"==typeof gCroRCV&&(window.gCroRCV=new Array),gCroRCV.push({config:e}))}
+function mcroPushEvent(n){"undefined"!=typeof globalCRO?globalCRO.sendEvent(n):
+("undefined"==typeof gCro&&(window.gCro=new Array),gCro.push(n))}
+function _cro_initialize(){window.globalCRO=new MCro,globalCRO.jsInit(_croID)}
+</script>
+<script async type="text/javascript" src="//cro.myshp.us/resources/common/js/more-common.js"></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-146784704-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-146784704-1');
+</script>
+<meta name="naver-site-verification" content="383e38573422c92c89c9e568d5cc0b91ad37ee22"/>
+
+<meta name="title" content="
+모비인사이드 MOBIINSIDE">
+<meta name="description" property="og:description" content="
+국내외 IT, 마케팅, 비즈니스 소식을 전하는 스타트업 미디어">
+<meta name="url" property="og:url" content="https://www.mobiinside.co.kr">
+<script id="mcjs">!function(c,h,i,m,p){m=c.createElement(h),p=c.getElementsByTagName(h)[0],m.async=1,m.src=i,p.parentNode.insertBefore(m,p)}(document,"script","https://chimpstatic.com/mcjs-connected/js/users/a038c27b3bd7ce34b911546f6/e216ff3ca1290a4ed3df84e13.js");</script>
+<meta name="google-site-verification" content="vXaFd3dO51v1-lX-01KrN6suK5tH-YrZBmwx1hMrIPQ" />
+
+<script id="mcjs">!function(c,h,i,m,p){m=c.createElement(h),p=c.getElementsByTagName(h)[0],m.async=1,m.src=i,p.parentNode.insertBefore(m,p)}(document,"script","https://chimpstatic.com/mcjs-connected/js/users/a038c27b3bd7ce34b911546f6/e216ff3ca1290a4ed3df84e13.js");</script>
+<span itemscope="" itemtype="http://schema.org/Organization">
+ <link itemprop="url" href="https://www.mobiinside.co.kr">
+<a itemprop="sameAs" href="http://naver.me/FbGrZn4K"></a>
+ <a itemprop="sameAs" href="https://www.facebook.com/mobiinside.co.kr/"></a>
+ <a itemprop="sameAs" href="https://twitter.com/mobiinside"></a>
+ <a itemprop="sameAs" href="https://brunch.co.kr/@mobiinside"></a>
+</span>
+
+
+
+<script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "item": {
+                    "@type": "WebSite",
+                    "@id": "https://www.mobiinside.co.kr/",
+                    "name": "Home"
+                }
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                    "item": {
+                    "@type": "WebPage",
+                    "@id": "https://www.mobiinside.co.kr/category/tech-ai/",
+                    "name": "테크/AI"
+                }
+            }    
+        ]
+    }
+</script>
+		<style type="text/css" id="wp-custom-css">
+			.cosmosfarm-share-buttons img { margin: 0; }
+
+#popbg, #popup14{display: none}
+#popbg{background: rgba(0,0,0,0.7);position:fixed;top:0;left:0;z-index:999999;}
+#popup14{position:fixed;top:50%;left:50%;z-index:9999999;transform:translate(-50%, -50%);width: 50%;max-width: 600px;background-color: #fff;padding-bottom: 35px;/*padding: 10px;width: 380px;height: 443px;*/}
+/*#popup14::before{content:"";display:block;background: url(https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2021/01/25113910/popup.jpg) no-repeat center;width: 380px; height: 423px;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);}
+#popup14 img{display: none;}
+#popup14::before, #popup14::after{content:"";display:block;clear:both;}
+#popup14 img{display: block;}
+#popup14 .todaycloseWin{float: left;font-size: 14px;}
+#popup14 .closeWin{float: right;font-size: 14px;}*/
+#popup14 a{display: block;}
+#popup14 img{display: block;}
+#popup14 .todaycloseWin{font-size: 14px;position:absolute;left: 3%;bottom:7px;color: #000;}
+#popup14 .closeWin{font-size: 14px;position:absolute;right: 3%;bottom: 7px;color: #000}
+
+@media screen and (max-width: 768px){
+	#popup14{width: 85%;max-width: 380px;/*padding:0 0 2%;height: 100vw;max-height: 440px;max-height: 620px;overflow-y: scroll;height: 45vh;*/}
+	/*#popup14::before{background-size: 100%;width: 100%;height: 100vw;max-height: 423px;}*/
+	#popup14 img{width: 100%;}
+	/*#popup14 .todaycloseWin{font-size: 12px;position:static;display:block;padding-left: 3%;margin-top: -28px}
+	#popup14 .closeWin{font-size: 12px;position:static;display:block;padding-right: 3%;margin-top: -23px;text-align:right;}*/
+	#popup14 .todaycloseWin{font-size: 12px;}
+	#popup14 .closeWin{font-size: 12px;}
+}
+@media screen and (max-width: 460px){
+	#popup14{width: 80%;transform:translate(-50%, -45%);}
+}
+.policy-highlight a {
+  font-weight: bold;
+}
+
+/* 테이블 블록: 모든 테두리 제거 */
+.wp-block-table table {
+  border: none !important;
+  border-collapse: collapse;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.wp-block-table th,
+.wp-block-table td {
+  border: none !important;
+}
+
+/* Author bio newline workaround (CSS only - improved) */
+.td-author-description,
+.td-author-content,
+.td-post-author-content {
+  white-space: pre-wrap;
+  overflow: visible;
+}
+.td-post-author-content,
+.td-post-author-content * {
+  overflow: visible !important;
+}
+.td-social-icon-wrap i.td-icon-youtube {
+  text-indent: 0 !important;
+  background: none !important;
+}		</style>
+		
+<!-- Button style compiled by theme -->
+
+<style>
+    .tdm-menu-active-style3 .tdm-header.td-header-wrap .sf-menu > .current-category-ancestor > a,
+                .tdm-menu-active-style3 .tdm-header.td-header-wrap .sf-menu > .current-menu-ancestor > a,
+                .tdm-menu-active-style3 .tdm-header.td-header-wrap .sf-menu > .current-menu-item > a,
+                .tdm-menu-active-style3 .tdm-header.td-header-wrap .sf-menu > .sfHover > a,
+                .tdm-menu-active-style3 .tdm-header.td-header-wrap .sf-menu > li > a:hover,
+                .tdm_block_column_content:hover .tdm-col-content-title-url .tdm-title,
+                .tds-button2 .tdm-btn-text,
+                .tds-button2 i,
+                .tds-button5:hover .tdm-btn-text,
+                .tds-button5:hover i,
+                .tds-button6 .tdm-btn-text,
+                .tds-button6 i,
+                .tdm_block_list .tdm-list-item i,
+                .tdm_block_pricing .tdm-pricing-feature i,
+                .tdm-social-item i {
+                  color: #e05560;
+                }
+                .tdm-menu-active-style5 .td-header-menu-wrap .sf-menu > .current-menu-item > a,
+                .tdm-menu-active-style5 .td-header-menu-wrap .sf-menu > .current-menu-ancestor > a,
+                .tdm-menu-active-style5 .td-header-menu-wrap .sf-menu > .current-category-ancestor > a,
+                .tdm-menu-active-style5 .td-header-menu-wrap .sf-menu > li > a:hover,
+                .tdm-menu-active-style5 .td-header-menu-wrap .sf-menu > .sfHover > a,
+                .tds-button1,
+                .tds-button6:after,
+                .tds-title2 .tdm-title-line:after,
+                .tds-title3 .tdm-title-line:after,
+                .tdm_block_pricing.tdm-pricing-featured:before,
+                .tdm_block_pricing.tds_pricing2_block.tdm-pricing-featured .tdm-pricing-header,
+                .tds-progress-bar1 .tdm-progress-bar:after,
+                .tds-progress-bar2 .tdm-progress-bar:after,
+                .tds-social3 .tdm-social-item {
+                  background-color: #e05560;
+                }
+                .tdm-menu-active-style4 .tdm-header .sf-menu > .current-menu-item > a,
+                .tdm-menu-active-style4 .tdm-header .sf-menu > .current-menu-ancestor > a,
+                .tdm-menu-active-style4 .tdm-header .sf-menu > .current-category-ancestor > a,
+                .tdm-menu-active-style4 .tdm-header .sf-menu > li > a:hover,
+                .tdm-menu-active-style4 .tdm-header .sf-menu > .sfHover > a,
+                .tds-button2:before,
+                .tds-button6:before,
+                .tds-progress-bar3 .tdm-progress-bar:after {
+                  border-color: #e05560;
+                }
+                .tdm-btn-style1 {
+					background-color: #e05560;
+				}
+				.tdm-btn-style2:before {
+				    border-color: #e05560;
+				}
+				.tdm-btn-style2 {
+				    color: #e05560;
+				}
+				.tdm-btn-style3 {
+				    -webkit-box-shadow: 0 2px 16px #e05560;
+                    -moz-box-shadow: 0 2px 16px #e05560;
+                    box-shadow: 0 2px 16px #e05560;
+				}
+				.tdm-btn-style3:hover {
+				    -webkit-box-shadow: 0 4px 26px #e05560;
+                    -moz-box-shadow: 0 4px 26px #e05560;
+                    box-shadow: 0 4px 26px #e05560;
+				}
+				
+				
+                .tdm-menu-active-style2 .tdm-header ul.sf-menu > .td-menu-item,
+                .tdm-menu-active-style4 .tdm-header ul.sf-menu > .td-menu-item,
+                .tdm-header .tdm-header-menu-btns,
+                .tdm-header-style-1 .td-main-menu-logo a,
+                .tdm-header-style-2 .td-main-menu-logo a,
+                .tdm-header-style-3 .td-main-menu-logo a {
+                    line-height: 60px;
+                }
+                .tdm-header-style-1 .td-main-menu-logo,
+                .tdm-header-style-2 .td-main-menu-logo,
+                .tdm-header-style-3 .td-main-menu-logo {
+                    height: 60px;
+                }
+                @media (min-width: 767px) {
+                    .tdm-header-style-1 .td-main-menu-logo img, 
+                    .tdm-header-style-2 .td-main-menu-logo img, 
+                    .tdm-header-style-3 .td-main-menu-logo img {
+                        max-height: 60px;
+                    }
+                }
+</style>
+
+</head>
+
+<body class="post-template-default single single-post postid-126272 single-format-standard tdm-menu-active-style3 mcp global-block-template-1 td-week single_template_3 td-full-layout" itemscope="itemscope" itemtype="https://schema.org/WebPage">
+
+        <div class="td-scroll-up"><i class="td-icon-menu-up"></i></div>
+
+    <div class="td-menu-background"></div>
+<div id="td-mobile-nav">
+    <div class="td-mobile-container">
+        <!-- mobile menu top section -->
+        <div class="td-menu-socials-wrap">
+            <!-- socials -->
+            <div class="td-menu-socials">
+                            </div>
+            <!-- close button -->
+            <div class="td-mobile-close">
+                <a href="#"><i class="td-icon-close-mobile"></i></a>
+            </div>
+        </div>
+
+        <!-- login section -->
+        
+        <!-- menu section -->
+        <div class="td-mobile-content">
+            <div class="menu-category-manu-container"><ul id="menu-category-manu" class="td-mobile-main-menu"><li id="menu-item-123527" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-first menu-item-123527"><a href="https://www.mobiinside.co.kr/menu-content/">CONTENT<i class="td-icon-menu-right td-element-after"></i></a>
+<ul class="sub-menu">
+	<li id="menu-item-123533" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123533"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-marketing-brand/">마케팅/브랜드</a></li>
+	<li id="menu-item-123530" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123530"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-trend/">트렌드</a></li>
+	<li id="menu-item-123532" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123532"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-business-startup/">비즈니스/스타트업</a></li>
+	<li id="menu-item-123531" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123531"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-career/">커리어/HR</a></li>
+	<li id="menu-item-123529" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123529"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-tech-ai/">테크/AI</a></li>
+	<li id="menu-item-129967" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-129967"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-ip/">IP</a></li>
+	<li id="menu-item-123528" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123528"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-game/">게임</a></li>
+</ul>
+</li>
+<li id="menu-item-123522" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-123522"><a href="https://www.mobiinside.co.kr/menu-inside/">INSIDE<i class="td-icon-menu-right td-element-after"></i></a>
+<ul class="sub-menu">
+	<li id="menu-item-123526" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123526"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-studio/">STUDIO</a></li>
+	<li id="menu-item-123525" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123525"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-post/">POST</a></li>
+	<li id="menu-item-123524" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123524"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-landscape/">랜드스케이프</a></li>
+	<li id="menu-item-123523" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123523"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-insideranking/">인사이드랭킹</a></li>
+</ul>
+</li>
+<li id="menu-item-123480" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-123480"><a href="https://www.mobiinside.co.kr/news-3/">NEWS<i class="td-icon-menu-right td-element-after"></i></a>
+<ul class="sub-menu">
+	<li id="menu-item-123478" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123478"><a href="https://www.mobiinside.co.kr/news-3/%eb%b3%b4%eb%8f%84%ec%9e%90%eb%a3%8c/">보도자료</a></li>
+	<li id="menu-item-123479" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-123479"><a href="https://www.mobiinside.co.kr/news-3/global-2/">GLOBAL</a></li>
+</ul>
+</li>
+<li id="menu-item-123190" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-123190"><a target="_blank" href="https://us11.campaign-archive.com/home/?u=a038c27b3bd7ce34b911546f6&#038;id=3a3e2d93e6">Newsletter</a></li>
+</ul></div>        </div>
+    </div>
+
+    <!-- register/login section -->
+    </div>    <div class="td-search-background"></div>
+<div class="td-search-wrap-mob">
+	<div class="td-drop-down-search" aria-labelledby="td-header-search-button">
+		<form method="get" class="td-search-form" action="https://www.mobiinside.co.kr/">
+			<!-- close button -->
+			<div class="td-search-close">
+				<a href="#"><i class="td-icon-close-mobile"></i></a>
+			</div>
+			<div role="search" class="td-search-input">
+				<span>Search</span>
+				<input id="td-header-search-mob" type="text" value="" name="s" autocomplete="off" />
+			</div>
+		</form>
+		<div id="td-aj-search-mob"></div>
+	</div>
+</div>
+
+    <div id="td-outer-wrap" class="td-theme-wrap">
+    
+        
+            <div class="tdc-header-wrap ">
+
+            <!--
+Header style 1
+-->
+
+
+<div class="td-header-wrap td-header-style-1 ">
+    
+    <div class="td-header-top-menu-full td-container-wrap td_stretch_container td_stretch_content_1200">
+        <div class="td-container td-header-row td-header-top-menu">
+            
+    <div class="top-bar-style-2">
+        <div class="td-header-sp-top-widget">
+    
+    </div>        
+<div class="td-header-sp-top-menu">
+
+
+	<div class="menu-top-container"><ul id="menu-top_menu_new" class="top-header-menu"><li id="menu-item-43115" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-first td-menu-item td-normal-menu menu-item-43115"><a href="https://www.mobiinside.co.kr/ad/">광고문의</a></li>
+<li id="menu-item-43253" class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-43253"><a href="https://www.mobiinside.co.kr/editor_apply/">필진지원</a></li>
+</ul></div></div>
+    </div>
+
+<!-- LOGIN MODAL -->
+        </div>
+    </div>
+
+    <div class="td-banner-wrap-full td-logo-wrap-full td-container-wrap td_stretch_container td_stretch_content_1200">
+        <div class="td-container td-header-row td-header-header">
+            <div class="td-header-sp-logo">
+                        <a class="td-main-logo" href="https://www.mobiinside.co.kr/">
+            <img class="td-retina-data" data-retina="https://s3-ap-northeast-2.amazonaws.com/mobiinsidecontent/kr/wp-content/uploads/2019/08/08110701/mobiinside_logo-2-1.png" src="https://s3-ap-northeast-2.amazonaws.com/mobiinsidecontent/kr/wp-content/uploads/2019/08/08110701/mobiinside_logo-2-1.png" alt="MOBIINSIDE"/>
+            <span class="td-visual-hidden">모비인사이드 MOBIINSIDE</span>
+        </a>
+                </div>
+                    </div>
+    </div>
+
+    <div class="td-header-menu-wrap-full td-container-wrap td_stretch_container td_stretch_content_1200">
+        
+        <div class="td-header-menu-wrap td-header-gradient ">
+            <div class="td-container td-header-row td-header-main-menu">
+                <div id="td-header-menu" role="navigation">
+    <div id="td-top-mobile-toggle"><a href="#"><i class="td-icon-font td-icon-mobile"></i></a></div>
+    <div class="td-main-menu-logo td-logo-in-header">
+                <a class="td-main-logo" href="https://www.mobiinside.co.kr/">
+            <img class="td-retina-data" data-retina="https://s3-ap-northeast-2.amazonaws.com/mobiinsidecontent/kr/wp-content/uploads/2019/08/08110701/mobiinside_logo-2-1.png" src="https://s3-ap-northeast-2.amazonaws.com/mobiinsidecontent/kr/wp-content/uploads/2019/08/08110701/mobiinside_logo-2-1.png" alt="MOBIINSIDE"/>
+        </a>
+        </div>
+    <div class="menu-category-manu-container"><ul id="menu-category-manu-1" class="sf-menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-first td-menu-item td-normal-menu menu-item-123527"><a href="https://www.mobiinside.co.kr/menu-content/">CONTENT</a>
+<ul class="sub-menu">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123533"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-marketing-brand/">마케팅/브랜드</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123530"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-trend/">트렌드</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123532"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-business-startup/">비즈니스/스타트업</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123531"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-career/">커리어/HR</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123529"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-tech-ai/">테크/AI</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-129967"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-ip/">IP</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123528"><a href="https://www.mobiinside.co.kr/menu-content/menu-content-game/">게임</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children td-menu-item td-normal-menu menu-item-123522"><a href="https://www.mobiinside.co.kr/menu-inside/">INSIDE</a>
+<ul class="sub-menu">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123526"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-studio/">STUDIO</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123525"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-post/">POST</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123524"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-landscape/">랜드스케이프</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123523"><a href="https://www.mobiinside.co.kr/menu-inside/menu-inside-insideranking/">인사이드랭킹</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children td-menu-item td-normal-menu menu-item-123480"><a href="https://www.mobiinside.co.kr/news-3/">NEWS</a>
+<ul class="sub-menu">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123478"><a href="https://www.mobiinside.co.kr/news-3/%eb%b3%b4%eb%8f%84%ec%9e%90%eb%a3%8c/">보도자료</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-123479"><a href="https://www.mobiinside.co.kr/news-3/global-2/">GLOBAL</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom td-menu-item td-normal-menu menu-item-123190"><a target="_blank" href="https://us11.campaign-archive.com/home/?u=a038c27b3bd7ce34b911546f6&#038;id=3a3e2d93e6">Newsletter</a></li>
+</ul></div></div>
+
+
+    <div class="header-search-wrap">
+        <div class="td-search-btns-wrap">
+            <a id="td-header-search-button" href="#" role="button" class="dropdown-toggle " data-toggle="dropdown"><i class="td-icon-search"></i></a>
+            <a id="td-header-search-button-mob" href="#" class="dropdown-toggle " data-toggle="dropdown"><i class="td-icon-search"></i></a>
+        </div>
+
+        <div class="td-drop-down-search" aria-labelledby="td-header-search-button">
+            <form method="get" class="td-search-form" action="https://www.mobiinside.co.kr/">
+                <div role="search" class="td-head-form-search-wrap">
+                    <input id="td-header-search" type="text" value="" name="s" autocomplete="off" /><input class="wpb_button wpb_btn-inverse btn" type="submit" id="td-header-search-top" value="Search" />
+                </div>
+            </form>
+            <div id="td-aj-search"></div>
+        </div>
+    </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+            </div>
+
+            
+<article id="post-126272" class="td-post-template-3 post-126272 post type-post status-publish format-standard has-post-thumbnail category-tech-ai tag-ai-ui- tag-ai--ux tag-ai- tag-ai-- tag-cursor-ai tag-figma tag-figma- tag-mcp tag-mcp- tag-ui- tag-ux- tag-35737 tag-35734 tag-4374 tag-35741 tag-26887 tag-35735 tag-26897 tag-35739 tag--ai tag-35745 tag-35742 tag-33819 tag-33816 tag-35740 tag-33818 tag-35736 tag-21154 tag-35733 td-container-wrap" itemscope itemtype="https://schema.org/Article">
+    <div class="td-post-header td-container">
+        <div class="td-crumb-container"><div class="entry-crumbs"><span><a title="" class="entry-crumb" href="https://www.mobiinside.co.kr/">Home</a></span> <i class="td-icon-right td-bread-sep td-bred-no-url-last"></i> <span class="td-bred-no-url-last">테크/AI</span></div></div>
+        <div class="td-post-header-holder td-image-gradient">
+            <div class="td-post-featured-image"><a href="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1.png" data-caption=""><img width="1068" height="591" class="entry-thumb td-modal-image" src="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-1068x591.png" srcset="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-1068x591.png 1068w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-300x166.png 300w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-1024x566.png 1024w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-768x425.png 768w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-696x385.png 696w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-759x420.png 759w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1.png 1280w" sizes="(max-width: 1068px) 100vw, 1068px" alt="" title="다운로드"/></a></div>
+            <header class="td-post-title">
+                <ul class="td-category"><li class="entry-category"><a  href="https://www.mobiinside.co.kr/category/tech-ai/">테크/AI</a></li></ul>                <h1 class="entry-title">[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?</h1>
+
+                
+
+                <div class="td-module-meta-info">
+                    <div class="td-post-author-name"><div class="td-author-by">By</div> <a href="https://www.mobiinside.co.kr/author/hsyoo/">유훈식</a><div class="td-author-line"> - </div> </div>                    <span class="td-post-date"><time class="entry-date updated td-module-date" datetime="2025-06-25T14:01:49+00:00" >6월 25, 2025</time></span>                                                        </div>
+
+            </header>
+        </div>
+    </div>
+
+    <div class="td-container">
+        <div class="td-pb-row">
+                                <div class="td-pb-span8 td-main-content" role="main">
+                        <div class="td-ss-main-content">
+                            
+    
+    <div class="td-post-content tagdiv-type">
+        <div class="td-a-rec td-a-rec-id-content_top  td-rec-hide-on-p td_uid_2_6a6221e15f9bc_rand td_block_template_1">
+<style>
+/* custom css */
+.td_uid_2_6a6221e15f9bc_rand.td-a-rec-img {
+				    text-align: left;
+				}
+				.td_uid_2_6a6221e15f9bc_rand.td-a-rec-img img {
+                    margin: 0 auto 0 0;
+                }
+</style><iframe src='https://compass.adop.cc/RD/a1552b83-d607-4574-bd5c-c9c635e1e1cc?type=iframe&amp;loc=&amp;size_width=728&amp;size_height=90' id='a1552b83-d607-4574-bd5c-c9c635e1e1cc' frameBorder='0' marginWidth='0' marginHeight='0' paddingWidth='0' paddingHeight='0' scrolling='no' style='width: 728px; height: 90px;'></iframe></div><div class="cosmosfarm-share-buttons cosmosfarm-share-buttons-default cosmosfarm-align-left">
+	<span class="cosmosfarm-share-button-title">
+		<picture>
+			<source media="(min-width: 600px)" srcset="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-share-32.png">
+			<img decoding="async" src="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-share.png" alt="공유하기" title="공유하기">
+		</picture>
+	</span>
+		<button class="cosmosfarm-share-button cosmosfarm-naver" onclick="return cosmosfarm_share('naver', 'https://www.mobiinside.co.kr/?p=126272', '[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?');">
+		<picture>
+			<source media="(min-width: 600px)" srcset="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-naver-32.png">
+			<img decoding="async" src="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-naver.png" alt="네이버" title="네이버">
+		</picture>
+	</button>
+		<button class="cosmosfarm-share-button cosmosfarm-facebook" onclick="return cosmosfarm_share('facebook', 'https://www.mobiinside.co.kr/?p=126272', '[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?');">
+		<picture>
+			<source media="(min-width: 600px)" srcset="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-facebook-32.png">
+			<img decoding="async" src="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-facebook.png" alt="페이스북" title="페이스북">
+		</picture>
+	</button>
+		<button class="cosmosfarm-share-button cosmosfarm-twitter" onclick="return cosmosfarm_share('twitter', 'https://www.mobiinside.co.kr/?p=126272', '[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?');">
+		<picture>
+			<source media="(min-width: 600px)" srcset="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-twitter-32.png">
+			<img decoding="async" src="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-twitter.png" alt="트위터" title="트위터">
+		</picture>
+	</button>
+		<button class="cosmosfarm-share-button cosmosfarm-band" onclick="return cosmosfarm_share('band', 'https://www.mobiinside.co.kr/?p=126272', '[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?');">
+		<picture>
+			<source media="(min-width: 600px)" srcset="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-band-32.png">
+			<img decoding="async" src="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-band.png" alt="밴드" title="밴드">
+		</picture>
+	</button>
+		<button class="cosmosfarm-share-button cosmosfarm-line" onclick="return cosmosfarm_share('line', 'https://www.mobiinside.co.kr/?p=126272', '[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?');">
+		<picture>
+			<source media="(min-width: 600px)" srcset="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-line-32.png">
+			<img decoding="async" src="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/layout/default/images/icon-line.png" alt="라인" title="라인">
+		</picture>
+	</button>
+	</div><div class="likebtn_container" style=""><!-- LikeBtn.com BEGIN --><span class="likebtn-wrapper"  data-identifier="post_126272"  data-site_id="5d6673e9943ec97278de508d"  data-theme="angular"  data-lang="ko"  data-dislike_enabled="false"  data-share_size="small"  data-tooltip_enabled="false"  data-i18n_like="추천하기"  data-i18n_after_like="추천"  data-i18n_like_tooltip="로그인이 필요합니다."  data-i18n_unlike_tooltip="추천 취소"  data-i18n_share_text="플러그인 공유"  data-i18n_popup_close="닫기"  data-style=""  data-unlike_allowed=""  data-show_copyright=""  data-item_url="https://www.mobiinside.co.kr/2025/06/25/mcp/"  data-item_title="[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?"  data-item_image="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1-1024x566.png"  data-item_date="2025-06-25T14:01:49+09:00"  data-engine="WordPress"  data-plugin_v="2.6.59"  data-prx="https://www.mobiinside.co.kr/wp-admin/admin-ajax.php?action=likebtn_prx"  data-event_handler="likebtn_eh" ></span><!-- LikeBtn.com END --></div>
+<h2 class="wrap_item item_type_text" data-block-index="1" data-shown="true"><span style="color: #050099;"><b>MCP로 이어지는 Cursor AI와 Figma 연동 이해하기</b></span></h2>
+<p> </p><div class="td-a-rec td-a-rec-id-content_inline  td-rec-hide-on-m td-rec-hide-on-tl td-rec-hide-on-tp td_uid_1_6a6221e15f31d_rand td_block_template_1">
+<style>
+/* custom css */
+.td_uid_1_6a6221e15f31d_rand.td-a-rec-img {
+				    text-align: left;
+				}
+				.td_uid_1_6a6221e15f31d_rand.td-a-rec-img img {
+                    margin: 0 auto 0 0;
+                }
+</style><script  src='https://compass.adop.cc/assets/js/adop/adopJ.js?v=14' ></script><ins class='adsbyadop' _adop_zon = '7100da65-0bd9-48b7-968d-fd3f8855207e' _adop_type = 're' style='display:inline-block;width:320px;height:100px;' _page_url=''></ins></div>
+<p class="wrap_item item_type_text" data-block-index="2" data-shown="true">MCP로 Cursor AI와 Figma를 연동하면 UX/UI 디자이너와 프로덕트 디자이너들에게 무엇이 좋을까? 먼저 MCP가 무엇인지 간단히 짚고 넘어가자. MCP(Model Context Protocol)는 AI 모델과 애플리케이션 간의 통신을 위한 개방형 표준 프로토콜로서, 일종의 “AI용 USB-C 단자” 역할을 한다고 볼 수 있다.</p>
+<p data-block-index="2" data-shown="true"> </p>
+<p class="wrap_item item_type_text" data-block-index="2" data-shown="true">AI 어시스턴트가 MCP 클라이언트를 통해 외부 도구의 정보를 읽어오고, 다시 그 도구에 명령을 전달하는 식으로 동작한다. 이 구조 덕분에 AI는 더 이상 제한된 자체 지식만으로 추측하지 않고, Figma의 실제 디자인 데이터와 맥락을 직접 파악하여 “상황 파악”을 할 수 있게 된다.</p>
+<p data-block-index="2" data-shown="true"> </p>
+<p class="wrap_item item_type_text" data-block-index="4" data-shown="true"><strong>이러한 MCP 기반의 Cursor AI–Figma 연동은 결과적으로 디자인-개발 프로세스 전반에 걸쳐 “자동화”와 “지능화”를 실현한다. </strong>이제 디자이너와 개발자는 각자 전문 역량을 더 창의적이고 핵심적인 작업에 집중할 수 있게 되었고, 반복적이고 지루한 전환 작업은 AI가 맡아 처리한다. 구체적으로 MCP로 Cursor AI와 Figma를 연결하면 어떤 일들이 가능할까? 현재 공개된 구현들을 살펴보면 다음과 같은 작업들이 실현되고 있다.</p>
+<p data-block-index="4" data-shown="true"> </p>
+<p data-block-index="4" data-shown="true"> </p>
+<div class="wrap_item item_type_img " data-app="{&quot;type&quot;:&quot;gridGallery&quot;,&quot;caption&quot;:&quot;&quot;,&quot;displayOption&quot;:&quot;ContentFit&quot;,&quot;images&quot;:[{&quot;url&quot;:&quot;http://t1.daumcdn.net/brunch/service/user/3XFk/image/22amgrgr7TXVmYYIoNV_nekNCZI.png&quot;,&quot;width&quot;:&quot;1788&quot;,&quot;height&quot;:&quot;1048&quot;,&quot;originalName&quot;:&quot;MCP 소개 글 - visual selection (3).png&quot;}]}" data-block-index="5" data-shown="true">
+<div class="wrap_content mobile_align_full">
+<div class="wrap_img_float"><img decoding="async" class="aligncenter" src="http://t1.daumcdn.net/brunch/service/user/3XFk/image/22amgrgr7TXVmYYIoNV_nekNCZI.png" alt="MCP 소개 글 - visual selection (3).png" data-phocus-index="0" /></div>
+</div>
+</div>
+<p data-block-index="6" data-shown="false"> </p>
+<p data-block-index="6" data-shown="false"> </p>
+<h3 class="wrap_item item_type_text" data-block-index="6" data-shown="false"><span style="color: #2e75b6;"><b>디자인 → 코드 자동 변환:</b></span></h3>
+<p class="wrap_item item_type_text" data-block-index="7" data-shown="false">Figma 디자인을 그대로 받아와 대응되는 프론트엔드 코드를 생성할 수 있다. 이제 AI가 Figma에서 버튼, 폰트, 레이아웃 같은 실제 UI 구성요소 데이터를 바로 가져와 코드를 만들어주므로, 사람이 일일이 CSS를 추측하며 작성할 필요가 없다. 실제로 한 개발자는 이 방식을 이용해 Figma의 카드 컴포넌트를 10분도 안 되어 React 코드로 변환했다는 경험을 공유했다. 그만큼 개발 속도가 획기적으로 빨라지는 것이다.</p>
+<p data-block-index="7" data-shown="false"> </p>
+<h3 class="wrap_item item_type_text" data-block-index="9" data-shown="false"><span style="color: #2e75b6;"><b>코드 → 디자인 자동 생성:</b></span></h3>
+<p class="wrap_item item_type_text" data-block-index="10" data-shown="false">반대로, 이미 작성된 프론트엔드 코드를 분석하여 Figma에 해당 UI 디자인을 생성해낼 수도 있다. 이는 기존에 디자인과 코드가 불일치할 때 일일이 수동으로 시안을 업데이트해야 했던 수고를 덜어준다. 예를 들어 개발자가 코드로 임시 구현한 UI를 AI가 읽고, Figma에 그 UI와 동일한 디자인을 자동으로 그려줄 수 있다. 디자인-개발 간 쌍방향 동기화가 가능한 셈이다.</p>
+<p data-block-index="10" data-shown="false"> </p>
+<h3 class="wrap_item item_type_text" data-block-index="12" data-shown="false"><span style="color: #2e75b6;"><b>대화형 디자인 생성:</b></span></h3>
+<p class="wrap_item item_type_text" data-block-index="13" data-shown="false">가장 놀라운 점은 자연어 한 줄만으로 Figma에 새로운 디자인을 만들어낼 수 있다는 것이다. 예를 들어 “모바일 가입 화면을 만들어줘”라고 ChatGPT나 Cursor AI에게 말하면, AI가 즉시 Figma에 새로운 회원가입 화면을 구성해 준다. 버튼 배치, 레이아웃까지도 AI가 채워주니, 디자이너 입장에서는 마치 밤새 일해주는 유능한 조수를 얻은 느낌이다. 초기 발상이나 와이어프레임 단계에서 큰 힘을 발휘할 수 있는 기능이다.</p>
+<p data-block-index="13" data-shown="false"> </p>
+<p data-block-index="13" data-shown="false"> </p>
+<hr />
+<p data-block-index="13" data-shown="false"> </p>
+<p data-block-index="13" data-shown="false"> </p>
+<h2 class="wrap_item item_type_text" data-block-index="15" data-shown="false"><span style="color: #050099;"><b>인터페이스 제안의 자동화: AI가 함께 만드는 디자인</b></span></h2>
+<p> </p>
+<p class="wrap_item item_type_text" data-block-index="16" data-shown="false">Cursor AI와 Figma의 연결이 가져오는 혁신은 UI 인터페이스 제안 및 생성 작업의 자동화다. 이제 AI는 단순히 코드를 짜는 조력자를 넘어, 디자인 단계에서도 창의적인 제안자와 제작자 역할을 일부 담당할 수 있게 되었다. 이는 숙련된 디자이너에겐 든든한 보조 도구가 되고, 초급 디자이너나 비전문가에겐 실질적인 설계 도움닫기가 된다.</p>
+<p data-block-index="16" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="18" data-shown="false">가장 직접적인 사례는 앞서 언급한 자연어를 통한 디자인 생성이다. 디자이너 또는 기획자가 원하는 UI를 한 줄 문장으로 설명하면, AI가 즉각 Figma에 해당 UI 초안을 그려주는 식이다. 예를 들어 “로그인 화면 만들어줘”라고 요청하면, AI는 적절한 로고 배치, 입력 필드, 로그인 버튼 등이 포함된 화면을 생성한다.</p>
+<p data-block-index="18" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="18" data-shown="false">심지어 몇 가지 변형 시안을 한꺼번에 제시해서, 디자이너가 그 중 마음에 드는 방향을 골라 세부 디테일을 다듬게 할 수도 있다. 이는 마치 여러 명의 주니어 디자이너들이 각각 시안을 가져오고, 시니어 디자이너가 최종 결정하는 과정과도 유사하다. 시간과 노력을 크게 절약해주면서도 다양한 아이디어를 얻을 수 있는 방법이다.</p>
+<p data-block-index="18" data-shown="false"> </p>
+<p data-block-index="18" data-shown="false"> </p>
+<div class="wrap_item item_type_img " data-app="{&quot;type&quot;:&quot;gridGallery&quot;,&quot;caption&quot;:&quot;Cursor AI를 통해서 Figma에서 로그인 페이지를 생성 시킨 사례&quot;,&quot;displayOption&quot;:&quot;ContentFit&quot;,&quot;images&quot;:[{&quot;url&quot;:&quot;http://t1.daumcdn.net/brunch/service/user/3XFk/image/ZDZ6l8aj9g6PgrsXO7IaFegsDco.png&quot;,&quot;width&quot;:&quot;1200&quot;,&quot;height&quot;:&quot;718&quot;,&quot;originalName&quot;:&quot;cursor-talk-to-figma-mcp.png&quot;}]}" data-block-index="19" data-shown="false">
+<div class="wrap_content mobile_align_full">
+<div class="wrap_img_float">
+<figure style="width: 1200px" class="wp-caption aligncenter"><img fetchpriority="high" decoding="async" src="http://t1.daumcdn.net/brunch/service/user/3XFk/image/ZDZ6l8aj9g6PgrsXO7IaFegsDco.png" alt="cursor-talk-to-figma-mcp.png" width="1200" height="718" data-phocus-index="1" /><figcaption class="wp-caption-text">Cursor AI를 통해서 Figma에서 로그인 페이지를 생성 시킨 사례</figcaption></figure>
+</div>
+</div>
+</div>
+<p> </p>
+<p> </p>
+<p class="wrap_item item_type_text" data-block-index="20" data-shown="false"><strong>AI를 통한 인터페이스 제안은 디자인의 반복 작업이나 잔업을 줄여주는 데에도 효과적이다.</strong> 예를 들어 다크 모드 적용을 생각해보자. 기존에는 디자이너가 밝은 화면 디자인을 다 만들어 놓고, 다시 모든 색상과 이미지 자산을 일일이 수정해 다크 모드 버전을 만드는 수고를 해야 했다.</p>
+<p data-block-index="20" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="20" data-shown="false">그러나 MCP 연동 AI에게 “이 디자인에 다크 모드를 적용해줘”라고 명령하면 AI가 알아서 색상 팔레트를 반전시키고, 필요한 경우 대비를 조정하여 새로운 테마를 만들어줄 수 있다. 실제 테스트에서도, 미리 만들어진 Figma 디자인 파일에 대해 AI가 자동으로 다크 모드 스타일을 적용해주는 사례가 소개되었다.</p>
+<p data-block-index="20" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="20" data-shown="false">AI는 디자인 시스템의 컬러 토큰 정보를 이용해 어두운 변형 값을 고르고, 이미지나 아이콘 역시 반전하거나 대체하여 전체적인 톤을 유지하면서도 눈에 편한 다크 모드 디자인을 뚝딱 내놓았다고 한다. 이러한 자동화는 디자이너가 반복 작업에 쓰는 시간을 줄이고 더 창의적인 부분에 집중하도록 도와준다.</p>
+<p data-block-index="20" data-shown="false"> </p>
+<p data-block-index="20" data-shown="false"> </p>
+<div class="wrap_item item_type_img " data-app="{&quot;type&quot;:&quot;gridGallery&quot;,&quot;caption&quot;:&quot;Cursor AI를 통해서 Figma에서 다크 모드 페이지를 생성 시킨 사례&quot;,&quot;displayOption&quot;:&quot;ContentFit&quot;,&quot;images&quot;:[{&quot;url&quot;:&quot;http://t1.daumcdn.net/brunch/service/user/3XFk/image/IaW6lYaA9zkKLyU8GAchnDrH9Gw&quot;,&quot;width&quot;:&quot;1280&quot;,&quot;height&quot;:&quot;720&quot;,&quot;originalName&quot;:&quot;from-figma-to-code-with-mcp-integration-inside-cursor-in-2-v0-PbxhrKZ20JqMZYwMRdmZqWpuHpJ6bUTdjYhNUDSwKG0.jpg?auto=webp&amp;s=f9a2ecf92e255eff4f7719032bb5daca049cff56&quot;}]}" data-block-index="21" data-shown="false">
+<div class="wrap_content mobile_align_full">
+<div class="wrap_img_float">
+<figure style="width: 1280px" class="wp-caption alignnone"><img decoding="async" src="http://t1.daumcdn.net/brunch/service/user/3XFk/image/IaW6lYaA9zkKLyU8GAchnDrH9Gw" alt="from-figma-to-code-with-mcp-integration-inside-cursor-in-2-v0-PbxhrKZ20JqMZYwMRdmZqWpuHpJ6bUTdjYhNUDSwKG0.jpg?auto=webp&amp;s=f9a2ecf92e255eff4f7719032bb5daca049cff56" width="1280" height="720" data-phocus-index="2" /><figcaption class="wp-caption-text">Cursor AI를 통해서 Figma에서 다크 모드 페이지를 생성 시킨 사례</figcaption></figure>
+</div>
+</div>
+</div>
+<p> </p>
+<p> </p>
+<p class="wrap_item item_type_text" data-block-index="22" data-shown="false"><strong>마지막으로, 클라이언트나 사용자에게 보여줄 목업을 자동으로 만들어주는 측면도 인터페이스 자동화의 큰 강점이다.</strong> 스타트업에서는 종종 빠르게 시각적 자료를 만들어 투자자나 고객에게 보여줘야 할 때가 있는데, MCP 연동 AI는 이러한 클라이언트용 목업 제작도 지원한다.</p>
+<p data-block-index="22" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="22" data-shown="false">예를 들어 “우리 브랜드 스타일에 맞춘 홈페이지 랜딩 페이지 시안을 몇 개 만들어줘”라고 입력하면, 브랜드 CI 색상과 폰트를 반영한 랜딩 페이지 디자인 시안들을 빠르게 생성해준다. 디자이너 입장에서는 기본적인 아이디어만 전달하고, 다양한 변주를 AI가 만들어주니 훨씬 효율적이다. 이렇게 만든 목업은 고객 피드백을 받아 다시 개선하는 데에도 쓰이고, 필요하면 바로 코드로도 연결할 수 있으므로(디자인 → 코드 자동 변환), 프로토타이핑과 피드백 수렴까지 하나의 흐름으로 이어지는 효과가 있다.</p>
+<p data-block-index="22" data-shown="false"> </p>
+<p data-block-index="22" data-shown="false"> </p>
+<hr />
+<p data-block-index="22" data-shown="false"> </p>
+<p data-block-index="22" data-shown="false"> </p>
+<h2 class="wrap_item item_type_text" data-block-index="24" data-shown="false"><span style="color: #050099;"><b>실시간 협업의 새로운 가능성</b></span></h2>
+<p> </p>
+<p class="wrap_item item_type_text" data-block-index="25" data-shown="false">MCP로 Cursor AI와 Figma를 연결하면 가장 먼저 실감할 수 있는 변화는 디자이너와 개발자 간 실시간 협업이 가능해진다는 점이다. 기존에는 디자이너가 Figma로 시안을 만들고 이를 개발자에게 전달하면, 개발자가 그걸 바탕으로 코드를 작성하는 일방향 핸드오프 과정이었다. 이 사이에 많은 문의와 수정이 오가며 시간이 지체되곤 했다. 그러나 이제 AI가 디자인 데이터를 실시간으로 코드에 반영해주니, <span style="text-decoration: underline;"><em>일종의 동시 작업 환경이 조성된다.</em></span></p>
+<p data-block-index="25" data-shown="false"> </p>
+<p data-block-index="25" data-shown="false"> </p>
+<div class="wrap_item item_type_img " data-app="{&quot;type&quot;:&quot;gridGallery&quot;,&quot;caption&quot;:&quot;&quot;,&quot;displayOption&quot;:&quot;ContentFit&quot;,&quot;images&quot;:[{&quot;url&quot;:&quot;http://t1.daumcdn.net/brunch/service/user/3XFk/image/B0oi5RXn7pnXpZS3H9EvikcNj3A.png&quot;,&quot;width&quot;:&quot;1710&quot;,&quot;height&quot;:&quot;1192&quot;,&quot;originalName&quot;:&quot;MCP 소개 글 - visual selection (2).png&quot;}]}" data-block-index="26" data-shown="false">
+<div class="wrap_content mobile_align_full">
+<div class="wrap_img_float"><img decoding="async" class="aligncenter" src="http://t1.daumcdn.net/brunch/service/user/3XFk/image/B0oi5RXn7pnXpZS3H9EvikcNj3A.png" alt="MCP 소개 글 - visual selection (2).png" data-phocus-index="3" /></div>
+</div>
+</div>
+<p data-block-index="27" data-shown="false"> </p>
+<p data-block-index="27" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="27" data-shown="false">AI가 디자인과 개발의 가교 역할을 하면서, 디자이너 → AI → 개발자의 3자 협업이 실시간으로 이루어지는 새로운 워크플로우. 디자이너가 Figma에서 만든 디자인을 AI가 바로 읽어 코드로 변환해주고, 개발자는 그 코드를 기반으로 세부를 다듬는 구조다. 디자이너가 Figma에서 무언가를 변경하면 AI가 즉각적으로 그 변화를 포착해 해당 부분의 코드를 제안해줄 수 있다.</p>
+<p data-block-index="27" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="27" data-shown="false">이를 통해 개발자는 변경된 디자인에 맞춰 바로 코드를 업데이트할 수 있으며, 더 이상 “디자인 시안 업데이트본 V5”를 따로 전달받을 때까지 하염없이 기다릴 필요가 없다. 예를 들어, 디자인에서 버튼 색상이 바뀌면 AI가 “해당 버튼 컴포넌트에 연동된 변수 값도 바꾸라”는 식으로 코드를 즉시 제안하거나 수정해준다. 이렇게 되면 디자인과 코드가 거의 실시간으로 동기화되어, 디자이너-개발자 구분 없이 한 팀이 동시에 결과물을 만들어가는 협업이 가능해진다.</p>
+<p data-block-index="27" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="29" data-shown="false">이러한 실시간 협업은 스타트업 팀에 특히 큰 영향을 준다. 작은 팀에서는 한 사람이 여러 역할을 겸하거나, 디자이너와 개발자가 긴밀히 소통해야 하는데, AI가 중간 실시간 통역자처럼 동작하면서 의사소통이 비약적으로 원활해진다. 개발자는 AI의 도움으로 정확한 코드 베이스를 빠르게 확보하고, 디자이너는 개발 결과물이 자신의 의도와 일치하는지 실시간 피드백을 받을 수 있다.</p>
+<p data-block-index="29" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="29" data-shown="false">“스마트한 핸드오프”가 실현된 덕분에, 프로젝트 진행 속도는 자연히 빨라지고 오해나 시행착오로 인한 재작업이 크게 준다. Figma의 새로운 MCP 서버를 활용하면 개발자 핸드오프가 훨씬 똑똑하고 빨라진다고 하는데, AI가 디자인 시스템의 컴포넌트와 토큰까지 정확히 파악해 코드에 바로 적용해주기 때문이라고 한다. 한마디로, 이제 디자인 파일을 넘긴 순간부터 코딩이 시작되어 즉시 결과를 함께 확인하는 시대가 온 것이다.</p>
+<p data-block-index="29" data-shown="false"> </p>
+<p data-block-index="29" data-shown="false"> </p>
+<hr />
+<p data-block-index="29" data-shown="false"> </p>
+<p data-block-index="29" data-shown="false"> </p>
+<h2 class="wrap_item item_type_text" data-block-index="31" data-shown="false"><span style="color: #050099;"><b>디자인 시스템 반영: 일관성 있는 디자인-코드 연계</b></span></h2>
+<p> </p>
+<p class="wrap_item item_type_text" data-block-index="32" data-shown="false">디자인 시스템은 현대 UI 디자인의 핵심 자산이다. 버튼, 컬러, 타이포그래피 같은 요소들을 일관된 규칙과 컴포넌트로 정의해 두면 대규모 프로젝트에서도 일관성을 유지할 수 있기 때문이다. MCP로 Cursor AI와 Figma가 연결되면 이 디자인 시스템의 힘이 배가된다. AI가 디자인 시스템의 맥락을 정확히 이해하고 코드에 반영해주기 때문에, 사람보다 더 꼼꼼하게 디자인-코드 간 일관성을 지켜낼 수 있다.</p>
+<p data-block-index="32" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="35" data-shown="false">예를 들어 기존 AI 코딩 도구는 디자인 시안의 스크린샷을 보고 코드를 생성할 때, 해당 색상이 디자인 시스템에서 정의한 프라이머리 컬러 토큰인지 알지 못했다. 그래서 비슷한 파랑이라도 엉뚱한 값으로 코드를 작성하거나, 이미 있는 컴포넌트를 못 찾고 새로운 컴포넌트처럼 만들어버리곤 했다. 결과적으로 “왜 라이브러리의 파란 버튼과 색이 다르지?” 같은 문제가 발생했던 것이다.</p>
+<p data-block-index="35" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="35" data-shown="false">그러나 MCP 연동 환경에서는 Figma가 AI에게 직접 “이건 color-primary-500 토큰이야”라고 알려줄 수 있다. AI는 이 정보를 바탕으로 정확히 해당 변수명이나 스타일을 코드에 넣어주므로, 결과물에 오차가 거의 없다. 실제 사례로, MCP를 적용한 후에는 AI가 Figma에서 쓰인 정확한 컴포넌트와 스타일 정보를 참조해 코드에 반영하니 중복이나 불일치가 현저히 줄었다고 한다. 즉, 디자인 시스템에 투자해 둔 노력이 그대로 코드 구현까지 이어지는 것이다.</p>
+<p data-block-index="35" data-shown="false"> </p>
+<p class="wrap_item item_type_text" data-block-index="37" data-shown="true">디자인 시스템이 잘 반영되면 얻을 수 있는 이점은 매우 크다. 첫째, 개발자 핸드오프가 빨라지고 정확해진다. AI가 알아서 컴포넌트와 토큰을 찾아주니 개발자는 추측 작업 없이 바로 해당 코드 조각을 사용하면 된다. 둘째, 디자인 시스템의 무결성이 유지된다. 수작업으로 코드를 짤 때 흔히 생기는 “비슷하지만 살짝 다른” 컴포넌트가 생길 여지가 없고, 한 소스의 진실(single source of truth)이 지켜진다. 셋째, 버그와 재작업 감소다. 잘못 연결된 스타일이나 중복 구현을 나중에 발견해 수정하는 일 대신, 처음부터 정확하게 나오니 품질 문제가 줄어든다. 마지막으로, 규모 확장에 용이하다. 디자인 시스템 기반으로 생성된 코드라면 나중에 프로젝트가 커져도 구조가 체계적이어서 유지보수가 쉽고, 새로운 기능을 추가할 때도 기존 토큰과 컴포넌트를 재활용하기 좋다.</p>
+<p data-block-index="37" data-shown="true"> </p>
+<p data-block-index="37" data-shown="true"> </p>
+<hr />
+<p data-block-index="37" data-shown="true"> </p>
+<p data-block-index="37" data-shown="true"> </p>
+<h2 class="wrap_item item_type_text" data-block-index="39" data-shown="true"><span style="color: #050099;"><b>AI와 함께하는 새로운 디자인 워크플로우</b></span></h2>
+<p> </p>
+<p class="wrap_item item_type_text" data-block-index="40" data-shown="true">지금까지 MCP로 Cursor AI와 Figma를 연동함으로써 생겨나는 UI 디자인 워크플로우의 혁신을 살펴보았다. 요약해보면, 디자인과 개발의 경계를 허무는 실시간 협업, 디자인 시스템 맥락의 철저한 반영으로 인한 일관성 유지, AI의 창의적 참여에 따른 인터페이스 자동 생성, 데이터와 AI 기반의 즉각적인 피드백 통합 등이 핵심 변화이다.</p>
+<p data-block-index="40" data-shown="true"> </p>
+<p class="wrap_item item_type_text" data-block-index="40" data-shown="true">이러한 혁신 덕분에 디자이너는 반복적인 잡무나 커뮤니케이션 지연에 소모하던 에너지를 아끼고, 더 창의적이고 전략적인 설계에 집중할 수 있게 된다. 개발자 역시 초기 구현에 드는 부담을 줄이고 디테일 및 최적화에 역량을 투입하게 되며, 결과물의 품질과 일치도가 높아진다.</p>
+<p data-block-index="40" data-shown="true"> </p>
+<p class="wrap_item item_type_text" data-block-index="43" data-shown="true">특히 스타트업 팀에게 MCP 기반 워크플로우는 게임 체인저가 될 수 있다. 소수 인원으로도 대기업 못지않은 생산성을 낼 수 있고, 디자인-개발 간 소통 오류로 인한 시행착오를 최소화하여 제품 출시까지의 시간을 단축할 수 있다. UI 구현 시간 자체를 2~5배까지 단축할 수 있다는 보고도 있으며, 이는 곧 시장 출시 속도가 그만큼 빨라짐을 의미한다. 치열한 경쟁 속에서 더 빨리, 그러나 품질은 높게 사용자에게 도달할 수 있는 능력은 스타트업의 성공 가능성을 크게 끌어올려줄 것이다.</p>
+<p data-block-index="43" data-shown="true"> </p>
+<p class="wrap_item item_type_text" data-block-index="45" data-shown="true">물론 이러한 변화가 디자이너의 역할을 대체하는 것은 아니다. 오히려 디자이너의 역할은 더욱 중요해지고 고도화된다. AI가 제안하고 자동으로 만들어주는 결과물들이라 해도, 최종적인 맥락 판단과 창의적인 방향 설정은 인간 디자이너의 몫이기 때문이다. MCP 환경에서 디자이너는 AI ‘팀원’에게 적절한 지시를 내리고, AI가 산출한 결과를 평가/수정하여 의도에 맞게 조율하는 지휘자 역할을 하게 된다.</p>
+<p data-block-index="45" data-shown="true"> </p>
+<p class="wrap_item item_type_text" data-block-index="45" data-shown="true"><span style="color: #ed6653;"><strong>반복 작업을 덜어낸 대신 더 많은 시간과 집중력을 사용자 경험의 근본적인 문제 해결이나 혁신적인 아이디어 구상에 쏟을 수 있게 되는 것이다. 요컨대 “AI와 협업하는 디자이너”가 새로운 표준이 되어가고 있으며, MCP는 그 협업을 가능하게 하는 기술적 기반이다.</strong></span></p>
+<p data-block-index="45" data-shown="true"> </p>
+<p data-block-index="45" data-shown="true"> </p>
+<hr />
+<p class="wrap_item item_type_text" data-block-index="48" data-shown="true">* 인공지능 활용 디자인 기술자격 교육 상세페이지: <a class="link" href="https://onoffmix.com/event/324137" target="_blank" rel="noopener">https://onoffmix.com/event/324137</a></p>
+<p data-block-index="48" data-shown="true">* AI를 활용한 프로덕트/UX/UI 디자인에 대한 다양한 정보와 소통을 원하는 분은 오픈 채팅방에서 함께 많은 디자이너 분들과 만나실 수 있습니다: <a class="link" href="https://litt.ly/aidesign" target="_blank" rel="noopener"><u>https://litt.ly/aidesign</u></a></p>
+<p><em>해당 콘텐츠는 유훈식 님이 <a href="https://brunch.co.kr/@ghidesigner" target="_blank" rel="noopener noreferrer">브런치</a>에 게재한 글을 편집한 뒤 모비인사이드에서 한 번 더 소개합니다.</em></p>
+<p><img decoding="async" class="wp-image-44366" src="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2019/10/04160359/88x315.png" alt="" width="88" height="31" /></p>
+<div class="td-a-rec td-a-rec-id-content_bottom  td_uid_3_6a6221e15fba5_rand td_block_template_1">
+<style>
+/* custom css */
+.td_uid_3_6a6221e15fba5_rand.td-a-rec-img {
+				    text-align: left;
+				}
+				.td_uid_3_6a6221e15fba5_rand.td-a-rec-img img {
+                    margin: 0 auto 0 0;
+                }
+</style><script src='https://compass.adop.cc/assets/js/adop/adopJ.js?v=14' ></script><ins class='adsbyadop' _adop_zon = '02ce6a6f-384c-46c6-b24f-c125da022c99' _adop_type = 're' style='display:inline-block;width:336px;height:280px;' _page_url=''></ins></div>    </div>
+
+
+    <footer>
+                
+        <div class="td-post-source-tags">
+                        <ul class="td-tags td-post-small-box clearfix"><li><span>TAGS</span></li><li><a href="https://www.mobiinside.co.kr/tag/ai-ui-%ec%83%9d%ec%84%b1%ea%b8%b0/">AI UI 생성기</a></li><li><a href="https://www.mobiinside.co.kr/tag/ai-%ea%b8%b0%eb%b0%98-ux/">AI 기반 UX</a></li><li><a href="https://www.mobiinside.co.kr/tag/ai-%eb%94%94%ec%9e%90%ec%9d%b8/">ai 디자인</a></li><li><a href="https://www.mobiinside.co.kr/tag/ai-%eb%94%94%ec%9e%90%ec%9d%b8-%ed%88%b4/">AI 디자인 툴</a></li><li><a href="https://www.mobiinside.co.kr/tag/ai-%ed%88%b4/">AI 툴</a></li><li><a href="https://www.mobiinside.co.kr/tag/cursor-ai/">Cursor AI</a></li><li><a href="https://www.mobiinside.co.kr/tag/figma/">figma</a></li><li><a href="https://www.mobiinside.co.kr/tag/figma-%ec%9e%90%eb%8f%99%ed%99%94/">Figma 자동화</a></li><li><a href="https://www.mobiinside.co.kr/tag/mcp/">MCP</a></li><li><a href="https://www.mobiinside.co.kr/tag/mcp-%ed%94%84%eb%a1%9c%ed%86%a0%ec%bd%9c/">MCP 프로토콜</a></li><li><a href="https://www.mobiinside.co.kr/tag/ui-%eb%94%94%ec%9e%90%ec%9d%b8/">ui 디자인</a></li><li><a href="https://www.mobiinside.co.kr/tag/ux-%eb%94%94%ec%9e%90%ec%9d%b8/">ux 디자인</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ea%b0%9c%eb%b0%9c%ec%9e%90-%ed%95%b8%eb%93%9c%ec%98%a4%ed%94%84/">개발자 핸드오프</a></li><li><a href="https://www.mobiinside.co.kr/tag/%eb%94%94%ec%9e%90%ec%9d%b8-%ea%b8%b0%ec%88%a0/">디자인 기술</a></li><li><a href="https://www.mobiinside.co.kr/tag/%eb%94%94%ec%9e%90%ec%9d%b8-%ec%8b%9c%ec%8a%a4%ed%85%9c/">디자인 시스템</a></li><li><a href="https://www.mobiinside.co.kr/tag/%eb%94%94%ec%9e%90%ec%9d%b8-%ec%97%85%eb%ac%b4-%ed%9a%a8%ec%9c%a8%ed%99%94/">디자인 업무 효율화</a></li><li><a href="https://www.mobiinside.co.kr/tag/%eb%94%94%ec%9e%90%ec%9d%b8-%ec%9e%90%eb%8f%99%ed%99%94/">디자인 자동화</a></li><li><a href="https://www.mobiinside.co.kr/tag/%eb%94%94%ec%9e%90%ec%9d%b8-%ed%94%84%eb%a1%9c%ec%84%b8%ec%8a%a4-%ed%98%81%ec%8b%a0/">디자인 프로세스 혁신</a></li><li><a href="https://www.mobiinside.co.kr/tag/%eb%94%94%ec%9e%90%ec%9d%b8-%ed%98%81%ec%8b%a0/">디자인 혁신</a></li><li><a href="https://www.mobiinside.co.kr/tag/%eb%94%94%ec%9e%90%ec%9d%b8%ea%b3%bc-%ea%b0%9c%eb%b0%9c-%ed%98%91%ec%97%85/">디자인과 개발 협업</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%83%9d%ec%84%b1%ed%98%95-ai/">생성형 AI</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%8a%a4%eb%a7%88%ed%8a%b8-%ed%95%b8%eb%93%9c%ec%98%a4%ed%94%84/">스마트 핸드오프</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%8a%a4%ed%83%80%ed%8a%b8%ec%97%85-%ec%9b%8c%ed%81%ac%ed%94%8c%eb%a1%9c%ec%9a%b0/">스타트업 워크플로우</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%8b%a4%ec%8b%9c%ea%b0%84-%ed%98%91%ec%97%85/">실시간 협업</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4-%eb%94%94%ec%9e%90%ec%9d%b8/">인터페이스 디자인</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%9e%90%ec%97%b0%ec%96%b4-%eb%94%94%ec%9e%90%ec%9d%b8-%ec%83%9d%ec%84%b1/">자연어 디자인 생성</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%bb%b4%ed%8f%ac%eb%84%8c%ed%8a%b8-%ea%b8%b0%eb%b0%98-%eb%94%94%ec%9e%90%ec%9d%b8/">컴포넌트 기반 디자인</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ec%bd%94%eb%93%9c-%ec%9e%90%eb%8f%99%ed%99%94/">코드 자동화</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ed%94%84%eb%a1%9c%eb%8d%95%ed%8a%b8-%eb%94%94%ec%9e%90%ec%9d%b8/">프로덕트 디자인</a></li><li><a href="https://www.mobiinside.co.kr/tag/%ed%94%84%eb%a1%a0%ed%8a%b8%ec%97%94%eb%93%9c-%ec%9e%90%eb%8f%99%ed%99%94/">프론트엔드 자동화</a></li></ul>        </div>
+
+                <div class="td-block-row td-post-next-prev"><div class="td-block-span6 td-post-prev-post"><div class="td-post-next-prev-content"><span>Previous article</span><a href="https://www.mobiinside.co.kr/2025/06/25/youtube-shopping-3/">[피처링 IN플루언서 IN사이트] &#x1f6cd;&#xfe0f;유튜브 쇼핑이 바꿀 커머스 패러다임, 성공 치트키는??</a></div></div><div class="td-next-prev-separator"></div><div class="td-block-span6 td-post-next-post"><div class="td-post-next-prev-content"><span>Next article</span><a href="https://www.mobiinside.co.kr/2025/06/26/dating-trend/">[트렌드로 읽는 소비문화] 연애 안해요, 연프 볼래요</a></div></div></div>        <div class="author-box-wrap"><a href="https://www.mobiinside.co.kr/author/hsyoo/"><img alt='' src='https://secure.gravatar.com/avatar/12a51bdff320c753b54b86c72b3bfa40?s=96&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/12a51bdff320c753b54b86c72b3bfa40?s=192&#038;d=mm&#038;r=g 2x' class='avatar avatar-96 photo' height='96' width='96' loading='lazy' decoding='async'/></a><div class="desc"><div class="td-author-name vcard author"><span class="fn"><a href="https://www.mobiinside.co.kr/author/hsyoo/">유훈식</a></span></div><div class="td-author-description">AI-Powered Design Lab을 운영하고 있는 유훈식 교수(서울미디어대학원대학교)는 인공지능 대전환 시대에 디자인과 디자이너가 가야할 미래 비전을 제시함과 동시에 이를 도와줄 수 있는 교육자로 활동하고 있다.</div><div class="td-author-social">
+        <span class="td-social-icon-wrap">
+            <a target="_blank" href="https://www.youtube.com/@aidesigntv" title="Youtube">
+                <i class="td-icon-font td-icon-youtube"></i>
+            </a>
+        </span></div><div class="clearfix"></div></div></div>        <span class="td-page-meta" itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="유훈식"></span><meta itemprop="datePublished" content="2025-06-25T14:01:49+00:00"><meta itemprop="dateModified" content="2025-06-25T14:01:51+09:00"><meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" itemid="https://www.mobiinside.co.kr/2025/06/25/mcp/"/><span class="td-page-meta" itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><span class="td-page-meta" itemprop="logo" itemscope itemtype="https://schema.org/ImageObject"><meta itemprop="url" content="https://s3-ap-northeast-2.amazonaws.com/mobiinsidecontent/kr/wp-content/uploads/2019/08/08110701/mobiinside_logo-2-1.png"></span><meta itemprop="name" content="모비인사이드 MOBIINSIDE"></span><meta itemprop="headline " content="[인공지능 시대의 디자인] MCP로 CursorAI와 Figma연결하면 뭐가좋음?"><span class="td-page-meta" itemprop="image" itemscope itemtype="https://schema.org/ImageObject"><meta itemprop="url" content="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2025/06/25140129/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-1.png"><meta itemprop="width" content="1280"><meta itemprop="height" content="708"></span>    </footer>
+
+    <div class="td_block_wrap td_block_related_posts td_uid_4_6a6221e16267b_rand td_with_ajax_pagination td-pb-border-top td_block_template_1"  data-td-block-uid="td_uid_4_6a6221e16267b" ><script>var block_td_uid_4_6a6221e16267b = new tdBlock();
+block_td_uid_4_6a6221e16267b.id = "td_uid_4_6a6221e16267b";
+block_td_uid_4_6a6221e16267b.atts = '{"limit":3,"ajax_pagination":"next_prev","live_filter":"cur_post_same_tags","td_ajax_filter_type":"td_custom_related","class":"td_uid_4_6a6221e16267b_rand","td_column_number":3,"live_filter_cur_post_id":126272,"live_filter_cur_post_author":"1103","block_template_id":"","header_color":"","ajax_pagination_infinite_stop":"","offset":"","td_ajax_preloading":"","td_filter_default_txt":"","td_ajax_filter_ids":"","el_class":"","color_preset":"","border_top":"","css":"","tdc_css":"","tdc_css_class":"td_uid_4_6a6221e16267b_rand","tdc_css_class_style":"td_uid_4_6a6221e16267b_rand_style"}';
+block_td_uid_4_6a6221e16267b.td_column_number = "3";
+block_td_uid_4_6a6221e16267b.block_type = "td_block_related_posts";
+block_td_uid_4_6a6221e16267b.post_count = "3";
+block_td_uid_4_6a6221e16267b.found_posts = "15";
+block_td_uid_4_6a6221e16267b.header_color = "";
+block_td_uid_4_6a6221e16267b.ajax_pagination_infinite_stop = "";
+block_td_uid_4_6a6221e16267b.max_num_pages = "5";
+tdBlocksArray.push(block_td_uid_4_6a6221e16267b);
+</script><h4 class="td-related-title td-block-title"><a id="td_uid_5_6a6221e166888" class="td-related-left td-cur-simple-item" data-td_filter_value="" data-td_block_id="td_uid_4_6a6221e16267b" href="#">RELATED ARTICLES</a><a id="td_uid_6_6a6221e16688d" class="td-related-right" data-td_filter_value="td_related_more_from_author" data-td_block_id="td_uid_4_6a6221e16267b" href="#">MORE FROM AUTHOR</a></h4><div id=td_uid_4_6a6221e16267b class="td_block_inner">
+
+	<div class="td-related-row">
+
+	<div class="td-related-span4">
+
+        <div class="td_module_related_posts td-animation-stack td_mod_related_posts">
+            <div class="td-module-image">
+                <div class="td-module-thumb"><a href="https://www.mobiinside.co.kr/2026/07/14/ai-era-designer-decision-making-value/" rel="bookmark" class="td-image-wrap" title="[우디의 커리어 디자인] AI 시대, 디자이너의 몸값은 어디서 나올까?"><img width="218" height="150" class="entry-thumb" src="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/07/13135255/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-6-1-218x150.png"  srcset="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/07/13135255/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-6-1-218x150.png 218w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/07/13135255/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-6-1-100x70.png 100w" sizes="(max-width: 218px) 100vw, 218px"  alt="" title="[우디의 커리어 디자인] AI 시대, 디자이너의 몸값은 어디서 나올까?" /></a></div>                            </div>
+            <div class="item-details">
+                <h3 class="entry-title td-module-title"><a href="https://www.mobiinside.co.kr/2026/07/14/ai-era-designer-decision-making-value/" rel="bookmark" title="[우디의 커리어 디자인] AI 시대, 디자이너의 몸값은 어디서 나올까?">[우디의 커리어 디자인] AI 시대, 디자이너의 몸값은 어디서 나올까?</a></h3>            </div>
+        </div>
+        
+	</div> <!-- ./td-related-span4 -->
+
+	<div class="td-related-span4">
+
+        <div class="td_module_related_posts td-animation-stack td_mod_related_posts">
+            <div class="td-module-image">
+                <div class="td-module-thumb"><a href="https://www.mobiinside.co.kr/2026/06/19/ai-native-designer-skills-guide/" rel="bookmark" class="td-image-wrap" title="[인공지능 시대의 디자인] AI 네이티브 디자인을 위한 5가지 역량"><img width="218" height="150" class="entry-thumb" src="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/06/19095552/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7-2026-06-18-183234-1-218x150.png"  srcset="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/06/19095552/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7-2026-06-18-183234-1-218x150.png 218w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/06/19095552/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7-2026-06-18-183234-1-100x70.png 100w" sizes="(max-width: 218px) 100vw, 218px"  alt="" title="[인공지능 시대의 디자인] AI 네이티브 디자인을 위한 5가지 역량" /></a></div>                            </div>
+            <div class="item-details">
+                <h3 class="entry-title td-module-title"><a href="https://www.mobiinside.co.kr/2026/06/19/ai-native-designer-skills-guide/" rel="bookmark" title="[인공지능 시대의 디자인] AI 네이티브 디자인을 위한 5가지 역량">[인공지능 시대의 디자인] AI 네이티브 디자인을 위한 5가지 역량</a></h3>            </div>
+        </div>
+        
+	</div> <!-- ./td-related-span4 -->
+
+	<div class="td-related-span4">
+
+        <div class="td_module_related_posts td-animation-stack td_mod_related_posts">
+            <div class="td-module-image">
+                <div class="td-module-thumb"><a href="https://www.mobiinside.co.kr/2026/06/09/ai-designer-productivity-workflow/" rel="bookmark" class="td-image-wrap" title="[일상AI] AI와 함께하는 디자이너의 하루는 어떻게 달라졌을까?"><img width="218" height="150" class="entry-thumb" src="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/06/08150406/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7-2026-06-08-143633-1-218x150.png"  srcset="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/06/08150406/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7-2026-06-08-143633-1-218x150.png 218w, https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2026/06/08150406/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7-2026-06-08-143633-1-100x70.png 100w" sizes="(max-width: 218px) 100vw, 218px"  alt="" title="[일상AI] AI와 함께하는 디자이너의 하루는 어떻게 달라졌을까?" /></a></div>                            </div>
+            <div class="item-details">
+                <h3 class="entry-title td-module-title"><a href="https://www.mobiinside.co.kr/2026/06/09/ai-designer-productivity-workflow/" rel="bookmark" title="[일상AI] AI와 함께하는 디자이너의 하루는 어떻게 달라졌을까?">[일상AI] AI와 함께하는 디자이너의 하루는 어떻게 달라졌을까?</a></h3>            </div>
+        </div>
+        
+	</div> <!-- ./td-related-span4 --></div><!--./row-fluid--></div><div class="td-next-prev-wrap"><a href="#" class="td-ajax-prev-page ajax-page-disabled" id="prev-page-td_uid_4_6a6221e16267b" data-td_block_id="td_uid_4_6a6221e16267b"><i class="td-icon-font td-icon-menu-left"></i></a><a href="#"  class="td-ajax-next-page" id="next-page-td_uid_4_6a6221e16267b" data-td_block_id="td_uid_4_6a6221e16267b"><i class="td-icon-font td-icon-menu-right"></i></a></div></div> <!-- ./block -->
+	<div class="comments" id="comments">
+        	<div id="respond" class="comment-respond">
+		<h3 id="reply-title" class="comment-reply-title">LEAVE A REPLY <small><a rel="nofollow" id="cancel-comment-reply-link" href="/2025/06/25/mcp/#respond" style="display:none;">Cancel reply</a></small></h3><p class="must-log-in td-login-comment"><a class="td-login-modal-js" data-effect="mpf-td-login-effect" href="https://www.mobiinside.co.kr/wp-login.php?redirect_to=https%3A%2F%2Fwww.mobiinside.co.kr%2F2025%2F06%2F25%2Fmcp%2F">Log in to leave a comment </a></p>	</div><!-- #respond -->
+	    </div> <!-- /.content -->
+                        </div>
+                    </div>
+                    <div class="td-pb-span4 td-main-sidebar" role="complementary">
+                        <div class="td-ss-main-sidebar">
+                            
+		<aside class="td_block_template_1 widget widget_recent_entries">
+		<h4 class="block-title"><span>RECENT POSTS</span></h4>
+		<ul>
+											<li>
+					<a href="https://www.mobiinside.co.kr/2026/07/23/new-employee-onboarding-checklist-guide/">[클랩의 리더 Insight] 신규 입사자 온보딩 체크리스트 완전 가이드: 단계별·역할별 실무 활용법</a>
+									</li>
+											<li>
+					<a href="https://www.mobiinside.co.kr/2026/07/23/dashboard-is-not-the-system/">[노션처럼 체계적으로 익히는 워드프레스] 대시보드는 일을 끝내주지 않는다</a>
+									</li>
+											<li>
+					<a href="https://www.mobiinside.co.kr/2026/07/23/unused-annual-leave-pay-resignation-calculation/">[자본이 묻고, 회사가 답하다] 퇴사자 미사용 연차 수당, 며칠분을 통상임금으로 계산해 언제 지급하나</a>
+									</li>
+											<li>
+					<a href="https://www.mobiinside.co.kr/2026/07/22/airbnb-perfectly-imperfect-travel-campaign-analysis/">[여가 브리핑] 에어비앤비가 말하는 &#8216;완벽하지 않은 여행&#8217;이란?</a>
+									</li>
+											<li>
+					<a href="https://www.mobiinside.co.kr/2026/07/22/first-100-customers-community-outreach-strategy/">[수트와후드의 스타트업 경영] 1인 기업 생존 전략: 샘 알트만이 말하는 10~20% 응답률의 비밀</a>
+									</li>
+					</ul>
+
+		</aside><div class="td-a-rec td-a-rec-id-sidebar  td_uid_7_6a6221e17198b_rand td_block_template_1">
+<style>
+/* custom css */
+.td_uid_7_6a6221e17198b_rand.td-a-rec-img {
+				    text-align: left;
+				}
+				.td_uid_7_6a6221e17198b_rand.td-a-rec-img img {
+                    margin: 0 auto 0 0;
+                }
+</style><script  src='https://compass.adop.cc/assets/js/adop/adopJ.js?v=14' ></script>
+<div class='adopweb'>
+<ins class='adsbyadop' _adop_zon = '2c121ca6-2a71-4626-9d0e-8f4645d0169b' _adop_type = 're' style='display:inline-block;width:300px;height:250px;' _page_url=''></ins>
+</div>
+<div class='adopmobile'>
+<ins class='adsbyadop' _adop_zon = 'a609ed00-2525-4600-b8fe-37fb97b14081' _adop_type = 're' style='display:inline-block;width:300px;height:250px;' _page_url=''></ins>
+</div></div><div class="td-a-rec td-a-rec-id-custom_ad_3  td-rec-hide-on-tl td-rec-hide-on-tp td-rec-hide-on-p td_uid_8_6a6221e171c52_rand td_block_template_1">
+<style>
+/* custom css */
+.td_uid_8_6a6221e171c52_rand.td-a-rec-img {
+				    text-align: left;
+				}
+				.td_uid_8_6a6221e171c52_rand.td-a-rec-img img {
+                    margin: 0 auto 0 0;
+                }
+</style><script  src='https://compass.adop.cc/assets/js/adop/adopJ.js?v=14' ></script>
+
+<ins class='adsbyadop' _adop_zon = '28fb7dde-59ff-4ee6-9465-7e0314325442' _adop_type = 're' style='display:inline-block;width:300px;height:250px;' _page_url=''></ins>
+
+<ins class='adsbyadop' _adop_zon = '52ddef5e-198f-4d4c-80e5-57d516804c2b' _adop_type = 're' style='display:inline-block;width:300px;height:250px;' _page_url=''></ins>
+</div><div class="td-a-rec td-a-rec-id-custom_ad_4  td-rec-hide-on-m td-rec-hide-on-tl td-rec-hide-on-tp td_uid_9_6a6221e171e6b_rand td_block_template_1">
+<style>
+/* custom css */
+.td_uid_9_6a6221e171e6b_rand.td-a-rec-img {
+				    text-align: left;
+				}
+				.td_uid_9_6a6221e171e6b_rand.td-a-rec-img img {
+                    margin: 0 auto 0 0;
+                }
+</style><script  src='https://compass.adop.cc/assets/js/adop/adopJ.js?v=14' ></script>
+
+<ins class='adsbyadop' _adop_zon = 'bb84acb5-6f68-452d-b36e-4ee9f85c363f' _adop_type = 're' style='display:inline-block;width:300px;height:250px;' _page_url=''></ins>
+
+<ins class='adsbyadop' _adop_zon = 'c949d73e-34df-44d5-821e-3e491aeac878' _adop_type = 're' style='display:inline-block;width:300px;height:250px;' _page_url=''></ins>
+</div>                        </div>
+                    </div>
+                            </div> <!-- /.td-pb-row -->
+    </div> <!-- /.td-container -->
+</article> <!-- /.post -->
+
+<!-- Instagram -->
+
+
+
+
+	<!-- Footer -->
+	
+	<!-- Sub Footer -->
+	    <div class="td-sub-footer-container td-container-wrap td_stretch_container td_stretch_content_1200">
+    <div class="td-container">
+        <div class="td-pb-row">
+            <div class="td-pb-span td-sub-footer-menu">
+                <div class="menu-footer_menu-container"><ul id="menu-footer_menu" class="td-subfooter-menu"><li id="menu-item-109923" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-first td-menu-item td-normal-menu menu-item-109923"><a href="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2023/06/29142929/Eng%EB%AA%A8%EB%B9%84%EC%9D%B8%EC%82%AC%EC%9D%B4%EB%93%9C-%EB%A7%A4%EC%B2%B4-%EC%86%8C%EA%B0%9C%EC%84%9C_v1.1.pdf">Introduction</a></li>
+<li id="menu-item-105354" class="menu-item menu-item-type-custom menu-item-object-custom td-menu-item td-normal-menu menu-item-105354"><a href="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2023/06/29113220/%EB%AA%A8%EB%B9%84%EC%9D%B8%EC%82%AC%EC%9D%B4%EB%93%9C-%EB%A7%A4%EC%B2%B4-%EC%86%8C%EA%B0%9C%EC%84%9C_v1.4.pdf">매체소개</a></li>
+<li id="menu-item-43032" class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-43032"><a href="https://www.mobiinside.co.kr/post_report/">기사제보</a></li>
+<li id="menu-item-105371" class="menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-105371"><a href="https://www.mobiinside.co.kr/%ea%b3%a0%ea%b0%9d%ec%84%bc%ed%84%b0/">고객센터</a></li>
+<li id="menu-item-135331" class="policy-highlight menu-item menu-item-type-post_type menu-item-object-page td-menu-item td-normal-menu menu-item-135331"><a href="https://www.mobiinside.co.kr/privacy-2026-06-05/">개인정보 처리방침</a></li>
+</ul></div>            </div>
+
+            <div class="td-pb-span td-sub-footer-copy">
+                상호 : 주식회사 모비데이즈 | 대표 : 유범령 | 대표번호 : 02-6929-1620 | 사업자등록번호 : 832-87-01824<br>주소 : 서울특별시 강남구 언주로 417 더 체크 빌딩 7층 (06222) | 개인정보보호책임자 : 유범령 (hello@mobiinside.co.kr) 개인정보보호담당자 : 한송아 (hello@mobiinside.co.kr)<br><br>
+&copy; 2026 Mobiinside. All rights reserved.            </div>
+
+                        </div>
+        </div>
+    </div>
+
+
+</div><!--close td-outer-wrap-->
+
+
+    <!-- LikeBtn.com BEGIN -->
+    <script type="text/javascript">var likebtn_wl = 1; (function(d, e, s) {a = d.createElement(e);m = d.getElementsByTagName(e)[0];a.async = 1;a.src = s;m.parentNode.insertBefore(a, m)})(document, 'script', '//w.likebtn.com/js/w/widget.js'); if (typeof(LikeBtn) != "undefined") { LikeBtn.init(); }</script>
+    <!-- LikeBtn.com END -->
+            			<div id="divFLRARight" style="display: none;position: absolute;top: 0px;width:160px;height:600px;overflow:hidden;z-index:999;"><iframe src='https://compass.adop.cc/RD/8eb118ad-3c9e-47e0-abed-baa97d35b9c3?type=iframe&loc=&size_width=160&size_height=600' id='8eb118ad-3c9e-47e0-abed-baa97d35b9c3' frameBorder='0' marginWidth='0' marginHeight='0' paddingWidth='0' paddingHeight='0' scrolling='no' style='width: 160px; height: 600px;'></iframe></div>
+			<div id="divFLRALeft" style="display: none;position: absolute;top: 0px;width:160px;height:600px;overflow:hidden;z-index:999;"><iframe src='https://compass.adop.cc/RD/7c926529-8f08-453b-97cd-4d5c3b33f561?type=iframe&loc=&size_width=160&size_height=600' id='7c926529-8f08-453b-97cd-4d5c3b33f561' frameBorder='0' marginWidth='0' marginHeight='0' paddingWidth='0' paddingHeight='0' scrolling='no' style='width: 160px; height: 600px;'></iframe></div>
+                        <style>
+                @media (max-width: 1200px) {
+                    #divFLRARight, #divFLRALeft {
+                        display: none !important;
+                    }
+                }
+            </style>
+            <script async>(function(s,u,m,o,j,v){j=u.createElement(m);v=u.getElementsByTagName(m)[0];j.async=1;j.src=o;j.dataset.sumoSiteId='2b65c000a2683000e1947e0079503d002a97e20098e2c00069aa3a0076c2ed00';j.dataset.sumoPlatform='wordpress';v.parentNode.insertBefore(j,v)})(window,document,'script','//load.sumome.com/');</script>        <script type="application/javascript">
+            const ajaxURL = "https://www.mobiinside.co.kr/wp-admin/admin-ajax.php";
+
+            function sumo_add_woocommerce_coupon(code) {
+                jQuery.post(ajaxURL, {
+                    action: 'sumo_add_woocommerce_coupon',
+                    code: code,
+                });
+            }
+
+            function sumo_remove_woocommerce_coupon(code) {
+                jQuery.post(ajaxURL, {
+                    action: 'sumo_remove_woocommerce_coupon',
+                    code: code,
+                });
+            }
+
+            function sumo_get_woocommerce_cart_subtotal(callback) {
+                jQuery.ajax({
+                    method: 'POST',
+                    url: ajaxURL,
+                    dataType: 'html',
+                    data: {
+                        action: 'sumo_get_woocommerce_cart_subtotal',
+                    },
+                    success: function (subtotal) {
+                        return callback(null, subtotal);
+                    },
+                    error: function (err) {
+                        return callback(err, 0);
+                    }
+                });
+            }
+        </script>
+        
+
+    <!--
+
+        Theme: Newspaper by tagDiv.com 2019
+        Version: 9.7.4 (rara)
+        Deploy mode: deploy
+        
+        uid: 6a6221e174abf
+    -->
+
+    
+<!-- Custom css from theme panel -->
+<style type="text/css" media="screen">
+/* custom css theme panel */
+/************* 
+* header banner position
+*************/
+.td-container.td-header-row.td-header-header{ display:flex;display:-webkit-flex;display:-ms-flex; }
+.td-header-style-1 .td-header-sp-logo{ margin:28px 0; }
+/* position - right */
+.td-header-style-1 .td-header-sp-recs{ margin:0;margin-left:auto;position: relative;} 
+.td-header-rec-wrap{ position: absolute;height: 60%;top:0;bottom:0;right:0;margin:auto; }
+
+
+
+/************* 
+* font
+*************/
+h3{ font-size:20px; }
+.td-theme-slider .slide-meta-cat a{ font-size: 16px;line-height: 30px; }
+.td-image-gradient .entry-title.td-module-title{ font-size:38px; }
+
+/***** blackBox *****/
+.td-full-layout .td-category-grid-fl .td_block_big_grid_fl_3 .td-big-grid-post .entry-title, 
+.td-full-layout .td-stretch-content .td_block_big_grid_fl_3 .td-big-grid-post .entry-title{
+    font-size:16px;line-height:20px;font-weight:400;
+}
+.td-big-grid-meta .td-post-category, 
+.td_module_wrap .td-post-category, 
+.td-module-image .td-post-category{ font-size: 15px;line-height: 30px; }
+
+/* blackBox - title txt */
+.big-tit{ font-size:20px;font-weight:bold; } /* <-메인화면 리스트 타이틀 기본 폰트 사이즈 */
+.td-big-grid-wrapper .smail-tit,
+.td_block_inner.td-column-3 .smail-tit,
+.td_block_inner.td-column-2 .smail-tit{font-size:14px;color:#b9b9b9;}
+.td-big-grid-wrapper .big-tit,
+.td_block_inner.td-column-3 .big-tit,
+.td_block_inner.td-column-2 .big-tit{font-size:16px;color:#fff;}
+/*.td-slider .big-tit{ font-size:35px;color:#fff; }*/
+/*.td-slider .smail-tit{ font-size:25px;color:#ccc;line-height: 36px; }*/
+
+/*** [메인화면] slider - 2019-11-28 *****/
+/* title */
+.td_block_big_grid_flex_1 .td-module-meta-info .big-tit{font-size:35px;}
+.td_block_big_grid_flex_1 .td-module-meta-info .smail-tit{font-size:25px;color:#ccc;}
+/* user-name/date */
+.td-module-meta-info{ font-size: 16px; }
+.td-post-date{ font-size: 13px; }
+/*.td_module_wrap .td-post-author-name a{ font-size: 16px; }*/
+
+
+.widget_archive a, .widget_calendar, .widget_categories a, 
+.widget_nav_menu a, .widget_meta a, .widget_pages a, .widget_recent_comments a, 
+.widget_recent_entries a, .widget_text .textwidget, .widget_tag_cloud a, .widget_search input, 
+.woocommerce .product-categories a, .widget_display_forums a, .widget_display_replies a, 
+.widget_display_topics a, .widget_display_views a, .widget_display_stats{font-size: 16px; }
+
+/* line 2 */
+.td_module_flex_1 .td-excerpt, .td_module_flex_3 .td-excerpt, 
+.td_module_flex_4 .td-excerpt, .td_module_flex_5 .td-excerpt{
+    text-overflow: ellipsis;overflow: hidden;
+    white-space: normal; line-height: 1.6;
+    word-wrap: break-word;
+    display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;
+}
+
+/* sub page */
+.td_module_wrap .entry-title{ font-size: 18px; }
+.td_uid_8_5d64d52c8088e_rand .td_module_mx1 .entry-title{ font-size:18px; }
+
+.td-excerpt{  
+    text-overflow: ellipsis;overflow: hidden;
+    white-space: normal; line-height: 1.2;
+    word-wrap: break-word;
+    display: -webkit-box;-webkit-line-clamp: 3;-webkit-box-orient: vertical;
+    font-size: 14px;
+}
+
+
+
+/*footer menu*/
+.foot-site-title,.foot-site-box li,.foot-site-box li a{font-size:15px;}
+.td-social-icon-wrap a i{font-size:13px;color:#999;}
+
+
+
+/************* 
+* style
+*************/
+.adopweb {display:block;}
+.adopmobile{display:none;}
+
+.td-theme-slider .slide-meta-cat a{ padding:0;margin:0;padding: 0 7px;  }
+.td-slide-nav.td-icon-left.prevButton,
+.td-slide-nav.td-icon-right.nextButton,
+.td-slide-nav.td-icon-left.prevButton:before,
+.td-slide-nav.td-icon-right.nextButton:before{display:none;opacity:0;}
+
+/* text - blackBox */
+.td-meta-info-container{background:rgba(0,0,0,.7);}
+.td-full-layout .td-category-grid-fl .td_block_big_grid_fl_3 .td-big-grid-post .t.td_module_flex_1 .td-excerpt,
+.td_module_flex_3 .td-excerpt, .td_module_flex_4 .td-excerpt, 
+.td_module_flex_5 .td-excerptd-meta-info-container, 
+.td-full-layout .td-stretch-content .td_block_big_grid_fl_3 .td-big-grid-post .td-meta-info-container{
+    padding:15px 15px 0;height:130px;
+}
+.td-big-grid-meta .td-post-category, 
+.td_module_wrap .td-post-category, 
+.td-module-image .td-post-category{ padding: 0 7px;vertical-align: middle; }
+
+
+/*side*/
+.td-pb-span9{width:74%;}
+.td-pb-row .td-pb-span3{ padding-left:0; }
+
+
+/*main list line 2*/
+.td-big-grid-post .td-module-meta-info{ margin:0; }
+
+.td-meta-info-container h3{ height:65px; }
+.smail-tit{ margin-bottom:5px;color:#666; }
+.big-tit{  margin-bottom:10px; }
+.td-big-grid-wrapper .smail-tit,
+.td_block_inner.td-column-3 .smail-tit,
+.td_block_inner.td-column-2 .smail-tit{margin:0;}
+.td-big-grid-wrapper .big-tit,
+.td_block_inner.td-column-3 .big-tit,
+.td_block_inner.td-column-2 .big-tit{margin:0;}
+
+
+/* scroll - left  */
+/*.td-more-articles-box{ right:0;left:-384px; }*/
+/*.td-front-end-display-block{ right:initial;left:0; }*/
+
+.td-module-meta-info a.td-post-category{ pointer-events: none; }
+
+
+/* 본문 top 광고 애드센스배너 중앙정렬 */
+.td-a-rec-id-content_inline.td-rec-hide-on-p{text-align:center;}
+.td-a-rec-id-sidebar > div{margin-bottom:0;}
+.td-a-rec-id-custom_ad_1 > div, 
+.td-a-rec-id-custom_ad_2 > div, 
+.td-a-rec-id-custom_ad_3 > div, 
+.td-a-rec-id-custom_ad_4 > div, 
+.td-a-rec-id-custom_ad_5 > div{margin-bottom:0;}
+ /*main AD position*/
+.adopweb {display:block ;}
+.adopmobile{display:none ;}
+
+
+/* likebtn position */
+.cosmosfarm-share-buttons,
+.likebtn_container{ display:inline-block; }
+.likebtn_container{ margin-left:5px;margin-top:20px;vertical-align:top;}
+
+/************* 
+* footer
+*************/
+.td-sub-footer-container{ padding:12px 0 20px;border-top:1px solid #ddd; }
+.td-sub-footer-container .td-sub-footer-menu{width:100%;position: relative;}
+.td-subfooter-menu{ float:left; }
+.td-sub-footer-container .td-sub-footer-copy{ /*padding-left:0;*/width:100%; }
+
+.foot-link-box{position: absolute;top:0;right:0}
+.foot-site{
+    position: relative;cursor: pointer;
+    display: inline-block;
+}
+.foot-site-title{ padding:5px 40px;border:1px solid #ddd;box-sizing:border-box;margin:0;position: relative; }
+.foot-site-title:after{ 
+    content:'\25BC';
+    position:absolute;top:20%;left:5%;font-size:15px;color:#ddd;
+}
+.foot-site-box{ position: absolute;bottom:60%;left:0;background:#fff;width:100%;box-sizing:border-box;
+    display:none;
+    border-top:1px solid #ddd;border-right:1px solid #ddd;border-left:1px solid #ddd; 
+}
+.foot-site-box li{ list-style:none; padding:5px 0;margin:0;}
+.foot-site-box li a{color:#494949;text-align:center;display:block;}
+.foot-site-box li:hover{ background:#ddd; }
+.foot-site-title.on{ border-top-color:transparent; }
+.foot-site-title.on:after{  content:'\25B2'; }
+.foot-site-title.on + ul{ display:block;transition:all .3s; }
+
+.td-social-icon-wrap a{display:inline-block;width:30px;height:30px;text-align:center;}
+
+
+
+/************* 
+* sub page
+*************/
+.td_module_mx1 .td-module-thumb{ height:200px; }
+.td_module_mx1 .td-module-meta-info{
+    background:rgba(0,0,0,.7);padding:15px;margin-bottom:0;
+    width: 100%;box-sizing: border-box;
+}
+
+.td-a-rec-id-sidebar{ text-align: center; }
+.td-pb-span8.td-main-content{width:74%;}
+.td-pb-span4.td-main-sidebar{width:25%;padding:0;}
+
+
+/***** sub page - register ***************/
+/* input style change */
+.mc4wp-checkbox-wp-registration-form input{ opacity: 0 !important; }
+.mc4wp-checkbox-wp-registration-form input+span{ 
+    margin-left:16px;color:#888;font-size:15px; 
+    display: inline-block;width: 85%;
+}
+.mc4wp-checkbox-wp-registration-form label{position: relative;}
+.mc4wp-checkbox-wp-registration-form label:before{
+    content:'\f372';
+    position: absolute;top:0;left:1px;margin:auto;
+    font-family: "Ionicons" !important;
+    line-height: 1;
+    font-size: 25px;
+    color:#aaa;
+}
+.mc4wp-checkbox-wp-registration-form input[type="checkbox"]:checked ~ :before{
+    content:'\f373'; 
+    position: absolute;top:0;left:1px;
+    font-family: "Ionicons" !important;
+    line-height: 1;
+    font-size: 25px;
+    background:#fff;
+    width:20px;height:20px;
+}
+.mc4wp-checkbox-wp-registration-form label:hover input[type="checkbox"] ~ :before,
+.mc4wp-checkbox-wp-registration-form label:hover:before {color:#666;}
+
+
+
+
+
+
+/************* 
+* media
+*************/
+
+@media screen and ( max-width:1140px ){
+    .td-sub-footer-container{ padding: 12px 2% 20px;box-sizing:border-box; }
+    .foot-link-box{ right:2%;}
+}
+@media screen and ( max-width:780px ){
+    .menu-footer_menu-container{width:100%;}
+    .td-sub-footer-container .td-sub-footer-menu{ height:80px;text-align:center;}
+    .td-subfooter-menu{float: initial;padding-right:0;}
+    .foot-link-box{ top:35px;right:0;left:0;margin:auto;}
+    .td-sub-footer-container .td-sub-footer-copy{ float: initial;padding:0;text-align:center; }
+}
+
+
+
+@media screen and (max-width:667px) and (orientation : portrait){
+    .td-banner-wrap-full .td-container.td-header-row.td-header-header{ 
+        display:block; display:-webkit-block;height:100px;position: relative;
+    }
+    .td-header-rec-wrap{ width:100% !important; }
+    .td-header-rec-wrap .td-a-rec.td-a-rec-id-header{ width:320px;margin:auto;}
+    .td-header-style-1 .td-header-sp-recs{
+        position: absolute !important;bottom:2% !important;left:0;right:0;margin:auto;height:90px;
+    }
+     
+     /*main AD position*/
+    .adopweb {display:none !important;}
+    .adopmobile{display:block !important;}
+}
+
+
+
+
+
+/* custom responsive css from theme panel (Advanced CSS) */
+@media (max-width: 767px) {
+.td-sub-footer-container.td-container-wrap .td-container{padding:0;}
+.td-sub-footer-container .td-sub-footer-menu{ height:100px;}
+.td-subfooter-menu{ line-height: 2; }
+.foot-link-box{ top:60px;}
+.foot-site-box li a{ padding-left:0; }
+body,*{  }
+
+.big-tit{ font-size:1.2rem; }
+.td-slider .smail-tit{ font-size:.9rem;line-height: 1.15; }
+.td-slider .big-tit{font-size:1rem;line-height: 1.25;word-break: keep-all;  }
+
+.td-full-layout .td-category-grid-fl .td_block_big_grid_fl_3 .td-big-grid-post .t.td_module_flex_1 .td-excerpt, .td_module_flex_3 .td-excerpt, 
+.td_module_flex_4 .td-excerpt, .td_module_flex_5 .td-excerptd-meta-info-container, 
+.td-full-layout .td-stretch-content .td_block_big_grid_fl_3 .td-big-grid-post .td-meta-info-container
+{ padding: 3%;height: auto;word-break: keep-all; }
+.td-mx-19 .entry-title{ line-height: 1.5 !important;word-break: keep-all; }
+
+.td-post-template-4 .td-post-header header .entry-title{ 
+    font-size:1.5rem;line-height:1.5;word-break: keep-all; }
+    
+/*main AD position*/    
+/* mobile용 에드센스 광고 위치조정 */
+.td-post-template-4 .td-post-content{ position: relative; }
+.td-a-rec-id-content_inline.td-rec-hide-on-m{
+  position: absolute;top:0;left:0;right:0;margin:auto;text-align: center;
+}
+.cosmosfarm-share-buttons-default.cosmosfarm-align-left,
+.likebtn_container{ padding-top:100px; }
+
+.adopweb {display:none;}
+.adopmobile{display:block;width:100%;text-align:center;}
+}
+</style>
+
+<script type="text/javascript">/*----------------
+*
+*  CONTENTS
+*
+-----------------*/
+// list [] ->괄호안에 내용 소제목 으로 나눠서 style조정
+function titleBoxStyle( name ){
+  var postText = document.querySelectorAll(name);
+  var postArr=[],
+      arr1=[],
+      arr2=[];
+  for( var k=0;k<postText.length;k++ ){
+      postArr.push( postText[k].innerText );
+  
+      var num = postArr[k].indexOf(']');
+      arr1.push( postArr[k].slice(0, num+1) )
+      arr2.push( postArr[k].slice(num+1) )
+      postText[k].innerHTML = `<p class="smail-tit">${arr1[k]}</p>
+                               <p class="big-tit">${arr2[k]}</p>` ;
+  }
+}
+
+// 메인 visual
+titleBoxStyle('.td-slider .td-module-title a')
+// 메인 그리드 3분할
+titleBoxStyle('.td_module_mx20 .td-meta-info-container .td-module-title')
+// 서브페이지 2분할
+titleBoxStyle('.td-module-meta-info .td-module-title a')
+
+
+
+/*----------------
+*
+*  FOOTER
+*
+-----------------*/
+// sns관련 내용
+// name -> 폰트어썸 <i> class 이름
+var SnsOption = [
+    { name:'facebook-f', 
+      url:'https://www.facebook.com/mobiinside.co.kr/' 
+    },
+    { name:'youtube', 
+      url:'https://www.youtube.com/channel/UC2S-6J6owqtUVMUn3Jd76qg/featured' 
+    },
+    { name:'bold fas', 
+      url:'https://blog.naver.com/mobiinside'
+    },
+    { name:'pen fas', 
+      url:'https://brunch.co.kr/@mobiinside#articles' 
+    }
+]
+
+// 패밀리 사이트 링크
+var FamilySiteOption = [
+    { text:'모비데이즈', 
+      url:'http://www.mobidays.com/' 
+    },
+    { text:'모비아카데미', 
+      url:'https://www.mobiacademy.co.kr' 
+    },
+    { text:'모비인터치', 
+      url:'http://www.mobintouch.co.kr/' 
+    },
+    { text:'맥스서밋', 
+      url:'https://maxsummit.co/'
+    },
+    { text:'맥스더크리에이티브',
+      url:'https://maxthecreative.co'
+    }
+]
+
+var footerMenu = document.querySelector('.td-sub-footer-container .td-sub-footer-menu')
+var footDiv = document.createElement('div')
+var snsSpan,footSite;
+footDiv.className = 'foot-link-box';
+footerMenu.appendChild(footDiv);
+
+//sns
+snsSpan = '<span class="td-social-icon-wrap">';
+for( var i=0;i<SnsOption.length;i++ ){
+    snsSpan +=  `<a target="_blank" href="${SnsOption[i].url}"> 
+                    <i class="fab fa-${SnsOption[i].name}"></i>
+                 </a>`;
+}
+//rss 
+snsSpan += `<a target="_blank" href="https://www.mobiinside.co.kr/feed/">
+                <i class="fas fa-rss"></i>
+            </a>` ; 
+snsSpan += '</span>';
+
+// site link box
+footSite = '<div class="foot-site">';
+footSite +=     '<p class="foot-site-title">Family Site</p>';
+footSite +=     '<ul class="foot-site-box">';
+for( var j=0;j<FamilySiteOption.length;j++ ){
+    footSite +=  `<li>
+                    <a href="${FamilySiteOption[j].url}" target="_blank">${FamilySiteOption[j].text}</a>
+                  </li>`;
+}
+footSite +=     '</ul>';
+footSite += '</div>';
+
+footDiv.innerHTML = snsSpan + footSite  ;
+
+// [Family Site] click event
+var btn = document.querySelector('.foot-site-title');
+document.body.addEventListener('click', function(e) { 
+    var target = e.target || e.srcElement ;
+     target == btn ? btn.classList.toggle('on') : btn.classList.remove('on'); 
+} );
+window.addEventListener('scroll', function(){  btn.classList.remove('on') } )
+
+
+//input - checkBox style
+var registerPage = location.pathname;
+var frmDiv = document.querySelector('.um-register .um-form ._um_row_1');
+var regExp = /[\{\}\[\]\/?.,;:|\)*~`!^\-+<>@\#$%&\\\=\(\'\"]/gi;
+ 
+if( registerPage.replace(regExp, "") == 'register') frmDiv.style.marginBottom = 0;
+
+
+</script>    <script>
+		function setCookie( name, value, expiredays ) {
+		   var todayDate = new Date();
+		   todayDate.setDate( todayDate.getDate() + expiredays );
+		   document.cookie = name + "=" + escape( value ) + "; path=/; expires=" + todayDate.toGMTString() + ";"
+		}
+		
+        function getCookie_today () {
+		   cookiedata = document.cookie;
+		   if ( cookiedata.indexOf("ncookie=done") < 0 ){
+			   jQuery("body").prepend('<div id="popbg"></div><div id="popup14"><a href="https://www.mobiinside.co.kr/2021/03/15/mobidays/"><img src="https://mobiinsidecontent.s3.ap-northeast-2.amazonaws.com/kr/wp-content/uploads/2021/03/11125031/marketer.jpg"></a> <a href="#" class="todaycloseWin" onclick="return false;">다시 보지 않기 </a> <a href="#" onclick="return false;" class="closeWin">닫기</a></div>')
+		   } else {
+			   console.log("no popup")
+		   }
+	   	}getCookie_today();
+		
+		//2021-03-22 팝업 숨김처리
+		function hidepop(){
+		  var popbg = jQuery('#popbg'),
+			  popup = jQuery('#popup14');
+		  var today = new Date();
+		  var selectDay = new Date('2021-3-22 23:59');
+		  if( today.getTime() >= selectDay.getTime() ){
+			popbg.css({
+			  opacity:0,
+			  display:'none'
+			});
+			popup.css({
+			  opacity:0,
+			  display:'none',
+			})
+		  }
+		}
+		hidepop();
+	
+		jQuery(function() {
+            
+			var w = jQuery(window).outerWidth(),
+				h = jQuery(window).outerHeight();
+			
+			jQuery("#popbg").css({width:w, height: h});
+			jQuery(window).resize(function(){
+				
+				var w = jQuery(window).outerWidth(),
+					h = jQuery(window).outerHeight();
+				jQuery("#popbg").css({width:w, height: h});
+            });
+            
+            jQuery(".closeWin").click(function(){
+                jQuery('#popup14').hide();    // 팝업창 아이디
+                jQuery('#popbg').hide();    // 배경 아이디
+            });
+            jQuery(".todaycloseWin").click(function(){
+                setCookie( "ncookie", "done" , 14 );     // 저장될 쿠키명 , 쿠키 value값 , 기간( ex. 1은 하루, 7은 일주일)
+                jQuery('#popup14').hide();    // 팝업창 아이디
+                jQuery('#popbg').hide();    // 배경 아이디
+            });
+		});
+    </script>
+<script type="text/javascript" id="contact-form-7-js-extra">
+/* <![CDATA[ */
+var wpcf7 = {"apiSettings":{"root":"https:\/\/www.mobiinside.co.kr\/wp-json\/contact-form-7\/v1","namespace":"contact-form-7\/v1"}};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/contact-form-7/includes/js/scripts.js?ver=5.3" id="contact-form-7-js"></script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-includes/js/underscore.min.js?ver=1.13.4" id="underscore-js"></script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/td-cloud-library/assets/js/js_posts_autoload.min.js?ver=388b2d8ea1192f4a22a4fef9c5911ef0" id="tdb_js_posts_autoload-js"></script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/td-composer/legacy/Newspaper/js/tagdiv_theme.min.js?ver=9.7.4" id="td-site-min-js"></script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-includes/js/comment-reply.min.js?ver=6.4.3" id="comment-reply-js" async="async" data-wp-strategy="async"></script>
+<script type="text/javascript" id="cosmosfarm-share-buttons-js-extra">
+/* <![CDATA[ */
+var cosmosfarm_share_settings = {"version":"1.9","default_img_src":"https:\/\/s3-ap-northeast-2.amazonaws.com\/mobiinsidecontent\/kr\/wp-content\/uploads\/2019\/07\/10224213\/logo.png"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/cosmosfarm-share-buttons/js/cosmosfarm-share-buttons.js?ver=1.9" id="cosmosfarm-share-buttons-js"></script>
+<script type="text/javascript" id="kboard-script-js-extra">
+/* <![CDATA[ */
+var kboard_settings = {"version":"6.6","home_url":"\/","site_url":"\/","post_url":"https:\/\/www.mobiinside.co.kr\/wp-admin\/admin-post.php","ajax_url":"https:\/\/www.mobiinside.co.kr\/wp-admin\/admin-ajax.php","plugin_url":"https:\/\/www.mobiinside.co.kr\/wp-content\/plugins\/kboard","media_group":"6a6221e13c103","view_iframe":"","locale":"ko_KR","ajax_security":"93ec78b835"};
+var kboard_localize_strings = {"kboard_add_media":"KBoard \ubbf8\ub514\uc5b4 \ucd94\uac00","next":"\ub2e4\uc74c","prev":"\uc774\uc804","required":"%s\uc740(\ub294) \ud544\uc218\uc785\ub2c8\ub2e4.","please_enter_the_title":"\uc81c\ubaa9\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_author":"\uc791\uc131\uc790\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_password":"\ube44\ubc00\ubc88\ud638\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_CAPTCHA":"\uc606\uc5d0 \ubcf4\uc774\ub294 \ubcf4\uc548\ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_name":"\uc774\ub984\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_email":"\uc774\uba54\uc77c\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.","you_have_already_voted":"\uc774\ubbf8 \ud22c\ud45c\ud588\uc2b5\ub2c8\ub2e4.","please_wait":"\uae30\ub2e4\ub824\uc8fc\uc138\uc694.","newest":"\ucd5c\uc2e0\uc21c","best":"\ucd94\ucc9c\uc21c","updated":"\uc5c5\ub370\uc774\ud2b8\uc21c","viewed":"\uc870\ud68c\uc21c","yes":"\uc608","no":"\uc544\ub2c8\uc694","did_it_help":"\ub3c4\uc6c0\uc774 \ub418\uc5c8\ub098\uc694?","hashtag":"\ud574\uc2dc\ud0dc\uadf8","tag":"\ud0dc\uadf8","add_a_tag":"\ud0dc\uadf8 \ucd94\uac00","removing_tag":"\ud0dc\uadf8 \uc0ad\uc81c","changes_you_made_may_not_be_saved":"\ubcc0\uacbd\uc0ac\ud56d\uc774 \uc800\uc7a5\ub418\uc9c0 \uc54a\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4.","name":"\uc774\ub984","email":"\uc774\uba54\uc77c","address":"\uc8fc\uc18c","address_2":"\uc8fc\uc18c 2","postcode":"\uc6b0\ud3b8\ubc88\ud638","phone_number":"\ud734\ub300\ud3f0\ubc88\ud638","mobile_phone":"\ud734\ub300\ud3f0\ubc88\ud638","phone":"\ud734\ub300\ud3f0\ubc88\ud638","company_name":"\ud68c\uc0ac\uba85","vat_number":"\uc0ac\uc5c5\uc790\ub4f1\ub85d\ubc88\ud638","bank_account":"\uc740\ud589\uacc4\uc88c","name_of_deposit":"\uc785\uae08\uc790\uba85","find":"\ucc3e\uae30","rate":"\ub4f1\uae09","ratings":"\ub4f1\uae09","waiting":"\ub300\uae30","complete":"\uc644\ub8cc","question":"\uc9c8\ubb38","answer":"\ub2f5\ubcc0","notify_me_of_new_comments_via_email":"\uc774\uba54\uc77c\ub85c \uc0c8\ub85c\uc6b4 \ub313\uae00 \uc54c\ub9bc \ubc1b\uae30","ask_question":"\uc9c8\ubb38\ud558\uae30","categories":"\uce74\ud14c\uace0\ub9ac","pages":"\ud398\uc774\uc9c0","all_products":"\uc804\uccb4\uc0c1\ud488","your_orders":"\uc8fc\ubb38\uc870\ud68c","your_sales":"\ud310\ub9e4\uc870\ud68c","my_orders":"\uc8fc\ubb38\uc870\ud68c","my_sales":"\ud310\ub9e4\uc870\ud68c","new_product":"\uc0c1\ud488\ub4f1\ub85d","edit_product":"\uc0c1\ud488\uc218\uc815","delete_product":"\uc0c1\ud488\uc0ad\uc81c","seller":"\ud310\ub9e4\uc790","period":"\uae30\uac04","period_of_use":"\uc0ac\uc6a9\uae30\uac04","last_updated":"\uc5c5\ub370\uc774\ud2b8 \ub0a0\uc9dc","list_price":"\uc815\uc0c1\uac00\uaca9","price":"\ud310\ub9e4\uac00\uaca9","total_price":"\ucd1d \uac00\uaca9","amount":"\uacb0\uc81c\uae08\uc561","quantity":"\uc218\ub7c9","use_points":"\ud3ec\uc778\ud2b8 \uc0ac\uc6a9","my_points":"\ub0b4 \ud3ec\uc778\ud2b8","available_points":"\uc0ac\uc6a9 \uac00\ub2a5 \ud3ec\uc778\ud2b8","apply_points":"\ud3ec\uc778\ud2b8 \uc0ac\uc6a9","buy_it_now":"\uad6c\ub9e4\ud558\uae30","sold_out":"\ud488\uc808","for_free":"\ubb34\ub8cc","pay_s":"%s \uacb0\uc81c","payment_method":"\uacb0\uc81c\uc218\ub2e8","credit_card":"\uc2e0\uc6a9\uce74\ub4dc","make_a_deposit":"\ubb34\ud1b5\uc7a5\uc785\uae08","reward_point":"\uc801\ub9bd \ud3ec\uc778\ud2b8","download_expiry":"\ub2e4\uc6b4\ub85c\ub4dc \uae30\uac04","checkout":"\uc8fc\ubb38\uc815\ubcf4\ud655\uc778","buyer_information":"\uc8fc\ubb38\uc790","applying_cash_receipts":"\ud604\uae08\uc601\uc218\uc99d \uc2e0\uccad","applying_cash_receipt":"\ud604\uae08\uc601\uc218\uc99d \uc2e0\uccad","cash_receipt":"\ud604\uae08\uc601\uc218\uc99d","privacy_policy":"\uac1c\uc778 \uc815\ubcf4 \uc815\ucc45","i_agree_to_the_privacy_policy":"\uac1c\uc778 \uc815\ubcf4 \uc815\ucc45\uc5d0 \ub3d9\uc758\ud569\ub2c8\ub2e4.","i_confirm_the_terms_of_the_transaction_and_agree_to_the_payment_process":"\uac70\ub798\uc870\uac74\uc744 \ud655\uc778\ud588\uc73c\uba70 \uacb0\uc81c\uc9c4\ud589\uc5d0 \ub3d9\uc758\ud569\ub2c8\ub2e4.","today":"\uc624\ub298","yesterday":"\uc5b4\uc81c","this_month":"\uc774\ubc88\ub2ec","last_month":"\uc9c0\ub09c\ub2ec","last_30_days":"\ucd5c\uadfc30\uc77c","agree":"\ucc2c\uc131","disagree":"\ubc18\ub300","opinion":"\uc758\uacac","comment":"\ub313\uae00","comments":"\ub313\uae00","your_order_has_been_cancelled":"\uc8fc\ubb38\uc774 \ucde8\uc18c\ub418\uc5c8\uc2b5\ub2c8\ub2e4.","order_information_has_been_changed":"\uc8fc\ubb38\uc815\ubcf4\uac00 \ubcc0\uacbd\ub418\uc5c8\uc2b5\ub2c8\ub2e4.","order_date":"\uc8fc\ubb38\uc77c","point_payment":"\ud3ec\uc778\ud2b8 \uacb0\uc81c","cancel_point_payment":"\ud3ec\uc778\ud2b8 \uacb0\uc81c \ucde8\uc18c","paypal":"\ud398\uc774\ud314","point":"\ud3ec\uc778\ud2b8","zipcode":"\uc6b0\ud3b8\ubc88\ud638","this_year":"\uc62c\ud574","last_year":"\uc791\ub144","period_total":"\uae30\uac04 \ud569\uacc4","total_revenue":"\uc804\uccb4 \uc218\uc775","terms_of_service":"\uc774\uc6a9\uc57d\uad00","i_agree_to_the_terms_of_service":"\uc774\uc6a9\uc57d\uad00\uc5d0 \ub3d9\uc758\ud569\ub2c8\ub2e4.","your_shopping_cart_is_empty":"\uc7a5\ubc14\uad6c\ub2c8\uac00 \ube44\uc5b4 \uc788\uc2b5\ub2c8\ub2e4!","category":"\uce74\ud14c\uace0\ub9ac","select":"\uc120\ud0dd","category_select":"\uce74\ud14c\uace0\ub9ac \uc120\ud0dd","information":"\uc815\ubcf4","telephone":"\uc804\ud654\ubc88\ud638","items":"\ud488\ubaa9","total_amount":"\ud569\uacc4\uae08\uc561","total_quantity":"\ucd1d\uc218\ub7c9","make_payment":"\uacb0\uc81c\ud558\uae30","add":"\ucd94\uac00","close":"\ub2eb\uae30"};
+var kboard_comments_localize_strings = {"reply":"\ub2f5\uae00","cancel":"\ucde8\uc18c","please_enter_the_author":"\uc791\uc131\uc790\uba85\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_password":"\ube44\ubc00\ubc88\ud638\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_CAPTCHA":"\ubcf4\uc548\ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.","please_enter_the_content":"\ub0b4\uc6a9\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.","are_you_sure_you_want_to_delete":"\uc0ad\uc81c \ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?","please_wait":"\uc7a0\uc2dc\ub9cc \uae30\ub2e4\ub824\uc8fc\uc138\uc694.","name":"\uc774\ub984","email":"\uc774\uba54\uc77c","address":"\uc8fc\uc18c","postcode":"\uc6b0\ud3b8\ubc88\ud638","phone_number":"\uc5f0\ub77d\ucc98","find":"\ucc3e\uae30","rate":"\ub4f1\uae09","ratings":"\ub4f1\uae09","waiting":"\ub300\uae30","complete":"\uc644\ub8cc","question":"\uc9c8\ubb38","answer":"\ub2f5\ubcc0","notify_me_of_new_comments_via_email":"\uc774\uba54\uc77c\ub85c \uc0c8\ub85c\uc6b4 \ub313\uae00 \uc54c\ub9bc \ubc1b\uae30","comment":"\ub313\uae00","comments":"\ub313\uae00"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/kboard/template/js/script.js?ver=6.6" id="kboard-script-js"></script>
+<script type="text/javascript" src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" id="daum-postcode-js"></script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/td-cloud-library/assets/js/js_files_for_front.min.js?ver=388b2d8ea1192f4a22a4fef9c5911ef0" id="tdb_js_files_for_front-js"></script>
+<script type="text/javascript" id="flra-script-js-extra">
+/* <![CDATA[ */
+var flra_array = {"MainContentW":"1200","LeftBannerW":"160","RightBannerW":"160","LeftAdjust":"30","RightAdjust":"30","TopAdjust":"380","TopAdjustScroll":"140"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.mobiinside.co.kr/wp-content/plugins/devvn-float-left-right-ads/left-right-ads/float-left-right.js?ver=1.0.8" id="flra-script-js"></script>
+
+<!-- JS generated by theme -->
+
+<script>
+    
+
+                jQuery().ready(function jQuery_ready() {
+                    tdAjaxCount.tdGetViewsCountsAjax("post","[126272]");
+                });
+            
+</script>
+
+
+</body>
+</html>
