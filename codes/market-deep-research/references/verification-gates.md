@@ -31,8 +31,11 @@ high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사).
 
 ## G3 verify_facts + manifest (실패 0)
 `verify_facts.py <report.md> <work_dir> [--conversion]`:
-본문/부록 분리 · 무태그 숫자 차단 · (Fxxx) 존재+confirmed+값 의미대조 · evidence 필수필드 ·
-text_quote verbatim · high-risk 캡처 실재. → `manifest.py build`(해시 고정).
+본문/부록 분리(주석 `<!-- FACTSHEET:APPENDIX -->` 우선, 없으면 '## 부록' 헤딩 최후 출현) ·
+본문을 문장·표행 세그먼트로 나눠 수치↔(Fxxx) 1:1 최근접 결박(태그 하나가 줄 전체를 면제하지
+않음) · 무태그 숫자 차단 · (Fxxx) 존재+confirmed+값·**단위** 의미대조(Decimal 스케일·차원,
+불일치 시 `[단위불일치]`/`[값불일치]`) · evidence 필수필드 · text_quote verbatim ·
+high-risk 캡처 실재. → `manifest.py build`(해시 고정).
 
 ## G5c 실행코드 검증(계산·상충)
 자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).

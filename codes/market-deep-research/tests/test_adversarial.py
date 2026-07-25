@@ -151,6 +151,152 @@ def manifest_capture_swap():
         assert not v["ok"] and v["changed"], v
 
 
+# --- G3 재작성 회귀(V02·V13·V10·V09) ------------------------------------------
+def _confirm(db, wp, fid, with_capture=True):
+    """fact 를 confirmed 로 만든다(증거+팀리드 재열람). with_capture 면 실파일까지 결박해
+    check_evidence_chain 의 [증빙] 실패가 값대조 assert 를 오염시키지 않게 한다."""
+    ev = {"fact_id": fid, "type": "table_cell", "source_url": "https://x", "sha256": _H}
+    if with_capture:
+        cap = f"_captures/{fid}.png"
+        (wp.captures).mkdir(parents=True, exist_ok=True)
+        (wp.root / cap).write_bytes(b"\x89PNG")
+        ev["capture"] = cap
+    db.add_evidence(ev)
+    db.add_verify_event(fid, "lead", "reread")
+    db.set_status(fid, "confirmed")
+
+
+@case
+def segment_binding():
+    """V02-1·V02-2: 세그먼트 안 1:1 최근접 결박 — 문장 내 두 번째(무태그) 수치가 첫 태그로
+    면제되지 않고, 태그가 수치보다 앞에 와도(선행 태그) 값대조가 걸린다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)          # F001 raw=300.9 unit=KRW_T
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+
+        (wp.root / "r1.md").write_text(
+            "매출은 300.9조원(F001) 이며 2030년에는 999조원까지 성장한다.\n", encoding="utf-8")
+        r1 = verify_facts.verify(wp.root / "r1.md", wd)
+        assert not r1["ok"] and any("무태그" in f for f in r1["failures"]), r1
+        assert not any("값불일치" in f for f in r1["failures"]), r1  # F001 자체는 값일치라 오염 없어야
+
+        (wp.root / "r2.md").write_text("(F001) 매출은 999조원.\n", encoding="utf-8")
+        r2 = verify_facts.verify(wp.root / "r2.md", wd)
+        assert not r2["ok"] and any("값불일치" in f for f in r2["failures"]), r2
+
+
+@case
+def scale_unit_bypass():
+    """V02-3·V02-4: 콤마 10배 오기·단위 축척 오기가 값대조를 통과하지 못하는지.
+    긍정형 짝: 같은 대장에 정상 표기 '300.9조원(F001)' 은 ok=True 여야 한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)          # F001 raw=300.9 unit=KRW_T
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+
+        (wp.root / "ok.md").write_text(
+            "매출은 300.9조원(F001).\n\n![증빙](_captures/F001.png)\n", encoding="utf-8")
+        rok = verify_facts.verify(wp.root / "ok.md", wd)
+        assert rok["ok"], rok
+
+        (wp.root / "comma.md").write_text("매출은 3,009조원(F001).\n", encoding="utf-8")
+        rc = verify_facts.verify(wp.root / "comma.md", wd)
+        assert not rc["ok"] and any("값불일치" in f for f in rc["failures"]), rc
+
+        (wp.root / "scale.md").write_text("매출은 300.9억원(F001).\n", encoding="utf-8")
+        rs = verify_facts.verify(wp.root / "scale.md", wd)
+        assert not rs["ok"] and any(("값불일치" in f or "단위불일치" in f) for f in rs["failures"]), rs
+
+
+@case
+def range_value_ok():
+    """V02-5: 대장이 범위값(45~50%)일 때 동일 범위 표기는 통과, 범위가 어긋나면 실패."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("범위", base=td)
+        db = FactsDB(wd)
+        db.add_fact({"claim": "점유율 45~50%", "risk": "normal", "status": "pending",
+                     "context": {"metric": "share", "entity": "글로벌", "geography": "GL", "period": "2030"},
+                     "value": {"raw": "45~50", "unit": "%"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+
+        (wp.root / "ok.md").write_text(
+            "점유율은 45~50%(F001).\n\n![증빙](_captures/F001.png)\n", encoding="utf-8")
+        rok = verify_facts.verify(wp.root / "ok.md", wd)
+        assert rok["ok"], rok
+        assert not any("값불일치" in f for f in rok["failures"]), rok
+
+        (wp.root / "bad.md").write_text("점유율은 45~60%(F001).\n", encoding="utf-8")
+        rbad = verify_facts.verify(wp.root / "bad.md", wd)
+        assert not rbad["ok"] and any("값불일치" in f for f in rbad["failures"]), rbad
+
+
+@case
+def evidence_table_row_forgery():
+    """V02-6: 근거표 행(사실(F001) | 위조수치 | …)이 표 셀 경계에 가려 전건 면제되지 않는지."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)          # F001 raw=300.9 unit=KRW_T
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        md = "| 사실 | 수치 |\n|---|---|\n| 매출(F001) | 999조원 |\n"
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any(("무태그" in f or "값불일치" in f) for f in rep["failures"]), rep
+
+
+@case
+def numeral_and_energy_units_untagged():
+    """V13-7: 한국식 수사 삽입형(1천억)·TWh 무태그 사실주장 검출. '12건'·'3개사' 같은 구조
+    카운트(계수 단위)는 오탐하지 않아야 한다(긍정형 짝)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        for text in ("투자액은 1천억원 규모다.\n", "발전량은 연 10 TWh.\n", "생산량은 10만톤이다.\n"):
+            (wp.root / "x.md").write_text(text, encoding="utf-8")
+            rep = verify_facts.verify(wp.root / "x.md", wd)
+            assert not rep["ok"] and any("무태그" in f for f in rep["failures"]), (text, rep)
+
+        (wp.root / "cnt.md").write_text("총 12건의 프로젝트를 3개사가 진행한다.\n", encoding="utf-8")
+        rcnt = verify_facts.verify(wp.root / "cnt.md", wd)
+        assert not any("무태그" in f for f in rcnt["failures"]), rcnt
+
+
+@case
+def appendix_forward_bypass():
+    """V10-8: 본문 중간의 '## 부록' 소제목 하나로 뒤 진짜 본문이 부록 취급돼 빠지지 않는지
+    (경계는 주석 최우선, 없으면 최후 헤딩). 긍정형 짝: 정식 주석 마커 뒤 부록은 여전히 면제."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        md = ("본론\n## 부록: 용어 정리\n시장은 999조원 규모다.\n"
+              "<!-- FACTSHEET:APPENDIX -->\n## 부록\n999조원(F001)\n")
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("무태그" in f for f in rep["failures"]), rep
+
+        _confirm(db, wp, "F001")
+        good = ("본론 정상 서술.\n\n![증빙](_captures/F001.png)\n"
+                "<!-- FACTSHEET:APPENDIX -->\n## 부록\n- 소스: 사내(F001)\n")
+        (wp.root / "g.md").write_text(good, encoding="utf-8")
+        rgood = verify_facts.verify(wp.root / "g.md", wd)
+        assert rgood["ok"], rgood
+
+
+@case
+def missing_image_path():
+    """V09-9: 이미지 문법은 있으나 참조 경로가 실재하지 않으면 [도판경로] 로 검출."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        md = "매출 300.9조원(F001).\n\n![c](_captures/DOES_NOT_EXIST.png)\n"
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("도판경로" in f for f in rep["failures"]), rep
+
+
 def main():
     import traceback
     ok = 0

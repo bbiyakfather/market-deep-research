@@ -46,7 +46,7 @@ description: >-
 [Bx] 반박·claim-graph ─ high-risk 주장: 독립그룹·반박검색·기본소스·시간증거  【v3-B】
 [G2] 증빙 게이트 ─ confirmed 전건 source_capture(핵심수치 필수)
 [3]  보고서 작성 ─ 고객 report.md(11부) + 내부 audit 번들 동시
-[G3] verify_facts + manifest ─ 실패 0 · 무태그숫자 차단 · 해시 고정
+[G3] verify_facts + manifest ─ 실패 0 · 무태그·단위 차단(세그먼트 결박) · 해시 고정
 [G5c]실행코드 검증 ─ 계산·상충 주장 스크립트 실증(CONFIRMED/REFUTED)   【v3-G5】
 [4]  render_pdf ─ GitHub 스타일 오프라인 PDF
 [G4] preview ─ 팀리드 육안검증(fitz 이미지 Read)
@@ -107,8 +107,10 @@ description: >-
 - 내부 `audit/`: facts 전수·폐기목록+사유·실패소스·검증이력·raw·세션 저널.
 
 ### [G3] verify_facts + manifest (실패 0)
-- `scripts/verify_facts.py`: 본문/생성부록 분리 파싱 · 무태그 숫자·통화·비율·표셀 탐지(태그
-  없는 사실주장 차단) · 모든 `(Fxxx)` 대장 존재+status∈{confirmed} + 값·단위·기간·주체 의미
+- `scripts/verify_facts.py`: 본문/생성부록 분리 파싱(부록 경계는 주석 우선, 없으면 헤딩 최후
+  출현) · 본문을 문장·표행 세그먼트로 나눠 수치↔`(Fxxx)`를 1:1 최근접 결박(태그 하나가 줄
+  전체를 면제하지 않음) · 무태그 숫자·통화·비율·표셀 탐지(태그 없는 사실주장 차단) · 모든
+  `(Fxxx)` 대장 존재+status∈{confirmed} + 값·**단위**(Decimal 스케일·차원, `[단위불일치]`)
   대조 · evidence 필수필드 누락 0 · source_capture 실재(핵심수치) · [환산 ON] Decimal 검산.
 - `scripts/manifest.py build`: source/capture/report/PDF/대장 SHA-256 고정.
 
