@@ -47,7 +47,12 @@ except Exception:
 
 def _ascii_ca() -> str | None:
     """libcurl(C)은 non-ASCII 경로의 CA 파일을 못 연다(Windows 한글 계정 이슈).
-    certifi 번들 경로가 non-ASCII면 ASCII 경로로 1회 복사해 그 경로를 쓴다. verify는 항상 ON."""
+    certifi 번들 경로가 non-ASCII면 ASCII 경로로 1회 복사해 그 경로를 쓴다. verify는 항상 ON.
+    V24: 매 실행 무조건 덮어써 위조 번들 선점을 막는다(크기만 비교하면 동일크기 위조를 못 잡음).
+    후보 경로는 사용자 전용 → 세계쓰기 순. 이 분기가 도는 조건이 '홈 경로가 non-ASCII' 라
+    사용자 전용 경로가 항상 쓸 수 있는 게 아니고, ASCII 가 아니면 libcurl 이 못 여니
+    ProgramData 폴백이 필요하다. 기존 ProgramData 잔존본은 다른 프로세스가 쓸 수 있어
+    지우지 않고 덮어쓰기만 한다."""
     try:
         import certifi
     except Exception:
@@ -57,14 +62,17 @@ def _ascii_ca() -> str | None:
         ca.encode("ascii"); return ca                # 이미 ASCII면 그대로
     except UnicodeEncodeError:
         pass
-    for base in (os.environ.get("ProgramData", r"C:\ProgramData"),
-                 (os.environ.get("SystemDrive", "C:") + "\\")):
+    for base in (Path.home() / ".claude",             # 사용자 전용(홈이 ASCII 일 때만 성립)
+                 Path(os.environ.get("ProgramData", r"C:\ProgramData")),
+                 Path(os.environ.get("SystemDrive", "C:") + "\\")):
         try:
-            dst = Path(base) / "market-deep-research" / "cacert.pem"
+            dst = base / "market-deep-research" / "cacert.pem"
+            s = str(dst); s.encode("ascii")           # 복사 전에 ASCII 판정(무의미한 쓰기 방지)
             dst.parent.mkdir(parents=True, exist_ok=True)
-            if not dst.exists() or dst.stat().st_size != Path(ca).stat().st_size:
-                shutil.copyfile(ca, dst)
-            s = str(dst); s.encode("ascii"); return s
+            # ponytail: 무조건 덮어쓰기. 덮어쓰기~libcurl 읽기 사이 TOCTOU 창은 남는다.
+            #           완전 차단은 디렉터리 ACL 제한이 필요하고 그건 이 스킬 범위 밖.
+            shutil.copyfile(ca, dst)
+            return s
         except Exception:
             continue
     return ca
