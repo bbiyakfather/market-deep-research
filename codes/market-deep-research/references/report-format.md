@@ -27,15 +27,19 @@ verify_facts.py 가 이 마커 이후를 부록으로 보고 '본문 사용'에�
 **고객/audit 분리(사용자 잠금)**: 6·7·8 은 **요지만**. 폐기목록·실패URL·미확인의혹·반박 상세는
 고객 PDF 미노출 → 내부 audit 로.
 
-## 조사유형별 목차 변형
-- **기술동향**: 3부 축=기술요소/성숙도/플레이어/정책 · 4부=기술지표(TRL·특허·성능) · 5부=연구기관 매핑.
-- **산업동향**: 3부=밸류체인 단계별 · 4부=시장규모·성장률(KOSIS/DART) · 8부(규제·정책 변화) 비중↑.
-- **기관·기업 실사**: 0부 entity-identity 선고정 · 5부=지배구조·재무·연혁 · 6부(검증요약) 비중↑.
+## 조사유형별 목차 변형 — 축 프리셋(단일 진실원)
+축(조사질문=에이전트 분할=3부 챕터, 1:1 대응) 이름은 **이 절에서만** 정의한다. `SKILL.md`·
+`agent-briefs.md`·`references/research-plan.md` 는 이 절을 참조만 하고 축 이름을 다시 나열하지
+않는다. 축 도출 절차·품질 기준(MECE·3~5개)은 `references/research-plan.md` 참조.
+- **기술동향**: 3부 축=기술요소/플레이어/시장/정책 · 4부=기술지표(TRL·특허·성능, 구 축 1개 폐기분 흡수) · 5부=연구기관 매핑.
+- **산업동향**: 3부 축=밸류체인/통계(KOSIS·DART·KIPRIS)/해외 · 4부=시장규모·성장률 · 8부(규제·정책 변화) 비중↑.
+- **기관·기업 실사**: 0부 entity-identity 선고정 · 3부 축=일반현황/사업현황/재무실적 · 5부=지배구조·계열사 엔티티 매핑(재무는 3부 소관, 5부와 중복 금지) · 6부(검증요약) 비중↑.
 
 ## 내부 audit 번들 (`audit/`)
-`facts.jsonl`(전수표) · 폐기목록+사유 · 실패소스URL · 검증이력(verify_events) · raw agent output ·
-세션 저널(`intent-diff.md`·`expansion-log.md`·`verification-economics.md`·`cause-disappearance.md`) ·
-`manifest.json` · `verify-<slug>.md`(실행검증).
+`research-plan.md`(G0 확정 조사계획·승인 목차) · `facts.jsonl`(전수표) · 폐기목록+사유 ·
+실패소스URL · 검증이력(verify_events) · raw agent output · 세션 저널(`intent-diff.md`·
+`expansion-log.md`·`verification-economics.md`·`cause-disappearance.md`) · `manifest.json` ·
+`verify-<slug>.md`(실행검증).
 
 ## 렌더
 `render_pdf.py`(pandoc gfm→html --embed-resources + style.html → HeadlessChrome, 오프라인·한글경로).
