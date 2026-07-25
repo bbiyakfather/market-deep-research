@@ -32,12 +32,12 @@ def reconstruct_excerpt(text: str, source_url: str, out_png: Path | str,
         f'<div style="color:#888;font-size:10px;margin-top:10px;">재구성: {_now()} · '
         f'출처(주장): {_html.escape(source_url)}</div></div>')
     doc = fitz.open()
-    page = doc.new_page(width=width / 2, height=1)          # 높이는 자동확장
+    page = doc.new_page(width=width / 2, height=2000)       # rect 밖은 잘리므로 충분한 높이로 생성
     rect = fitz.Rect(0, 0, width / 2, 2000)
-    spare = page.insert_htmlbox(rect, doc_html)             # 남은 높이 반환
-    used_h = 2000 - (spare if isinstance(spare, (int, float)) else spare[1])
-    page.set_mediabox(fitz.Rect(0, 0, width / 2, max(40, used_h + 12)))
-    pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
+    spare = page.insert_htmlbox(rect, doc_html)             # (남은 높이, scale) 반환 — [0]이 남은 높이
+    used_h = 2000 - (spare if isinstance(spare, (int, float)) else spare[0])
+    clip = fitz.Rect(0, 0, width / 2, max(40, used_h + 12))
+    pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=clip)   # mediabox 조작 대신 클립으로 크롭
     Path(out_png).parent.mkdir(parents=True, exist_ok=True)
     pix.save(str(out_png))
     doc.close()
@@ -52,6 +52,10 @@ def demo() -> None:
                                 "https://example.com/report", Path(td) / "r1.png")
         assert r["type"] == "reconstructed_excerpt" and r["evidence"] is False
         assert Path(r["path"]).stat().st_size > 0
+        # V23 회귀 가드: 백지 PNG(수정 전 720x4022, 비백색 픽셀 0개)로 돌아가지 않았는지 확인
+        px = fitz.Pixmap(r["path"])
+        assert px.height < 400, px.height
+        assert any(px.samples[i] < 240 for i in range(0, len(px.samples), 3))
     print(f"[{_now()}] capture_web demo OK  (증빙 불인정 산출물)")
 
 
