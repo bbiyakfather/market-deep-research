@@ -32,12 +32,14 @@ confirmed 전건 `source_capture`(capture_pdf 또는 playwright 실화면). html
 high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사).
 
 ## G3 verify_facts + manifest (실패 0)
-`verify_facts.py <report.md> <work_dir> [--conversion]`:
+`verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]`:
 본문/부록 분리(주석 `<!-- FACTSHEET:APPENDIX -->` 우선, 없으면 '## 부록' 헤딩 최후 출현) ·
 본문을 문장·표행 세그먼트로 나눠 수치↔(Fxxx) 1:1 최근접 결박(태그 하나가 줄 전체를 면제하지
 않음) · 무태그 숫자 차단 · (Fxxx) 존재+confirmed+값·**단위** 의미대조(Decimal 스케일·차원,
 불일치 시 `[단위불일치]`/`[값불일치]`) · evidence 필수필드 · text_quote verbatim ·
-high-risk 캡처 실재. → `manifest.py build`(해시 고정 — 이 시점은 report.pdf 생성 전이라
+high-risk 캡처 실재 · **목차 기계검사**(`--plan` 미지정 시 `audit/research-plan.md` 자동탐지,
+그마저 없으면 생략 — 계획 파일 없는 기존 조사는 이 검사만으로 FAIL 하지 않음). →
+`manifest.py build`(해시 고정 — 이 시점은 report.pdf 생성 전이라
 렌더 산출물은 [4] 이후 재봉인에서 추가됨).
 
 ## G5c 실행코드 검증(계산·상충)

@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import fitz                                                 # noqa: E402
-from skill_paths import resolve_work_dir, WorkPaths        # noqa: E402
+from skill_paths import REFERENCES, resolve_work_dir, WorkPaths   # noqa: E402
 from facts_db import (FactsDB, ValidationError, _write_jsonl_atomic,      # noqa: E402
                        check_capture_path, load_schema, validate_fact)
 import capture_pdf                                          # noqa: E402
@@ -789,6 +789,144 @@ def orphan_evidence_rejected():
         ev = db.add_evidence({"fact_id": "F001", "type": "table_cell",
                               "source_url": "https://x", "sha256": _H})   # 긍정형 짝
         assert ev["fact_id"] == "F001" and len(db.evidence()) == 1
+
+
+# --- G6b 재작성 회귀(봉인 순서 정합) -------------------------------------------
+@case
+def pdf_tamper_detected():
+    """재봉인 후 report.pdf 를 1바이트 변조하면 ok=False 이고 changed 에 report.pdf 포함.
+    (수정 전에는 report.pdf 가 애초에 매니페스트에 없어 변조해도 절대 검출 안 됐다.)"""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("pdf변조", base=td)
+        wp = WorkPaths(wd)
+        wp.report_pdf.write_bytes(b"%PDF-1.4 original content")
+        manifest.build(wp)                                    # 봉인(report.pdf 포함)
+        assert manifest.verify(wp)["ok"]
+        data = bytearray(wp.report_pdf.read_bytes())
+        data[10] ^= 0xFF                                       # 1바이트 변조
+        wp.report_pdf.write_bytes(bytes(data))
+        v = manifest.verify(wp)
+        assert not v["ok"] and "report.pdf" in v["changed"], v
+
+
+@case
+def unsealed_new_file_fails():
+    """봉인 후 추적 대상 디렉터리(_captures/)에 임의 파일을 추가하면 ok=False.
+    (수정 전에는 new 항목이 ok 판정에 안 들어가 조용히 통과했다 — render 로 생긴 report.pdf
+    가 영구히 미봉인 상태로 남던 것과 같은 뿌리의 구멍.)"""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("미봉인신규", base=td)
+        wp = WorkPaths(wd)
+        (wp.sources / "a.txt").write_text("x", encoding="utf-8")
+        manifest.build(wp)
+        assert manifest.verify(wp)["ok"]
+        (wp.captures / "sneaky.png").write_bytes(b"\x89PNG")   # 봉인 후 임의 파일 추가
+        v = manifest.verify(wp)
+        assert not v["ok"] and "_captures/sneaky.png" in v["new"], v
+
+
+# --- G9 재작성 회귀(목차 기계검사) --------------------------------------------
+def _toc_plan(wp: WorkPaths, plan_text: str) -> None:
+    wp.audit.mkdir(parents=True, exist_ok=True)
+    (wp.audit / "research-plan.md").write_text(plan_text, encoding="utf-8")
+
+
+@case
+def toc_part_missing():
+    """승인 목차의 부가 본문에서 통째로 빠지면 [목차이탈] FAIL. 긍정형 짝: 부가 전부 있으면
+    PASS([도판경로] 오염 방지를 위해 실제 캡처 이미지를 참조한다)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        _toc_plan(wp, "# 부 0. 개요\n# 부 1. 검증 요약\n# 부 3. 테마별 본론\n## 축: 매출\n")
+
+        bad = ("## 0. 개요\n매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n\n"
+              "## 3. 테마별 본론\n### 매출\n서술.\n")          # '부 1. 검증 요약' 통째로 빠짐
+        (wp.root / "bad.md").write_text(bad, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "bad.md", wd)
+        assert not rep["ok"] and any("목차이탈" in f for f in rep["failures"]), rep
+
+        good = ("## 0. 개요\n매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n\n"
+               "## 1. 검증 요약\n검증 내용.\n\n## 3. 테마별 본론\n### 매출\n서술.\n")
+        (wp.root / "good.md").write_text(good, encoding="utf-8")
+        rep2 = verify_facts.verify(wp.root / "good.md", wd)
+        assert not any("목차이탈" in f for f in rep2["failures"]), rep2
+
+
+@case
+def toc_empty_section():
+    """헤딩은 있는데 다음 헤딩까지 본문이 비어 있으면 [빈챕터] FAIL. 긍정형 짝: 내용 있으면 PASS."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        _toc_plan(wp, "# 부 0. 개요\n# 부 3. 테마별 본론\n## 축: 매출\n")
+
+        bad = ("## 0. 개요\n\n## 3. 테마별 본론\n### 매출\n매출은 300.9조원(F001).\n\n"
+              "![c](_captures/F001.png)\n")                     # '0. 개요' 헤딩만 있고 본문 없음
+        (wp.root / "bad.md").write_text(bad, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "bad.md", wd)
+        assert not rep["ok"] and any("빈챕터" in f for f in rep["failures"]), rep
+
+        good = ("## 0. 개요\n개요 서술.\n\n## 3. 테마별 본론\n### 매출\n"
+               "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n")
+        (wp.root / "good.md").write_text(good, encoding="utf-8")
+        rep2 = verify_facts.verify(wp.root / "good.md", wd)
+        assert not any("빈챕터" in f for f in rep2["failures"]), rep2
+
+        # 조건부 부는 '해당 없음' 한 줄이면 충족(빈챕터로 안 잡힘)
+        _toc_plan(wp, "# 부 3. 테마별 본론\n## 축: 매출\n# 부 5. 결론(해당 시)\n")
+        cond = ("## 3. 테마별 본론\n### 매출\n매출은 300.9조원(F001).\n\n"
+               "![c](_captures/F001.png)\n\n## 5. 결론\n해당 없음\n")
+        (wp.root / "cond.md").write_text(cond, encoding="utf-8")
+        rep3 = verify_facts.verify(wp.root / "cond.md", wd)
+        assert not any("빈챕터" in f for f in rep3["failures"]), rep3
+
+
+@case
+def toc_axis_chapter_missing():
+    """3부 승인 축 챕터가 본문에 없으면 [축누락] FAIL. 긍정형 짝: 축 챕터가 다 있으면 PASS."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        _toc_plan(wp, "# 부 3. 테마별 본론\n## 축: 매출\n## 축: 시장규모\n")
+
+        bad = ("## 3. 테마별 본론\n### 매출\n매출은 300.9조원(F001).\n\n"
+              "![c](_captures/F001.png)\n")                     # '시장규모' 축 챕터 없음
+        (wp.root / "bad.md").write_text(bad, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "bad.md", wd)
+        assert not rep["ok"] and any("축누락" in f for f in rep["failures"]), rep
+
+        good = ("## 3. 테마별 본론\n### 매출\n매출은 300.9조원(F001).\n\n"
+               "![c](_captures/F001.png)\n\n### 시장규모\n서술.\n")
+        (wp.root / "good.md").write_text(good, encoding="utf-8")
+        rep2 = verify_facts.verify(wp.root / "good.md", wd)
+        assert not any("축누락" in f for f in rep2["failures"]), rep2
+
+
+@case
+def plan_format_contract():
+    """research-plan.md 의 '승인 목차 예시' 블록을 그대로 읽어 파서에 먹인다 — G2 가 서식을
+    바꾸는 순간 자동탐지가 게이트 강화가 아니라 전건 오탐 폭탄이 되므로, 실제 파일을 직접
+    검증해 문서-파서 계약을 고정한다. 긍정형 짝: --plan 미지정(기본값)이면 목차 관련
+    failure 가 0(계획 파일 없는 기존 조사와 호환)."""
+    plan_path = REFERENCES / "research-plan.md"
+    parts, axes = verify_facts.parse_plan_toc(plan_path.read_text(encoding="utf-8"))
+    assert len(parts) >= 3, parts
+    assert len(axes) >= 1, axes
+    assert any(title == "부록" for _, title in parts), parts
+
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "r.md").write_text(
+            "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)      # plan 미지정 → 자동탐지도 실패(없음)
+        assert not any(x.startswith(("[목차이탈]", "[빈챕터]", "[축누락]"))
+                      for x in rep["failures"]), rep
 
 
 def main():

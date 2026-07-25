@@ -12,14 +12,16 @@
                              본문에 쓰인 confirmed 핵심수치(raw 가 Decimal 로 파싱되는 값) source_capture 실재
   7. check_figures         — 본문 대표 이미지(증빙캡처·차트·도식) 존재 + 참조 경로 실재([도판경로]) +
                              생성했으나 미결박 캡처 표면화
-  (스텁) check_toc         — 목차 기계검사. G9 에서 구현 예정, 현재는 no-op.
+  8. check_toc             — 목차 기계검사(G9). references/research-plan.md 의 승인 목차
+                             ('# 부 N. 제목'/'## 축: 이름')를 파싱해 본문 헤딩·빈 챕터·축
+                             커버리지를 대조. 계획 파일이 없으면 검사 생략(warning 만).
 
 부록 경계: '<!-- FACTSHEET:APPENDIX -->' 주석이 있으면 그 지점을 최우선으로 쓴다. 주석이 없으면
 직전 최후 출현하는 '## 부록'/'## Appendix' 헤딩을 경계로 쓴다(문서 중간의 소제목 하나로 뒤 본문
 전체가 부록 취급되는 것을 막기 위해 '최초 출현'이 아니라 '최후 출현'을 쓴다). 마커/헤딩이 전혀
 없으면 문서 전체를 본문으로 본다. 주석 마커를 쓰는 것을 권장한다(report-format.md 참조).
 
-CLI: python verify_facts.py <report.md> <work_dir> [--conversion]
+CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]
      python verify_facts.py demo
 """
 from __future__ import annotations
@@ -462,12 +464,89 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], 
     return failures, warnings
 
 
-def check_toc(md: str, wp: WorkPaths) -> list[str]:
-    """목차(11부 표준목차) 기계검사 스텁. --plan 배선은 G9 소관, 현재는 no-op."""
-    return []
+# --- 목차(G9) ----------------------------------------------------------------
+# research-plan.md "승인 목차 예시" 서식 — 부 번호·제목은 '# 부 N. 제목', 3부 하위 축 챕터는
+# '## 축: 이름' 으로 고정 표기(문서 자체가 정본, 서식 임의 변경 금지 — 바뀌면 파서도 같이 깨져야
+# 정합이 유지되므로 plan_format_contract 케이스로 실제 파일을 직접 먹여 계약을 고정한다).
+_PLAN_PART = re.compile(r"^# 부 (\d+)\.\s*(.+)$", re.M)
+_PLAN_AXIS = re.compile(r"^## 축:\s*(.+)$", re.M)
+_COND_MARK = "(해당 시)"
 
 
-def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool = False) -> dict:
+def parse_plan_toc(text: str) -> tuple[list[tuple[int, str]], list[str]]:
+    """승인 목차 텍스트에서 (부번호, 제목) 목록과 '3부' 바로 아래(다음 '# 부' 전까지)의
+    '## 축:' 이름 목록을 뽑는다."""
+    parts = [(int(n), title.strip()) for n, title in _PLAN_PART.findall(text)]
+    part_matches = list(_PLAN_PART.finditer(text))
+    axes: list[str] = []
+    for i, m in enumerate(part_matches):
+        if m.group(1) == "3":
+            end = part_matches[i + 1].start() if i + 1 < len(part_matches) else len(text)
+            axes = [a.strip() for a in _PLAN_AXIS.findall(text[m.end():end])]
+            break
+    return parts, axes
+
+
+_MD_HEADING = re.compile(r"^(#{1,6})\s*(.+?)\s*$", re.M)
+
+
+def check_toc(md: str, wp: WorkPaths, plan: Path | str | None = None) -> tuple[list[str], list[str]]:
+    """승인 목차(research-plan.md 서식) 대비 본문의 목차 이탈·빈 껍데기·축 커버리지 검사.
+    plan 을 명시하지 않으면 wp.audit/research-plan.md 를 자동 탐지하되, 그마저 없으면 검사를
+    생략한다(warning 만) — 계획 파일이 없는 기존 조사를 전건 FAIL 시키지 않기 위함(비교대상
+    없이는 이탈도 없다). plan 이 명시됐거나 자동탐지된 파일이 실재할 때만 failure 로 승격."""
+    failures: list[str] = []
+    warnings: list[str] = []
+    plan_path = Path(plan) if plan else (wp.audit / "research-plan.md")
+    if not plan_path.exists():
+        warnings.append(f"[목차미검증] 승인 계획 없음({plan_path}) — 목차 기계검사 생략")
+        return failures, warnings
+
+    parts, axes = parse_plan_toc(plan_path.read_text(encoding="utf-8"))
+    if not parts:
+        warnings.append(f"[목차미검증] {plan_path} 에서 승인 목차('# 부 N.')를 못 찾음")
+        return failures, warnings
+
+    headings = [(m.start(), m.end(), len(m.group(1)), m.group(2).strip())
+                for m in _MD_HEADING.finditer(md)]
+    body_len = len(md)
+
+    def _find(title: str) -> int | None:
+        for idx, (_s, _e, _lvl, text) in enumerate(headings):
+            if title and (title in text or text in title):
+                return idx
+        return None
+
+    def _section(idx: int) -> str:
+        _s, end, level, _text = headings[idx]
+        nxt = next((h[0] for h in headings[idx + 1:] if h[2] <= level), body_len)
+        return md[end:nxt].strip()
+
+    for num, raw_title in parts:
+        conditional = _COND_MARK in raw_title
+        title = raw_title.replace(_COND_MARK, "").strip()
+        idx = _find(title)
+        if idx is None:
+            if conditional:
+                continue                # 조건부 부는 헤딩 자체가 없어도 충족
+            failures.append(f"[목차이탈] 승인 목차 '부 {num}. {title}' 이 본문에 없음")
+            continue
+        if not _section(idx):
+            failures.append(f"[빈챕터] '부 {num}. {title}' 헤딩만 있고 본문이 비어있음"
+                            + ("(조건부면 '해당 없음' 한 줄 필요)" if conditional else ""))
+
+    for axis in axes:
+        idx = _find(axis)
+        if idx is None:
+            failures.append(f"[축누락] 승인 축 '{axis}' 챕터가 본문에 없음")
+        elif not _section(idx):
+            failures.append(f"[빈챕터] 축 '{axis}' 헤딩만 있고 본문이 비어있음")
+
+    return failures, warnings
+
+
+def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool = False,
+          plan: Path | str | None = None) -> dict:
     md = Path(report_md).read_text(encoding="utf-8")
     body, _appendix = split_body_appendix(md)
     db = FactsDB(work)
@@ -494,7 +573,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures += fig_fail
     warnings += fig_warn
 
-    failures += check_toc(md, wp)
+    toc_fail, toc_warn = check_toc(md, wp, plan)
+    failures += toc_fail
+    warnings += toc_warn
 
     if conversion:
         for f in facts.values():
@@ -589,7 +670,8 @@ if __name__ == "__main__":
     if not args or args[0] == "demo":
         demo()
     elif len(args) >= 2:
-        rep = verify(args[0], args[1], conversion="--conversion" in args)
+        plan = args[args.index("--plan") + 1] if "--plan" in args[:-1] else None
+        rep = verify(args[0], args[1], conversion="--conversion" in args, plan=plan)
         _print(rep)
         sys.exit(0 if rep["ok"] else 1)
     else:
