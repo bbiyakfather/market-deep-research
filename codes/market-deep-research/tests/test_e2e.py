@@ -79,14 +79,22 @@ def main():
                              "observer_group": "dart" if fid == "F001" else "market_report"})
             db.add_verify_event(f["id"], "lead", "reread", "원문 표셀 재열람 일치")
             if risk == "high":                          # claim-graph 필드(데모)
-                fr = [x for x in db.facts() if x["id"] == fid][0]
+                rows = db.facts()                       # 한 번만 읽어 그 원소를 갱신(재독으로 덮이지 않게)
+                fr = [x for x in rows if x["id"] == fid][0]
                 fr.update({"independent_groups": ["dart", "irstatement"],
                            "counter_search": {"query": "삼성 2024 매출 정정", "result": "없음",
                                               "found_stronger_refutation": False},
                            "primary_source_ref": "E001", "observed_at": "2026-07-22", "valid_at": "2025-03"})
                 from facts_db import _write_jsonl_atomic
-                _write_jsonl_atomic(wp.facts, db.facts())
+                _write_jsonl_atomic(wp.facts, rows)
             db.set_status(fid, "confirmed")
+
+        # 2.5) claim-graph 영속 확인 — set_status 재기록(디스크 재독+재쓰기) 이후에도 필드가 살아있는지
+        f001 = [x for x in db.facts() if x["id"] == "F001"][0]
+        assert f001["independent_groups"] == ["dart", "irstatement"], f001
+        assert f001["counter_search"]["found_stronger_refutation"] is False, f001
+        assert f001["primary_source_ref"] == "E001", f001
+        assert f001["valid_at"] == "2025-03", f001
 
         # 3) 보고서 작성
         wp.report_md.write_text(REPORT, encoding="utf-8")

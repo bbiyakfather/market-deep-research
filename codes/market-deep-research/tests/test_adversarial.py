@@ -3,6 +3,7 @@
 게이트/검증기가 조작·오류를 '정확히 실패로' 잡는지 확인한다. 각 케이스는 통과가 아니라
 '검출(실패 판정)'이 성공이다. chk-scope: 빈결과·삼킨 예외를 성공으로 신뢰하지 않는다.
 """
+import hashlib
 import sys
 import tempfile
 from pathlib import Path
@@ -16,6 +17,9 @@ import manifest                                            # noqa: E402
 import verify_facts                                        # noqa: E402
 
 CASES = []
+
+# 유효한 64자리 sha256 fixture 상수 — 후속 케이스가 "h" 같은 placeholder 를 재도입하지 못하게.
+_H = hashlib.sha256(b"fixture").hexdigest()
 
 
 def case(fn):
@@ -153,7 +157,7 @@ def main():
     for fn in CASES:
         try:
             fn(); print(f"  [검출OK] {fn.__name__}"); ok += 1
-        except AssertionError as e:
+        except Exception as e:                     # assert 외 예외로 스위트 전체가 죽지 않게
             print(f"  [실패!!] {fn.__name__}: {e}"); traceback.print_exc()
     print(f"\n적대적 fixture: {ok}/{len(CASES)} 검출 성공")
     sys.exit(0 if ok == len(CASES) else 1)
