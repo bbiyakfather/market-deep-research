@@ -3,6 +3,8 @@
 자체 스택만으로 파이프라인이 완주하는지, 고객PDF/audit 분리가 되는지 확인한다.
 네트워크 불필요(로컬 PDF 로 캡처 체인 검증). render 는 pandoc+chrome 사용.
 """
+import hashlib
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -74,7 +76,8 @@ def main():
                              "value": {"raw": raw, "unit": unit},
                              "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
             db.add_evidence({"fact_id": f["id"], "type": "table_cell",
-                             "source_url": "https://dart.fss.or.kr/e2e", "sha256": "h" + fid,
+                             "source_url": "https://dart.fss.or.kr/e2e",
+                             "sha256": hashlib.sha256(("e2e-" + fid).encode()).hexdigest(),
                              "locator": {"page": 1}, "capture": cap, "source_role": "원출처",
                              "observer_group": "dart" if fid == "F001" else "market_report"})
             db.add_verify_event(f["id"], "lead", "reread", "원문 표셀 재열람 일치")
@@ -110,6 +113,16 @@ def main():
         # 6) render → PDF (고객용)
         r = render_pdf.render(wp.report_md, wp.report_pdf, resource_dir=wp.root)
         assert r["ok"] and wp.report_pdf.stat().st_size > 2000, r
+
+        # 6.5) 재봉인 — [5]의 build 시점엔 report.pdf 가 없어 미봉인 상태다. 재봉인 전엔 신규
+        # 파일로 잡혀 verify 가 실패해야 하고, 재봉인 후엔 항목 해시가 실제 PDF 해시와 일치해야
+        # 한다(V06 회귀 가드).
+        v_unsealed = manifest.verify(wp)
+        assert not v_unsealed["ok"] and "report.pdf" in v_unsealed["new"], v_unsealed
+        manifest.build(wp)
+        assert manifest.verify(wp)["ok"]
+        sealed = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
+        assert sealed["report.pdf"]["sha256"] == manifest.sha256_file(wp.report_pdf)
 
         # 7) preview 육안검증 이미지
         imgs = preview_pdf.preview(wp.report_pdf, wp.root / "_preview")

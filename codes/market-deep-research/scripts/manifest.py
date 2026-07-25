@@ -70,7 +70,7 @@ def verify(work: WorkPaths | Path | str) -> dict:
     changed = [r for r in stored if r in current and stored[r]["sha256"] != current[r]["sha256"]]
     missing = [r for r in stored if r not in current]
     new = [r for r in current if r not in stored]
-    ok = not (changed or missing)          # 신규 추가만 있으면 무결성은 유지(경고만)
+    ok = not (changed or missing or new)   # 신규(미봉인) 파일도 실패 — render 산출물은 재봉인 필수
     return {"ok": ok, "changed": changed, "missing": missing, "new": new}
 
 
@@ -89,8 +89,19 @@ def demo() -> None:
         (wp.sources / "a.txt").write_text("tampered", encoding="utf-8")   # 변조
         v = verify(wp)
         assert not v["ok"] and v["changed"], f"변조 미검출: {v}"
+        (wp.sources / "a.txt").write_text("hello", encoding="utf-8")      # 원복(다음 단언 격리)
 
-        (wp.captures / "E001.png").write_bytes(b"\x89PNG")                # 신규만
+        # G3 build 이후 render_pdf 가 report.pdf 를 새로 만드는 상황 재현 — 재봉인 전엔 미봉인 신규
+        # 파일로 잡혀 실패해야 한다(V06 회귀 가드).
+        wp.report_pdf.write_bytes(b"%PDF-1.4 fake")
+        v2 = verify(wp)
+        assert not v2["ok"] and "report.pdf" in v2["new"], f"미봉인 신규 파일이 통과됨: {v2}"
+
+        build(wp)                                                         # 재봉인
+        assert verify(wp)["ok"], "재봉인 후에도 실패"
+
+        (wp.captures / "E001.png").write_bytes(b"\x89PNG")                # 재봉인 후 또 신규만
+        assert not verify(wp)["ok"], "재봉인 없이 신규 파일이 통과됨"
         build(wp)
         assert verify(wp)["ok"]
     print(f"[{datetime.now().isoformat(timespec='seconds')}] manifest demo OK")

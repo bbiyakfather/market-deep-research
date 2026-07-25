@@ -37,15 +37,18 @@ high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사).
 본문을 문장·표행 세그먼트로 나눠 수치↔(Fxxx) 1:1 최근접 결박(태그 하나가 줄 전체를 면제하지
 않음) · 무태그 숫자 차단 · (Fxxx) 존재+confirmed+값·**단위** 의미대조(Decimal 스케일·차원,
 불일치 시 `[단위불일치]`/`[값불일치]`) · evidence 필수필드 · text_quote verbatim ·
-high-risk 캡처 실재. → `manifest.py build`(해시 고정).
+high-risk 캡처 실재. → `manifest.py build`(해시 고정 — 이 시점은 report.pdf 생성 전이라
+렌더 산출물은 [4] 이후 재봉인에서 추가됨).
 
 ## G5c 실행코드 검증(계산·상충)
 자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
 
 ## G4 preview → G5 최종 무결성
-`preview_pdf.py` 육안검증 + **intent-diff 축별 대조**(`audit/intent-diff.md` 개시분의 축별
-"참이어야 하는가" 목록을 실제 보고서 발견과 대조 — 축마다 gap 유무 판정, 결과를
-`audit/intent-diff.md` 에 추기) → PDF F태그·링크·캡처 수 재검사 + `manifest.py verify`.
+report.pdf 생성 후 **재봉인**(`manifest.py build` 재실행 — [G3] 항목은 보존한 채 report.pdf 등
+렌더 산출물 해시를 추가) → `preview_pdf.py` 육안검증 + **intent-diff 축별 대조**
+(`audit/intent-diff.md` 개시분의 축별 "참이어야 하는가" 목록을 실제 보고서 발견과 대조 —
+축마다 gap 유무 판정, 결과를 `audit/intent-diff.md` 에 추기) → PDF F태그·링크·캡처 수 재검사
++ `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정).
 **복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
 **[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님).
 

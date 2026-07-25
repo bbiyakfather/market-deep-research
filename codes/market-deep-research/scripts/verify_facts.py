@@ -30,7 +30,9 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from facts_db import FactsDB
+import manifest
+from facts_db import (FactsDB, ValidationError, check_capture_path, load_schema,
+                       validate_evidence, validate_fact)
 from skill_paths import WorkPaths
 
 # --- 부록 경계 ---------------------------------------------------------------
@@ -315,17 +317,76 @@ def check_bound_numbers(body: str, facts: dict) -> tuple[list[str], list[str]]:
     return failures, warnings
 
 
-def check_ledger_integrity(facts: dict, used: set[str]) -> list[str]:
-    """confirmed 인데 본문에서 한 번도 태그로 안 쓰인 사실(유실 점검)."""
-    warnings = []
+# G4: risk 태깅 누락 경고 — 지표가 이 5개 범주(시장규모·성장률·딜규모·순위·점유율)에 해당하는데
+# risk=high 가 아니면 경고만(강제 아님, 다음 배치). 별도 설정 파일 없이 코드 리터럴로 유지.
+_HIGH_RISK_METRICS = ("market_size", "growth_rate", "deal_size", "rank", "share")
+
+
+def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
+                           evidence_raw: list[dict], wp: WorkPaths) -> tuple[list[str], list[str]]:
+    """confirmed 인데 본문 미사용(경고) + 대장 원시행 재검증(실패) + F-ID·E-ID·claim_key
+    유일성(실패) + 고위험 지표 risk 미태깅(경고).
+    verify() 가 `{f['id']: f for f in db.facts()}` 로 dict 화만 하면 같은 ID 중복행이 마지막
+    값으로 조용히 덮인다 — 대장 파일에 직접 append 된 미검증 행(예: status=confirmed·
+    evidence_ids=[] 인 조작 행)이나 중복 F-ID(하나가 값대조를 무력화)를 통과시킨다. 그래서
+    이 함수는 raw 리스트를 따로 받아 전 행을 validate_fact/validate_evidence 로 재검증한다."""
+    failures: list[str] = []
+    warnings: list[str] = []
+    schema = load_schema()
+
+    seen_fid: dict[str, dict] = {}
+    seen_claim_key: dict[str, str] = {}
+    for f in facts_raw:
+        fid = f.get("id")
+        if f.get("kind") == "evidence":       # 실전 픽스처에서 실측: evidence 행이 facts.jsonl 에 섞여 있음
+            failures.append(f"[대장오염] {fid}: evidence 행이 facts.jsonl 에 있음(파이프라인 오류)")
+            continue
+        if fid in seen_fid:
+            failures.append(f"[중복ID] fact.id {fid} 가 facts.jsonl 에 중복 행 — 대장 직접조작 의심")
+        else:
+            seen_fid[fid] = f
+        ck = f.get("claim_key")
+        if ck:
+            if ck in seen_claim_key and seen_claim_key[ck] != fid:
+                failures.append(f"[중복claim_key] {ck!r} → {seen_claim_key[ck]}·{fid} 중복")
+            else:
+                seen_claim_key[ck] = fid
+        try:
+            validate_fact(f, schema)
+        except ValidationError as e:
+            failures.append(f"[대장무결성] {fid}: {e}")
+
+    seen_eid: dict[str, dict] = {}
+    for e in evidence_raw:
+        eid = e.get("id")
+        if e.get("kind") == "fact":
+            failures.append(f"[대장오염] {eid}: fact 행이 evidence.jsonl 에 있음(파이프라인 오류)")
+            continue
+        if eid in seen_eid:
+            failures.append(f"[중복ID] evidence.id {eid} 가 evidence.jsonl 에 중복 행")
+        else:
+            seen_eid[eid] = e
+        try:
+            validate_evidence(e, schema, wp)
+        except ValidationError as ex:
+            failures.append(f"[대장무결성] {eid}: {ex}")
+
     for fid, f in facts.items():
         if f.get("status") == "confirmed" and fid not in used:
             warnings.append(f"[미사용] confirmed {fid} 본문에서 안 쓰임")
-    return warnings
+        metric = ((f.get("context") or {}).get("metric") or "").lower()
+        if any(k in metric for k in _HIGH_RISK_METRICS) and f.get("risk") != "high":
+            warnings.append(f"[risk태깅] {fid} metric={metric!r} 고위험 지표인데 risk={f.get('risk')!r}")
+
+    return failures, warnings
+
+
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.I)
 
 
 def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[str]) -> list[str]:
-    """evidence 필수필드 + text_quote verbatim + confirmed 핵심수치 source_capture 실재."""
+    """evidence 필수필드 + text_quote verbatim + sha256 형식/실해시 대조 + confirmed 핵심수치
+    source_capture 실재(신뢰경계 포함)."""
     failures = []
     for f in facts.values():
         if f.get("status") != "confirmed":
@@ -339,6 +400,18 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                     failures.append(f"[증거필드] {eid} '{k}' 누락")
             if e.get("type") == "text_quote" and not e.get("verbatim"):
                 failures.append(f"[verbatim] {eid} text_quote 인데 verbatim 없음")
+            sha = e.get("sha256")
+            if sha and not _SHA256_RE.match(sha):
+                failures.append(f"[해시형식] {eid} sha256 형식 오류(64자리 16진수 아님): {sha!r}")
+            local = e.get("local")
+            if local:
+                p = wp.root / local
+                if not p.exists():
+                    failures.append(f"[스냅샷유실] {eid} local 경로 없음: {local}")
+                elif sha and _SHA256_RE.match(sha):
+                    actual = manifest.sha256_file(p)      # 새 해시 유틸 신설 금지 — manifest 재사용
+                    if actual.lower() != sha.lower():
+                        failures.append(f"[해시불일치] {eid} local 파일 실해시가 sha256 필드와 다름")
         # G2 증빙: 본문에 쓰인 confirmed '핵심수치'(raw 가 Decimal 로 파싱되는 값)는 source_capture 필수.
         # risk=high 태깅 여부와 무관하게 강제 — [Bx] 반박게이트 미실행 시 캡처 0 통과되던 구멍 차단.
         is_core_num = _vals((f.get("value") or {}).get("raw", "")) is not None
@@ -347,8 +420,17 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
             caps = [c for c in caps if c]
             if not caps:
                 failures.append(f"[증빙] 핵심수치 {f['id']} source_capture 없음")
-            elif not any((wp.root / c).exists() or Path(c).exists() for c in caps):
-                failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
+            else:
+                ok_cap = False
+                for c in caps:
+                    violation = check_capture_path(c, wp)
+                    if violation:
+                        failures.append(f"[증빙경계] {f['id']} capture 신뢰경계 위반({c}): {violation}")
+                        continue
+                    if (wp.root / c).exists():
+                        ok_cap = True
+                if not ok_cap:
+                    failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
     return failures
 
 
@@ -389,8 +471,10 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     md = Path(report_md).read_text(encoding="utf-8")
     body, _appendix = split_body_appendix(md)
     db = FactsDB(work)
-    facts = {f["id"]: f for f in db.facts()}
-    evidence = {e["id"]: e for e in db.evidence()}
+    facts_raw = db.facts()
+    evidence_raw = db.evidence()
+    facts = {f["id"]: f for f in facts_raw}
+    evidence = {e["id"]: e for e in evidence_raw}
     wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
     used = {m.group(0).strip("()") for m in TAG.finditer(body)}
 
@@ -401,7 +485,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures += bn_fail
     warnings += bn_warn
 
-    warnings += check_ledger_integrity(facts, used)
+    li_fail, li_warn = check_ledger_integrity(facts, used, facts_raw, evidence_raw, wp)
+    failures += li_fail
+    warnings += li_warn
     failures += check_evidence_chain(facts, evidence, wp, used)
 
     fig_fail, fig_warn = check_figures(body, evidence, wp)
@@ -432,9 +518,11 @@ def _print(rep: dict) -> None:
 
 
 def demo() -> None:
+    import hashlib
     import tempfile
     from skill_paths import resolve_work_dir
     from facts_db import FactsDB as DB
+    _h = lambda tag: hashlib.sha256(tag.encode()).hexdigest()  # 유효한 sha256 fixture 생성
     with tempfile.TemporaryDirectory() as td:
         wd = resolve_work_dir("검증 데모", base=td)
         db = DB(wd)
@@ -445,7 +533,7 @@ def demo() -> None:
                      "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
                      "risk": "normal", "status": "pending"})
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
-                         "source_url": "https://dart.fss.or.kr", "sha256": "h",
+                         "source_url": "https://dart.fss.or.kr", "sha256": _h("F001-E001"),
                          "capture": "_captures/f001.jpg"})   # 핵심수치 증빙 결박
         db.add_verify_event("F001", "lead", "reread")
         db.set_status("F001", "confirmed")
@@ -480,7 +568,7 @@ def demo() -> None:
                      "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
                      "risk": "normal", "status": "pending"})
         db.add_evidence({"fact_id": "F002", "type": "text_quote", "verbatim": "surpass 4 GW",
-                         "source_url": "https://iea.org", "sha256": "h2"})   # capture 없음
+                         "source_url": "https://iea.org", "sha256": _h("F002-E002")})   # capture 없음
         db.add_verify_event("F002", "lead", "reread")
         db.set_status("F002", "confirmed")
         nocap = "신규 용량은 4GW(F002) 이다.\n\n![](_captures/f001.jpg)\n"

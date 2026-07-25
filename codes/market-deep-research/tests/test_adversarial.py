@@ -5,16 +5,19 @@
 """
 import hashlib
 import ipaddress
+import json
 import socket
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import fitz                                                 # noqa: E402
 from skill_paths import resolve_work_dir, WorkPaths        # noqa: E402
-from facts_db import FactsDB, ValidationError              # noqa: E402
+from facts_db import (FactsDB, ValidationError, _write_jsonl_atomic,      # noqa: E402
+                       check_capture_path, load_schema, validate_fact)
 import capture_pdf                                          # noqa: E402
 import fetch                                               # noqa: E402
 import manifest                                            # noqa: E402
@@ -135,7 +138,7 @@ def text_quote_without_verbatim():
         wd, db = _base_db(td)
         try:
             db.add_evidence({"fact_id": "F001", "type": "text_quote",
-                             "source_url": "https://x", "sha256": "h"})
+                             "source_url": "https://x", "sha256": _H})
             raise AssertionError("verbatim 누락 통과")
         except ValidationError:
             pass
@@ -156,7 +159,7 @@ def mistagged_value():
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
-                         "source_url": "https://dart", "sha256": "h"})
+                         "source_url": "https://dart", "sha256": _H})
         db.add_verify_event("F001", "lead", "reread")
         db.set_status("F001", "confirmed")
         wp = WorkPaths(wd)
@@ -182,7 +185,7 @@ def high_risk_without_capture():
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
-                         "source_url": "https://dart", "sha256": "h"})   # capture 없음
+                         "source_url": "https://dart", "sha256": _H})   # capture 없음
         db.add_verify_event("F001", "lead", "reread")
         db.set_status("F001", "confirmed")
         wp = WorkPaths(wd)
@@ -575,6 +578,217 @@ def manifest_asset_swap():
         (wp.gen_assets / "chart.png").write_bytes(b"\x89PNG-tampered")      # 차트 변조
         v = manifest.verify(wp)
         assert not v["ok"] and "assets/chart.png" in v["changed"], v
+
+
+# --- G4 재작성 회귀(대장 무검증 신뢰 제거 + 증빙 경로 봉쇄) --------------------
+@case
+def unvalidated_ledger_row():
+    """verify() 가 db.facts() 를 dict 화만 하고 재검증을 안 하면, 대장 파일에 직접 append 된
+    미검증 confirmed 행(evidence_ids=[] 인데 confirmed)이 조용히 통과한다. check_ledger_integrity
+    가 전 행을 validate_fact 로 재검증해야 [대장무결성] 으로 잡는다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("미검증행", base=td)
+        wp = WorkPaths(wd)
+        rows = [{"kind": "fact", "claim_key": "x|y|z|2024|_|_", "id": "F001",
+                 "claim": "위조 사실",
+                 "context": {"metric": "x", "entity": "y", "geography": "z", "period": "2024"},
+                 "value": {"raw": "1", "unit": "x"},
+                 "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
+                 "risk": "normal", "status": "confirmed", "evidence_ids": [], "verify_events": []}]
+        _write_jsonl_atomic(wp.facts, rows)
+        (wp.root / "r.md").write_text("본문에 태그 없음.\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("대장무결성" in f for f in rep["failures"]), rep
+
+        # 긍정형 짝: 정상 add_fact/add_evidence 경로로 등재된 행은 [대장무결성] 없이 통과
+        wd2, db2 = _base_db(td)
+        wp2 = WorkPaths(wd2)
+        _confirm(db2, wp2, "F001")
+        (wp2.root / "ok.md").write_text(
+            "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        rep2 = verify_facts.verify(wp2.root / "ok.md", wd2)
+        assert not any("대장무결성" in f for f in rep2["failures"]), rep2
+
+
+@case
+def duplicate_fact_id():
+    """같은 F-ID 로 중복 행을 심으면 dict화 시 마지막 행이 조용히 채택돼 값대조를 무력화한다
+    (진짜 F001=300.9 옆에 조작 F001=999 를 추가하면 본문 '999(F001)' 이 값불일치 없이 통과).
+    [중복ID] 로 잡아야 한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)          # 진짜 F001 raw=300.9 unit=KRW_T
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "ok.md").write_text(
+            "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        rep_before = verify_facts.verify(wp.root / "ok.md", wd)
+        assert not any("중복ID" in f for f in rep_before["failures"]), rep_before   # 긍정형 짝
+
+        rows = db.facts()
+        forged = dict(rows[0]); forged["value"] = {"raw": "999", "unit": "KRW_T"}
+        rows.append(forged)             # 같은 id="F001" 중복 행(조작값)
+        _write_jsonl_atomic(wp.facts, rows)
+        (wp.root / "bad.md").write_text(
+            "매출은 999조원(F001).\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "bad.md", wd)
+        assert not rep["ok"] and any("중복ID" in f for f in rep["failures"]), rep
+
+
+@case
+def fake_evidence_hash():
+    """sha256 형식이 64자리 16진수가 아니거나, local 스냅샷이 실재해도 재계산한 해시가
+    선언값과 다르면 [해시형식]/[해시불일치] 로 잡아야 한다(형식/필드 존재만 보던 구멍).
+    긍정형 짝: local 실재 + 해시 일치하면 통과."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                         "source_url": "https://dart", "sha256": "not-a-real-hash"})
+        db.add_verify_event("F001", "lead", "reread")
+        db.set_status("F001", "confirmed")
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
+        (wp.root / "x.png").write_bytes(b"\x89PNG")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("해시형식" in f for f in rep["failures"]), rep
+
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        snap = wp.sources / "snap.txt"
+        snap.parent.mkdir(parents=True, exist_ok=True)
+        snap.write_text("실제 내용", encoding="utf-8")
+        db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                         "source_url": "https://dart", "sha256": _H,   # 실제 파일 해시와 다름
+                         "local": "_sources/snap.txt"})
+        db.add_verify_event("F001", "lead", "reread")
+        db.set_status("F001", "confirmed")
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
+        (wp.root / "x.png").write_bytes(b"\x89PNG")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("해시불일치" in f for f in rep["failures"]), rep
+
+    with tempfile.TemporaryDirectory() as td:                          # 긍정형 짝
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        snap = wp.sources / "snap.txt"
+        snap.parent.mkdir(parents=True, exist_ok=True)
+        snap.write_text("정확한 내용", encoding="utf-8")
+        real_hash = manifest.sha256_file(snap)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                         "source_url": "https://dart", "sha256": real_hash,
+                         "local": "_sources/snap.txt"})
+        db.add_verify_event("F001", "lead", "reread")
+        db.set_status("F001", "confirmed")
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
+        (wp.root / "x.png").write_bytes(b"\x89PNG")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not any(("해시형식" in f or "해시불일치" in f) for f in rep["failures"]), rep
+
+
+@case
+def capture_outside_workdir():
+    """capture 가 작업폴더의 _captures/ 밖(../ 탈출)이거나 _reconstructed/ 재구성 발췌면
+    증빙으로 인정하면 안 된다 — add_evidence 시점(정상 API)과, 대장을 직접 조작해 이미
+    evidence.jsonl 에 박힌 경우(check_evidence_chain 시점) 둘 다 확인한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        try:
+            db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                             "source_url": "https://x", "sha256": _H,
+                             "capture": "../../outside.png"})
+            assert False, "작업폴더 밖 capture 가 add_evidence 를 통과함"
+        except ValidationError:
+            pass
+        try:
+            db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                             "source_url": "https://x", "sha256": _H,
+                             "capture": "_reconstructed/x.png"})
+            assert False, "_reconstructed/ capture 가 add_evidence 를 통과함"
+        except ValidationError:
+            pass
+
+    with tempfile.TemporaryDirectory() as td:      # 대장 직접조작(정상 API 우회) 시나리오
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        db.add_verify_event("F001", "lead", "reread")
+        ev_rows = [{"id": "E001", "fact_id": "F001", "type": "table_cell",
+                    "source_url": "https://x", "sha256": _H, "accessed_at": "2026-01-01",
+                    "capture": "../../outside.png"}]
+        _write_jsonl_atomic(wp.evidence, ev_rows)
+        facts = db.facts(); facts[0]["evidence_ids"] = ["E001"]
+        _write_jsonl_atomic(wp.facts, facts)
+        db.set_status("F001", "confirmed")
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
+        (wp.root / "x.png").write_bytes(b"\x89PNG")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("증빙경계" in f for f in rep["failures"]), rep
+
+    with tempfile.TemporaryDirectory() as td:      # 긍정형 짝: 정상 _captures/ 하위 상대경로
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "ok.md").write_text(
+            "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        rep2 = verify_facts.verify(wp.root / "ok.md", wd)
+        assert not any("증빙경계" in f for f in rep2["failures"]), rep2
+
+
+@case
+def status_regrade_blocked():
+    """반박이 기록되거나 폐기 사유가 남은 채, 또는 강등 이후 새 lead 재검증 없이 confirmed
+    재승급이 되면 안 된다 — 파이프라인이 실제로 이 경로를 압박한다(disputed 인용은 [미확정]
+    FAIL, 태그를 빼면 [무태그] FAIL 이라 재승급이 유일한 탈출구가 됨). 새 lead 재검증 추가
+    후엔 성공(긍정형 짝)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        db.set_status("F001", "disputed")
+        facts = db.facts()
+        facts[0]["counter_search"] = {"query": "정정", "result": "발견",
+                                      "found_stronger_refutation": True}
+        _write_jsonl_atomic(wp.facts, facts)
+        try:
+            db.set_status("F001", "confirmed")
+            assert False, "반박 기록된 채 재승급이 통과됨"
+        except ValidationError:
+            pass
+
+        facts = db.facts()
+        facts[0]["counter_search"]["found_stronger_refutation"] = False
+        _write_jsonl_atomic(wp.facts, facts)
+        time.sleep(1.1)     # demoted_at 과 같은 초 충돌 방지(_now() 는 초 단위)
+        db.add_verify_event("F001", "lead", "reread")
+        db.set_status("F001", "confirmed")            # 긍정형 짝: 새 검증 있으면 재승급 성공
+        assert db.facts()[0]["status"] == "confirmed"
+
+        # 폐기 사유가 남은 채로 억지로 confirmed 로 되돌린 원시 행은 validate_fact 자체가 거부
+        facts = db.facts()
+        facts[0]["status"], facts[0]["discard_reason"] = "confirmed", "무출처(테스트)"
+        try:
+            validate_fact(facts[0], load_schema())
+            assert False, "폐기 사유 남은 채 confirmed 검증이 통과됨"
+        except ValidationError:
+            pass
+
+
+@case
+def orphan_evidence_rejected():
+    """add_evidence 가 존재하지 않는 fact_id 에 조용히 성공하던 구멍(G1 에서 이관) — evidence
+    기록 전에 fact 존재를 선검사해 거부. 긍정형 짝: 존재하는 fact_id 는 정상 등재."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        try:
+            db.add_evidence({"fact_id": "F999", "type": "table_cell",
+                             "source_url": "https://x", "sha256": _H})
+            assert False, "orphan evidence 가 통과됨"
+        except ValidationError:
+            pass
+        assert db.evidence() == [], "orphan evidence 가 파일에 남으면 안 됨"
+
+        ev = db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                              "source_url": "https://x", "sha256": _H})   # 긍정형 짝
+        assert ev["fact_id"] == "F001" and len(db.evidence()) == 1
 
 
 def main():

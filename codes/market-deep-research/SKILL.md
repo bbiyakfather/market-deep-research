@@ -49,6 +49,7 @@ description: >-
 [G3] verify_facts + manifest ─ 실패 0 · 무태그·단위 차단(세그먼트 결박) · 해시 고정
 [G5c]실행코드 검증 ─ 계산·상충 주장 스크립트 실증(CONFIRMED/REFUTED)   【v3-G5】
 [4]  render_pdf ─ GitHub 스타일 오프라인 PDF
+[4b] 재봉인 ─ manifest.py build 재실행(기존 항목 보존 + report.pdf 등 렌더 산출물 해시 추가)
 [G4] preview ─ 팀리드 육안검증(fitz 이미지 Read)
 [G5] 최종 무결성 ─ PDF F태그·링크·캡처 수 재검사 + manifest 재확인
 ```
@@ -124,13 +125,21 @@ description: >-
 - 계산·상충·성능 주장은 최소 자체포함 스크립트 실행 → stdout 캡처 → `verify-<slug>.md`
   (CONFIRMED/REFUTED/PARTIAL). 시장조사 접점: 시장규모=수량×ASP·CAGR·통화환산 Decimal 검산.
 
-### [4] render_pdf → [G4] preview → [G5] 최종 무결성
+### [4] render_pdf → [4b] 재봉인 → [G4] preview → [G5] 최종 무결성
 - `render_pdf.py`(pandoc gfm→html --embed-resources → HeadlessChrome --print-to-pdf,
-  한글경로 퍼센트인코딩·오프라인). `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 +
-  **intent-diff 축별 대조**(64-65행 개시분과 실제 발견 대조, 절차·복귀 규칙은
-  `references/verification-gates.md` G4 절 참조).
-- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`. 복귀 규칙은
-  `references/verification-gates.md` 참조(파일 변경/intent-diff gap 각각 다른 복귀처).
+  한글경로 퍼센트인코딩·오프라인)로 report.pdf 생성.
+- **[4b] 재봉인**: `scripts/manifest.py build` 재실행. [G3]의 build 시점엔 report.pdf 가 아직
+  없어 매니페스트에 영구 누락되므로, 렌더 직후 다시 build 해 **기존 항목(source/capture/
+  facts/evidence/report_md)은 그대로 둔 채** report.pdf 등 렌더 산출물의 해시만 추가한다.
+  재봉인을 건너뛰면 report.pdf 는 변조·삭제해도 [G5] 가 잡지 못한다.
+- `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 + **intent-diff 축별 대조**(64-65행
+  개시분과 실제 발견 대조, 절차·복귀 규칙은 `references/verification-gates.md` G4 절 참조).
+- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`(재봉인 기준 — 이 시점부턴
+  신규 파일도 실패로 판정). 복귀 규칙은 `references/verification-gates.md` 참조(파일 변경/
+  intent-diff gap 각각 다른 복귀처).
+- **참고**: [G2]가 만드는 실패 캡처 `.FAILED` 산출물도 `_captures/**` 글롭에 잡힌다 — 재봉인
+  이후 캡처를 재시도하면 그 결과물이 신규 파일로 잡혀 verify 가 실패로 뜬다. 의도된 동작이며
+  이 경우도 재봉인이 해법이다.
 
 ---
 

@@ -23,6 +23,10 @@ def _now() -> str:
 
 def reconstruct_excerpt(text: str, source_url: str, out_png: Path | str,
                         width: int = 720, zoom: float = 2.0) -> dict:
+    # G4: 재구성 발췌는 증빙 불인정이라 _reconstructed/ 밖에 저장되면 verify_facts 의 capture
+    # 신뢰경계 검사를 우회해 증빙처럼 보일 위험이 있다 — 산출 단계에서부터 차단.
+    if "_reconstructed" not in Path(out_png).as_posix().split("/"):
+        raise ValueError(f"재구성 발췌는 _reconstructed/ 하위에만 저장 가능: {out_png}")
     safe = _html.escape(text)
     doc_html = (
         '<div style="font-family:Malgun Gothic,sans-serif;font-size:13px;padding:14px;">'
@@ -49,13 +53,19 @@ def demo() -> None:
     import tempfile
     with tempfile.TemporaryDirectory() as td:
         r = reconstruct_excerpt("시장 규모는 45조원으로 추정된다(재구성 예시).",
-                                "https://example.com/report", Path(td) / "r1.png")
+                                "https://example.com/report", Path(td) / "_reconstructed" / "r1.png")
         assert r["type"] == "reconstructed_excerpt" and r["evidence"] is False
         assert Path(r["path"]).stat().st_size > 0
         # V23 회귀 가드: 백지 PNG(수정 전 720x4022, 비백색 픽셀 0개)로 돌아가지 않았는지 확인
         px = fitz.Pixmap(r["path"])
         assert px.height < 400, px.height
         assert any(px.samples[i] < 240 for i in range(0, len(px.samples), 3))
+        # G4: _reconstructed/ 밖 출력 경로는 거부(증빙 우회 차단)
+        try:
+            reconstruct_excerpt("x", "https://example.com", Path(td) / "outside.png")
+            assert False, "_reconstructed/ 밖 출력이 통과됨"
+        except ValueError:
+            pass
     print(f"[{_now()}] capture_web demo OK  (증빙 불인정 산출물)")
 
 
