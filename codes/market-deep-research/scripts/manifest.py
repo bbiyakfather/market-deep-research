@@ -18,9 +18,12 @@ from pathlib import Path
 from skill_paths import WorkPaths
 
 # 해시 대상: (라벨, 상대경로 glob). 조사 산출물의 증거체인.
+# audit/** 는 절대 추가하지 말 것 — G5c·G4 가 G3 이후에도 정상적으로 audit/ 에 쓰므로
+# 추가하면 정상 경로가 매번 changed 로 잡혀 G3 무한 복귀가 된다(실측 확인됨).
 TRACKED = [
     ("source", "_sources/**/*"),
     ("capture", "_captures/**/*"),
+    ("assets", "assets/**/*"),        # report.pdf 에 --embed-resources 로 내장되는 생성 차트
     ("facts", "facts.jsonl"),
     ("evidence", "evidence.jsonl"),
     ("report_md", "report.md"),
