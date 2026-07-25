@@ -379,6 +379,21 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
         metric = ((f.get("context") or {}).get("metric") or "").lower()
         if any(k in metric for k in _HIGH_RISK_METRICS) and f.get("risk") != "high":
             warnings.append(f"[risk태깅] {fid} metric={metric!r} 고위험 지표인데 risk={f.get('risk')!r}")
+        # [Bx] claim-graph 긍정 요건 가시화(warning 만 — failure 승격은 다음 배치).
+        # G4 는 부정 검사(반박 기록·폐기사유·강등재검증)만 넣었을 뿐 이 네 요건을 아무 데도
+        # 읽지 않아 실전 대장(confirmed 76건 전부)이 게이트를 한 번도 안 거친 게 안 보였다.
+        if f.get("risk") == "high" and f.get("status") == "confirmed":
+            missing = []
+            if len(f.get("independent_groups") or []) < 2:
+                missing.append("독립 관찰그룹 부족")
+            if not f.get("counter_search"):
+                missing.append("반박검색 기록 없음")
+            if not f.get("primary_source_ref"):
+                missing.append("기본소스 참조 없음")
+            if not (f.get("observed_at") or f.get("valid_at")):
+                missing.append("시간증거 없음")
+            if missing:
+                warnings.append(f"[반박게이트] {fid}: " + "·".join(missing))
 
     return failures, warnings
 

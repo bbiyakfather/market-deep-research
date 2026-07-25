@@ -6,16 +6,19 @@
 import hashlib
 import ipaddress
 import json
+import re
 import socket
 import sys
 import tempfile
 import time
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import fitz                                                 # noqa: E402
-from skill_paths import REFERENCES, resolve_work_dir, WorkPaths   # noqa: E402
+from skill_paths import REFERENCES, SKILL_ROOT, resolve_work_dir, WorkPaths   # noqa: E402
 from facts_db import (FactsDB, ValidationError, _write_jsonl_atomic,      # noqa: E402
                        check_capture_path, load_schema, validate_fact)
 import capture_pdf                                          # noqa: E402
@@ -927,6 +930,200 @@ def plan_format_contract():
         rep = verify_facts.verify(wp.root / "r.md", wd)      # plan 미지정 → 자동탐지도 실패(없음)
         assert not any(x.startswith(("[목차이탈]", "[빈챕터]", "[축누락]"))
                       for x in rep["failures"]), rep
+
+
+@case
+def claim_graph_fields_warned():
+    """risk=high confirmed fact 에 claim-graph 긍정 요건(독립그룹≥2·반박검색기록·기본소스·
+    시간증거)이 없으면 [반박게이트] warning — G4 는 부정 검사(반박기록·폐기사유·강등재검증)만
+    넣고 이 긍정 요건은 아무 데도 안 읽어 실전 대장이 게이트를 한 번도 안 거친 게 안 보였다.
+    failure 로는 승격 안 함(실전 대장 confirmed 전건이 미충족이라 전면 FAIL 은 다음 배치).
+    긍정형 짝: 네 필드를 다 채우면 warning 이 사라짐."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)          # F001 risk=high
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        md = "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n"
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep["ok"], rep                                     # failure 로 승격되면 안 됨
+        assert any("반박게이트" in w for w in rep["warnings"]), rep
+
+        rows = db.facts()
+        fr = next(r for r in rows if r["id"] == "F001")
+        fr.update({"independent_groups": ["dart", "irstatement"],
+                  "counter_search": {"query": "q", "result": "없음",
+                                     "found_stronger_refutation": False},
+                  "primary_source_ref": "E001", "observed_at": "2026-07-22",
+                  "valid_at": "2025-03"})
+        _write_jsonl_atomic(wp.facts, rows)
+        rep2 = verify_facts.verify(wp.root / "r.md", wd)
+        assert not any("반박게이트" in w for w in rep2["warnings"]), rep2   # 긍정형 짝
+
+
+# --- G2/G8 재작성 회귀(문서정합 — 축 프리셋·종료기준·조사유형 4종·intent-diff) --------------
+def _read(rel):
+    return (SKILL_ROOT / rel).read_text(encoding="utf-8")
+
+
+@case
+def axis_preset_parity():
+    rfmt = (SKILL_ROOT / "references" / "report-format.md").read_text(encoding="utf-8")
+    skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+    def rf_axes(label):
+        m = re.search(rf"\*\*{label}\*\*.*?3부\s*축=([^\n]+?)\s·\s\d+부=", rfmt, re.S)
+        assert m, f"report-format.md 에 {label} 3부 축 목록 없음"
+        toks = [re.sub(r"\([^)]*\)", "", t).strip() for t in m.group(1).split("/")]
+        return {t for t in toks if t}
+
+    assert re.search(r"^## 조사유형별", rfmt, re.M), "절 제목 접두 유지 안 됨"
+    assert "축 프리셋" in rfmt
+    assert "성숙도" not in rfmt, "폐기 축 문자열이 report-format.md 에 남아있음"
+
+    m_block = re.search(r"- 조사 분할:.*?(?=\n- )", skill, re.S)
+    assert m_block, "SKILL.md 의 '조사 분할:' 불릿을 못 찾음(문서 구조 변경됨?)"
+    clauses = {lbl: val for lbl, val in
+              re.findall(r"\*\*([^*]+)\*\*=(.+?)(?=\s*·\s*\*\*|\.\s*$)", m_block.group(0) + " ", re.S)}
+    assert clauses, "SKILL.md 조사 분할에서 절을 하나도 못 찾음"
+
+    for label in ("기술동향", "산업동향"):
+        assert label in clauses, f"SKILL.md 조사 분할에 {label} 없음"
+        m1 = re.search(r"축분할\s*\(([^)]+)\)", clauses[label])
+        if m1:
+            skill_set = {t for t in re.split("·", m1.group(1).split("+")[0].strip()) if t}
+        else:
+            skill_set = set()
+            for part in clauses[label].split("+"):
+                part = re.sub(r"\([^)]*\)", "", part).strip()
+                if part:
+                    skill_set.add(part)
+        assert rf_axes(label) == skill_set, (label, rf_axes(label), skill_set)
+
+    rf_biz = rf_axes("기술사업화 실사")
+    assert rf_biz
+    if "기술사업화 실사" in clauses:
+        m2 = re.search(r"축분할\s*\(([^)]+)\)", clauses["기술사업화 실사"])
+        assert m2, clauses["기술사업화 실사"]
+        skill_biz = {t for t in re.split("·", m2.group(1).split(",")[0].strip()) if t}
+        assert rf_biz == skill_biz, (rf_biz, skill_biz)
+
+    assert rf_axes("기관·기업 실사")   # SKILL.md 비교대상 없음(대상기반 분할) — 존재만
+
+
+@case
+def termination_terms_unified():
+    """SKILL.md·agent-briefs.md·report-format.md·verification-gates.md 4파일에서
+    '조사종료기준'/'종료기준'(공백 정규화 후) 이 사라지고 '축별 충분조건'·'루프 수렴조건'이
+    존재하는지."""
+    files = {"SKILL.md": _read("SKILL.md"),
+             "agent-briefs.md": _read("references/agent-briefs.md"),
+             "report-format.md": _read("references/report-format.md"),
+             "verification-gates.md": _read("references/verification-gates.md")}
+    norm = lambda s: re.sub(r"\s+", "", s)
+    for name, t in files.items():
+        n = norm(t)
+        assert "조사종료기준" not in n and "종료기준" not in n, f"{name} 에 종료기준 잔존"
+    assert "유일종료조건" not in norm(files["SKILL.md"]), "SKILL.md 에 구 문구 잔존"
+    assert "축별충분조건" in norm(files["SKILL.md"])
+    assert "루프수렴조건" in norm(files["SKILL.md"])
+    for name in ("agent-briefs.md", "report-format.md", "verification-gates.md"):
+        assert "축별충분조건" in norm(files[name]), f"{name} 에 축별 충분조건 없음"
+
+
+@case
+def depth_cap_default_present():
+    """깊이캡 숫자 기본값이 SKILL.md·research-plan.md 최소 2곳에 정규식으로 잡히고 서로
+    일치하는지(한쪽만 고치고 다른 쪽을 잊는 사고 방지)."""
+    skill = _read("SKILL.md")
+    plan = _read("references/research-plan.md")
+    m1 = re.search(r"깊이캡.{0,20}?(\d+)\s*회.{0,10}?(\d+)\s*명", skill)
+    assert m1, "SKILL.md 에 깊이캡 숫자 기본값 없음"
+    m2 = re.search(r"깊이캡 기본값.*?(\d+)\s*회.*?(\d+)\s*명", plan)
+    assert m2, "research-plan.md 에 깊이캡 숫자 기본값 없음"
+    assert (m1.group(1), m1.group(2)) == (m2.group(1), m2.group(2)), \
+        f"깊이캡 값 불일치: SKILL.md={m1.groups()} research-plan.md={m2.groups()}"
+
+
+@case
+def axis_scoped_convergence():
+    """확장수렴 절에 '축별'·'잔여'가 함께 있는지 — 리드가 안 나오는 축이 조용히 '수렴 성공'
+    으로 처리되는 구멍을 막는 문구가 실제로 있는지 확인."""
+    m = re.search(r"\*\*확장수렴 루프\*\*.*?(?=\n\n|\n###)", _read("SKILL.md"), re.S)
+    assert m, "확장수렴 루프 절을 못 찾음"
+    block = m.group(0)
+    assert "축별" in block and "잔여" in block, block
+
+
+@case
+def expand_marker_has_axis():
+    """agent-briefs.md EXPAND 블록의 LEAD·DEAD END 줄에 AXIS 필드가 (LEAD 는 같은 줄에) 있는지."""
+    m = re.search(r"## EXPAND\n(.*?)\n\n", _read("references/agent-briefs.md"), re.S)
+    assert m, "EXPAND 블록을 못 찾음"
+    block = m.group(1)
+    lead_line = next((ln for ln in block.splitlines() if ln.startswith("- LEAD:")), None)
+    assert lead_line and "AXIS:" in lead_line, f"LEAD 줄에 AXIS 없음: {lead_line!r}"
+    assert "AXIS:" in block, "EXPAND 블록에 AXIS 없음"
+
+
+@case
+def survey_type_parity():
+    """report-format.md 조사유형별 절의 유형 수(4)와 SKILL.md 조사 분할의 유형 수(4)가 같고,
+    양쪽 다 '기술사업화 실사' 를 포함하는지."""
+    rfmt = _read("references/report-format.md")
+    skill = _read("SKILL.md")
+    m_sec = re.search(r"## 조사유형별.*?(?=\n##|\Z)", rfmt, re.S)
+    assert m_sec, "조사유형별 절을 못 찾음"
+    types = ["기술동향", "산업동향", "기관·기업", "기술사업화 실사"]
+    for t in types:
+        assert t in m_sec.group(0), f"report-format.md 조사유형별 절에 {t} 없음"
+    m_block = re.search(r"- 조사 분할:.*?(?=\n- )", skill, re.S)
+    assert m_block, "SKILL.md 조사 분할 불릿을 못 찾음"
+    for t in types:
+        short = t.replace(" 실사", "")
+        assert short in m_block.group(0) or t in m_block.group(0), f"SKILL.md 조사 분할에 {t} 없음"
+    assert "기술사업화 실사" in rfmt and "기술사업화 실사" in skill
+
+
+@case
+def ip_landscape_in_tech_variant():
+    """기술동향 변형 4부가 IP 랜드스케이프(출원추이·CPC 등)로 승격됐고, source-ladder.md 가
+    특허 1차소스 도구를 실제로 가리키는지."""
+    rfmt = _read("references/report-format.md")
+    ladder = _read("references/source-ladder.md")
+    assert "랜드스케이프" in rfmt and "CPC" in rfmt, "기술동향 4부에 IP 랜드스케이프 요소 없음"
+    assert ("korean-patent-search" in ladder or "Patent_Landscape" in ladder
+            or "Patent Landscape" in ladder), "source-ladder.md 에 특허 1차소스 도구 명시 없음"
+
+
+@case
+def intent_diff_closed_at_g4():
+    """SKILL.md 가 'G4 에서 발견과 대조해 gap 종결'이라 약속한 것을 verification-gates.md
+    G4 절이 실제로 이행하는지(축별 대조 단계 + gap 발견 시 복귀처 명시)."""
+    gates = _read("references/verification-gates.md")
+    skill = _read("SKILL.md")
+    m = re.search(r"## G4 preview.*?(?=\n##|\Z)", gates, re.S)
+    assert m, "verification-gates.md G4 절을 못 찾음"
+    block = m.group(0)
+    assert "intent-diff" in block, "G4 절에 intent-diff 대조 단계 없음"
+    assert "축별" in block, "G4 절에 '축별' 대조 언급 없음"
+    assert "복귀" in block, "G4 절에 복귀 규칙 없음"
+    assert skill.count("intent-diff") >= 2, "SKILL.md 의 intent-diff 언급이 너무 적음(약속만 하고 안 지킴 재발 방지)"
+    assert "verification-gates.md" in re.search(r"\[4\] render_pdf.*?(?=\n---|\Z)", skill, re.S).group(0), \
+        "SKILL.md G4 절이 verification-gates.md 를 참조하지 않음"
+
+
+@case
+def skill_frontmatter_intact():
+    """front-matter YAML 이 여전히 파싱되고, description 이 1024자 이하이며, 4번째 조사유형
+    '기술사업화 실사' 가 포함되는지."""
+    text = _read("SKILL.md")
+    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    assert m, "front-matter 파싱 실패(--- 블록 없음)"
+    data = yaml.safe_load(m.group(1))
+    desc = data["description"]
+    assert len(desc) <= 1024, f"description {len(desc)}자 — 1024자 초과"
+    assert "기술사업화 실사" in desc, "description 에 기술사업화 실사 없음"
 
 
 def main():
