@@ -14,16 +14,20 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 
 ## fetch 사다리 (`scripts/fetch.py`)
 `python fetch.py get <URL> --out _sources`
-1. **보안경계(선제)**: HTTP(S)만 · private/loopback/link-local/reserved IP 및 리다이렉트 대상 차단(SSRF)
-   · 크기(8MB)·시간(25s)·MIME 제한. 원문=불신뢰(추출만, 실행 금지).
+1. **보안경계(선제+사후)**: HTTP(S)만 · private/loopback/link-local/reserved IP 및 리다이렉트 대상
+   차단(SSRF, DNS 사전검증) · **연결 후 실접속 IP(primary_ip) 재검증**(DNS 리바인딩 TOCTOU 방지)
+   · 크기(8MB)·시간(25s)·**MIME 허용목록**(실제 게이트 — PDF 는 매직바이트`%PDF-` 로 판정, 확장자/헤더는 불신).
+   원문=불신뢰(추출만, 실행 금지).
 2. **curl_cffi TLS 그리드**(chrome/safari/chrome110 전수, R6). 각 홉 SSRF 재검증. CA 번들은 ASCII 경로로.
 3. **Jina Reader**(`r.jina.ai`, JS렌더·정제) → `archived_url` 구분 기록.
 4. **Wayback**(`archive.org/wayback/available`) → snapshot → `archived_url` 구분.
 5. **소진 → `status:"delegate"`**: 오케스트레이터가 **insane-search 스킬**로 위임(강방어 사이트).
 
 ## 4계층 성공검증 (R2) — HTTP200 ≠ 성공
-`fetch.validate_body`: ① 챌린지 마커(Just a moment/DataDome/Access Denied 등) ② 비정상 크기(<200B)
-③ 쿠키/빈SPA ④ 성공 셀렉터. 판정 `ok`(본문≥1000자) / `partial`(OGP만) / `challenge`/`empty`(실패).
+`fetch.validate_body`: ⓪ **HTTP 4xx/5xx 는 본문 무관 즉시 실패**(상태코드 우선) ① 성공 셀렉터 최우선
+② 본문 길이(≥1000자면 확정 성공 — 긴 기사 속 챌린지 문구 인용은 오탐 아님) ③ 챌린지 마커(짧은
+인터스티셜만 해당) ④ 비정상 크기(<200B). 판정 `ok`(셀렉터 또는 본문≥1000자) / `partial`(얇은 본문) /
+`challenge`/`empty`(실패).
 
 ## WAF 조기감지 정찰 (R7, playwright MCP)
 반복의도 조회에서 초기 2~3회 challenge면: 백그라운드로 fetch 격자 계속 + 포어그라운드로
