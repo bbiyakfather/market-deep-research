@@ -10,8 +10,10 @@
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
-insane-search / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정(유형·범위·**조사종료기준**·
-환산옵션 OFF·출력형식·**목차 승인**). 기관조사면 `entity-identity.md` 선행. `audit/intent-diff.md` 개시.
+insane-search / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
+환산옵션 OFF·출력형식·**승인 목차**) — 통과조건: `audit/research-plan.md` 존재 + 승인 기록 +
+승인 목차(`references/research-plan.md` 서식) 포함, 확정 전 팬아웃 금지. 기관조사면
+`entity-identity.md` 선행. `audit/intent-diff.md` 개시.
 
 ## G1 join + 수집 게이트
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
@@ -41,8 +43,11 @@ high-risk 캡처 실재. → `manifest.py build`(해시 고정).
 자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
 
 ## G4 preview → G5 최종 무결성
-`preview_pdf.py` 육안검증 → PDF F태그·링크·캡처 수 재검사 + `manifest.py verify`.
-**변경 검출 시 G3 복귀.**
+`preview_pdf.py` 육안검증 + **intent-diff 축별 대조**(`audit/intent-diff.md` 개시분의 축별
+"참이어야 하는가" 목록을 실제 보고서 발견과 대조 — 축마다 gap 유무 판정, 결과를
+`audit/intent-diff.md` 에 추기) → PDF F태그·링크·캡처 수 재검사 + `manifest.py verify`.
+**복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
+**[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님).
 
 ## 환산 옵션(기본 OFF)
 ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시), 표시 반올림 일관, 본문 영어통화단어 0.

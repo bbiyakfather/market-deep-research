@@ -11,6 +11,10 @@
 generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`curated-sources.json`의 phase0_apis).
 세션에 무료 공공 MCP(opendart/DART·KOSIS·KIPRIS·KakaoMap)가 붙어있으면 **오케스트레이터가 1차소스로
 기회적 사용**(유료 무의존 유지 — 무료). 없으면 무시하고 자체 스택.
+- **특허/IP 1차소스**: `korean-patent-search` 스킬(KIPRIS 공식 API, 출원번호 상세조회 포함)과
+  Patent Landscape Analytics MCP(출원추이·출원인 순위·CPC 분포·기술수명주기)가 세션에 있으면
+  IP 랜드스케이프(기술동향 4부)·기술사업화 실사(3부 권리성)의 1차 증빙으로 기회적 사용
+  (추가 도구 설치 없이 1차 소스 확보).
 
 ## fetch 사다리 (`scripts/fetch.py`)
 `python fetch.py get <URL> --out _sources`

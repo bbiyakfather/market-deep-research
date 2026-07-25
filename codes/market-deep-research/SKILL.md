@@ -6,8 +6,8 @@ description: >-
   [사실 → 출처 → 화면캡처] 증거구조로 "조사마다 수치가 달라지는 문제"를 제거한 팩트시트
   PDF(+내부 audit 번들)를 만든다. 유료 API(firecrawl/tavily) 무의존 자체 수집 스택을
   코어로 쓰고, 강방어 사이트는 insane-search 스킬로 위임한다. 사용 시점 — "증빙/캡처 포함
-  시장조사 보고서", "기술동향·산업동향·기관/기업 실사", "근거 있는 딥리서치 PDF", "N개 대상
-  비교·실태·실적·딜 조사". 제외 — 단순 사실확인·한두 출처 요약(WebSearch 직접).
+  시장조사 보고서", "기술동향·산업동향·기관/기업 실사·기술사업화 실사", "근거 있는 딥리서치
+  PDF", "N개 대상 비교·실태·실적·딜 조사". 제외 — 단순 사실확인·한두 출처 요약(WebSearch 직접).
 ---
 
 # market-deep-research — 증빙형 시장조사 보고서
@@ -57,25 +57,31 @@ description: >-
 - **의존성 점검**: `python scripts/preflight.py` — python·fitz·pandoc·HeadlessChrome·
   curl_cffi·trafilatura 유무, playwright MCP·insane-search 스킬·무료 공공 MCP(opendart·
   KOSIS·KakaoMap 등) 감지. 미설치 계층은 "건너뜀+경고"로 진행(자체 스택이 보장 코어).
-- **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사)·범위·**조사
-  종료기준**·환산옵션(기본 OFF)·출력형식·**보고서 목차 승인**.
+- **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사/기술사업화 실사)·
+  범위·**축별 충분조건**·환산옵션(기본 OFF)·출력형식·**승인 목차**(`references/research-plan.md`
+  서식). 확정 결과는 `audit/research-plan.md` 에 기록(승인 전 팬아웃 금지 — 병렬 조사원 스폰은
+  확정 후에만).
 - **기관·기업 조사면** `references/entity-identity.md` 동일성 게이트를 먼저 통과(법인명·
   사업자/법인번호·주소·이전상호·해외ID)해 조사 대상을 확정.
 - **intent-diff 개시**: `audit/intent-diff.md` 에 "요청 의도가 참이라면 무엇이 참이어야
   하는가"를 축별로 기록(G4 에서 발견과 대조해 gap 종결). 【v3-D】
 
 ### [1] 병렬 조사 → [E] 확장·수렴  【v3-A】
-- 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정) · **기술동향**=축분할
-  (기술요소·플레이어·시장·정책 + 교차검증1) · **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS
-  기존 스킬 조합) + 해외.
+- 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/
+  사업현황/재무실적 전건 조사) · **기술동향**=축분할(기술요소·플레이어·시장·정책 + 교차검증1) ·
+  **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS 기존 스킬 조합) + 해외 · **기술사업화 실사**=
+  축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도).
 - 조사원 = **sonnet**(병렬·저비용, background). 에이전트별 `_research/<agent>/` 임시폴더에만
   쓴다(파일충돌 방지). 워커는 **읽기전용**(공식 대장 미기록) — 반환은 마커로. 【v3-F】
 - 반환 마커(`agent-briefs.md`): evidence 스키마 JSONL + `## CLAIMS`(CLAIM/RISK/SOURCES/
   COUNTER/PRIMARY) + `## EXPAND`(LEAD/WHY/ANGLE, DEAD END) + `## 인사이트`(사실/추론 구분,
   근거 F-ID) + `## 요약`.
-- **확장수렴 루프**: 팀리드가 EXPAND 리드를 `audit/expansion-log.md` 로 dedup(미확인 리드
-  포함) → 새 리드마다 후속 워커 즉시 스폰. **수렴(유일 종료조건)**: 미확인 리드 0, 또는
-  연속 2웨이브 무신규, 또는 깊이캡 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅.
+- **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에
+  축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0
+  에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건,
+  후자는 워커에게 전달되는 조사 깊이 기준): **축별 잔여 리드 각 0**(한 축이라도 잔여 리드가
+  남으면 미수렴), 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md`
+  확정값이 있으면 그 값 우선) 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅.
 
 ### [G1] join + 수집 게이트
 - 전 에이전트 완료/timeout/부분실패 처리. raw 산출물 `_research/` 보존.
@@ -120,8 +126,11 @@ description: >-
 
 ### [4] render_pdf → [G4] preview → [G5] 최종 무결성
 - `render_pdf.py`(pandoc gfm→html --embed-resources → HeadlessChrome --print-to-pdf,
-  한글경로 퍼센트인코딩·오프라인). `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증.
-- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`. **파일 변경 시 G3 복귀.**
+  한글경로 퍼센트인코딩·오프라인). `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 +
+  **intent-diff 축별 대조**(64-65행 개시분과 실제 발견 대조, 절차·복귀 규칙은
+  `references/verification-gates.md` G4 절 참조).
+- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`. 복귀 규칙은
+  `references/verification-gates.md` 참조(파일 변경/intent-diff gap 각각 다른 복귀처).
 
 ---
 
@@ -140,4 +149,5 @@ description: >-
 | `references/evidence-capture.md` | source_capture vs reconstructed_excerpt·메타 결박 |
 | `references/report-format.md` | 고객 11부 목차·유형변형·내부 audit 양식 |
 | `references/verification-gates.md` | G0~G5 상세·4차원 등급·claim-graph·환산 |
+| `references/research-plan.md` | G0 조사계획 확정(축·축별 충분조건·깊이캡·승인 목차) |
 | `references/entity-identity.md` | 기관·기업 동일성 확인 게이트 |
