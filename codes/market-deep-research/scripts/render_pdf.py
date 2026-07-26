@@ -28,10 +28,12 @@ def _now() -> str:
 def _pandoc_html(md_path: Path, html_out: Path, resource_dir: Path) -> None:
     # title 은 문서 자체 H1 을 쓰도록 비워 둔다(하드코딩 제목이 표지에 찍히는 것 방지).
     # pandoc 은 빈 title 에 경고만 내고 정상 산출한다.
+    # --fail-if-warnings: 리소스(이미지 등) 미발견 경고가 exit 0 으로 조용히 넘어가던 것을
+    # 승격 — 증빙 이미지가 통째로 빠진 PDF 가 ok=True 로 반환되는 사각지대를 막는다(G6a).
     cmd = ["pandoc", str(md_path), "-f", "gfm", "-t", "html5", "--standalone",
            "--embed-resources", f"--resource-path={resource_dir}",
            f"--include-in-header={STYLE}", "--metadata", "title=",
-           "-o", str(html_out)]
+           "--fail-if-warnings", "-o", str(html_out)]
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:
         raise RuntimeError(f"pandoc 실패: {r.stderr.strip()}")

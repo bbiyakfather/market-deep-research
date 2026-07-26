@@ -13,9 +13,12 @@
 ## capture_pdf 사용
 `python capture_pdf.py <pdf> <number> _captures/E###.png [--page N]`
 - 검색어 = **정확 숫자**(부분문자열 지양). 쉼표/공백 변형 자동 재시도(`_variants`).
-- 파일명 = evidence ID. 반환 `ok:false`(미발견=표기변형/스캔PDF)면 페이지 전체 렌더 + **실패상태**
-  → 팀리드 육안 fallback, confirmed 불가.
-- 오귀속 육안 확인(엉뚱한 표의 같은 숫자를 잡지 않았는지).
+- 파일명 = evidence ID. 반환 `ok:false`(미발견/부분문자열만 발견돼 강등)면 원본 `out_png` 가 아니라
+  `E###.FAILED.png` 로 저장(페이지 전체 렌더, 팀리드 육안 fallback) — `out_png` 자체는 생성되지
+  않으므로 대장이 그 경로를 가리켜도 `verify_facts.py` 가 파일부재로 **[증빙유실] FAIL** 을 내며,
+  재작업 전까지 confirmed 불가.
+- 부분문자열 오귀속(예: '45'가 '2045' 안에서 히트)은 rect 인접 문자 검사로 자동 필터링된다.
+  그래도 엉뚱한 표의 같은 숫자를 잡지 않았는지 육안 확인은 유지.
 
 ## playwright 실화면 캡처 시 메타 결박(필수)
 스크린샷 evidence 는 **최종 URL · 접근 시각(accessed_at) · viewport · locator(selector)** 를 함께

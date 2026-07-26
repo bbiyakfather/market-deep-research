@@ -24,12 +24,12 @@ import socket
 import sys
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, urljoin, urlparse
 
 MAX_BYTES = 8 * 1024 * 1024
 TIMEOUT = 25
 IMPERSONATE_GRID = ["chrome", "safari", "chrome110"]
-ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml",
+ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml", "text/xml",
                 "application/xhtml", "application/pdf", "application/rss")
 CHALLENGE_MARKERS = ("just a moment", "access denied", "cf-challenge", "datadome",
                      "sec-if-cpt-container", "enable javascript and cookies",
@@ -47,7 +47,12 @@ except Exception:
 
 def _ascii_ca() -> str | None:
     """libcurl(C)은 non-ASCII 경로의 CA 파일을 못 연다(Windows 한글 계정 이슈).
-    certifi 번들 경로가 non-ASCII면 ASCII 경로로 1회 복사해 그 경로를 쓴다. verify는 항상 ON."""
+    certifi 번들 경로가 non-ASCII면 ASCII 경로로 1회 복사해 그 경로를 쓴다. verify는 항상 ON.
+    V24: 매 실행 무조건 덮어써 위조 번들 선점을 막는다(크기만 비교하면 동일크기 위조를 못 잡음).
+    후보 경로는 사용자 전용 → 세계쓰기 순. 이 분기가 도는 조건이 '홈 경로가 non-ASCII' 라
+    사용자 전용 경로가 항상 쓸 수 있는 게 아니고, ASCII 가 아니면 libcurl 이 못 여니
+    ProgramData 폴백이 필요하다. 기존 ProgramData 잔존본은 다른 프로세스가 쓸 수 있어
+    지우지 않고 덮어쓰기만 한다."""
     try:
         import certifi
     except Exception:
@@ -57,14 +62,17 @@ def _ascii_ca() -> str | None:
         ca.encode("ascii"); return ca                # 이미 ASCII면 그대로
     except UnicodeEncodeError:
         pass
-    for base in (os.environ.get("ProgramData", r"C:\ProgramData"),
-                 (os.environ.get("SystemDrive", "C:") + "\\")):
+    for base in (Path.home() / ".claude",             # 사용자 전용(홈이 ASCII 일 때만 성립)
+                 Path(os.environ.get("ProgramData", r"C:\ProgramData")),
+                 Path(os.environ.get("SystemDrive", "C:") + "\\")):
         try:
-            dst = Path(base) / "market-deep-research" / "cacert.pem"
+            dst = base / "market-deep-research" / "cacert.pem"
+            s = str(dst); s.encode("ascii")           # 복사 전에 ASCII 판정(무의미한 쓰기 방지)
             dst.parent.mkdir(parents=True, exist_ok=True)
-            if not dst.exists() or dst.stat().st_size != Path(ca).stat().st_size:
-                shutil.copyfile(ca, dst)
-            s = str(dst); s.encode("ascii"); return s
+            # ponytail: 무조건 덮어쓰기. 덮어쓰기~libcurl 읽기 사이 TOCTOU 창은 남는다.
+            #           완전 차단은 디렉터리 ACL 제한이 필요하고 그건 이 스킬 범위 밖.
+            shutil.copyfile(ca, dst)
+            return s
         except Exception:
             continue
     return ca
@@ -107,21 +115,35 @@ def check_url_safe(url: str) -> str:
     return host
 
 
+def check_response_ip(r) -> None:
+    """실접속 IP 사후 재검증(V26 — TOCTOU 방지). check_url_safe 가 검증한 DNS 해석과 실제
+    connect() 대상이 다를 수 있다(DNS 리바인딩). curl_cffi 응답의 primary_ip 를 재검사한다.
+    프록시(HTTP_PROXY/HTTPS_PROXY) 사용 시 primary_ip 는 프록시 주소이므로 검사를 건너뛴다."""
+    if os.environ.get("HTTP_PROXY") or os.environ.get("HTTPS_PROXY") \
+            or os.environ.get("http_proxy") or os.environ.get("https_proxy"):
+        return
+    ip = getattr(r, "primary_ip", None)
+    if ip and _ip_is_unsafe(ip):
+        raise SsrfBlocked(f"실접속 차단 IP({ip})")
+
+
 # --- 4계층 성공검증 (R2) -----------------------------------------------------
 def validate_body(text: str, status: int, success_selectors: list[str] | None = None) -> dict:
     """{verdict: ok|partial|challenge|empty, reason}. HTTP200 ≠ 성공."""
+    if status and status >= 400:                       # ⓪ 상태코드 우선(V17) — 4xx/5xx 본문은 안 믿음
+        return {"verdict": "empty", "reason": f"http {status}"}
     low = (text or "").lower()
-    for m in CHALLENGE_MARKERS:                       # ① 챌린지 마커
+    n = len(text or "")
+    if success_selectors and any(s.lower() in low for s in success_selectors):
+        return {"verdict": "ok", "reason": "success selector matched"}  # ① 성공 셀렉터 최우선
+    body = extract_text(text)
+    if len(body) >= 1000:                              # ② 본문이 충분히 길면 확정 성공(V27 —
+        return {"verdict": "ok", "reason": f"body {len(body)} chars"}  #   긴 기사 안의 챌린지 문구 인용은 오탐 아님)
+    for m in CHALLENGE_MARKERS:                        # ③ 챌린지 마커(짧은 인터스티셜만 여기 도달)
         if m in low:
             return {"verdict": "challenge", "reason": f"challenge marker: {m}"}
-    n = len(text or "")
-    if n < 200:                                        # ② 비정상 크기(빈 SPA/차단)
+    if n < 200:                                         # ④ 비정상 크기(빈 SPA/차단)
         return {"verdict": "empty", "reason": f"too small ({n}B)"}
-    if success_selectors and any(s.lower() in low for s in success_selectors):
-        return {"verdict": "ok", "reason": "success selector matched"}  # ④ 성공 셀렉터
-    body = extract_text(text)
-    if len(body) >= 1000:
-        return {"verdict": "ok", "reason": f"body {len(body)} chars"}
     if n >= 200:
         return {"verdict": "partial", "reason": f"thin body ({len(body)} chars)"}
     return {"verdict": "empty", "reason": "no usable body"}
@@ -143,19 +165,23 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = 5) -> dict:
         return {"ok": False, "reason": "curl_cffi 미설치", "status": None, "text": "", "final_url": url}
     cur = url
     for _ in range(max_redirects + 1):
-        check_url_safe(cur)                             # 각 홉 SSRF 검증
+        check_url_safe(cur)                             # 각 홉 SSRF 사전검증(DNS 기준)
         _kw = {"verify": _CA_BUNDLE} if _CA_BUNDLE else {}
         r = creq.get(cur, impersonate=impersonate, timeout=TIMEOUT,
                      allow_redirects=False, stream=True, **_kw)
+        check_response_ip(r)                            # 실접속 IP 사후 재검증(V26 — TOCTOU)
         if r.status_code in (301, 302, 303, 307, 308):
             loc = r.headers.get("location") or r.headers.get("Location")
             r.close()
             if not loc:
                 return {"ok": False, "reason": "redirect without Location", "status": r.status_code,
                         "text": "", "final_url": cur}
-            cur = loc if loc.startswith("http") else f"{urlparse(cur).scheme}://{urlparse(cur).hostname}{loc}"
+            cur = urljoin(cur, loc)                     # V19 — 수제 조립 대신 표준 결합(프로토콜상대·상대경로·포트 보존)
             continue
-        mime = (r.headers.get("content-type") or "").split(";")[0].strip().lower()
+        ctype = r.headers.get("content-type") or ""
+        mime = ctype.split(";")[0].strip().lower()
+        charset = next((p.split("=", 1)[1].strip().strip('"') for p in ctype.split(";")[1:]
+                        if p.strip().lower().startswith("charset=")), None)
         buf = b""
         for chunk in r.iter_content(chunk_size=65536):
             buf += chunk
@@ -164,8 +190,17 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = 5) -> dict:
                 return {"ok": False, "reason": "oversize", "status": r.status_code,
                         "text": "", "final_url": cur, "mime": mime}
         r.close()
-        is_pdf = mime == "application/pdf" or cur.lower().endswith(".pdf")
-        text = "" if is_pdf else buf.decode("utf-8", errors="replace")
+        is_pdf = buf[:5] == b"%PDF-"                    # V18a — 매직바이트만 신뢰(확장자/헤더는 위조 가능)
+        if not is_pdf and mime and mime not in ALLOWED_MIME:   # V18b — PDF 판정 뒤에 게이트(옥텟스트림 PDF 보존)
+            return {"ok": False, "reason": f"mime:{mime}", "status": r.status_code,
+                    "text": "", "final_url": cur, "mime": mime}
+        if is_pdf:
+            text = ""
+        else:
+            try:
+                text = buf.decode(charset or "utf-8")   # 선언된 charset 우선(EUC-KR 등 무시 방지)
+            except (LookupError, UnicodeDecodeError):
+                text = buf.decode("utf-8", errors="replace")
         return {"ok": True, "status": r.status_code, "text": text, "raw": buf,
                 "final_url": cur, "mime": mime, "is_pdf": is_pdf}
     return {"ok": False, "reason": "too many redirects", "status": None, "text": "", "final_url": cur}
@@ -302,11 +337,24 @@ def demo() -> None:
             + "<title>t</title></head><body><div id='app'></div><p>로딩중</p></body></html>")
     assert len(thin) >= 200
     assert validate_body(thin, 200)["verdict"] == "partial"
+    # V17: 상태코드 우선 — 4xx/5xx 본문은 아무리 길어도 안 믿음(200 이면 같은 본문도 ok, 긍정형 짝)
+    long_body = "가나다 " * 500
+    assert validate_body(long_body, 404)["verdict"] == "empty"
+    assert validate_body(long_body, 503)["verdict"] == "empty"
+    assert validate_body(long_body, 200)["verdict"] == "ok"
+    # V27: 긴 기사 안에 챌린지 문구가 인용문으로만 등장 → ok(짧은 진짜 챌린지 페이지는 여전히 challenge)
+    article = ("<html><body><article><p>" + "전문가는 Just a moment 라는 문구를 인용했다. " * 80
+               + "</p></article></body></html>")
+    assert validate_body(article, 200)["verdict"] == "ok"
     print(f"[{_now()}] fetch demo OK (curl_cffi={'Y' if creq else 'N'}, "
           f"trafilatura={'Y' if trafilatura else 'N'}, CA={'ascii' if _CA_BUNDLE else 'default'})")
 
 
 if __name__ == "__main__":
+    for _stream in (sys.stdout, sys.stderr):          # cp949 콘솔/파이프 UnicodeEncodeError 방지
+        _reconf = getattr(_stream, "reconfigure", None)
+        if _reconf:
+            _reconf(encoding="utf-8", errors="replace")
     args = sys.argv[1:]
     if not args or args[0] == "demo":
         demo()

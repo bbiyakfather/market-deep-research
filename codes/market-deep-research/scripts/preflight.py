@@ -93,6 +93,10 @@ def _fmt(report: dict) -> str:
 
 
 if __name__ == "__main__":
+    for _stream in (sys.stdout, sys.stderr):          # cp949 콘솔/파이프 UnicodeEncodeError 방지
+        _reconf = getattr(_stream, "reconfigure", None)
+        if _reconf:
+            _reconf(encoding="utf-8", errors="replace")
     rep = check()
     if "--json" in sys.argv:
         print(json.dumps(rep, ensure_ascii=False, indent=2))

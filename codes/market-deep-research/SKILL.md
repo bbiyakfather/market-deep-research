@@ -6,8 +6,8 @@ description: >-
   [사실 → 출처 → 화면캡처] 증거구조로 "조사마다 수치가 달라지는 문제"를 제거한 팩트시트
   PDF(+내부 audit 번들)를 만든다. 유료 API(firecrawl/tavily) 무의존 자체 수집 스택을
   코어로 쓰고, 강방어 사이트는 insane-search 스킬로 위임한다. 사용 시점 — "증빙/캡처 포함
-  시장조사 보고서", "기술동향·산업동향·기관/기업 실사", "근거 있는 딥리서치 PDF", "N개 대상
-  비교·실태·실적·딜 조사". 제외 — 단순 사실확인·한두 출처 요약(WebSearch 직접).
+  시장조사 보고서", "기술동향·산업동향·기관/기업 실사·기술사업화 실사", "근거 있는 딥리서치
+  PDF", "N개 대상 비교·실태·실적·딜 조사". 제외 — 단순 사실확인·한두 출처 요약(WebSearch 직접).
 ---
 
 # market-deep-research — 증빙형 시장조사 보고서
@@ -46,9 +46,10 @@ description: >-
 [Bx] 반박·claim-graph ─ high-risk 주장: 독립그룹·반박검색·기본소스·시간증거  【v3-B】
 [G2] 증빙 게이트 ─ confirmed 전건 source_capture(핵심수치 필수)
 [3]  보고서 작성 ─ 고객 report.md(11부) + 내부 audit 번들 동시
-[G3] verify_facts + manifest ─ 실패 0 · 무태그숫자 차단 · 해시 고정
+[G3] verify_facts + manifest ─ 실패 0 · 무태그·단위 차단(세그먼트 결박) · 해시 고정
 [G5c]실행코드 검증 ─ 계산·상충 주장 스크립트 실증(CONFIRMED/REFUTED)   【v3-G5】
 [4]  render_pdf ─ GitHub 스타일 오프라인 PDF
+[4b] 재봉인 ─ manifest.py build 재실행(기존 항목 보존 + report.pdf 등 렌더 산출물 해시 추가)
 [G4] preview ─ 팀리드 육안검증(fitz 이미지 Read)
 [G5] 최종 무결성 ─ PDF F태그·링크·캡처 수 재검사 + manifest 재확인
 ```
@@ -57,25 +58,31 @@ description: >-
 - **의존성 점검**: `python scripts/preflight.py` — python·fitz·pandoc·HeadlessChrome·
   curl_cffi·trafilatura 유무, playwright MCP·insane-search 스킬·무료 공공 MCP(opendart·
   KOSIS·KakaoMap 등) 감지. 미설치 계층은 "건너뜀+경고"로 진행(자체 스택이 보장 코어).
-- **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사)·범위·**조사
-  종료기준**·환산옵션(기본 OFF)·출력형식·**보고서 목차 승인**.
+- **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사/기술사업화 실사)·
+  범위·**축별 충분조건**·환산옵션(기본 OFF)·출력형식·**승인 목차**(`references/research-plan.md`
+  서식). 확정 결과는 `audit/research-plan.md` 에 기록(승인 전 팬아웃 금지 — 병렬 조사원 스폰은
+  확정 후에만).
 - **기관·기업 조사면** `references/entity-identity.md` 동일성 게이트를 먼저 통과(법인명·
   사업자/법인번호·주소·이전상호·해외ID)해 조사 대상을 확정.
 - **intent-diff 개시**: `audit/intent-diff.md` 에 "요청 의도가 참이라면 무엇이 참이어야
   하는가"를 축별로 기록(G4 에서 발견과 대조해 gap 종결). 【v3-D】
 
 ### [1] 병렬 조사 → [E] 확장·수렴  【v3-A】
-- 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정) · **기술동향**=축분할
-  (기술요소·플레이어·시장·정책 + 교차검증1) · **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS
-  기존 스킬 조합) + 해외.
+- 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/
+  사업현황/재무실적 전건 조사) · **기술동향**=축분할(기술요소·플레이어·시장·정책 + 교차검증1) ·
+  **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS 기존 스킬 조합) + 해외 · **기술사업화 실사**=
+  축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도).
 - 조사원 = **sonnet**(병렬·저비용, background). 에이전트별 `_research/<agent>/` 임시폴더에만
   쓴다(파일충돌 방지). 워커는 **읽기전용**(공식 대장 미기록) — 반환은 마커로. 【v3-F】
 - 반환 마커(`agent-briefs.md`): evidence 스키마 JSONL + `## CLAIMS`(CLAIM/RISK/SOURCES/
   COUNTER/PRIMARY) + `## EXPAND`(LEAD/WHY/ANGLE, DEAD END) + `## 인사이트`(사실/추론 구분,
   근거 F-ID) + `## 요약`.
-- **확장수렴 루프**: 팀리드가 EXPAND 리드를 `audit/expansion-log.md` 로 dedup(미확인 리드
-  포함) → 새 리드마다 후속 워커 즉시 스폰. **수렴(유일 종료조건)**: 미확인 리드 0, 또는
-  연속 2웨이브 무신규, 또는 깊이캡 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅.
+- **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에
+  축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0
+  에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건,
+  후자는 워커에게 전달되는 조사 깊이 기준): **축별 잔여 리드 각 0**(한 축이라도 잔여 리드가
+  남으면 미수렴), 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md`
+  확정값이 있으면 그 값 우선) 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅.
 
 ### [G1] join + 수집 게이트
 - 전 에이전트 완료/timeout/부분실패 처리. raw 산출물 `_research/` 보존.
@@ -110,8 +117,10 @@ description: >-
   육안 선별(Read) → `[그림]` 캡션+출처 결박(`references/image-research.md`). `_images/` 저장.
 
 ### [G3] verify_facts + manifest (실패 0)
-- `scripts/verify_facts.py`: 본문/생성부록 분리 파싱 · 무태그 숫자·통화·비율·표셀 탐지(태그
-  없는 사실주장 차단) · 모든 `(Fxxx)` 대장 존재+status∈{confirmed} + 값·단위·기간·주체 의미
+- `scripts/verify_facts.py`: 본문/생성부록 분리 파싱(부록 경계는 주석 우선, 없으면 헤딩 최후
+  출현) · 본문을 문장·표행 세그먼트로 나눠 수치↔`(Fxxx)`를 1:1 최근접 결박(태그 하나가 줄
+  전체를 면제하지 않음) · 무태그 숫자·통화·비율·표셀 탐지(태그 없는 사실주장 차단) · 모든
+  `(Fxxx)` 대장 존재+status∈{confirmed} + 값·**단위**(Decimal 스케일·차원, `[단위불일치]`)
   대조 · evidence 필수필드 누락 0 · source_capture 실재(핵심수치) · [환산 ON] Decimal 검산.
 - `scripts/manifest.py build`: source/capture/report/PDF/대장 SHA-256 고정.
 
@@ -119,10 +128,21 @@ description: >-
 - 계산·상충·성능 주장은 최소 자체포함 스크립트 실행 → stdout 캡처 → `verify-<slug>.md`
   (CONFIRMED/REFUTED/PARTIAL). 시장조사 접점: 시장규모=수량×ASP·CAGR·통화환산 Decimal 검산.
 
-### [4] render_pdf → [G4] preview → [G5] 최종 무결성
+### [4] render_pdf → [4b] 재봉인 → [G4] preview → [G5] 최종 무결성
 - `render_pdf.py`(pandoc gfm→html --embed-resources → HeadlessChrome --print-to-pdf,
-  한글경로 퍼센트인코딩·오프라인). `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증.
-- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`. **파일 변경 시 G3 복귀.**
+  한글경로 퍼센트인코딩·오프라인)로 report.pdf 생성.
+- **[4b] 재봉인**: `scripts/manifest.py build` 재실행. [G3]의 build 시점엔 report.pdf 가 아직
+  없어 매니페스트에 영구 누락되므로, 렌더 직후 다시 build 해 **기존 항목(source/capture/
+  facts/evidence/report_md)은 그대로 둔 채** report.pdf 등 렌더 산출물의 해시만 추가한다.
+  재봉인을 건너뛰면 report.pdf 는 변조·삭제해도 [G5] 가 잡지 못한다.
+- `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 + **intent-diff 축별 대조**(64-65행
+  개시분과 실제 발견 대조, 절차·복귀 규칙은 `references/verification-gates.md` G4 절 참조).
+- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`(재봉인 기준 — 이 시점부턴
+  신규 파일도 실패로 판정). 복귀 규칙은 `references/verification-gates.md` 참조(파일 변경/
+  intent-diff gap 각각 다른 복귀처).
+- **참고**: [G2]가 만드는 실패 캡처 `.FAILED` 산출물도 `_captures/**` 글롭에 잡힌다 — 재봉인
+  이후 캡처를 재시도하면 그 결과물이 신규 파일로 잡혀 verify 가 실패로 뜬다. 의도된 동작이며
+  이 경우도 재봉인이 해법이다.
 
 ---
 
@@ -142,4 +162,5 @@ description: >-
 | `references/report-format.md` | 고객 11부 목차·유형변형·내부 audit 양식 |
 | `references/image-research.md` | 세부주제 대표 이미지(도판) 수확·선별·라이선스 |
 | `references/verification-gates.md` | G0~G5 상세·4차원 등급·claim-graph·환산 |
+| `references/research-plan.md` | G0 조사계획 확정(축·축별 충분조건·깊이캡·승인 목차) |
 | `references/entity-identity.md` | 기관·기업 동일성 확인 게이트 |
