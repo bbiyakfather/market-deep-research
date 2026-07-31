@@ -1,6 +1,7 @@
 """fetch.py — 자체 fetch/extract 스택 (plan-v2 핵심설계3 + v3-C).
 
-보안경계(선제) → curl_cffi TLS 그리드 → Jina Reader → Wayback → (실패 시) insane-search 위임 신호.
+보안경계(선제) → [도메인 라우팅] → curl_cffi TLS 그리드 → 모바일(iOS 지문+UA) → Jina Reader
+→ Googlebot UA → RSS → Wayback → OGP 메타. 우회 전략을 **내장**한다(외부 스킬 위임 없음).
 원본(raw) + 정제본(trafilatura) 둘 다 저장 + SHA-256. archived_url(Jina/Wayback)은 원 URL과 구분.
 
 철칙(정책·완화 불가):
@@ -34,6 +35,33 @@ ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml"
 CHALLENGE_MARKERS = ("just a moment", "access denied", "cf-challenge", "datadome",
                      "sec-if-cpt-container", "enable javascript and cookies",
                      "verifying you are human", "captcha-delivery")
+
+# --- 내장 우회 계층 상수 (구 insane-search 위임분 흡수) -----------------------
+MOBILE_UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 "
+             "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")
+MOBILE_HEADERS = {"User-Agent": MOBILE_UA,
+                  "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+                  "Referer": "https://m.naver.com/"}
+GOOGLEBOT_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; "
+                                   "+http://www.google.com/bot.html)"}
+# iOS TLS 지문 우선, 없으면 데스크톱 safari로 degrade
+MOBILE_IMPERSONATE = "safari180_ios"
+
+DEFAULT_ORDER = ["direct", "mobile", "jina", "googlebot", "rss", "wayback"]
+
+# 도메인 라우팅 — 매칭되면 그 계층을 앞에 세운다(insane-search 사이트 인덱스 흡수).
+# (호스트 정규식, 우선 계층). 나머지 계층은 DEFAULT_ORDER 순서로 뒤따른다.
+ROUTES: list[tuple[str, list[str]]] = [
+    (r"(^|\.)blog\.naver\.com$",                      ["mobile", "rss"]),
+    (r"(^|\.)(news|finance|tv)\.naver\.com$",         ["jina"]),
+    (r"(^|\.)(dcinside\.com|fmkorea\.com)$",          ["mobile"]),
+    (r"(^|\.)yozm\.wishket\.com$",                    ["mobile"]),          # Jina 차단
+    (r"(^|\.)tistory\.com$",                          ["rss"]),
+    (r"(^|\.)(medium\.com|substack\.com)$",           ["jina", "rss"]),
+    (r"(^|\.)(brunch\.co\.kr|clien\.net|ruliweb\.com|ppomppu\.co\.kr)$", ["jina", "rss"]),
+    (r"(^|\.)(news\.hada\.io|44bits\.io|careerly\.co\.kr)$", ["jina"]),
+    (r"(^|\.)(hankyung\.com|news\.daum\.net)$",       ["jina", "rss"]),
+]
 
 try:
     from curl_cffi import requests as creq          # TLS 위장
@@ -160,13 +188,16 @@ def extract_text(html: str) -> str:
 
 
 # --- 단일 fetch (수동 리다이렉트 검증 + 크기캡) -----------------------------
-def _fetch_once(url: str, impersonate: str, max_redirects: int = 5) -> dict:
+def _fetch_once(url: str, impersonate: str, max_redirects: int = 5,
+                headers: dict | None = None) -> dict:
     if creq is None:
         return {"ok": False, "reason": "curl_cffi 미설치", "status": None, "text": "", "final_url": url}
     cur = url
     for _ in range(max_redirects + 1):
         check_url_safe(cur)                             # 각 홉 SSRF 사전검증(DNS 기준)
         _kw = {"verify": _CA_BUNDLE} if _CA_BUNDLE else {}
+        if headers:
+            _kw["headers"] = headers                    # UA 위장(모바일·봇) — TLS 지문과 별개 축
         r = creq.get(cur, impersonate=impersonate, timeout=TIMEOUT,
                      allow_redirects=False, stream=True, **_kw)
         check_response_ip(r)                            # 실접속 IP 사후 재검증(V26 — TOCTOU)
@@ -231,59 +262,153 @@ def _via_wayback(url: str) -> dict:
     return {"ok": False, "reason": "no wayback snapshot", "status": None, "text": "", "final_url": url}
 
 
+def _mobile_urls(url: str) -> list[str]:
+    """모바일 대체 URL 후보. 네이버 블로그는 PostView 변환이 유일하게 본문을 준다."""
+    p = urlparse(url)
+    host = (p.hostname or "").lower()
+    out: list[str] = []
+    if host.endswith("blog.naver.com") and not host.startswith("m."):
+        seg = [s for s in p.path.split("/") if s]
+        if len(seg) >= 2 and seg[1].isdigit():
+            out.append(f"https://m.blog.naver.com/PostView.naver?blogId={seg[0]}&logNo={seg[1]}")
+        out.append(url.replace("://blog.naver.com", "://m.blog.naver.com", 1))
+    elif host and not host.startswith("m.") and host.count(".") >= 1:
+        out.append(p._replace(netloc="m." + p.netloc).geturl())
+    out.append(url)                                     # 원 URL + 모바일 UA 조합도 시도
+    return list(dict.fromkeys(out))
+
+
+def _rss_urls(url: str) -> list[str]:
+    p = urlparse(url)
+    host = (p.hostname or "").lower()
+    base = f"{p.scheme}://{p.netloc}"
+    out: list[str] = []
+    if host.endswith("blog.naver.com"):
+        seg = [s for s in p.path.split("/") if s]
+        if seg:
+            out.append(f"https://rss.blog.naver.com/{seg[0]}.xml")
+    if host.endswith("substack.com"):
+        out.append(base + "/feed")
+    out += [base + "/rss", base + "/feed", base + "/rss.xml"]
+    return list(dict.fromkeys(out))
+
+
+def _ogp_partial(html: str) -> str:
+    """본문 확보 실패 시 OGP/description 메타만이라도 건진다(fallback.md 2번)."""
+    import re
+    got: dict[str, str] = {}
+    pat = (r'<meta[^>]+?(?:property|name)\s*=\s*["\'](og:title|og:description|description)["\']'
+           r'[^>]*?content\s*=\s*["\']([^"\']+)',
+           r'<meta[^>]+?content\s*=\s*["\']([^"\']+)["\']'
+           r'[^>]*?(?:property|name)\s*=\s*["\'](og:title|og:description|description)["\']')
+    for m in re.finditer(pat[0], html, re.I | re.S):
+        got.setdefault(m.group(1).lower(), m.group(2))
+    for m in re.finditer(pat[1], html, re.I | re.S):
+        got.setdefault(m.group(2).lower(), m.group(1))
+    parts = [got.get("og:title", ""), got.get("og:description") or got.get("description", "")]
+    return "\n".join(p for p in parts if p).strip()
+
+
+def _try_derived(url: str, impersonate: str, headers: dict | None = None) -> dict:
+    """**파생** URL(모바일·RSS 등 우리가 합성한 주소) 전용 fetch.
+
+    SSRF 차단·미해석 호스트는 그 후보만 건너뛴다 — 차단 자체는 그대로 유효하고(요청 안 나감),
+    다만 사다리를 죽이지 않는다. 원 URL 의 SSRF 는 진입부 check_url_safe 가 이미 막았고
+    `direct` 계층에서는 계속 전파시킨다(리다이렉트 내부망 이탈은 보안 사건).
+    """
+    try:
+        return _fetch_once(url, impersonate, headers=headers)
+    except SsrfBlocked as e:
+        return {"ok": False, "reason": f"skip:{e}", "status": None, "text": "", "final_url": url}
+    except Exception as e:
+        return {"ok": False, "reason": f"error:{e}", "status": None, "text": "", "final_url": url}
+
+
+def _candidates(tier: str, url: str):
+    """계층 이름 → (라벨, _fetch_once 형태 응답) 후보들을 순서대로 내놓는다."""
+    if tier == "direct":
+        for imp in IMPERSONATE_GRID:
+            yield f"curl_cffi:{imp}", _fetch_once(url, imp)      # SSRF 는 전파(보안 사건)
+    elif tier == "mobile":
+        for u in _mobile_urls(url):
+            res = _try_derived(u, MOBILE_IMPERSONATE, headers=MOBILE_HEADERS)
+            if not res.get("ok") and str(res.get("reason", "")).startswith("error:"):
+                res = _try_derived(u, "safari", headers=MOBILE_HEADERS)  # iOS 지문 미지원 빌드
+            yield "mobile", res
+    elif tier == "jina":
+        yield "jina", _via_jina(url)
+    elif tier == "googlebot":
+        yield "googlebot", _try_derived(url, "chrome", headers=GOOGLEBOT_HEADERS)
+    elif tier == "rss":
+        for u in _rss_urls(url):
+            res = _try_derived(u, "chrome")
+            if res.get("ok"):
+                res["archived_url"] = u                  # 원 URL과 구분(대체 표현물)
+            yield "rss", res
+    elif tier == "wayback":
+        yield "wayback", _via_wayback(url)
+
+
+def _tier_order(url: str) -> list[str]:
+    """`direct`(원 URL·원본 충실도 최고)를 항상 먼저 타고, 도메인 라우팅은 **폴백 순서만** 바꾼다.
+
+    insane-search 라우팅표는 WebFetch 기준이라 "이 사이트는 jina로" 식이지만,
+    이 스택의 1계층 curl_cffi(TLS 위장)는 WebFetch보다 강해 대개 direct로 뚫린다.
+    라우팅을 앞세우면 헛요청이 늘고, 더 나쁘게는 RSS 요약본이 본문보다 먼저 partial 로
+    잡혀 원문 대신 반환될 수 있다(한경 실측).
+    """
+    import re
+    host = (urlparse(url).hostname or "").lower()
+    head: list[str] = []
+    for pat, tiers in ROUTES:
+        if re.search(pat, host):
+            head = [t for t in tiers if t != "direct"]
+            break
+    return ["direct"] + head + [t for t in DEFAULT_ORDER if t not in head and t != "direct"]
+
+
 def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
-    """자체 사다리 전체. 반환 status ∈ {ok, partial, fail, delegate}.
-    delegate = 자체 스택 소진 → 오케스트레이터가 insane-search 스킬로 위임."""
+    """자체 사다리 전체(도메인 라우팅 + 내장 우회). 반환 status ∈ {ok, partial, fail}.
+
+    구 버전의 `delegate`(insane-search 스킬 위임)는 사다리에 흡수돼 사라졌다.
+    """
     trace: list[dict] = []
     partial_res: dict | None = None
+    last_html: str = ""
     check_url_safe(url)                                 # 진입 전 1차 검증
 
-    # 1) curl_cffi TLS 그리드(전수)
-    for imp in IMPERSONATE_GRID:
+    for tier in _tier_order(url):
         try:
-            res = _fetch_once(url, imp)
+            for label, res in _candidates(tier, url):
+                if not res or not res.get("ok"):
+                    trace.append({"tier": label, "fail": (res or {}).get("reason")})
+                    continue
+                if res.get("is_pdf"):
+                    return _result("ok", res, trace, note="pdf")
+                v = validate_body(res["text"], res.get("status", 0), success_selectors)
+                trace.append({"tier": label, "verdict": v["verdict"], "reason": v["reason"]})
+                if v["verdict"] == "ok":
+                    return _result("ok", res, trace, note=tier)
+                if v["verdict"] == "partial" and partial_res is None:
+                    partial_res = res
+                if res.get("text"):
+                    last_html = res["text"]
         except SsrfBlocked:
             raise
         except Exception as e:
-            trace.append({"tier": f"curl_cffi:{imp}", "error": str(e)}); continue
-        if not res.get("ok"):
-            trace.append({"tier": f"curl_cffi:{imp}", "fail": res.get("reason")}); continue
-        if res.get("is_pdf"):
-            return _result("ok", res, trace, note="pdf")
-        v = validate_body(res["text"], res.get("status", 0), success_selectors)
-        trace.append({"tier": f"curl_cffi:{imp}", "verdict": v["verdict"], "reason": v["reason"]})
-        if v["verdict"] == "ok":
-            return _result("ok", res, trace)
-        if v["verdict"] == "partial":
-            partial_res = res
-    # 2) Jina Reader
-    try:
-        jr = _via_jina(url)
-        if jr.get("ok"):
-            v = validate_body(jr["text"], jr.get("status", 0), success_selectors)
-            trace.append({"tier": "jina", "verdict": v["verdict"]})
-            if v["verdict"] in ("ok", "partial"):
-                return _result(v["verdict"], jr, trace)
-    except SsrfBlocked:
-        raise
-    except Exception as e:
-        trace.append({"tier": "jina", "error": str(e)})
-    # 3) Wayback
-    try:
-        wb = _via_wayback(url)
-        if wb.get("ok"):
-            v = validate_body(wb["text"], wb.get("status", 0), success_selectors)
-            trace.append({"tier": "wayback", "verdict": v["verdict"]})
-            if v["verdict"] in ("ok", "partial"):
-                return _result(v["verdict"], wb, trace)
-    except Exception as e:
-        trace.append({"tier": "wayback", "error": str(e)})
+            trace.append({"tier": tier, "error": str(e)})
 
     if partial_res is not None:
         return _result("partial", partial_res, trace)
-    # 4) 소진 → 위임 신호
-    return {"status": "delegate", "final_url": url, "trace": trace,
-            "hint": "insane-search 스킬로 위임(강방어 사이트)"}
+    # OGP 메타만이라도 — 제목+요약 확보 시 partial 인정
+    if last_html:
+        og = _ogp_partial(last_html)
+        if len(og) >= 40:
+            trace.append({"tier": "ogp", "verdict": "partial"})
+            return _result("partial", {"final_url": url, "text": og, "mime": "text/html"},
+                           trace, note="ogp")
+    return {"status": "fail", "final_url": url, "trace": trace,
+            "hint": "자체 사다리 전 계층 소진 — playwright MCP(JS 렌더링) 또는 대체출처를 찾을 것"}
 
 
 def _result(status: str, res: dict, trace: list, note: str = "") -> dict:
@@ -346,6 +471,41 @@ def demo() -> None:
     article = ("<html><body><article><p>" + "전문가는 Just a moment 라는 문구를 인용했다. " * 80
                + "</p></article></body></html>")
     assert validate_body(article, 200)["verdict"] == "ok"
+
+    # --- 내장 우회 계층(구 insane-search 위임분) ---------------------------
+    # 도메인 라우팅: direct 가 **항상 먼저**, 라우팅은 폴백 순서만 조정(중복 없음)
+    assert _tier_order("https://blog.naver.com/abc/223")[:3] == ["direct", "mobile", "rss"]
+    assert _tier_order("https://news.naver.com/x")[:2] == ["direct", "jina"]
+    assert _tier_order("https://yozm.wishket.com/magazine/detail/1/")[:2] == ["direct", "mobile"]
+    plain = _tier_order("https://example.com/a")
+    assert plain == DEFAULT_ORDER, plain
+    for u in ("https://blog.naver.com/a/1", "https://news.naver.com/x", "https://x.substack.com/p/a"):
+        assert _tier_order(u)[0] == "direct", u   # 원본 충실도 최우선 — RSS 요약본 선점 방지
+    for u in ("https://blog.naver.com/a/1", "https://example.com/a"):
+        order = _tier_order(u)
+        assert len(order) == len(set(order)) == len(DEFAULT_ORDER), order
+
+    # 네이버 블로그: 숫자 logNo 일 때만 PostView 변환(오변환 방지)
+    mu = _mobile_urls("https://blog.naver.com/navion/223456789")
+    assert mu[0] == "https://m.blog.naver.com/PostView.naver?blogId=navion&logNo=223456789", mu
+    assert _mobile_urls("https://blog.naver.com/navion/tag")[0].startswith(
+        "https://m.blog.naver.com/navion/tag"), "숫자 아닌 경로는 PostView 변환 금지"
+    assert _mobile_urls("https://example.com/a")[0] == "https://m.example.com/a"
+    assert "https://example.com/a" in _mobile_urls("https://example.com/a")  # 원 URL 폴백 보존
+
+    assert "https://rss.blog.naver.com/navion.xml" in _rss_urls("https://blog.naver.com/navion/1")
+    assert "https://x.substack.com/feed" in _rss_urls("https://x.substack.com/p/a")
+
+    # 파생 URL 이 SSRF·미해석이어도 그 후보만 건너뛴다(사다리 전체가 죽으면 안 됨).
+    # 차단 자체는 유효 — 요청은 나가지 않고 reason 에 skip 으로 남는다.
+    _d = _try_derived("http://127.0.0.1/x", "chrome")
+    assert _d["ok"] is False and _d["reason"].startswith("skip:"), _d
+
+    # OGP: 속성 순서 뒤바뀐 경우도 잡아야 한다
+    assert "제목" in _ogp_partial('<meta property="og:title" content="제목">')
+    assert "요약" in _ogp_partial('<meta content="요약" name="og:description">')
+    assert _ogp_partial("<html><body>없음</body></html>") == ""
+
     print(f"[{_now()}] fetch demo OK (curl_cffi={'Y' if creq else 'N'}, "
           f"trafilatura={'Y' if trafilatura else 'N'}, CA={'ascii' if _CA_BUNDLE else 'default'})")
 

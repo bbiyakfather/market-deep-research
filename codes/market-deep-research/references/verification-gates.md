@@ -10,7 +10,7 @@
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
-insane-search / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
+openpyxl·yt-dlp / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
 환산옵션 OFF·출력형식·**승인 목차**) — 통과조건: `audit/research-plan.md` 존재 + 승인 기록 +
 승인 목차(`references/research-plan.md` 서식) 포함, 확정 전 팬아웃 금지. 기관조사면
 `entity-identity.md` 선행. `audit/intent-diff.md` 개시.

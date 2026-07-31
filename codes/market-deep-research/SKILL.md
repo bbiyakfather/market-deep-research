@@ -5,7 +5,8 @@ description: >-
   조사 서브에이전트를 지휘하고, 보고서 진입 전 모든 사실을 원문 재열람으로 전건 재검증하며,
   [사실 → 출처 → 화면캡처] 증거구조로 "조사마다 수치가 달라지는 문제"를 제거한 팩트시트
   PDF(+내부 audit 번들)를 만든다. 유료 API(firecrawl/tavily) 무의존 자체 수집 스택을
-  코어로 쓰고, 강방어 사이트는 insane-search 스킬로 위임한다. 사용 시점 — "증빙/캡처 포함
+  코어로 쓰며, 강방어 사이트 우회(도메인 라우팅·모바일 지문·RSS·OGP)를 코어에 내장한다.
+  사용 시점 — "증빙/캡처 포함
   시장조사 보고서", "기술동향·산업동향·기관/기업 실사·기술사업화 실사", "근거 있는 딥리서치
   PDF", "N개 대상 비교·실태·실적·딜 조사". 제외 — 단순 사실확인·한두 출처 요약(WebSearch 직접).
 ---
@@ -56,8 +57,9 @@ description: >-
 
 ### [G0] preflight + 요구사항 확정
 - **의존성 점검**: `python scripts/preflight.py` — python·fitz·pandoc·HeadlessChrome·
-  curl_cffi·trafilatura 유무, playwright MCP·insane-search 스킬·무료 공공 MCP(opendart·
-  KOSIS·KakaoMap 등) 감지. 미설치 계층은 "건너뜀+경고"로 진행(자체 스택이 보장 코어).
+  curl_cffi·trafilatura 유무, playwright MCP·무료 공공 MCP(opendart·KOSIS·KakaoMap 등) 감지.
+  미설치 계층은 "건너뜀+경고"로 진행(자체 스택이 보장 코어).
+  ※ `curl_cffi` 는 사실상 필수 — 내장 우회(모바일 iOS 지문 등)가 전부 그 위에 얹혀 있다.
 - **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사/기술사업화 실사)·
   범위·**축별 충분조건**·환산옵션(기본 OFF)·출력형식·**승인 목차**(`references/research-plan.md`
   서식). 확정 결과는 `audit/research-plan.md` 에 기록(승인 전 팬아웃 금지 — 병렬 조사원 스폰은
@@ -90,8 +92,11 @@ description: >-
   `discarded`**(audit 기록). 독립성: 같은 보도자료 재전재는 1출처로 계산(`source_role`).
 
 ### [2] 팀리드 재검증 (★전건)
-- 보고서 진입 후보 **모든 fact** 를 팀리드가 원문 재열람(WebFetch → 차단 시 fetch.py →
-  강방어 시 insane-search 위임)하여 verbatim/locator 대조 → `db.add_verify_event(by="lead")`.
+- 보고서 진입 후보 **모든 fact** 를 팀리드가 원문 재열람(WebFetch → 차단 시 `fetch.py`
+  사다리가 우회까지 내장 처리)하여 verbatim/locator 대조 → `db.add_verify_event(by="lead")`.
+  ⚠ **WebFetch 가 403 이라고 "원문확인불가"로 넘기지 말 것** — `fetch.py` 로 한 번 더 확인한다.
+  실제로 WebFetch·데스크톱 지문이 전부 막힌 GVR 이 모바일 계층으로 열렸고, 스니펫으로만
+  확인해 "일치" 판정했던 건에서 오류가 나왔다(2026-07-31).
 - confirmed 조건(facts_db 강제): 최소 1 evidence + 팀리드 verify_event. 무출처=confirm 불가.
 
 ### [Bx] 반박검색 + claim-graph 게이트  【v3-B】
@@ -148,9 +153,12 @@ description: >-
 
 ## 모델 분리 / 자원 재사용
 - 조사원 = sonnet(병렬·저비용). 재검증·종합 = 메인 세션(고성능).
-- **수집 사다리**(`references/source-ladder.md`): WebFetch → fetch.py(curl_cffi TLS→모바일
-  →Jina→Wayback, 보안경계) → **강방어 시 insane-search 스킬 위임**(이중구현 금지). 무료 공공
+- **수집 사다리**(`references/source-ladder.md`): WebFetch → fetch.py(**도메인 라우팅** →
+  curl_cffi TLS 그리드 → **모바일 iOS 지문+UA** → Jina → **Googlebot UA** → **RSS** → Wayback
+  → **OGP**, 보안경계). 우회는 **코어 내장**이라 외부 스킬 위임이 없다. 무료 공공
   MCP(opendart·KOSIS 등)는 있으면 Phase0 1차소스로 기회적 활용(유료 무의존 유지).
+  ※ **모바일 계층이 실전 핵심** — Cloudflare 403(예: grandviewresearch.com)이 데스크톱 지문
+  3종을 다 막아도 iOS 지문으로 통과하는 사례가 확인됐다(2026-07-31 실측).
 
 ## 참조 문서 (필요할 때만 로드)
 | 파일 | 언제 |

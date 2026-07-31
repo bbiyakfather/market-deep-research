@@ -1,11 +1,12 @@
 """preflight.py — G0 의존성/도구 점검. 미설치 계층은 "건너뜀+경고"로 진행(자체 스택이 보장 코어).
 
-파이썬에서 감지 가능한 것만 본다(python 패키지 · CLI 바이너리 · insane-search 스킬 폴더).
+파이썬에서 감지 가능한 것만 본다(python 패키지 · CLI 바이너리).
 playwright MCP · 무료 공공 MCP(opendart/KOSIS 등)는 런타임에서 오케스트레이터(Claude)가
 도구 목록으로 확인한다 — 여기서는 "런타임 확인 필요"로만 표시.
 
 HARD(없으면 exit 1): python>=3.10, fitz(PyMuPDF), pandoc, chrome.
-SOFT(경고): curl_cffi, trafilatura, openpyxl, yt-dlp, insane-search 스킬.
+SOFT(경고): curl_cffi, trafilatura, openpyxl, yt-dlp.
+※ curl_cffi 는 사실상 필수 — 내장 우회(모바일 iOS 지문 등)가 전부 이 위에 얹혀 있다.
 
 CLI: python preflight.py          # 리포트 출력, HARD 누락 시 exit 1
      python preflight.py --json   # JSON
@@ -44,12 +45,6 @@ def _find_chrome() -> str | None:
     return None
 
 
-def _find_insane_search() -> str | None:
-    base = Path.home() / ".claude" / "plugins"
-    hits = list(base.glob("**/insane-search/**/SKILL.md")) if base.exists() else []
-    return str(hits[0].parent) if hits else None
-
-
 def check() -> dict:
     py_ok = sys.version_info >= (3, 10)
     report = {
@@ -59,11 +54,8 @@ def check() -> dict:
             "pandoc": {"ok": shutil.which("pandoc") is not None, "detail": shutil.which("pandoc")},
             "chrome": {"ok": _find_chrome() is not None, "detail": _find_chrome()},
         },
-        "soft": {
-            **{m: {"ok": _has_py(m)} for m in SOFT_PY},
-            "insane_search_skill": {"ok": _find_insane_search() is not None,
-                                    "detail": _find_insane_search()},
-        },
+        # 강방어 우회는 fetch.py 에 내장됨 — insane-search 스킬 의존 없음(2026-07-31)
+        "soft": {m: {"ok": _has_py(m)} for m in SOFT_PY},
         "runtime_check_needed": [
             "playwright MCP (mcp__*playwright*)",
             "무료 공공 MCP: opendart · KOSIS · KakaoMap 등",
