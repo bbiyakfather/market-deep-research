@@ -28,7 +28,7 @@ Codex 판정 **DISAGREE(재설계 요구)**, Claude **수용**. 아래 v2는 재
 ---
 
 ## 산출물 위치
-- 개발본(git): `C:\Users\김형일\Documents\Claude\Projects\codes\factsheet-research\`
+- 개발본(git): `D:\Projects\codes\factsheet-research\`
 - 설치본: 완성 후 `C:\Users\김형일\.claude\skills\factsheet-research\` (install.py로 해시검증 복사)
 - 기존 market-deep-research 스킬은 수정 금지 (완성 후 폐기 여부만 사용자에게 권고)
 

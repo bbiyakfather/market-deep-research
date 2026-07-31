@@ -1,0 +1,7 @@
+# 조사 실행 산출물(스킬 소스 아님) — 작업폴더·수집 캐시
+research_*/
+_sources/
+__pycache__/
+*.pyc
+*.tmp
+*.bak*
