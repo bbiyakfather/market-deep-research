@@ -408,7 +408,7 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
             return _result("partial", {"final_url": url, "text": og, "mime": "text/html"},
                            trace, note="ogp")
     return {"status": "fail", "final_url": url, "trace": trace,
-            "hint": "자체 사다리 전 계층 소진 — playwright MCP(JS 렌더링) 또는 대체출처를 찾을 것"}
+            "hint": "자체 사다리 전 계층 소진 — 브라우저 MCP(agent-browser 우선, JS 렌더링) 또는 대체출처를 찾을 것"}
 
 
 def _result(status: str, res: dict, trace: list, note: str = "") -> dict:

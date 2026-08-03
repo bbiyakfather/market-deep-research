@@ -32,7 +32,7 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 6. **RSS** — `rss.blog.naver.com/{id}.xml` · `/feed` · `/rss` · `/rss.xml` → `archived_url` 구분.
 7. **Wayback**(`archive.org/wayback/available`) → snapshot → `archived_url` 구분.
 8. **OGP 메타**(og:title·og:description) — 본문 실패 시 제목+요약만 `partial` 로(속성 순서 양방향 파싱).
-9. **소진 → `status:"fail"`**: playwright MCP(JS 렌더링) 또는 대체출처로.
+9. **소진 → `status:"fail"`**: 브라우저 MCP(JS 렌더링 — agent-browser 우선, playwright 폴백) 또는 대체출처로.
 
 **도메인 라우팅**(`fetch.ROUTES`): 네이버 블로그→모바일·RSS, 네이버 뉴스/증권→Jina,
 디시·펨코·요즘IT→모바일, 티스토리→RSS, 미디엄·서브스택→Jina·RSS 등.
@@ -49,10 +49,14 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 인터스티셜만 해당) ④ 비정상 크기(<200B). 판정 `ok`(셀렉터 또는 본문≥1000자) / `partial`(얇은 본문) /
 `challenge`/`empty`(실패).
 
-## WAF 조기감지 정찰 (R7, playwright MCP)
+## WAF 조기감지 정찰 (R7) — ⚠ 이 항목만 playwright 우선
 반복의도 조회에서 초기 2~3회 challenge면: 백그라운드로 fetch 격자 계속 + 포어그라운드로
-`mcp__*playwright*` 로 페이지 로드 → 네트워크 요청에서 내부 `/api/`·`/graphql`·`.json` XHR 포착 →
+브라우저 MCP 로 페이지 로드 → 네트워크 요청에서 내부 `/api/`·`/graphql`·`.json` XHR 포착 →
 그 JSON 엔드포인트를 fetch 로 직접 호출(대부분 API 는 HTML 보다 방어 약함). 신규 인프라 0.
+- **도구 선택**: `agent-browser 에는 네트워크 요청 목록 도구가 없다` — 정찰만은
+  `mcp__*playwright*`(`browser_network_requests`)를 1순위로 쓴다. playwright 가 없으면
+  `agent_browser_eval` 로 `performance.getEntriesByType('resource')` 를 읽어 대체(리소스 URL 목록만
+  나오고 요청/응답 본문은 못 본다 — 열위 폴백임을 인지할 것).
 
 ## 코어 내장 (구 insane-search 위임분)
 - 강방어 우회는 `fetch.py` 사다리에 **내장**됐다 — 도메인 라우팅·모바일 지문·Googlebot·RSS·OGP.

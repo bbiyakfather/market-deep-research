@@ -10,7 +10,7 @@
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
-openpyxl·yt-dlp / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
+openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
 환산옵션 OFF·출력형식·**승인 목차**) — 통과조건: `audit/research-plan.md` 존재 + 승인 기록 +
 승인 목차(`references/research-plan.md` 서식) 포함, 확정 전 팬아웃 금지. 기관조사면
 `entity-identity.md` 선행. `audit/intent-diff.md` 개시.
@@ -28,8 +28,10 @@ openpyxl·yt-dlp / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
 
 ## G2 증빙 게이트
-confirmed 전건 `source_capture`(capture_pdf 또는 playwright 실화면). htmlbox 재구성은 **불인정**.
-high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사).
+confirmed 전건 `source_capture`(capture_pdf 또는 브라우저 MCP 실화면 — 계층·recipe 는
+`evidence-capture.md`). htmlbox 재구성은 **불인정**.
+high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사). 실재 검사는 파일 유무만 보므로
+**백지 캡처는 걸러내지 못한다** — 저장된 PNG 팀리드 육안 확인이 게이트의 일부다.
 
 ## G3 verify_facts + manifest (실패 0)
 `verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]`:

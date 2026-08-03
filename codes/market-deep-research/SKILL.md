@@ -57,7 +57,8 @@ description: >-
 
 ### [G0] preflight + 요구사항 확정
 - **의존성 점검**: `python scripts/preflight.py` — python·fitz·pandoc·HeadlessChrome·
-  curl_cffi·trafilatura 유무, playwright MCP·무료 공공 MCP(opendart·KOSIS·KakaoMap 등) 감지.
+  curl_cffi·trafilatura 유무, 브라우저 MCP(agent-browser 1순위·playwright·claude-in-chrome)·
+  무료 공공 MCP(opendart·KOSIS·KakaoMap 등) 감지.
   미설치 계층은 "건너뜀+경고"로 진행(자체 스택이 보장 코어).
   ※ `curl_cffi` 는 사실상 필수 — 내장 우회(모바일 iOS 지문 등)가 전부 그 위에 얹혀 있다.
 - **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사/기술사업화 실사)·
@@ -109,7 +110,9 @@ description: >-
 
 ### [G2] 증빙 게이트
 - confirmed 전건 `source_capture` 생성: 로컬/다운로드 PDF=`capture_pdf.py`(fitz 정확숫자
-  하이라이트+크롭), 접근가능 웹=playwright 실화면 스크린샷(최종URL·시각·viewport·locator 결박).
+  하이라이트+크롭), 접근가능 웹=**agent-browser** 실화면 스크린샷(playwright·claude-in-chrome 폴백,
+  최종URL·시각·viewport·locator 결박). ⚠ agent-browser 는 `selector` 크롭이 백지로 저장되면서도
+  성공을 반환하므로 **뷰포트 캡처 + 팀리드 육안 확인**이 필수(`references/evidence-capture.md`).
 - **재구성 발췌(htmlbox)는 증빙 불인정** → `capture_web.py` 산출물은 `_reconstructed/`(내부용).
   원본 캡처 불가 시 대체출처 or "미확인" 유지. 핵심수치는 캡처 필수.
 
