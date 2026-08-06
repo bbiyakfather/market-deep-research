@@ -44,6 +44,25 @@ def _variants(number: str) -> list[str]:
 _SUBSTR_CHARS = set(".,0123456789")   # 인접 시 부분문자열 오귀속으로 보고 버릴 문자('45%'·'2024-45'는 살림)
 
 
+def _merge_runs(rects: list) -> list:
+    """[v9] 한 번의 히트가 여러 span 에 걸쳐 쪼개진 rect 를 하나로 합친다.
+
+    `search_for` 는 매치가 서로 다른 span 에 걸치면 조각난 rect 들을 돌려준다 —
+    실측(웹 페이지를 Chrome 이 print 렌더한 PDF): `820.5` → `820` / `.` / `5` 3조각.
+    조각을 개별 히트로 보면 **조각마다 옆 글자가 숫자**라서 V15 부분문자열 필터가 전부
+    버리고 '숫자 미발견'이 난다(정상 수치인데 캡처 실패). 합쳐야 바깥 경계로 판정된다.
+    같은 줄에서 가로로 맞닿은(간격 1pt 미만) 조각만 합치므로, 공백으로 떨어진 별개
+    출현은 합쳐지지 않는다. 폭 추정(`r.width/len`)도 합친 뒤라야 맞다.
+    """
+    out: list = []
+    for r in sorted(rects, key=lambda x: (round(x.y0, 1), x.x0)):
+        if out and abs(out[-1].y0 - r.y0) < 1.0 and r.x0 - out[-1].x1 < 1.0:
+            out[-1] = out[-1] | r                     # fitz.Rect 합집합
+        else:
+            out.append(fitz.Rect(r))
+    return out
+
+
 def _standalone_rects(page, rects: list, matched: str) -> list:
     """부분문자열 오귀속 차단(V15): rect 좌우 바로 옆 글자가 숫자/콤마/소수점이면
     '2045' 안의 '45' 처럼 더 큰 숫자의 일부이므로 버린다."""
@@ -185,7 +204,7 @@ def capture_number(pdf_path: Path | str, number: str, out_png: Path | str,
                 raw = page.search_for(v)
                 if not raw:
                     continue
-                filtered = _standalone_rects(page, raw, v)
+                filtered = _standalone_rects(page, _merge_runs(raw), v)
                 if filtered:
                     matched, rects = v, filtered
                     break
@@ -271,6 +290,19 @@ def demo() -> None:
         e6 = Path(td) / "e6.png"
         r6 = capture_page(pdf, 1, e6)
         assert r6["ok"] and r6["mode"] == "page" and e6.stat().st_size > 0, r6
+
+        # [v9] span 파편화 병합. 합성 PDF 로는 파편화를 재현할 수 없어(fitz 가 같은 폰트·
+        # 같은 줄을 한 span 으로 뭉친다) 여기서는 순수 함수를 단위로 고정하고, 실제 재현
+        # (Chrome print 렌더에서 '820.5' → '820'/'.'/'5' 3조각)은 capture_web.demo_live 가 맡는다.
+        R = fitz.Rect
+        merged = _merge_runs([R(116, 87, 136, 101), R(136, 87, 139, 99), R(139, 87, 146, 101)])
+        assert len(merged) == 1 and merged[0].x0 == 116 and merged[0].x1 == 146, merged
+        # 별개 출현은 삼키지 않는다: 공백만큼 떨어졌거나(x 간격) 다른 줄이면 따로
+        assert len(_merge_runs([R(100, 87, 120, 101), R(126, 87, 146, 101)])) == 2
+        assert len(_merge_runs([R(100, 87, 120, 101), R(100, 140, 120, 154)])) == 2
+        # 긍정형 짝: 병합을 넣어도 V15 오귀속 차단은 그대로 — '2045' 안의 45 는 여전히 버린다
+        r7 = capture_number(pdf2, "45", Path(td) / "e7.png")
+        assert r7["ok"] and r7["rect"][1] > 120, r7
     print(f"[{_now()}] capture_pdf demo OK")
 
 

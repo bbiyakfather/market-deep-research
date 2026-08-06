@@ -225,6 +225,17 @@ def demo_live() -> None:
         assert r["capture_verbatim"] == "820.5", r
         assert (cap / "E001.png").stat().st_size > 0, r
 
+        # ①b ★span 파편화 실전 재현 — 표 셀이 아니라 **문단 안의 수치**. Chrome print 렌더는
+        #    '820.5' 를 '820'/'.'/'5' 3개 span 으로 쪼개고, 조각마다 옆 글자가 숫자라
+        #    capture_pdf 의 V15 필터가 전부 버려 '숫자 미발견'이 났다(라이브 설치본 실측으로
+        #    발견). _merge_runs 병합이 빠지면 여기서 잡힌다.
+        para = td / "para.html"
+        para.write_text("<html><head><meta charset=utf-8></head><body><h1>R</h1>"
+                        "<p>valued at USD 820.5 million in 2024 across regions.</p>"
+                        "</body></html>", encoding="utf-8")
+        rp = capture_live(para.resolve().as_uri(), "820.5", cap / "E010.png")
+        assert rp["ok"] and rp["capture_mode"] == "print", f"문단 내 수치 미발견(span 파편화): {rp}"
+
         # ② 부분문자열 오귀속은 여전히 차단(capture_pdf 의 V15 가 그대로 물린다) —
         #    '45' 는 '2045'/'820.5' 안에만 있으므로 독립 히트가 없어 통과되면 안 된다.
         e2 = cap / "E002.png"
