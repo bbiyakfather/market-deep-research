@@ -9,6 +9,7 @@ CLI: python render_pdf.py <report.md> [out.pdf]
 """
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -16,6 +17,9 @@ from datetime import datetime
 from pathlib import Path
 
 from skill_paths import ASSETS
+import gates
+import manifest
+from skill_paths import WorkPaths
 from preflight import _find_chrome
 
 STYLE = ASSETS / "style.html"
@@ -97,8 +101,27 @@ if __name__ == "__main__":
     if not args or args[0] == "demo":
         demo()
     elif len(args) >= 1:
+        md_path = Path(args[0])
         out = args[1] if len(args) >= 2 else None
-        import json
-        print(json.dumps(render(args[0], out), ensure_ascii=False))
+        wp = WorkPaths(md_path.parent)
+        try:
+            gates.require_receipt(wp, "G3")
+        except gates.GateError as exc:
+            print(f"[render] G3 PASS 영수증 전제조건 미충족: {exc}", file=sys.stderr)
+            sys.exit(1)
+        try:
+            rendered = render(md_path, out)
+            sealed = manifest.build(wp)
+            receipt = gates.record_script_result(
+                wp, "[4b]", 0,
+                json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"])},
+                           ensure_ascii=False, sort_keys=True),
+                wp.facts,
+            )
+        except (gates.GateError, OSError, RuntimeError) as exc:
+            print(f"[render] 실패: {exc}", file=sys.stderr)
+            sys.exit(1)
+        print(json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"]),
+                          "receipt": receipt}, ensure_ascii=False))
     else:
         print(__doc__); sys.exit(2)

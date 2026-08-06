@@ -15,6 +15,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import gates
 from skill_paths import WorkPaths
 
 # 해시 대상: (라벨, 상대경로 glob). 조사 산출물의 증거체인.
@@ -114,7 +115,13 @@ if __name__ == "__main__":
     elif args[0] == "build" and len(args) == 2:
         m = build(args[1]); print(f"기록: {len(m['entries'])} 항목 → manifest.json")
     elif args[0] == "verify" and len(args) == 2:
-        v = verify(args[1])
+        wp = WorkPaths(args[1])
+        try:
+            gates.require_receipt(wp, "[4b]")
+        except gates.GateError as exc:
+            print(f"[4b] 영수증 전제조건 미충족: {exc}", file=sys.stderr)
+            sys.exit(1)
+        v = verify(wp)
         print(json.dumps(v, ensure_ascii=False, indent=2))
         sys.exit(0 if v["ok"] else 1)
     else:

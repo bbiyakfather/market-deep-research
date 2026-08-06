@@ -26,6 +26,7 @@ CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--plan <resea
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 from datetime import datetime
@@ -33,6 +34,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import manifest
+import gates
 from facts_db import (FactsDB, ValidationError, check_capture_path, load_schema,
                        validate_evidence, validate_fact)
 from skill_paths import WorkPaths
@@ -688,6 +690,22 @@ if __name__ == "__main__":
         plan = args[args.index("--plan") + 1] if "--plan" in args[:-1] else None
         rep = verify(args[0], args[1], conversion="--conversion" in args, plan=plan)
         _print(rep)
-        sys.exit(0 if rep["ok"] else 1)
+        if not rep["ok"]:
+            sys.exit(1)
+        wp = WorkPaths(args[1])
+        checked = gates.check_gate(wp, "G3")
+        if not checked["ok"]:
+            print("[G3] 선행 영수증 미충족: " + "; ".join(checked["issues"]), file=sys.stderr)
+            sys.exit(1)
+        try:
+            receipt = gates.record_script_result(
+                wp, "G3", 0,
+                json.dumps(rep, ensure_ascii=False, sort_keys=True), wp.facts,
+            )
+        except gates.GateError as exc:
+            print(f"[G3] 영수증 기록 실패: {exc}", file=sys.stderr)
+            sys.exit(1)
+        print(f"[G3] PASS 영수증 기록: {receipt['result_summary_sha256']}")
+        sys.exit(0)
     else:
         print(__doc__); sys.exit(2)

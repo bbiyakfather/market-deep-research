@@ -69,6 +69,7 @@ description: >-
   사업자/법인번호·주소·이전상호·해외ID)해 조사 대상을 확정.
 - **intent-diff 개시**: `audit/intent-diff.md` 에 "요청 의도가 참이라면 무엇이 참이어야
   하는가"를 축별로 기록(G4 에서 발견과 대조해 gap 종결). 【v3-D】
+- **영수증**: 승인 후 `python scripts/gates.py record G0 <work_dir> --evidence "..." --refs ...`를 기록하고 `check G0`로 refs를 재검사한다.
 
 ### [1] 병렬 조사 → [E] 확장·수렴  【v3-A】
 - 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/
@@ -91,6 +92,7 @@ description: >-
 - 전 에이전트 완료/timeout/부분실패 처리. raw 산출물 `_research/` 보존.
 - `scripts/facts_db.py` 로 스키마 검증 등재(위반은 제한적 재요청). **출처 없는 주장은 즉시
   `discarded`**(audit 기록). 독립성: 같은 보도자료 재전재는 1출처로 계산(`source_role`).
+- **영수증**: join 완료 영수증을 남긴 뒤 `python scripts/gates.py check G1 <work_dir>`로 G1 선행조건을 검사한다.
 
 ### [2] 팀리드 재검증 (★전건)
 - 보고서 진입 후보 **모든 fact** 를 팀리드가 원문 재열람(WebFetch → 차단 시 `fetch.py`
@@ -99,6 +101,7 @@ description: >-
   실제로 WebFetch·데스크톱 지문이 전부 막힌 GVR 이 모바일 계층으로 열렸고, 스니펫으로만
   확인해 "일치" 판정했던 건에서 오류가 나왔다(2026-07-31).
 - confirmed 조건(facts_db 강제): 최소 1 evidence + 팀리드 verify_event. 무출처=confirm 불가.
+- **영수증**: 재검증 선언은 `gates.py record [2] <work_dir> --evidence "..."`로 기록하고 `check [2]`로 G0·G1을 확인한다.
 
 ### [Bx] 반박검색 + claim-graph 게이트  【v3-B】
 - 대상 = `risk:"high"` fact(시장규모·성장률·딜규모·순위 등 오류비용 큰 주장). 근거·순서는
@@ -131,6 +134,7 @@ description: >-
   `(Fxxx)` 대장 존재+status∈{confirmed} + 값·**단위**(Decimal 스케일·차원, `[단위불일치]`)
   대조 · evidence 필수필드 누락 0 · source_capture 실재(핵심수치) · [환산 ON] Decimal 검산.
 - `scripts/manifest.py build`: source/capture/report/PDF/대장 SHA-256 고정.
+- **영수증**: CLI PASS는 G1·[2] 영수증을 확인한 뒤 G3 자기기록을 남기며, 누락 시 fail-closed한다.
 
 ### [G5c] 실행코드 검증  【v3-G5】
 - 계산·상충·성능 주장은 최소 자체포함 스크립트 실행 → stdout 캡처 → `verify-<slug>.md`
@@ -143,11 +147,13 @@ description: >-
   없어 매니페스트에 영구 누락되므로, 렌더 직후 다시 build 해 **기존 항목(source/capture/
   facts/evidence/report_md)은 그대로 둔 채** report.pdf 등 렌더 산출물의 해시만 추가한다.
   재봉인을 건너뛰면 report.pdf 는 변조·삭제해도 [G5] 가 잡지 못한다.
+- **영수증**: `render_pdf.py` CLI는 렌더 성공 직후 manifest build와 [4b] 자기기록을 자동 수행하며, `manifest.py verify`는 [4b] 영수증 없이는 실패한다.
 - `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 + **intent-diff 축별 대조**(64-65행
   개시분과 실제 발견 대조, 절차·복귀 규칙은 `references/verification-gates.md` G4 절 참조).
 - 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`(재봉인 기준 — 이 시점부턴
   신규 파일도 실패로 판정). 복귀 규칙은 `references/verification-gates.md` 참조(파일 변경/
   intent-diff gap 각각 다른 복귀처).
+- **영수증**: preview 전 `python scripts/gates.py check G4 <work_dir>`로 G0 계획 해시 드리프트를 검사하고, 확인 후 `record G4`로 기록한다.
 - **참고**: [G2]가 만드는 실패 캡처 `.FAILED` 산출물도 `_captures/**` 글롭에 잡힌다 — 재봉인
   이후 캡처를 재시도하면 그 결과물이 신규 파일로 잡혀 verify 가 실패로 뜬다. 의도된 동작이며
   이 경우도 재봉인이 해법이다.
