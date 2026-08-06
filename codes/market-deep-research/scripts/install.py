@@ -76,6 +76,13 @@ def install(target: Path | str = DEFAULT_TARGET, dry_run: bool = False) -> dict:
             "verified": len(verified), "failed": failed, "dry_run": dry_run, "removed": removed}
 
 
+def _content_sha(p: Path) -> str:
+    """줄바꿈 정규화 해시. git 이 체크아웃 때 CRLF 로 바꿔놓는 탓에 바이트 해시로 대조하면
+    내용이 같은 파일이 전부 '변경'으로 뜬다 — 거짓 경보가 나는 가드는 곧 무시되는 가드다."""
+    b = p.read_bytes()
+    return hashlib.sha256(b.replace(b"\r\n", b"\n")).hexdigest()
+
+
 def check(target: Path | str = DEFAULT_TARGET) -> dict:
     """저장소↔설치본 드리프트 대조(읽기전용). 설치본이 정본보다 뒤처지면 새 방어가
     '넣었다'고 기록되는데 라이브에는 없는 상태가 된다 — 그 침묵을 깨는 가드."""
@@ -83,8 +90,8 @@ def check(target: Path | str = DEFAULT_TARGET) -> dict:
     if not (target / "SKILL.md").exists():
         return {"ok": False, "target": str(target), "installed": False,
                 "changed": [], "missing": [], "extra": []}
-    src_rel = {str(p.relative_to(SKILL_ROOT)): _sha(p) for p in _iter_files(SKILL_ROOT)}
-    dst_rel = {str(p.relative_to(target)): _sha(p) for p in _iter_files(target)}
+    src_rel = {str(p.relative_to(SKILL_ROOT)): _content_sha(p) for p in _iter_files(SKILL_ROOT)}
+    dst_rel = {str(p.relative_to(target)): _content_sha(p) for p in _iter_files(target)}
     changed = sorted(r for r, h in src_rel.items() if r in dst_rel and dst_rel[r] != h)
     missing = sorted(r for r in src_rel if r not in dst_rel)          # 설치본에 없음
     extra = sorted(r for r in dst_rel if r not in src_rel)            # 설치본에만 있음
@@ -128,6 +135,11 @@ def demo() -> None:
         # --check: 방금 설치했으니 동기 상태여야 하고, 변조하면 그 경로가 잡혀야 한다
         c0 = check(target)
         assert c0["ok"] and c0["installed"], c0
+        # 줄바꿈만 다른 파일은 드리프트가 아니다(git 체크아웃이 CRLF 로 바꾸는 것 때문에
+        # 거짓 경보가 나면 가드 자체가 무시된다)
+        tgt_md = target / "SKILL.md"
+        tgt_md.write_bytes(tgt_md.read_bytes().replace(b"\r\n", b"\n"))
+        assert check(target)["ok"], "줄바꿈 차이가 드리프트로 오보됨"
         (target / "scripts" / "facts_db.py").write_text("tampered", encoding="utf-8")
         c1 = check(target)
         assert not c1["ok"] and "scripts/facts_db.py" in [p.replace("\\", "/") for p in c1["changed"]], c1
