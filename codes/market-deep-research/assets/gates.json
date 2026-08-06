@@ -1,0 +1,13 @@
+{"gates": [
+  {"id": "G0",     "order": 0,  "watches": [],                                   "label": "preflight+브리프"},
+  {"id": "PLAN",   "order": 1,  "watches": [],                                   "label": "계획 합의+consent"},
+  {"id": "G1",     "order": 2,  "watches": ["facts"],                            "label": "join"},
+  {"id": "LV",     "order": 3,  "watches": ["facts"],                            "label": "팀리드 재검증([2])"},
+  {"id": "BX",     "order": 4,  "watches": ["facts"],                            "label": "반박·claim-graph"},
+  {"id": "G2",     "order": 5,  "watches": ["facts"],                            "label": "증빙 게이트"},
+  {"id": "G3",     "order": 6,  "watches": ["facts", "report_md"],               "label": "verify_facts+manifest"},
+  {"id": "G5C",    "order": 7,  "watches": ["facts"],                            "label": "실행코드 검증"},
+  {"id": "RENDER", "order": 8,  "watches": ["report_md", "report_pdf"],          "label": "렌더+재봉인([4]+[4b])"},
+  {"id": "G4",     "order": 9,  "watches": ["report_pdf"],                       "label": "preview 육안+intent-diff"},
+  {"id": "G5",     "order": 10, "watches": ["facts", "report_md", "report_pdf"], "label": "최종 무결성"}
+]}

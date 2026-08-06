@@ -21,16 +21,25 @@
 전체가 부록 취급되는 것을 막기 위해 '최초 출현'이 아니라 '최후 출현'을 쓴다). 마커/헤딩이 전혀
 없으면 문서 전체를 본문으로 본다. 주석 마커를 쓰는 것을 권장한다(report-format.md 참조).
 
+  9. [v4-Q] check_forbidden_patterns — 플레이스홀더·비밀/내부경로(FAIL)·무각주 헤지(WARN) ·
+     check_capture_structure — 캡처 바이트/픽셀 구조검사(WARN) · check_cited_domains — 대상 스펙
+     기대출처 미달(WARN) · --min-confirmed 정량 하한(기본 OFF) · compute_metrics — 품질 메트릭
+     (결박률·evidence 깊이·도메인 편중>40% 경고·1차출처율·Bx 생존율, 게이트 아님).
+
 CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]
+                            [--min-confirmed N] [--target-spec audit/target-spec.json]
+                            [--metrics-out audit/quality-metrics.json]
      python verify_facts.py demo
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from urllib.parse import urlparse
 
 import manifest
 from facts_db import (FactsDB, ValidationError, check_capture_path, load_schema,
@@ -560,8 +569,163 @@ def check_toc(md: str, wp: WorkPaths, plan: Path | str | None = None) -> tuple[l
     return failures, warnings
 
 
+# --- [v4-Q] 금지 패턴·캡처 구조검사·품질 메트릭 -------------------------------
+# 금지 패턴 상수는 문자열 연접으로 조립한다 — 이 스크립트·스킬 문서·테스트 픽스처가 패턴 문자열
+# 자체를 담고 있어도 자기 자신을 오탐하지 않게(gajae verify-g002 self-safe pattern 관행).
+_PLACEHOLDER_RE = re.compile("|".join([
+    "TO" + "DO", "TB" + "D", r"\[캡" + r"처\]", "lor" + "em ipsum", "XX" + "XX",
+]))
+# 무각주 헤지: 세그먼트에 (Fxxx) 태그가 하나도 없는데 추정성 서술이 등장 — 근거 미결박 추정 신호.
+_HEDGE_RE = re.compile(r"(?:으로|로)\s*추정된다|것으로\s*보인다|추산된다")
+# 비밀·내부경로: 고객 PDF 공개 경계 보호(키 형식·스크래치/사용자 절대경로).
+_SECRET_RES = [
+    re.compile(r"sk-[A-Za-z0-9]{20,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"Bearer\s+[A-Za-z0-9._\-]{20,}"),
+    re.compile(r"[A-Za-z]:\\Users\\[^\s)\"']+"),
+    re.compile(r"AppData\\Local\\Temp"),
+]
+
+
+def check_forbidden_patterns(body: str) -> tuple[list[str], list[str]]:
+    """[v4-Q] 본문 금지 패턴 — 플레이스홀더(FAIL)·비밀/내부경로(FAIL)·무각주 헤지(WARN)."""
+    failures: list[str] = []
+    warnings: list[str] = []
+    for m in _PLACEHOLDER_RE.finditer(body):
+        failures.append(f"[플레이스홀더] 미완성 마커 잔존: {m.group(0)!r}")
+    for rx in _SECRET_RES:
+        m = rx.search(body)
+        if m:
+            failures.append(f"[비밀유출] 키/내부경로 패턴 노출: {m.group(0)[:40]!r}")
+    for seg in split_segments(body):
+        if _HEDGE_RE.search(seg) and not TAG.search(seg):
+            warnings.append(f"[무근거헤지] F태그 없는 추정 서술: {seg.strip()[:60]!r}")
+    return failures, warnings
+
+
+def check_capture_structure(evidence: dict, wp: WorkPaths) -> list[str]:
+    """[v4-Q] 캡처 파일 구조검사(WARN 전용) — '파일이 존재한다'와 '원문 화면이 담겼다'를 분리.
+    바이트 하한 + fitz 픽셀 샘플 유니크 컬러 하한(백지·단색 검출). fitz 미가용/판독 불가는
+    판독불가 WARN(실패 위장 금지 — honest unknown)."""
+    warnings: list[str] = []
+    for e in evidence.values():
+        cap = e.get("capture")
+        if not cap:
+            continue
+        p = wp.root / cap
+        if not p.exists():
+            continue                       # 실재 검사는 check_evidence_chain 소관(FAIL)
+        size = p.stat().st_size
+        if size < 2048:
+            warnings.append(f"[캡처구조] {e.get('id')} 캡처 {size}B — 바이트 하한(2KB) 미달")
+            continue
+        try:
+            import fitz                    # preflight HARD 의존성 — 신규 의존 아님
+            with fitz.open(p) as doc:
+                pix = doc[0].get_pixmap()
+            step = max(1, (pix.width * pix.height) // 4096)   # ~4096 픽셀 샘플
+            samples = {pix.pixel(i % pix.width, (i // pix.width) % pix.height)
+                       for i in range(0, pix.width * pix.height, step)}
+            if len(samples) < 8:
+                warnings.append(f"[캡처구조] {e.get('id')} 유니크 컬러 {len(samples)}종 — 백지/단색 의심")
+        except Exception as ex:            # noqa: BLE001 — 판독 실패는 WARN 으로 표면화
+            warnings.append(f"[캡처구조] {e.get('id')} 캡처 판독 불가({type(ex).__name__}) — 육안 확인 필요")
+    return warnings
+
+
+def check_cited_domains(evidence_raw: list[dict], target_spec: Path | str | None) -> list[str]:
+    """[v4-S] 대상 스펙(audit/target-spec.json)의 기대 1차출처 도메인(cited_domains)이 대장에
+    전무하면 '기대출처 미달' WARN. 스펙 파일이 없으면 검사 생략."""
+    if not target_spec:
+        return []
+    sp = Path(target_spec)
+    if not sp.exists():
+        return []
+    try:
+        spec = json.loads(sp.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as ex:
+        return [f"[대상스펙] target-spec 판독 불가({type(ex).__name__}): {sp}"]
+    seen = {urlparse(e.get("source_url", "")).netloc.lower() for e in evidence_raw}
+    warnings = []
+    for t in spec.get("targets", []):
+        for dom in t.get("cited_domains", []):
+            d = dom.lower()
+            if not any(d in s for s in seen if s):
+                warnings.append(f"[기대출처] {t.get('name', '?')}: {dom} 이 대장에 미인용")
+    return warnings
+
+
+def check_out_of_scope(body: str, target_spec: Path | str | None) -> list[str]:
+    """[v4-Q] 대상 스펙의 out_of_scope 용어가 본문 세그먼트에 F태그 동반 사실주장으로 등장하면
+    WARN — 확정 범위 밖 주제가 보고서에 스며든 신호(리뷰 C4: 13필드 다운스트림 결박)."""
+    if not target_spec:
+        return []
+    sp = Path(target_spec)
+    if not sp.exists():
+        return []
+    try:
+        spec = json.loads(sp.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []                              # 판독 불가는 check_cited_domains 가 보고
+    terms = [t for t in spec.get("out_of_scope", []) if t]
+    warnings = []
+    for term in terms:
+        for seg in split_segments(body):
+            if term in seg and TAG.search(seg):
+                warnings.append(f"[축외침범] out-of-scope 용어 {term!r} 가 사실주장 세그먼트에 등장: "
+                                f"{seg.strip()[:60]!r}")
+                break                          # 용어당 1회 보고
+    return warnings
+
+
+def compute_metrics(facts_raw: list[dict], evidence_raw: list[dict], used: set[str]) -> tuple[dict, list[str]]:
+    """[v4-Q] 품질 메트릭(게이트 아님·리포트 전용) — audit/quality-metrics.json 은 CLI 가 기록."""
+    warnings: list[str] = []
+    confirmed = [f for f in facts_raw if f.get("status") == "confirmed"]
+    high = [f for f in facts_raw if f.get("risk") == "high"]
+    ev_by_fact: dict[str, int] = {}
+    for e in evidence_raw:
+        ev_by_fact[e.get("fact_id", "")] = ev_by_fact.get(e.get("fact_id", ""), 0) + 1
+
+    domains: dict[str, int] = {}
+    for e in evidence_raw:
+        d = urlparse(e.get("source_url", "")).netloc.lower()
+        if d:
+            domains[d] = domains.get(d, 0) + 1
+    top_domain, top_share = None, 0.0
+    if domains:
+        top_domain = max(domains, key=domains.get)
+        top_share = domains[top_domain] / sum(domains.values())
+        if top_share > 0.40:
+            warnings.append(f"[출처편중] 단일 도메인 {top_domain} 인용 점유 {top_share:.0%} (>40%)")
+
+    entity_ev: dict[str, int] = {}
+    for f in facts_raw:
+        ent = (f.get("context") or {}).get("entity") or "na"
+        entity_ev[ent] = entity_ev.get(ent, 0) + ev_by_fact.get(f.get("id", ""), 0)
+
+    metrics = {
+        "facts_total": len(facts_raw),
+        "facts_confirmed": len(confirmed),
+        "confirmed_used_in_body_rate": round(
+            sum(1 for f in confirmed if f["id"] in used) / len(confirmed), 3) if confirmed else None,
+        "evidence_per_confirmed_fact": round(
+            sum(ev_by_fact.get(f["id"], 0) for f in confirmed) / len(confirmed), 2) if confirmed else None,
+        "primary_source_rate": round(
+            sum(1 for f in confirmed if f.get("primary_source_ref")) / len(confirmed), 3) if confirmed else None,
+        "bx_survival_rate": round(
+            sum(1 for f in high if f.get("status") == "confirmed") / len(high), 3) if high else None,
+        "top_domain": top_domain,
+        "top_domain_share": round(top_share, 3) if top_domain else None,
+        "domain_citations": dict(sorted(domains.items(), key=lambda kv: -kv[1])[:20]),
+        "entity_evidence_share": entity_ev,
+    }
+    return metrics, warnings
+
+
 def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool = False,
-          plan: Path | str | None = None) -> dict:
+          plan: Path | str | None = None, min_confirmed: int | None = None,
+          target_spec: Path | str | None = None) -> dict:
     md = Path(report_md).read_text(encoding="utf-8")
     body, _appendix = split_body_appendix(md)
     db = FactsDB(work)
@@ -598,7 +762,22 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
             if v.get("unit", "").startswith(("USD", "$")) and not v.get("decimal"):
                 warnings.append(f"[환산] {f['id']} decimal 검산값 없음")
 
+    # [v4-Q] 금지 패턴·캡처 구조·기대출처·정량 하한·품질 메트릭
+    fp_fail, fp_warn = check_forbidden_patterns(body)
+    failures += fp_fail
+    warnings += fp_warn
+    warnings += check_capture_structure(evidence, wp)
+    warnings += check_cited_domains(evidence_raw, target_spec)
+    warnings += check_out_of_scope(body, target_spec)
+    n_confirmed = sum(1 for f in facts.values() if f.get("status") == "confirmed")
+    if min_confirmed is not None and n_confirmed < min_confirmed:
+        failures.append(f"[하한] requires at least {min_confirmed} confirmed facts; "
+                        f"current: {n_confirmed}")
+    metrics, m_warn = compute_metrics(facts_raw, evidence_raw, used)
+    warnings += m_warn
+
     return {"ok": len(failures) == 0, "failures": failures, "warnings": warnings,
+            "metrics": metrics,
             "stats": {"facts": len(facts), "evidence": len(evidence),
                       "body_tags": len(used)}}
 
@@ -685,8 +864,17 @@ if __name__ == "__main__":
     if not args or args[0] == "demo":
         demo()
     elif len(args) >= 2:
-        plan = args[args.index("--plan") + 1] if "--plan" in args[:-1] else None
-        rep = verify(args[0], args[1], conversion="--conversion" in args, plan=plan)
+        def _opt(name: str) -> str | None:
+            return args[args.index(name) + 1] if name in args[:-1] else None
+        plan = _opt("--plan")
+        mc = _opt("--min-confirmed")
+        rep = verify(args[0], args[1], conversion="--conversion" in args, plan=plan,
+                     min_confirmed=int(mc) if mc else None, target_spec=_opt("--target-spec"))
+        metrics_out = _opt("--metrics-out")
+        if metrics_out:  # [v4-Q] verify() 는 순수 유지 — 파일 기록은 CLI 경로에서만
+            Path(metrics_out).parent.mkdir(parents=True, exist_ok=True)
+            Path(metrics_out).write_text(
+                json.dumps(rep["metrics"], ensure_ascii=False, indent=2), encoding="utf-8")
         _print(rep)
         sys.exit(0 if rep["ok"] else 1)
     else:

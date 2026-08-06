@@ -5,7 +5,7 @@
 
 | 부 | 제목 | 필수 구성요소 |
 |---|---|---|
-| 0 | 표지·메타 | 주제·범위·**기준일(as_of/valid_at)**·조사팀·면책·전체 신뢰수준 배지(`.badge`) |
+| 0 | 표지·메타 | 주제·범위·**restated_goal 1문장**(G0 에서 사용자가 verbatim 확정한 목표 문장)·**기준일(as_of/valid_at)**·조사팀·면책·전체 신뢰수준 배지(`.badge`) |
 | 1 | Executive Summary | 핵심답변 2~3문단 + **핵심수치 카드**(`.kpi-row`, 최상위 지표 F태그) |
 | 2 | 조사 개요 | 조사질문(축)·축별 충분조건·방법 요약·한계 한 줄 · **커버리지 선언**(조사 수행 기간·검색
 언어권·소스 계층 커버리지·미커버 소스 범주 요약 — URL 상세는 audit 유지) |
@@ -33,6 +33,11 @@ verify_facts.py 가 이 마커 이후를 부록으로 보고 '본문 사용'에�
 **고객/audit 분리(사용자 잠금)**: 6·7·8 은 **요지만**. 폐기목록·실패URL·미확인의혹·반박 상세는
 고객 PDF 미노출 → 내부 audit 로.
 
+**7부 상충 근거(run-ledger 결박)**: 7부에 병기하는 A vs B 상충 수치는 `run-ledger.jsonl` 의
+`kind:conflict` 레코드와 그 `kind:disposition` 처분(accept_a|accept_b|synthesize_range|
+defer_to_report_caveat|reject_both + rationale)을 근거로만 서술한다 — 처분 없는 충돌 잔존 시
+G2 진입 불가(fail-closed, `verification-gates.md` 참조).
+
 ## 조사유형별 목차 변형 — 축 프리셋(단일 진실원)
 축(조사질문=에이전트 분할=3부 챕터, 1:1 대응) 이름은 **이 절에서만** 정의한다. `SKILL.md`·
 `agent-briefs.md`·`references/research-plan.md` 는 이 절을 참조만 하고 축 이름을 다시 나열하지
@@ -43,10 +48,66 @@ verify_facts.py 가 이 마커 이후를 부록으로 보고 '본문 사용'에�
 - **기술사업화 실사**: 3부 축=기술성/권리성/시장성/사업성(2018 기술가치평가 실무매뉴얼 체계) · 4부=시장성 지표 · 5부=공급(기술보유 기관)·수요(수요기업 후보, 채택근거 F태그 결박) 이중매핑.
 
 ## 내부 audit 번들 (`audit/`)
-`research-plan.md`(G0 확정 조사계획·승인 목차) · `facts.jsonl`(전수표) · 폐기목록+사유 ·
-실패소스URL · 검증이력(verify_events) · raw agent output · 세션 저널(`intent-diff.md`·
-`expansion-log.md`·`verification-economics.md`·`cause-disappearance.md`) · `manifest.json` ·
-`verify-<slug>.md`(실행검증).
+로스터는 **고정 표면** — 임의 추가·생략 금지(`run_ledger.py validate` 가 missing/unexpected/legacy
+3분류로 검사). 변경은 명시적 결정 + 문서정합 테스트 갱신 동반.
+- **스크립트 관리(신설)**: `run-ledger.jsonl`(게이트 영수증·steering·ask/answer·conflict/disposition
+  — append-only) · `run-metadata.json`(재개 진입점 메타) · `quality-metrics.json`(verify_facts
+  `--metrics-out` 산출)
+- **사람용 보고(신설)**: `bx-report.md`(반박 산출 표준 양식) · `g4-visual-check.md`(G4 육안 체크리스트
+  산출물) · `run-receipt.md`(G5 직전 영수증 — 아래 절)
+- **기존 유지**: `research-plan.md`(G0 확정 조사계획·승인 목차) · `facts.jsonl`(전수표) · 폐기목록+사유 ·
+  실패소스URL · 검증이력(verify_events) · raw agent output · 세션 저널(`intent-diff.md`·
+  `expansion-log.md`·`verification-economics.md`·`cause-disappearance.md` — 정의는 아래 절) ·
+  `manifest.json` · `verify-<slug>.md`(실행검증)
+- **선택**: `handoff.md`(세션 인수인계 시 — 아래 절). `draft-factsheet.md` 는 audit/ 이 아니라
+  **작업폴더 루트**(중간 드래프트 — 아래 절).
+- **이벤트성 대장 신설 금지**: steering·asks·conflicts·dispositions 는 별도 파일이 아니라
+  `run-ledger.jsonl` 의 `kind` 레코드로 기록한다(파일 인플레이션 방지).
+
+## 산출물 규약 — 영수증·핸드오프·드래프트·재개 【v4-R】
+
+### run-receipt.md (G5 직전 작성)
+G5 완료 선언 직전에 팀리드가 작성하는 온보딩 영수증. 무결성은 manifest.json 이 아니라 **G5 게이트
+영수증(`run-ledger.jsonl`)의 `target_hashes` 에 run-receipt.md sha256 을 포함하는 자기참조**로
+봉인한다(`manifest.py` 는 audit/** 를 추적하지 않음 — 불변).
+```markdown
+# Run Receipt
+- Date / Scope: <조사 수행 기간> / <restated_goal 1문장>
+- 산출 파일: <report.pdf · report.md · facts.jsonl · audit/** 전체 목록>
+- 경계 선언: 배제한 출처 유형 · 유료 API 미사용 확인
+- Evidence inspected: 재열람으로 원문을 전수 확인한 fact 범위(F-ID 구간 · 건수)
+- Result — 답할 수 있는 질문: <...> / 답할 수 없는 질문: <...>
+- Caveats: 접근 실패 출처 목록 + "실패에서 아무 사실도 추론하지 않았다"(필수 문구)
+```
+
+### handoff.md (선택 — 세션 인수인계 시)
+필수 섹션: ① 현재/잔여 게이트(`run-ledger.jsonl` 상태에서 주입 — 산문 재구성 금지) ② facts 카운트
+(status 별) ③ 미해결 반박·충돌 ④ 차단 출처 ⑤ 재개 진입점(다음 행동 1개). 신규 세션은
+handoff.md + 대장 다이제스트만 읽고 시작한다. confirmed 0건이면 재시작 권고.
+
+### 재개 다이제스트
+재개 세션 컨텍스트 최상단에 아래 블록을 합성해 주입한다(문자 상한 내, 초과분은 상태 우선 절삭):
+```
+# Prior research ledger context
+- F001 [confirmed] <fact 문장 요약> — <핵심 출처 도메인>
+- F014 [disputed]  <fact 문장 요약> — <핵심 출처 도메인>
+```
+자동 재개는 **미완료 증거**(미통과 게이트·미검증 fact·미해결 반박)가 있을 때만 — 증거 없이
+산문 기억만으로 재개하지 않는다.
+
+### draft-factsheet.md (작업폴더 루트, 중간 드래프트)
+언제든 현재 대장에서 합성 가능. 단 첫 줄 워터마크 필수:
+`> **DRAFT — 게이트 미검증**. 수치·출처는 재검증 전이며 인용 금지.`
+게이트 통과 전 수치가 워터마크 없이 유통되는 사고를 막는다. 최종 산출물로 오인 금지.
+
+### 접은 방향 기록 (expansion-log.md 연계)
+가설 폐기·대상 제외·출처 계열 포기 시 `expansion-log.md` 에 사유 + 건진 부분 사실(있으면 F-ID)을
+기록한다. "왜 접었나"가 기록에 없으면 다음 조사가 같은 막다른 길을 반복한다.
+
+### cause-disappearance.md 정의 (8부 상태변화의 근거 저널)
+이전 조사(같은 주제 재조사)의 claim_key diff 대비 **사라진 항목과 원인**(출처 소멸/수치 갱신/폐기)을
+기록한다. 8부(상태 변화·주의)에 쓰는 취소·지연·갱신 항목은 이 저널의 기록에 결박된다.
+1줄 양식: `<claim_key> — 소멸원인: 출처 소멸|수치 갱신|폐기(사유 1구절) — 대체: <신규 claim_key|없음>`
 
 ## 렌더
 `render_pdf.py`(pandoc gfm→html --embed-resources + style.html → HeadlessChrome, 오프라인·한글경로).

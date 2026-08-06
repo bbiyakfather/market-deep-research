@@ -8,6 +8,27 @@
 | directness | 직접성 | 원데이터·원문 직접 | 3차 재인용·요약 |
 | recency | 최신성 | 조사시점 기준 최신 | 수년 경과·갱신됨 |
 
+## 게이트 영수증 · run-ledger 【v4-L】
+게이트 정본은 `assets/gates.json`(11종, 순서 고정): G0 → PLAN → G1 → LV([2] 팀리드 재검증) →
+BX → G2(증빙) → G3 → G5C → RENDER([4]+[4b]) → G4 → G5. 작업 단계 [1] 팬아웃·[E] 확장수렴·
+[3] 집필은 게이트가 아니므로 영수증 대상 아님(그 결과는 G1/G3 영수증에 담김).
+- **영수증**: 게이트 통과 주장은 `scripts/run_ledger.py`(스크립트 정본) `checkpoint <gate>
+  --verdict PASS|WATCH|BLOCK --evidence "..."` 가 `audit/run-ledger.jsonl` 에 append 하는
+  레코드로만 성립. verdict 는 `PASS|WATCH|BLOCK` 3값 고정 — 리뷰 레인 원어(CLEAR/OKAY/
+  APPROVE 등)는 `lane_verdicts: [{lane, token}]` 에 원어 보존, 게이트 verdict 환산은 팀리드가 기록.
+- **신선도는 fact 단위**: watches 에 facts 가 든 게이트는 영수증의 `fact_hashes`(claim_key→sha)
+  와 현재 대장을 대조 — 변경 0 이면 fresh, 있으면 partial_stale + 변경 claim_key 목록만
+  재검증(전건 재검증 강제 아님 — 아래 델타 라체트와 정합). report_md/report_pdf 는 파일 해시
+  전체 실효(렌더 산출물은 원자 단위가 파일). `generation` 카운터·대조 규칙의 구현 정본은
+  `run_ledger.py` — 이 문서는 절차만 서술한다.
+- **join phase 어휘**(G1 checkpoint `phase`): `complete | awaiting_verification | failed |
+  cancelled | blocked_partial`. 다음 게이트 checkpoint 거부는 **failed·cancelled 만**.
+  awaiting_verification 은 [2] 진입이 정상 경로. blocked_partial(human_blocked 레인 잔존)은
+  진행 허용하되 G5 완료 선언 시 보고서 9부 한계 고지 필수.
+- **완료 선언 규칙**: "보고서 완성" = run-ledger 에 11개 게이트 전부 신선 PASS 또는
+  WATCH(BLOCK 0). WATCH 가 하나라도 있으면 9부 한계 고지 필수. 진행 기억·산문 선언은
+  증거가 아니다.
+
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
 insane-search / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
@@ -17,13 +38,50 @@ insane-search / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정
 
 ## G1 join + 수집 게이트
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
-(위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록).
+(위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록). join 결과는 G1 checkpoint
+`phase`(위 join phase 어휘)로 기록.
 
-## G2 팀리드 재검증(전건) + [Bx] claim-graph
+## 동결 스냅샷 검증 코호트 【v4-V】
+G1 join 후 대장을 동결(파일 sha + fact 단위 content-hash)하고, 3레인이 **같은 동결본**을
+검사한다: ① 재검증([2] — 권한은 팀리드 전속) ② 반박([Bx]) ③ **정합성**(단위·연도·정의·
+entity_id 스윕).
+- **join before repairing**: 레인별 수리 금지 — 발견을 통합 blocker 배치로 모아 일괄 보수 후
+  재동결·`generation`+1(run-ledger checkpoint 필드). 다른 해시의 동결본에 대한 verdict 는 무효.
+- **2세대+ 델타 라체트**: ① 변경·신규 fact 만 재검증(`run_ledger.py status` 의 partial_stale
+  목록과 정합) ② 기통과 fact 에 대한 신규 반박은 "왜 이전 패스에서 안 보였나" 정당화 필수 —
+  없으면 non-blocking 강등 ③ 이전 blocker 전부 해소 시 판정 악화 금지 ④ carryover P1/P2 는
+  세대 무관 블로킹 ⑤ 과잉 반박(스코프 인플레이션)은 팀리드가 리뷰 결함으로 기각 가능.
+- **전건 처분**: 검증 발견은 accept(수정·강등) 또는 rebut(원문 인용 반박문) — 침묵 폐기 금지.
+  처분 요약은 run-ledger `kind:disposition`(disposition: `accept|rebut`), 상세 반박문은
+  `audit/bx-report.md` 처분표 절. 수정된 fact 는 게이트 영수증에서 fact 단위 실효.
+  재반박 2라운드 상한 — 초과 시 disputed 강등 + 보고서 9부 한계 명기.
+- **출처 충돌 typed 처분**: 모순 수치 자동 채택 금지(abort-and-report) — run-ledger
+  `kind:conflict` 기록 후 `kind:disposition`(`accept_a|accept_b|synthesize_range|
+  defer_to_report_caveat|reject_both` + rationale)이 있어야 해당 fact 재검증 통과.
+  **미처분 충돌 잔존 시 G2 진입 불가**(fail-closed) — 여기서 G2 는 아래 **증빙 게이트**를
+  말한다.
+- **모순 트리거 4종**:
+  | 트리거 | 처리 |
+  |---|---|
+  | A 출처 상호 모순 | `kind:conflict` → typed 처분 |
+  | B 단위·기간·정의 불일치 | 정합성 레인, claim_key 분리 |
+  | C 주장만 있고 근거 없음 | 등급 하향·discard 후보 |
+  | D 신규 범위 발견 | [E] 확장수렴 리드로 회송 |
+  새 증거가 기존 fact 를 뒤집으면 삭제 대신 disputed→supersede 체인 — "모순된 fact 를 절대
+  삭제하지 않는다". 구분은 `dispute_kind: refuted|definition_conflict|unresolved`(additive)
+  로 기록, supersede 체인은 refuted 에만 요구.
+- **bx-report 양식**(`audit/bx-report.md`): 머리에 심각도 집계(P1×n…)+Top-N → 발견마다
+  `P1~P3 — <분류>: 한 줄 — F###` 앵커 + 메커니즘(evidence 인용 결박) + Suggestion → 말미
+  Healthy Areas + Scope examined. P1=수치·출처 불일치(본문 진입 차단) · P2=증거 약함 ·
+  P3=표현·범위.
+
+## [2] 팀리드 재검증(전건) + [Bx] claim-graph
 - 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람 → `add_verify_event(by="lead")`.
   verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
-  ② **1회 반박검색**(`counter_search.found_stronger_refutation=false`) ③ **기본소스**(`primary_source_ref`)
+  ② **반례 쿼리 소진**(계획 시점 반례 쿼리 — research-plan 항목 스키마의 `반례 쿼리` — 전건
+  소진 + `counter_search.found_stronger_refutation=false`, 더 강한 반박 없음; `verify_facts.py`
+  검사는 warning 유지) ③ **기본소스**(`primary_source_ref`)
   ④ **시간증거**(`observed_at`+`valid_at`). 불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
 
@@ -42,8 +100,23 @@ high-risk 캡처 실재 · **목차 기계검사**(`--plan` 미지정 시 `audit
 `manifest.py build`(해시 고정 — 이 시점은 report.pdf 생성 전이라
 렌더 산출물은 [4] 이후 재봉인에서 추가됨).
 
-## G5c 실행코드 검증(계산·상충)
+## G5c 실행코드 검증(계산·상충) 【v4-N】
 자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
+- **대상 선별**: `evidence.type=calculation` 존재 OR fact `derivation=computed`. 대상인데
+  `verify-<slug>.md` 없으면 G5 에서 지적.
+- **verify-<slug>.md 표준 템플릿** — 계산 하나 = 기록 하나:
+  ```
+  입력: <fact_id> · <값>
+  스크립트 전문: <자체포함 스크립트>
+  stdout: <verbatim>
+  판정: CONFIRMED|REFUTED|PARTIAL — 근거 1줄
+  ```
+- **Evidence discipline 3규칙**: ① 가리킬 수 있는 실행 출력에만 근거 — 직접 계산해 보지
+  않은 지표·결론 보고 금지 ② 계산 실패는 원인을 고쳐 계속 — 은폐 금지(실패 시 해당 fact
+  미검증 강등) ③ shows(데이터가 보여주는 것) vs infer(추론) 구분, 가정 명시.
+- **honest unknown**: 캡처·수집이 성공 여부 불명으로 끝나면 `unknown` 정직 기록(실패 위장
+  금지) — 파일 존재 검증으로 finalize, 불가면 재시도 후보. "기록 부재 = 알 수 없음이지
+  미실행이 아니다."
 
 ## G4 preview → G5 최종 무결성
 report.pdf 생성 후 **재봉인**(`manifest.py build` 재실행 — [G3] 항목은 보존한 채 report.pdf 등
@@ -53,10 +126,36 @@ report.pdf 생성 후 **재봉인**(`manifest.py build` 재실행 — [G3] 항�
 + `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정).
 **복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
 **[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님).
+**G4 이원화 【v4-V】**: (a) 육안검증은 `audit/g4-visual-check.md` 체크리스트 산출물로 기록
+(페이지·확인 항목·결과 — 육안 블랙박스 제거). (b) **선택 레인: fresh-context 팩트체커** —
+입력은 report.md + facts.jsonl + research-plan.md **만**(조사 저널·대화 서사 주입 금지:
+저작 세션의 프레이밍 미공유가 목적). 반환 마지막 비공백 줄 `VERDICT: APPROVE|REQUEST_CHANGES`
+고정 파싱 — 파싱 불가, 또는 미해결 P1 동반 APPROVE 는 malformed → fail-closed(불가해 응답을
+APPROVE 로 매핑 금지). 팩트체커 발견은 동결 코호트의 전건 처분 루프에 물린다.
 
 ## 환산 옵션(기본 OFF)
 ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시), 표시 반올림 일관, 본문 영어통화단어 0.
 `value.decimal` 에 검산값. 오차 표기(±)는 근거 있을 때만.
+
+## 사용자 개입 프로토콜(asks) 【v4-A】
+이 절이 ask 프로토콜의 **정본**이다(`references/research-plan.md` 는 G0·PLAN 개입 지점
+목록만 참조). 기록은 run-ledger 레코드로만 — 별도 파일 없음:
+```
+ask    {kind, ask_id, gate_id, question, options[], recommended?, supersedes?, at}
+answer {kind, ask_id, answer, resolved_by: user|timeout, at}
+```
+- **활성 ask 1개**: 개입 지점 중첩 시 큐잉 후 하나씩. 팀리드 권고는 `recommended` 표시만 —
+  기록되는 답은 **사용자 원답만**.
+- **멱등·계보**: 같은 답 재적용은 no-op, 다른 답은 conflict 기록. 재시작 후 옛 활성 ask 는
+  quarantined + 새 ask_id 재발행(`supersedes` 계보) — 옛 답을 새 질문에 적용 금지.
+- **이중확인**: 고비용·파괴 행동(웨이브 연장·fact 일괄 무효화·전면 재캡처)은 계획 시 허용
+  클래스 합의 + 실행 시점 명시 승인 — 둘 중 하나라도 없으면 fail-closed. **파괴적 승인 자동
+  합성 금지**.
+- **목차 승인 = prepared→bind→activate**: join 후 보고서 단계는 prepared(목차 후보만, 본문
+  보류) → 승인 기록(bind) → activate 후 집필. 재승인은 no-op.
+- **알림 의도 매핑**: 게이트 통과→notify(요약만) · 승인 대기→ask(**판단에 필요한 전체 맥락
+  필수** — 후보 목차 전문·예상 추가 비용; 가리면 답할 수 없다) · 게이트 실패→failed+blocker
+  요약 · 중단→cancelled.
 
 ## 상태 모델
 `confirmed`(검증완료) · `pending`(미검증) · `disputed`(정의차·상반 병기) · `superseded`(시계열 갱신,

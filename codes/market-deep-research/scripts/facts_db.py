@@ -71,6 +71,14 @@ def validate_fact(fact: dict, schema: dict | None = None) -> dict:
     b = fact["context"].get("basis")
     if b:
         _check_enum(b, "basis", enums, "fact.context.basis")
+    # [v4] additive optional 필드 — 있으면 enum/형식 검증(없으면 통과, 레거시 대장 호환)
+    if fact.get("dispute_kind"):
+        _check_enum(fact["dispute_kind"], "dispute_kind", enums, "fact.dispute_kind")
+    if fact.get("derivation"):
+        _check_enum(fact["derivation"], "derivation", enums, "fact.derivation")
+    sb = fact.get("superseded_by")
+    if sb and not (isinstance(sb, str) and sb.startswith("F") and sb[1:].isdigit() and len(sb) >= 4):
+        raise ValidationError(f"{fid}: superseded_by 형식 오류: {sb!r} (F### 이상)")
 
     # confirmed 는 최소 1 evidence + 팀리드 verify_event 필요(무출처 confirm 금지)
     if fact["status"] == "confirmed":
@@ -130,6 +138,8 @@ def validate_evidence(ev: dict, schema: dict | None = None, work: WorkPaths | No
     _check_enum(ev["type"], "evidence_type", enums, "evidence.type")
     if ev.get("source_role"):
         _check_enum(ev["source_role"], "source_role", enums, "evidence.source_role")
+    if ev.get("verdict"):
+        _check_enum(ev["verdict"], "evidence_verdict", enums, "evidence.verdict")
     if ev["type"] == "text_quote" and not ev.get("verbatim"):
         raise ValidationError(f"{eid}: text_quote 는 verbatim 필수")
     if ev.get("capture"):

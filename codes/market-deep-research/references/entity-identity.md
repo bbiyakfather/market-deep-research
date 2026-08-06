@@ -19,6 +19,21 @@
 2. 지주사/자회사/브랜드명 구분(연결 vs 별도 재무 — `context.definition` 에 명시).
 3. 확정 결과를 `audit/` 및 보고서 0부(표지·메타)에 기록. 이후 모든 fact 의 `entity_id` 고정.
 
+## 대상 스펙 (조사대상 프로파일) 【v4-S】
+식별자 확정에 더해, 대상마다 아래 스펙을 G0 에서 함께 확정해 **전 워커 레인의 공유 계약**으로
+주입한다(워커마다 검색어·출처 우선순위가 달라져 수치가 흔들리는 문제 차단):
+| 필드 | 용도 |
+|---|---|
+| 정식명 + 별칭·약칭 | 검색 쿼리 자동 확장 |
+| 로마자/한글 표기 변형 | 국문·영문 소스 교차 검색(예: "두산퓨얼셀"/"Doosan Fuel Cell") |
+| 카테고리·경쟁군 | 비교축·플레이어 장 구성 |
+| **기대 1차출처 도메인**(cited_domains) | 공시·공식 IR 등 반드시 확인해야 할 도메인 — 최종 대장에 전무하면 `verify_facts` 가 "기대출처 미달" WARN |
+| 조사 언어 | 레인별 소스 언어 범위 |
+스펙 자체에도 근거(확정에 쓴 출처)와 확정 시각을 붙여 audit 에 남긴다 — 스펙도 감사 대상이다.
+기계 판독본은 `audit/target-spec.json` — `{"targets": [{"name", "aliases", "cited_domains"}],
+"out_of_scope": [...]}` 형식으로 두면 `verify_facts.py --target-spec` 이 기대출처 미달(`[기대출처]`)
+과 확정 범위 밖 용어 침범(`[축외침범]`)을 WARN 으로 검사한다.
+
 ## 무료 공공 MCP/스킬 활용 (있으면)
 - `nts-business-registration`(사업자 진위·상태), `fsc-corporate-info`(법인 개요),
   `k-dart`/`opendart-*`(공시·재무·개황), `national-pension-workplace`(직원규모),

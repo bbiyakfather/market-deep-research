@@ -8,7 +8,10 @@
     "risk": ["high", "normal"],
     "evidence_type": ["text_quote", "table_cell", "chart", "api_response", "negative_search", "calculation"],
     "source_role": ["원출처", "재인용", "보도자료"],
-    "basis": ["actual", "estimate", "forecast", "nominal", "real", "annual", "quarterly", "ttm"]
+    "basis": ["actual", "estimate", "forecast", "nominal", "real", "annual", "quarterly", "ttm"],
+    "dispute_kind": ["refuted", "definition_conflict", "unresolved"],
+    "derivation": ["source", "computed", "inferred"],
+    "evidence_verdict": ["support", "contradict", "uncertain"]
   },
   "fact": {
     "required": ["claim_key", "id", "claim", "context", "value", "grade", "risk", "status"],
@@ -69,7 +72,11 @@
       "valid_at": {"type": ["string", "null"], "description": "[v3-E] 주장이 유효한 시점"},
       "last_seen": {"type": ["string", "null"], "description": "[v3-E] 마지막으로 소스에서 확인된 시점(상태변경 추적)"},
 
-      "discard_reason": {"type": ["string", "null"]}
+      "discard_reason": {"type": ["string", "null"]},
+
+      "superseded_by": {"type": ["string", "null"], "description": "[v4-V] 이 fact 를 대체한 새 fact id. 모순된 fact 는 삭제 대신 disputed→supersede 체인으로 남긴다."},
+      "dispute_kind": {"type": ["string", "null"], "enum_ref": "dispute_kind", "description": "[v4-V] disputed 세분: refuted(새 증거가 뒤집음 — supersede 체인 요구) | definition_conflict(정의차 상반 병기 — 정당한 종착) | unresolved(미해결)"},
+      "derivation": {"type": ["string", "null"], "enum_ref": "derivation", "description": "[v4-N] source(출처 수치) | computed(계산 파생 — G5c 대상) | inferred(추론 — 보고서 10부 사실/추론 구분 전용)"}
     }
   },
   "evidence": {
@@ -89,7 +96,8 @@
       "source_role": {"enum_ref": "source_role", "nullable": true},
       "capture": {"type": ["string", "null"], "description": "_captures/E###.png (source_capture)"},
       "observer_group": {"type": ["string", "null"], "description": "[v3] 독립성 판정용 관찰그룹 라벨"},
-      "observed_at": {"type": ["string", "null"]}
+      "observed_at": {"type": ["string", "null"]},
+      "verdict": {"type": ["string", "null"], "enum_ref": "evidence_verdict", "description": "[v4-V] 이 증거가 fact 주장을 support|contradict|uncertain 하는지 — 반박·상충 증거의 방향 기록(Bx negative_search 결박과 연동)"}
     },
     "conditional": {
       "text_quote_requires_verbatim": "type == 'text_quote' → verbatim 필수"

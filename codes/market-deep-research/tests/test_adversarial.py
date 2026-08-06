@@ -1126,6 +1126,166 @@ def skill_frontmatter_intact():
     assert "기술사업화 실사" in desc, "description 에 기술사업화 실사 없음"
 
 
+# --- v4 흡수(gajae-absorption) 케이스 -----------------------------------------
+@case
+def v4_schema_fields_enforced():
+    """[v4] additive 필드(dispute_kind·derivation·superseded_by·evidence.verdict) 위반 검출."""
+    from facts_db import validate_evidence
+    s = load_schema()
+    base = {"claim_key": "k", "id": "F001", "claim": "c",
+            "context": {"metric": "m", "entity": "e", "geography": "g", "period": "p"},
+            "value": {"raw": "1", "unit": "u"},
+            "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
+            "risk": "high", "status": "pending"}
+    validate_fact(dict(base, dispute_kind="refuted", derivation="computed", superseded_by="F002"), s)
+    for bad in ({"dispute_kind": "bogus"}, {"derivation": "magic"}, {"superseded_by": "X01"}):
+        try:
+            validate_fact(dict(base, **bad), s); raise AssertionError(f"v4 필드 위반 통과: {bad}")
+        except ValidationError:
+            pass
+    ev = {"id": "E001", "fact_id": "F001", "type": "text_quote", "source_url": "https://x",
+          "sha256": _H, "accessed_at": "2026", "verbatim": "q"}
+    validate_evidence(dict(ev, verdict="contradict"), s)
+    try:
+        validate_evidence(dict(ev, verdict="maybe"), s); raise AssertionError("evidence.verdict 위반 통과")
+    except ValidationError:
+        pass
+
+
+@case
+def placeholder_and_secret_in_body_fail():
+    """[v4-Q] 플레이스홀더·비밀/내부경로가 본문에 잔존하면 FAIL."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        md = ("보고서 " + "TO" + "DO" + " 정리 필요.\n"
+              "로그: C:\\Users\\someone\\work\\a.log 참조.\n")
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"], rep
+        assert any("플레이스홀더" in f for f in rep["failures"]), rep["failures"]
+        assert any("비밀유출" in f for f in rep["failures"]), rep["failures"]
+
+
+@case
+def hedge_without_tag_warns():
+    """[v4-Q] F태그 없는 추정 서술은 WARN, 태그 동반이면 비대상."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        (wp.root / "r.md").write_text("시장은 확대될 것으로 보인다.\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert any("무근거헤지" in w for w in rep["warnings"]), rep["warnings"]
+        (wp.root / "r2.md").write_text("성장세로 추정된다(F001).\n", encoding="utf-8")
+        rep2 = verify_facts.verify(wp.root / "r2.md", wd)
+        assert not any("무근거헤지" in w for w in rep2["warnings"]), rep2["warnings"]
+
+
+@case
+def capture_structure_tiny_warns():
+    """[v4-Q] 존재하지만 바이트 하한 미달인 캡처는 [캡처구조] WARN(존재 검사와 분리)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell", "source_url": "https://dart",
+                         "sha256": _H, "capture": "_captures/E001.png"})
+        wp = WorkPaths(wd)
+        (wp.root / "_captures").mkdir(parents=True, exist_ok=True)
+        (wp.root / "_captures" / "E001.png").write_bytes(b"\x89PNG\r\n")   # 6B — 하한 미달
+        (wp.root / "r.md").write_text("본문 없음.\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert any("캡처구조" in w for w in rep["warnings"]), rep["warnings"]
+
+
+@case
+def min_confirmed_floor_message():
+    """[v4-Q] --min-confirmed 정량 하한 — 미달 시 요구/실측 카운트를 담은 실패."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        (wp.root / "r.md").write_text("본문 없음.\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd, min_confirmed=5)
+        assert any("requires at least 5" in f and "current: 0" in f
+                   for f in rep["failures"]), rep["failures"]
+
+
+@case
+def cited_domains_missing_warns():
+    """[v4-S] 대상 스펙의 기대 1차출처 도메인이 대장에 전무하면 [기대출처] WARN."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        spec = wp.root / "audit" / "target-spec.json"
+        spec.parent.mkdir(parents=True, exist_ok=True)
+        spec.write_text(json.dumps({"targets": [{"name": "삼성", "cited_domains": ["dart.fss.or.kr"]}]},
+                                   ensure_ascii=False), encoding="utf-8")
+        (wp.root / "r.md").write_text("본문 없음.\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd, target_spec=spec)
+        assert any("기대출처" in w and "dart.fss.or.kr" in w for w in rep["warnings"]), rep["warnings"]
+
+
+@case
+def out_of_scope_term_warns():
+    """[v4-Q] 확정 범위 밖(out_of_scope) 용어가 F태그 사실주장 세그먼트에 등장하면 [축외침범] WARN."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        spec = wp.root / "audit" / "target-spec.json"
+        spec.parent.mkdir(parents=True, exist_ok=True)
+        spec.write_text(json.dumps({"out_of_scope": ["수소차"]}, ensure_ascii=False), encoding="utf-8")
+        (wp.root / "r.md").write_text("수소차 매출 300.9조원(F001) 이다.\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd, target_spec=spec)
+        assert any("축외침범" in w for w in rep["warnings"]), rep["warnings"]
+
+
+@case
+def audit_artifact_roster_parity():
+    """[v4-L/R] audit 산출물 로스터(고정 표면) — run_ledger 상수와 report-format.md 문서 정합."""
+    import run_ledger
+    doc = (REFERENCES / "report-format.md").read_text(encoding="utf-8")
+    for name in run_ledger.ROSTER_REQUIRED + run_ledger.ROSTER_OPTIONAL:
+        assert name in doc, f"report-format.md audit 로스터에 {name} 누락"
+    assert "이벤트성 대장 신설 금지" in doc, "로스터 고정 표면 선언 누락"
+    for legacy in run_ledger.ROSTER_LEGACY:
+        assert legacy not in doc.replace("run-ledger.jsonl", ""), \
+            f"금지된 이벤트성 대장 {legacy} 가 문서에 재등장"
+
+
+@case
+def gates_enum_parity():
+    """[v4-L] assets/gates.json 11종이 SKILL.md·verification-gates.md 와 정합."""
+    gates = json.loads((SKILL_ROOT / "assets" / "gates.json").read_text(encoding="utf-8"))["gates"]
+    ids = [g["id"] for g in gates]
+    assert ids == ["G0", "PLAN", "G1", "LV", "BX", "G2", "G3", "G5C", "RENDER", "G4", "G5"], ids
+    assert [g["order"] for g in gates] == list(range(11)), "order 불연속"
+    skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+    vg = (REFERENCES / "verification-gates.md").read_text(encoding="utf-8")
+    for gid in ids:
+        assert gid in skill, f"SKILL.md 에 게이트 {gid} 언급 없음"
+        assert gid in vg, f"verification-gates.md 에 게이트 {gid} 언급 없음"
+
+
+@case
+def completion_rule_parity():
+    """[v4-L] 완료 선언 규칙 문구가 SKILL.md·verification-gates.md 양쪽에 존재."""
+    rule = "진행기억·산문선언은증거가아니다"      # 공백·개행 제거 후 대조(줄바꿈 무관)
+    skill = re.sub(r"\s+", "", (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8"))
+    vg = re.sub(r"\s+", "", (REFERENCES / "verification-gates.md").read_text(encoding="utf-8"))
+    assert rule in skill and "run_ledger.py" in skill, "SKILL.md 완료 선언 규칙 누락"
+    assert rule in vg, "verification-gates.md 완료 선언 규칙 누락"
+
+
+@case
+def lane_contract_parity():
+    """[v4-W/C] 레인 계약·리뷰어 verdict·restate 앵커가 문서 간 정합."""
+    briefs = (REFERENCES / "agent-briefs.md").read_text(encoding="utf-8")
+    plan = (REFERENCES / "research-plan.md").read_text(encoding="utf-8")
+    for anchor in ("### Lane", "## RECEIPT", "## BLOCKERS", "# Research brief (authoritative)",
+                   "human_blocked", "VERDICT:"):
+        assert anchor in briefs, f"agent-briefs.md 에 {anchor!r} 누락"
+    for anchor in ("PLANNING-STUCK", "restated_goal", "반례 쿼리", "consent"):
+        assert anchor in plan, f"research-plan.md 에 {anchor!r} 누락"
+
+
 def main():
     import traceback
     ok = 0
