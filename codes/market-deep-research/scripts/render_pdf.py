@@ -43,22 +43,27 @@ def _chrome_pdf(html_path: Path, pdf_out: Path) -> None:
     chrome = _find_chrome()
     if not chrome:
         raise RuntimeError("Chrome 미발견 — G0 preflight 확인")
-    # 렌더 전 기존 PDF 삭제: 잠긴(뷰어가 연) 파일에 Chrome 이 덮어쓰기 실패해도 옛 파일이
-    # size≠0 로 남아 '성공'으로 오검증되던 false positive 차단. 잠김이면 명시적 에러로 노출.
-    try:
-        pdf_out.unlink()
-    except FileNotFoundError:
-        pass
-    except PermissionError as e:
-        raise RuntimeError(f"기존 PDF 잠김 — 뷰어 닫고 재시도: {pdf_out} ({e})")
+    # 임시파일에 렌더 후 원자 교체. 예전엔 pdf_out 을 먼저 unlink 했는데, 뷰어가 연 파일은
+    # Windows 에서 **삭제만 되고**(delete-pending) 같은 이름의 새 파일 생성이 거부돼 옛 PDF
+    # 까지 유실됐다(2026-08-03 실측). 렌더가 실패해도 기존 산출물은 남아야 한다.
+    # Chrome 은 --print-to-pdf 의 **상대경로를 자기 cwd 기준**으로 해석해 "액세스 거부"로
+    # 죽는다(2026-08-03 실측). 항상 절대경로로 넘긴다.
+    pdf_out = pdf_out.resolve()
+    tmp_pdf = pdf_out.with_name(pdf_out.stem + ".rendering" + pdf_out.suffix)
+    tmp_pdf.unlink(missing_ok=True)
     cmd = [chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
-           "--no-pdf-header-footer", f"--print-to-pdf={pdf_out}",
+           "--no-pdf-header-footer", f"--print-to-pdf={tmp_pdf}",
            html_path.resolve().as_uri()]                  # file:// 퍼센트인코딩(한글경로)
     # encoding 명시: 한글 Windows(cp949) 기본 디코딩이 Chrome stderr 바이트에서 죽어
     # 에러 메시지를 못 읽던 문제 차단(errors=replace 로 렌더 실패 원인은 항상 노출).
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if not pdf_out.exists() or pdf_out.stat().st_size == 0:
+    if not tmp_pdf.exists() or tmp_pdf.stat().st_size == 0:
         raise RuntimeError(f"Chrome PDF 실패(생성 안 됨): {r.stderr[-400:]}")
+    try:
+        tmp_pdf.replace(pdf_out)                          # 옛 PDF 는 성공했을 때만 사라진다
+    except PermissionError as e:
+        raise RuntimeError(f"기존 PDF 잠김 — 뷰어 닫고 재시도: {pdf_out} "
+                           f"(새 PDF 는 {tmp_pdf} 에 보존) ({e})")
 
 
 def render(md_path: Path | str, pdf_out: Path | str | None = None,

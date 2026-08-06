@@ -1,10 +1,19 @@
 # evidence-capture — source_capture vs reconstructed_excerpt · 메타 결박
 
+## ⛔ 크롭 원칙 (모든 캡처 공통, V16)
+**국소 크롭 금지.** 수치 주변만 오린 이미지는 제목·표머리·단위·기준연도가 잘려 사용자가 그
+자리에서 원문을 확인할 수 없고, 증빙으로서 신빙성이 떨어진다. 캡처는 항상:
+- **좌우 = 문서(또는 뷰포트) 전폭** — 잘라내지 않는다.
+- **상하 = 대상 문단 ± 인접 한 문단** — 위아래 문맥이 최소 한 문단씩 보여야 한다.
+- **표 안의 수치는 표 전체**(열 제목·단위행 포함) — 값만 보이고 열 이름이 없으면 증빙이 아니다.
+PDF 는 `capture_pdf.py` 가 이 규격을 강제하고(`_context_clip`), 웹은 **selector 크롭 없이
+뷰포트 캡처**(`scrollIntoView({block:'center'})` → 대상이 화면 중앙 = 상하 문맥 확보)로 맞춘다.
+
 ## 두 종류를 절대 혼동하지 않는다
 | 상황 | 방법 | 유형 | 증빙 인정 | 저장 |
 |---|---|---|---|---|
-| 로컬/다운로드 PDF | `capture_pdf.py`(fitz 정확숫자 하이라이트+크롭) | **source_capture** | ✅ | `_captures/E###.png` |
-| 접근 가능한 웹 | playwright 실화면 스크린샷(MCP 직접) | **source_capture** | ✅ | `_captures/E###.png` |
+| 로컬/다운로드 PDF | `capture_pdf.py`(fitz 정확숫자 하이라이트 + 전폭·문단 크롭) | **source_capture** | ✅ | `_captures/E###.png` |
+| 접근 가능한 웹 | 실화면 스크린샷(브라우저 MCP — 아래 계층순) | **source_capture** | ✅ | `_captures/E###.png` |
 | 차단·유실 원문 | `capture_web.py`(insert_htmlbox 재구성) | **reconstructed_excerpt** | ❌ | `_reconstructed/` |
 
 - **재구성 발췌(htmlbox)는 증빙 불인정**: 연구자가 그린 재현물이라 조작 발췌도 통과할 수 있음.
@@ -13,6 +22,14 @@
 ## capture_pdf 사용
 `python capture_pdf.py <pdf> <number> _captures/E###.png [--page N]`
 - 검색어 = **정확 숫자**(부분문자열 지양). 쉼표/공백 변형 자동 재시도(`_variants`).
+- 크롭 = **좌우 전폭 + 상하 인접 문단 + (표 히트 시)표 전체**(`_context_clip`, `find_tables`).
+  반환 `clip` 필드로 실제 범위 확인 가능.
+- **검색 불가 원문**(스캔PDF, 폰트 인코딩이 깨져 `search_for` 가 못 찾는 PDF)은
+  `python capture_pdf.py page <pdf> <N> _captures/E###.png` 로 **페이지 전면 캡처**를 쓴다.
+  하이라이트는 없지만 페이지 전체라 발췌 조작 여지가 없고, 위치는 `evidence.locator` 로 지정한다.
+  ※ 깨진 인코딩은 폰트 서브셋의 일괄 코드 시프트인 경우가 있어(Sourcewell 계약서 = -0x1D),
+  `chr(ord(c)+오프셋)` 로 복호화하면 **팀리드 원문 대조**는 가능하다 — 대조는 복호화, 캡처는 전면.
+  `pad` 를 줄여 국소 크롭으로 되돌리지 말 것 — 위 크롭 원칙 위반.
 - 파일명 = evidence ID. 반환 `ok:false`(미발견/부분문자열만 발견돼 강등)면 원본 `out_png` 가 아니라
   `E###.FAILED.png` 로 저장(페이지 전체 렌더, 팀리드 육안 fallback) — `out_png` 자체는 생성되지
   않으므로 대장이 그 경로를 가리켜도 `verify_facts.py` 가 파일부재로 **[증빙유실] FAIL** 을 내며,
@@ -20,7 +37,31 @@
 - 부분문자열 오귀속(예: '45'가 '2045' 안에서 히트)은 rect 인접 문자 검사로 자동 필터링된다.
   그래도 엉뚱한 표의 같은 숫자를 잡지 않았는지 육안 확인은 유지.
 
-## playwright 실화면 캡처 시 메타 결박(필수)
+## 실화면 캡처 — 브라우저 계층 + 메타 결박(필수)
+계층(위에서부터 시도): **1순위 `agent-browser`** → 2순위 playwright MCP → 3순위 claude-in-chrome
+(브라우저에 이미 로그인 세션이 있어야 열리는 페이지). agent-browser 가 1순위인 이유 = `path` 로
+`_captures/E###.png` 에 **직접 저장** · `allowedDomains` 로 대상 도메인 밖 트래픽 차단(`fetch.py`
+보안경계와 정합) · `eval` 로 스크롤·메타를 직접 제어.
+
+### 표준 recipe (agent-browser) — 2026-08-03 실측 확인
+1. `agent_browser_open(url, allowedDomains=[대상도메인, 이미지CDN])` — 반환 `data.url` 이 리다이렉트
+   후 **최종 URL**(http→https 실측 확인).
+2. `agent_browser_wait_for_text(핵심수치 verbatim 일부)` — 렌더 완료 + 도달 검증 겸용.
+3. `agent_browser_eval` 로 **목표 요소를 화면에 올리고 메타를 한 번에 취득**:
+   `el.scrollIntoView({block:'center'})` 후 `innerWidth+'x'+innerHeight`(viewport) ·
+   `location.href`(최종 URL) · 요소 rect 를 반환. → `evidence.locator` 에 이때 쓴 CSS selector 기록.
+4. `agent_browser_screenshot(path="_captures/E###.png", format="png")` — **selector 없이 뷰포트 캡처**.
+5. 저장된 PNG 를 **팀리드가 Read 로 육안 확인**(핵심수치가 실제로 찍혔는지). 미확인이면 3~4 재시도.
+
+### ⛔ `selector` 크롭 금지 — 2026-08-03 실측 반증
+`agent_browser_screenshot(selector=…)` 는 **크롭 크기만 맞고 내용은 백지**로 저장되면서
+`success:true` 를 반환한다(요소가 화면 안이든 밖이든 동일, `scrollIntoView` 후에도 동일).
+`fullPage:true` 와 함께 주면 selector 는 **조용히 무시**된다. 자동 검출이 불가능한 백지 증빙이
+`source_capture` 로 등재되는 최악의 경로이므로 **증빙 캡처에 selector 를 쓰지 않는다**.
+크롭이 필요하면 뷰포트 캡처 + 캡션으로 위치를 지정한다(원문 맥락이 함께 보이는 편이 증빙에 유리).
+⚠ 이 때문에 **5번 육안 확인은 생략 불가** — 도구의 `success:true` 는 캡처 성공을 보장하지 않는다.
+
+### 메타 결박 (계층 무관 동일 적용)
 스크린샷 evidence 는 **최종 URL · 접근 시각(accessed_at) · viewport · locator(selector)** 를 함께
 기록(`evidence.locator`, `evidence.source_url`, `evidence.observed_at`). 결박 없는 스크린샷은 불인정.
 
@@ -46,13 +87,21 @@
 말고 `unknown` 으로 정직 기록한다 — 파일 존재 검증으로 finalize 하고, 불가하면 재시도 후보로 승격.
 기록 부재 = "결과를 알 수 없음"이지 "실행되지 않았음"이 아니다.
 
-## 스크롤 실패 페이지 캡처 (find→scroll_to) — 검증된 우회
+## 스크롤 실패 페이지 캡처 — 검증된 우회
 IEA 스크롤리텔링·비네트 광고·무한스크롤 등 **휠 스크롤·PageDown·좌표 scroll_to 가 목표 문단에
-도달하지 못하는** 페이지는 아래 순서로 안정 캡처한다(2026-07 PEM 조사에서 미캡처 4건 전량 해소).
+도달하지 못하는** 페이지(2026-07 PEM 조사에서 미캡처 4건 발생 → 전량 해소).
+
+**1순위 — agent-browser `eval` + `scrollIntoView`** (2026-08-03 실측: 뷰포트 높이 569 밖인 문서
+y=2702 위치의 표가 `scrollIntoView({block:'center'})` 후 뷰포트 캡처에 정확히 담겼다).
+`agent_browser_eval` 로 목표 요소를 셀렉터/텍스트로 찾아 `scrollIntoView` → 뷰포트 캡처.
+좌표가 아니라 **요소 기준**이라 광고 오버레이·가상스크롤과 무관하게 도달한다.
+
+**3순위 폴백 — claude-in-chrome `find` → `scroll_to`** (agent-browser 미연결이거나 브라우저의
+기존 로그인 세션이 필요할 때):
 1. `mcp__claude-in-chrome__find` 로 목표 문단의 고유 텍스트(핵심수치 verbatim 일부)를 검색 → `ref` 확보.
 2. `mcp__claude-in-chrome__computer` `scroll_to(ref)` — 좌표가 아니라 **요소 ref 기준**으로 이동(광고 오버레이·가상스크롤 무관하게 도달).
 3. 도달 후 스크린샷 저장(`_captures/E###.jpg`) + 메타 결박(최종URL·accessed_at·viewport·locator=ref).
-- 비네트/동의 배너가 Esc·Close 로 안 닫히면: 먼저 `find` 로 배너 닫기 버튼 ref 를 잡아 클릭, 실패 시
-  배너를 피해 target ref 로 `scroll_to` 후 크롭. 그래도 불가하면 **캡처 미확보를 정직 고지**하고
+- 비네트/동의 배너가 Esc·Close 로 안 닫히면: 먼저 배너 닫기 버튼을 잡아 클릭, 실패 시
+  배너를 피해 목표 요소로 이동 후 캡처. 그래도 불가하면 **캡처 미확보를 정직 고지**하고
   동일 URL·verbatim 은 `_sources/` 에 팀리드 재열람으로 보존(INDEX 한계 절에 기록).
 - 다운로드가 필요한 PDF(예: 초안 T&C)는 **다운로드=권한 사안**이라 수행하지 않고 URL·verbatim 인용으로 대체.

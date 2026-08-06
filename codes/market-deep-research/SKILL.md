@@ -5,8 +5,10 @@ description: >-
   조사 서브에이전트를 지휘하고, 보고서 진입 전 모든 사실을 원문 재열람으로 전건 재검증하며,
   [사실 → 출처 → 화면캡처] 증거구조로 "조사마다 수치가 달라지는 문제"를 제거한 팩트시트
   PDF(+내부 audit 번들)를 만든다. 유료 API(firecrawl/tavily) 무의존 자체 수집 스택을
-  코어로 쓰고, 강방어 사이트는 insane-search 스킬로 위임한다. 사용 시점 — "증빙/캡처 포함
-  시장조사 보고서", "기술동향·산업동향·기관/기업 실사·기술사업화 실사", "근거 있는 딥리서치
+  코어로 쓰며, 강방어 사이트 우회(도메인 라우팅·모바일 지문·RSS·OGP)를 코어에 내장한다.
+  사용 시점 — "증빙/캡처 포함
+  시장조사 보고서", "기술동향·산업동향·기관/기업 실사·기술사업화 실사·비즈니스 모델 조사",
+  "BM 보고서·수익모델/가격/경쟁구도 조사", "근거 있는 딥리서치
   PDF", "N개 대상 비교·실태·실적·딜 조사". 제외 — 단순 사실확인·한두 출처 요약(WebSearch 직접).
 ---
 
@@ -37,6 +39,8 @@ description: >-
 
 ## 산출물
 - `report.pdf`(고객용, 11부 표준목차 → `references/report-format.md`)
+- `bm-summary.md`(비즈니스 모델 조사 유형만: 2~3쪽 문서 이식용 요약, [G3] 통과 후 report.md
+  재배열로만 생성·F태그 유지 → `references/report-format.md` bm-summary 절)
 - `audit/`(내부: facts 전수·폐기·실패소스·검증이력·세션 저널·raw agent output·manifest)
 
 작업폴더는 `scripts/skill_paths.py` 가 `research_<주제>_<YYYYMMDD>/` 아래에 생성한다.
@@ -82,14 +86,20 @@ G4·G5). 기계 하한: confirmed 무증거·스키마 위반 대장은 팀리�
   경로(WebSearch)를 안내하고 종료(사용자 고집 시 진행). 이어 **브리프 앵커 게이트**: 앵커
   7종(대상명·기간·지역·언어·비교축·산출형식·용도) 0개면 팬아웃 금지, 인터뷰로 라우팅.
 - **의존성 점검**: `python scripts/preflight.py` — python·fitz·pandoc·HeadlessChrome·
-  curl_cffi·trafilatura 유무, playwright MCP·insane-search 스킬·무료 공공 MCP(opendart·
-  KOSIS·KakaoMap 등) 감지. 미설치 계층은 "건너뜀+경고"로 진행(자체 스택이 보장 코어).
+  curl_cffi·trafilatura 유무, 브라우저 MCP(agent-browser 1순위·playwright·claude-in-chrome)·
+  무료 공공 MCP(opendart·KOSIS·KakaoMap 등) 감지. 미설치 계층은 "건너뜀+경고"로 진행(자체
+  스택이 보장 코어). ※ `curl_cffi` 는 사실상 필수 — 내장 우회(모바일 iOS 지문 등)가 전부
+  그 위에 얹혀 있다.
 - **요구사항 확정 = 심층 인터뷰 【v4-I】**(`references/research-plan.md` 규율): 라운드당
   1질문 · 최약 차원 조준 · **사실/결정 라우팅**(사실은 예비탐색 인용확인, 결정만 질문) ·
   자동확정 3연속 상한 · 케이던스 1-2 자동/3+ 착수확인/5 하드캡(조기 착수 갭은 가정으로 9부
   승계) · **restate 게이트**(목적 1문장 verbatim 확인 → `restated_goal`). 조사유형(기술동향/
-  산업동향/기관·기업 실사/기술사업화 실사)·범위·**축별 충분조건**·환산옵션(기본 OFF)·출력형식·
-  **승인 목차** 확정 결과는 `audit/research-plan.md` 에 기록.
+  산업동향/기관·기업 실사/기술사업화 실사/비즈니스 모델 조사)·범위·**축별 충분조건**·환산옵션
+  (기본 OFF)·출력형식·**승인 목차** 확정 결과는 `audit/research-plan.md` 에 기록.
+- **BM 렌즈로 조사질문 도출**: 사업성·수요·경쟁·벤치마크·산업구조 관련 조사면
+  `references/business-frameworks.md`(BMC 9블록·JTBD 가치제안·수익모델 유형·red-team·경쟁사
+  규모분류·선행사례 선정규칙·산업구조 5력)로 축별 조사질문·부하가정을 생성 — 렌즈는
+  질문 생성기 전용(보고서 골격·축 이름 불변, 답은 evidence 로만).
 - **승인 3단 【v4-I】**: clarity(브리프) → feasibility([PLAN] 계획 합의 루프) → **consent**
   (명시 승인 후에만 팬아웃 — 계획이 존재한다는 이유로 조사를 자동 시작하지 않는다).
 - **기관·기업 조사면** `references/entity-identity.md` 동일성 게이트 + **대상 스펙 【v4-S】**
@@ -111,7 +121,8 @@ G4·G5). 기계 하한: confirmed 무증거·스키마 위반 대장은 팀리�
 - 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/
   사업현황/재무실적 전건 조사) · **기술동향**=축분할(기술요소·플레이어·시장·정책 + 교차검증1) ·
   **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS 기존 스킬 조합) + 해외 · **기술사업화 실사**=
-  축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도).
+  축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도) · **비즈니스 모델 조사**=
+  축분할(`report-format.md` BM 프리셋 — 기본 4축 + G0 채택 선택축, 축당 1에이전트).
 - 조사원 = **sonnet**(병렬·저비용, background). 에이전트별 `_research/<agent>/` 임시폴더에만
   쓴다(파일충돌 방지). 워커는 **읽기전용**(공식 대장 미기록) — 반환은 마커로. 【v3-F】
 - **레인 섹션 스폰 【v4-W】**(`agent-briefs.md`): `### Lane <id> — <축>` 섹션당 정확히 1명,
@@ -140,8 +151,11 @@ G4·G5). 기계 하한: confirmed 무증거·스키마 위반 대장은 팀리�
 - G1 후 대장을 **동결**(fact 단위 content-hash)하고 3레인이 같은 동결본 검사: ① 재검증(이 절 —
   권한은 팀리드 전속) ② 반박([Bx]) ③ 정합성(단위·연도·정의·entity_id 스윕). **join before
   repairing** — 레인별 수리 금지, 통합 blocker 배치 후 일괄 보수 → 재동결·generation+1.
-- 보고서 진입 후보 **모든 fact** 를 팀리드가 원문 재열람(WebFetch → 차단 시 fetch.py →
-  강방어 시 insane-search 위임)하여 verbatim/locator 대조 → `db.add_verify_event(by="lead")`.
+- 보고서 진입 후보 **모든 fact** 를 팀리드가 원문 재열람(WebFetch → 차단 시 `fetch.py`
+  사다리가 우회까지 내장 처리)하여 verbatim/locator 대조 → `db.add_verify_event(by="lead")`.
+  ⚠ **WebFetch 가 403 이라고 "원문확인불가"로 넘기지 말 것** — `fetch.py` 로 한 번 더 확인한다.
+  실제로 WebFetch·데스크톱 지문이 전부 막힌 GVR 이 모바일 계층으로 열렸고, 스니펫으로만
+  확인해 "일치" 판정했던 건에서 오류가 나왔다(2026-07-31).
 - confirmed 조건(facts_db 강제): 최소 1 evidence + 팀리드 verify_event. 무출처=confirm 불가.
 - **2세대+ 델타 라체트**: 변경·신규 fact 만 재검증. 기통과 fact 신규 반박은 "왜 이전 패스에서
   안 보였나" 정당화 필수. 발견은 전건 처분(accept/rebut — 침묵 폐기 금지). 출처 충돌은
@@ -157,8 +171,13 @@ G4·G5). 기계 하한: confirmed 무증거·스키마 위반 대장은 팀리�
 - 반박검색 산출물은 `negative_search` 증거유형으로 결박.
 
 ### [G2] 증빙 게이트
+- **크롭 원칙(V16)**: 모든 증빙 캡처는 **좌우 문서/뷰포트 전폭 + 상하 인접 한 문단**. 수치
+  주변만 오린 국소 크롭은 제목·표머리·단위가 잘려 사용자가 원문을 즉시 확인할 수 없으므로
+  증빙으로 쓰지 않는다(`references/evidence-capture.md` 첫 절).
 - confirmed 전건 `source_capture` 생성: 로컬/다운로드 PDF=`capture_pdf.py`(fitz 정확숫자
-  하이라이트+크롭), 접근가능 웹=playwright 실화면 스크린샷(최종URL·시각·viewport·locator 결박).
+  하이라이트 + 전폭·문단 크롭), 접근가능 웹=**agent-browser** 실화면 스크린샷(playwright·claude-in-chrome 폴백,
+  최종URL·시각·viewport·locator 결박). ⚠ agent-browser 는 `selector` 크롭이 백지로 저장되면서도
+  성공을 반환하므로 **뷰포트 캡처 + 팀리드 육안 확인**이 필수(`references/evidence-capture.md`).
 - **재구성 발췌(htmlbox)는 증빙 불인정** → `capture_web.py` 산출물은 `_reconstructed/`(내부용).
   원본 캡처 불가 시 대체출처 or "미확인" 유지. 핵심수치는 캡처 필수.
 
@@ -166,6 +185,9 @@ G4·G5). 기계 하한: confirmed 무증거·스키마 위반 대장은 팀리�
 - 고객용 `report.md`: **11부 표준목차**(표지→Executive→개요→테마별 본론→시장수치→플레이어→
   검증요약→상충→상태변화→한계·반론→요약·인사이트→부록). 조사유형별 변형은 `report-format.md`.
 - 내부 `audit/`: facts 전수·폐기목록+사유·실패소스·검증이력·raw·세션 저널.
+- **세부주제별 대표 이미지(도판)**: `harvest_images.py` 로 ① 소스 PDF 도판 크롭(출처 자동
+  일치·최우선) ② 확보 페이지 이미지 ③ 이미지 검색(openverse·commons) 순 수확 → 팀리드
+  육안 선별(Read) → `[그림]` 캡션+출처 결박(`references/image-research.md`). `_images/` 저장.
 
 ### [G3] verify_facts + manifest (실패 0)
 - `scripts/verify_facts.py`: 본문/생성부록 분리 파싱(부록 경계는 주석 우선, 없으면 헤딩 최후
@@ -212,18 +234,23 @@ G4·G5). 기계 하한: confirmed 무증거·스키마 위반 대장은 팀리�
 
 ## 모델 분리 / 자원 재사용
 - 조사원 = sonnet(병렬·저비용). 재검증·종합 = 메인 세션(고성능).
-- **수집 사다리**(`references/source-ladder.md`): WebFetch → fetch.py(curl_cffi TLS→모바일
-  →Jina→Wayback, 보안경계) → **강방어 시 insane-search 스킬 위임**(이중구현 금지). 무료 공공
+- **수집 사다리**(`references/source-ladder.md`): WebFetch → fetch.py(**도메인 라우팅** →
+  curl_cffi TLS 그리드 → **모바일 iOS 지문+UA** → Jina → **Googlebot UA** → **RSS** → Wayback
+  → **OGP**, 보안경계). 우회는 **코어 내장**이라 외부 스킬 위임이 없다. 무료 공공
   MCP(opendart·KOSIS 등)는 있으면 Phase0 1차소스로 기회적 활용(유료 무의존 유지).
+  ※ **모바일 계층이 실전 핵심** — Cloudflare 403(예: grandviewresearch.com)이 데스크톱 지문
+  3종을 다 막아도 iOS 지문으로 통과하는 사례가 확인됐다(2026-07-31 실측).
 
 ## 참조 문서 (필요할 때만 로드)
 | 파일 | 언제 |
 |---|---|
 | `references/agent-briefs.md` | 레인 섹션 스폰·역할 로스터·반환 마커(RECEIPT/BLOCKERS)·리뷰어 브리프·워커 경계·철칙 |
-| `references/source-ladder.md` | 검색 계층·fetch 폴백·Phase0 API·4계층 성공검증·WAF 정찰·research-memory(domain-recipes) |
+| `references/source-ladder.md` | 검색 계층·fetch 내장 우회 사다리·Phase0 API·4계층 성공검증·WAF 정찰·research-memory(domain-recipes) |
 | `references/extract-recipes.md` | 증거유형별 추출·PDF fitz·특수소스 recipe·derivation/verdict 결박 |
-| `references/evidence-capture.md` | source_capture vs reconstructed_excerpt·메타 결박·표면별 증거 규칙·캡처 구조검사 |
-| `references/report-format.md` | 고객 11부 목차·유형변형·audit 로스터(고정 표면)·run-receipt/handoff/드래프트 규약 |
+| `references/evidence-capture.md` | source_capture vs reconstructed_excerpt·크롭 원칙(V16)·메타 결박·표면별 증거 규칙·캡처 구조검사 |
+| `references/report-format.md` | 고객 11부 목차·유형변형(BM 프리셋·bm-summary)·audit 로스터(고정 표면)·run-receipt/handoff/드래프트 규약 |
+| `references/image-research.md` | 세부주제 대표 이미지(도판) 수확·선별·라이선스 |
 | `references/verification-gates.md` | G0~G5 상세·run-ledger 영수증·동결 코호트·라체트·asks 정본·4차원 등급·claim-graph·환산 |
 | `references/research-plan.md` | G0 인터뷰 규율·조사계획 확정(항목 스키마·반례 선설계·의도 확정·계획 합의 루프·깊이캡·승인 목차) |
+| `references/business-frameworks.md` | G0 조사질문 도출 렌즈(BMC·JTBD·수익모델·red-team·경쟁사·벤치마크·산업구조)·워커 체크리스트 |
 | `references/entity-identity.md` | 기관·기업 동일성 확인 게이트·대상 스펙(cited_domains) |

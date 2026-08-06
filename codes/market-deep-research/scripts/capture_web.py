@@ -3,7 +3,7 @@
 ★중요: 이 산출물은 연구자가 재구성한 발췌물이다. 원문 실화면이 아니므로 3중 증빙의
 '출처 스크린샷(source_capture)'으로 인정하지 않는다. `_reconstructed/` 에만 저장하고,
 고객 PDF 증빙에는 쓰지 않는다(원본 캡처 불가 시 대체출처 or '미확인' 유지).
-실화면 캡처는 접근가능 웹=playwright(MCP 직접) / 로컬PDF=capture_pdf.py.
+실화면 캡처는 접근가능 웹=브라우저 MCP(agent-browser 우선) / 로컬PDF=capture_pdf.py.
 
 CLI: python capture_web.py demo
 """

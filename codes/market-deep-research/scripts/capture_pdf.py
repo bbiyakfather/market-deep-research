@@ -1,10 +1,12 @@
 """capture_pdf.py — PDF 정확숫자 하이라이트+크롭 → source_capture (plan-v2 핵심설계4).
 
-로컬/다운로드 PDF 에서 대상 숫자를 검색해 하이라이트하고 주변을 크롭한 PNG 를 만든다.
+로컬/다운로드 PDF 에서 대상 숫자를 검색해 하이라이트하고 **좌우 페이지 전폭 + 상하 한 문단**
+범위를 크롭한 PNG 를 만든다(국소 크롭 금지 — 문맥이 잘리면 증빙 신빙성이 떨어진다, V16).
 파일명 = evidence ID. 정확 숫자 검색(부분문자열 금지 지향) — 표기변형(쉼표·공백)은 변형 재시도.
 스캔PDF(텍스트레이어 없음)·표기변형 실패 시 페이지 전체 렌더 + 실패상태(육안 fallback).
 
 CLI: python capture_pdf.py demo
+     python capture_pdf.py page <pdf> <N> <out.png>   # 페이지 전면(검색 불가 원문)
      python capture_pdf.py <pdf> <number> <out.png> [--page N]
 """
 from __future__ import annotations
@@ -56,6 +58,69 @@ def _standalone_rects(page, rects: list, matched: str) -> list:
     return out
 
 
+def _context_clip(page, r, pad: int) -> "fitz.Rect":
+    """증빙 크롭 원칙(V16): **좌우는 페이지 전폭**, 상하는 **한 문단만큼** 확장.
+    숫자 주변만 오린 국소 크롭은 문서 맥락(제목·표머리·단위)이 잘려 신빙성이 떨어진다.
+    문단 = fitz 텍스트 블록. 히트 블록의 위/아래 인접 블록까지 포함하고, 블록을 못 찾으면
+    최소 여백(pad*3)으로 대체한다."""
+    y0, y1 = r.y0 - pad * 3, r.y1 + pad * 3
+    blocks = sorted((b for b in page.get_text("blocks") if b[6] == 0), key=lambda b: b[1])
+    hits = [i for i, b in enumerate(blocks) if fitz.Rect(b[:4]).intersects(r)]
+    if hits:
+        y0 = min(y0, fitz.Rect(blocks[max(0, min(hits) - 1)][:4]).y0 - pad)
+        y1 = max(y1, fitz.Rect(blocks[min(len(blocks) - 1, max(hits) + 1)][:4]).y1 + pad)
+    try:                                   # 표 셀 히트 → 표 전체(열 제목 포함)까지 확장
+        tabs = [fitz.Rect(t.bbox) for t in page.find_tables().tables]
+        hit_t = [t for t in tabs if t.intersects(r)]
+        # 합계행·이어지는 조각이 별도 표로 인식되는 경우가 흔하다 → 세로로 맞닿은(간격
+        # 3*pad 이내) 표를 반복 병합해 열 제목이 잘리지 않게 한다.
+        changed = bool(hit_t)
+        while changed:
+            changed = False
+            ty0, ty1 = min(t.y0 for t in hit_t), max(t.y1 for t in hit_t)
+            for t in tabs:
+                if t in hit_t:
+                    continue
+                if t.y0 < ty1 + pad * 3 and t.y1 > ty0 - pad * 3:
+                    hit_t.append(t); changed = True
+        if hit_t:
+            y0 = min(y0, min(t.y0 for t in hit_t) - pad)
+            y1 = max(y1, max(t.y1 for t in hit_t) + pad)
+    except Exception:                      # find_tables 미지원/파싱실패는 문단 크롭 유지
+        pass
+    # 경계 스냅: 절단선이 텍스트 블록 **내부**를 지나면 글자가 반쯤 잘려 보여 "잘린 증빙"이
+    # 된다 → 걸린 블록 바깥으로 밀어낸다(확장하며 새 블록에 걸릴 수 있어 몇 회 반복).
+    for _ in range(3):
+        moved = False
+        for b in blocks:
+            bb = fitz.Rect(b[:4])
+            if bb.y0 < y0 < bb.y1:
+                y0, moved = bb.y0 - 2, True
+            if bb.y0 < y1 < bb.y1:
+                y1, moved = bb.y1 + 2, True
+        if not moved:
+            break
+    return fitz.Rect(0, max(0, y0), page.rect.width, min(page.rect.height, y1))
+
+
+def capture_page(pdf_path: Path | str, page: int, out_png: Path | str, zoom: float = 2.0) -> dict:
+    """지정 페이지를 **전면** 캡처(하이라이트 없음). 텍스트레이어가 없거나(스캔) 폰트 인코딩이
+    깨져 `search_for` 가 원문을 못 찾는 PDF 의 정당한 증빙 경로. 페이지 전체라 발췌 조작 여지가
+    없고 크롭 원칙(전폭+문맥)도 자동 충족한다. 위치는 evidence.locator 로 지정한다."""
+    out_png = Path(out_png)
+    doc = fitz.open(str(pdf_path))
+    try:
+        pno = max(0, min(page - 1, doc.page_count - 1))
+        p = doc.load_page(pno)
+        pix = p.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
+        out_png.parent.mkdir(parents=True, exist_ok=True)
+        pix.save(str(out_png))
+        return {"ok": True, "type": "source_capture", "mode": "page", "page": pno + 1,
+                "path": str(out_png), "captured_at": _now()}
+    finally:
+        doc.close()
+
+
 def capture_number(pdf_path: Path | str, number: str, out_png: Path | str,
                    page_hint: int | None = None, zoom: float = 2.0, pad: int = 40) -> dict:
     out_png = Path(out_png)
@@ -80,15 +145,17 @@ def capture_number(pdf_path: Path | str, number: str, out_png: Path | str,
                 continue
             r = rects[0]
             for rr in rects:                              # 하이라이트(필터 후 목록만 — 오귀속 방지)
-                page.add_highlight_annot(rr)
-            clip = fitz.Rect(max(0, r.x0 - pad), max(0, r.y0 - pad),
-                             min(page.rect.width, r.x1 + pad * 4),
-                             min(page.rect.height, r.y1 + pad))
+                try:
+                    page.add_highlight_annot(rr)
+                except ValueError:                        # 비정상 quad(0폭 rect 등)로 fitz 가 죽는
+                    pass                                  # 경우가 있다 → 하이라이트만 포기, 크롭은 유지
+            clip = _context_clip(page, r, pad)
             pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=clip)
             out_png.parent.mkdir(parents=True, exist_ok=True)
             pix.save(str(out_png))
             return {"ok": True, "type": "source_capture", "page": pno + 1,
                     "matched": matched, "rect": [r.x0, r.y0, r.x1, r.y1],
+                    "clip": [clip.x0, clip.y0, clip.x1, clip.y1],
                     "path": str(out_png), "captured_at": _now()}
         # 실패(미발견 또는 부분문자열만 발견돼 강등): out_png 와 분리된 .FAILED 사이드카에
         # 첫 페이지(또는 힌트) 전체 렌더 + 상태 fail(육안 fallback). out_png 자체는 생성하지
@@ -119,6 +186,10 @@ def demo() -> None:
 
         r = capture_number(pdf, "300.9", Path(td) / "e1.png")
         assert r["ok"] and r["page"] == 1 and Path(r["path"]).stat().st_size > 0, r
+        # V16: 크롭은 좌우 페이지 전폭 + 상하 인접 문단(아래 140pt 줄까지) 포함
+        pw = fitz.open(str(pdf))[0].rect.width
+        assert r["clip"][0] == 0 and abs(r["clip"][2] - pw) < 0.01, r
+        assert r["clip"][1] < 88 and r["clip"][3] > 140, r
         # 콤마 변형: "1234" → "1,234" 로 발견
         r2 = capture_number(pdf, "1234", Path(td) / "e2.png")
         assert r2["ok"] and r2["matched"] == "1,234", r2
@@ -144,6 +215,11 @@ def demo() -> None:
         doc3.save(str(pdf3)); doc3.close()
         r5 = capture_number(pdf3, "45", Path(td) / "e5.png")
         assert not r5["ok"] and ".FAILED" in r5["path"], r5
+
+        # V16b: 페이지 전면 모드 — 검색 불가 원문(스캔·깨진 인코딩)의 정당한 증빙 경로
+        e6 = Path(td) / "e6.png"
+        r6 = capture_page(pdf, 1, e6)
+        assert r6["ok"] and r6["mode"] == "page" and e6.stat().st_size > 0, r6
     print(f"[{_now()}] capture_pdf demo OK")
 
 
@@ -155,6 +231,9 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if not args or args[0] == "demo":
         demo()
+    elif args[0] == "page" and len(args) >= 4:            # page <pdf> <N> <out.png>
+        import json
+        print(json.dumps(capture_page(args[1], int(args[2]), args[3]), ensure_ascii=False))
     elif len(args) >= 3:
         pg = int(args[args.index("--page") + 1]) if "--page" in args else None
         import json

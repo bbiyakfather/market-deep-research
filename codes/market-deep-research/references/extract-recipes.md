@@ -20,10 +20,18 @@ fetch.py 가 깨끗한 본문을 확보하면, 서브에이전트(LLM=extractor)
 - 정확숫자 캡처는 `capture_pdf.py`. 스캔PDF(텍스트레이어 없음)는 OCR 한계 고지 + 실패상태.
 
 ## 특수 소스 recipe (비-v1 배선 — 필요 시 수동)
-v1 코어(DDG/SearXNG/arXiv/SEC/Wikipedia) 외. 강방어·플랫폼은 **insane-search 스킬 위임**:
+v1 코어(DDG/SearXNG/arXiv/SEC/Wikipedia) 외.
+- **강방어 사이트·네이버 블로그/뉴스는 `fetch.py` 사다리에 내장**됐다(도메인 라우팅·모바일
+  iOS 지문·Googlebot·RSS·OGP). 그냥 `fetch(url)` 을 부르면 된다 — 별도 배선 불필요.
 - Semantic Scholar / CrossRef: 논문 메타(무료 API). GitHub: 코드·이슈. HN/Reddit: 토론(Algolia/.json).
-- X/Twitter · YouTube 자막 · 네이버 블로그/뉴스 · 미디어 1858사이트: **insane-search 스킬**.
-- 미디어 메타/자막: yt-dlp(SOFT, 설치 시).
+- X/Twitter Syndication · Reddit `.json` · 미디어 자막/메타(yt-dlp, SOFT): **미내장**.
+  시장조사 범위 밖이라 의도적으로 뺐다. 필요하면 아래 명령을 수동으로 쓴다.
+  ```bash
+  curl -sL "https://syndication.twitter.com/srv/timeline-profile/screen-name/{handle}"
+  curl -sL -H "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)" \
+       "https://www.reddit.com/r/{sub}/hot.json?limit=10"
+  yt-dlp --dump-json "URL"          # 메타 / --write-auto-sub 로 자막
+  ```
 
 ## 무료 공공 MCP Phase0 (있으면 1차소스)
 - `opendart-*`(DART 공시·재무), `kosis-*`(국가통계), `korean-patent-search`(KIPRIS),

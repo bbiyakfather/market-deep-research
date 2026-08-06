@@ -31,7 +31,7 @@ BX → G2(증빙) → G3 → G5C → RENDER([4]+[4b]) → G4 → G5. 작업 단�
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
-insane-search / RUNTIME: playwright MCP·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
+openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
 환산옵션 OFF·출력형식·**승인 목차**) — 통과조건: `audit/research-plan.md` 존재 + 승인 기록 +
 승인 목차(`references/research-plan.md` 서식) 포함, 확정 전 팬아웃 금지. 기관조사면
 `entity-identity.md` 선행. `audit/intent-diff.md` 개시.
@@ -86,8 +86,10 @@ entity_id 스윕).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
 
 ## G2 증빙 게이트
-confirmed 전건 `source_capture`(capture_pdf 또는 playwright 실화면). htmlbox 재구성은 **불인정**.
-high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사).
+confirmed 전건 `source_capture`(capture_pdf 또는 브라우저 MCP 실화면 — 계층·recipe 는
+`evidence-capture.md`). htmlbox 재구성은 **불인정**.
+high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사). 실재 검사는 파일 유무만 보므로
+**백지 캡처는 걸러내지 못한다** — 저장된 PNG 팀리드 육안 확인이 게이트의 일부다.
 
 ## G3 verify_facts + manifest (실패 0)
 `verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]`:
@@ -124,6 +126,8 @@ report.pdf 생성 후 **재봉인**(`manifest.py build` 재실행 — [G3] 항�
 (`audit/intent-diff.md` 개시분의 축별 "참이어야 하는가" 목록을 실제 보고서 발견과 대조 —
 축마다 gap 유무 판정, 결과를 `audit/intent-diff.md` 에 추기) → PDF F태그·링크·캡처 수 재검사
 + `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정).
+BM 렌즈를 쓴 조사면 추가 2항목(`references/business-frameworks.md`): ① L6 부하가정의
+Fails if 촉발 여부 대조(촉발분은 9부 기재) ② 블록 간 정합 3문항(불일치는 7부 후보).
 **복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
 **[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님).
 **G4 이원화 【v4-V】**: (a) 육안검증은 `audit/g4-visual-check.md` 체크리스트 산출물로 기록

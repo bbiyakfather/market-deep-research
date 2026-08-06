@@ -12,10 +12,13 @@
 ```
 ### Lane <id> — <축 이름>
 1. TASK (MUST): <역할 — 아래 로스터 4종 중 하나> + <축 이름>(`report-format.md` 축 프리셋 참조 — 여기서 새 축 이름을 짓지 않는다, 한 줄)
-2. 범위 (MUST): <대상/기간/지역/축별 충분조건> — 담당 질문·대상 소스를 구체 열거
+2. 범위 (MUST): <대상/기간/지역/축별 충분조건(경쟁사 축이면 G0 확정 "렌즈 확인사항"의 규모분류 기준 원문 포함)> — 담당 질문·대상 소스를 구체 열거
 3. 프로토콜 (MUST): search.py/fetch.py 사다리 사용 + 내장 WebSearch 병행. 원문 확보 후 evidence 스키마로 구조화.
 4. 반환 (MUST): 아래 마커 블록(JSONL + CLAIMS + EXPAND + 인사이트/요약 + RECEIPT + BLOCKERS)
 5. 브리프 결박 (MUST): 확정 브리프 블록을 아래 형식 그대로 verbatim 주입
+6. [사업성·수요·경쟁·벤치마크·산업구조 축만] 체크리스트 (SHOULD): 팀리드가 `references/business-frameworks.md`
+   에서 해당 렌즈 절(L1~L5·L7~L9 중 적용 맵 해당분)만 발췌해 붙인다(파일 전체 로드 금지).
+   체크리스트 항목도 답은 evidence 로만 — 답 없으면 "미확인"으로 반환(캔버스 채우기식 추측 금지).
 
 # Research brief (authoritative)
 기간: <...> · 지역: <...> · 언어: <...> · 시장 정의: <...> · out-of-scope: <...>
