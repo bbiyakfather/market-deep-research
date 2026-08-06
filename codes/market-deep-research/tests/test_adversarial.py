@@ -1640,6 +1640,13 @@ def v5_doc_code_parity():
     # 임계는 실측 근거와 함께 코드에 있어야 한다(추정 임계 재도입 방지)
     assert capture_pdf.BLANK_MAX_COLORS == 2 and capture_pdf.BLANK_MAX_INK == 0.0005
 
+    # ⑦ v7 — 레거시 완화가 문서·코드 어디에도 되살아나 있지 않아야 한다
+    rl_src = (SKILL_ROOT / "scripts" / "run_ledger.py").read_text(encoding="utf-8")
+    assert "폐지" in vg and "floor(d)" in vg, "verification-gates.md 에 floor 규칙 갱신 누락"
+    assert "migration_required:" not in rl_src, "레거시 완화 코드가 되살아남"
+    assert "폐지" in skill, "SKILL.md 에 완화 폐지 사실 누락"
+    assert hasattr(_rl, "_stale_reverify_scan") and hasattr(_rl, "_ledger_lock")
+
 
 def main():
     import traceback

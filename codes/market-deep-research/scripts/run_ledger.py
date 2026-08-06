@@ -20,9 +20,12 @@
     - 검증 발견 처분값: accept|rebut
 
 기계 하한(floor) — checkpoint 시 스크립트가 대장을 직접 스캔, 요청 verdict 를 강제 하향:
-  (b) confirmed 인데 evidence_ids 빈 배열 → BLOCK
-  (c) 대장 스키마 위반 행 존재 → BLOCK. 단 evidence.jsonl 부재(=배치1 이전 레거시 단일
-      대장)면 (c)는 WATCH + migration_required 사유로 강등(기존 조사 재개를 막지 않는다).
+  (b) confirmed 인데 evidence_ids 가 비었거나 참조 대상이 실재하지 않음(댕글링) → BLOCK
+  (c) 대장 스키마 위반 행 존재 → BLOCK  【v7】 evidence.jsonl 부재를 사유로 한 WATCH 완화는
+      폐지했다 — 완화 조건이 '증거 대장이 없음'이라 "안 만들면 통과"라는 우회로였다.
+  (d) LV 한정: 직전 LV 영수증 이후 내용이 바뀐 confirmed fact 에 lead 재검증이 늘지 않음 → BLOCK
+      (수정 후 재열람 없이 checkpoint 만 다시 찍어 신선도를 되살리는 경로 차단. 기준선은
+       영수증에 실린 claim_key 별 lead 재검증 횟수 — 타임스탬프가 초 단위라 시각 비교는 못 쓴다)
 
 join 4상+1: G1 checkpoint 는 --phase 필수
   complete | awaiting_verification | failed | cancelled | blocked_partial
@@ -46,10 +49,13 @@ answer 충돌 기록 · 2=거부(미기록: 미정의 게이트·phase 위반·�
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import sys
 import tempfile
+import threading
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -170,31 +176,44 @@ def _target_hashes(wp: WorkPaths, watches: list[str]) -> dict[str, str]:
 
 # --- 기계 하한(floor) ---------------------------------------------------------
 def _floor_scan(wp: WorkPaths) -> dict:
-    """(b) confirmed 무증거 / (c) 스키마 위반 / legacy(evidence.jsonl 부재) 스캔."""
+    """(b) confirmed 무증거·댕글링 참조 / (c) 스키마 위반 스캔.
+
+    【v7】 evidence.jsonl 부재를 사유로 (c)를 WATCH 로 낮추던 '레거시 완화'는 폐지했다.
+    완화가 보호하던 대상(구 스키마 조사 폴더)이 실은 테스트 샘플이라 지킬 실데이터가 없었고,
+    남은 효과는 '증거 대장을 만들지 않으면(또는 지우면) 위반이 WATCH 로 강등된다'는 공식
+    우회로뿐이었다 — 완화 조건이 '증거가 없음'인 것 자체가 설계 오류였다.
+    """
     schema = load_schema()
     b, c = [], []
-    legacy = not wp.evidence.exists()
+    ev_rows = _read_jsonl(wp.evidence) if wp.evidence.exists() else []
+    known_ev = {e.get("id") for e in ev_rows}
     for f in _read_jsonl(wp.facts):
         fid = f.get("id") or f.get("claim_key") or "?"
-        if f.get("status") == "confirmed" and not f.get("evidence_ids"):
-            b.append(str(fid))
+        if f.get("status") == "confirmed":
+            ids = f.get("evidence_ids") or []
+            if not ids:
+                b.append(str(fid))
+            else:
+                dangling = [e for e in ids if e not in known_ev]
+                if dangling:      # 참조는 있는데 대상이 없다 = 증거 없는 confirmed 와 같다
+                    b.append(f"{fid}(댕글링 {', '.join(dangling)})")
         try:
             validate_fact(f, schema)
         except Exception as e:                    # 형식 파손 행도 위반으로 집계(전 진단 계속)
             c.append(f"{fid}: {e}")
-    if not legacy:
-        for ev in _read_jsonl(wp.evidence):
-            try:
-                validate_evidence(ev, schema, wp)
-            except Exception as e:
-                c.append(f"{ev.get('id', '?')}: {e}")
-    return {"b": b, "c": c, "legacy": legacy}
+    for ev in ev_rows:
+        try:
+            validate_evidence(ev, schema, wp)
+        except Exception as e:
+            c.append(f"{ev.get('id', '?')}: {e}")
+    return {"b": b, "c": c}
 
 
 def _print_floor(fl: dict) -> None:
-    print(f"[floor(b)] confirmed 무증거 위반: {', '.join(fl['b']) or '<none>'}")
-    tag = " (레거시 단일 대장 — migration_required 완화)" if fl["legacy"] and fl["c"] else ""
-    print(f"[floor(c)] 대장 스키마 위반: {'; '.join(fl['c']) or '<none>'}{tag}")
+    print(f"[floor(b)] confirmed 무증거·댕글링 위반: {', '.join(fl['b']) or '<none>'}")
+    print(f"[floor(c)] 대장 스키마 위반: {'; '.join(fl['c']) or '<none>'}")
+    if fl.get("d"):
+        print(f"[floor(d)] 변경 후 재검증 없음: {', '.join(fl['d'])}")
 
 
 def _clamp(requested: str, fl: dict, blockers: list[str]) -> str:
@@ -202,17 +221,60 @@ def _clamp(requested: str, fl: dict, blockers: list[str]) -> str:
     final = requested
     if fl["b"]:
         final = "BLOCK"
-        blockers += [f"floor(b): {i} confirmed 인데 evidence_ids 빈 배열" for i in fl["b"]]
+        blockers += [f"floor(b): {i} confirmed 인데 유효한 evidence 참조 없음" for i in fl["b"]]
     if fl["c"]:
-        if fl["legacy"]:
-            if _SEV[final] < _SEV["WATCH"]:
-                final = "WATCH"
-            blockers.append(
-                f"migration_required: 레거시 단일 대장(evidence.jsonl 부재) — 스키마 위반 {len(fl['c'])}행")
-        else:
-            final = "BLOCK"
-            blockers += [f"floor(c): {i}" for i in fl["c"]]
+        final = "BLOCK"
+        blockers += [f"floor(c): {i}" for i in fl["c"]]
+    if fl.get("d"):
+        final = "BLOCK"
+        blockers += [f"floor(d): {i}" for i in fl["d"]]
     return final
+
+
+def _stale_reverify_scan(wp: WorkPaths, ledger: list[dict], gate_id: str) -> list[str]:
+    """floor(d) 【v7】 — LV(팀리드 전건 재검증) 한정: 직전 LV checkpoint 이후 **내용이 바뀐**
+    confirmed fact 는, 그 변경 이후에 기록된 lead 재검증 이벤트가 있어야 다시 PASS 가 된다.
+
+    이게 없으면 '수치를 고치고 → 재열람 없이 checkpoint 만 다시 찍어 → 신선도 복귀'가 성립해
+    fact 단위 신선도 모델 자체가 무의미해진다(v5 감사 GS-4). 대상을 LV 로 좁힌 이유는 LV 만이
+    '전 fact 를 팀리드가 원문 재열람'을 의미하는 게이트이기 때문이다 — BX·G2 는 요구 증적이
+    달라 같은 규칙을 그대로 씌우면 과잉 차단이 된다.
+    """
+    if gate_id != "LV":
+        return []
+    last = next((r for r in reversed(ledger)
+                 if r.get("kind") == "checkpoint" and r.get("gate") == "LV"), None)
+    if not last:
+        return []                                  # 최초 LV 는 대조할 직전 상태가 없다
+    prev_counts = last.get("lead_verify_counts")
+    if prev_counts is None:
+        return []                                  # v7 이전 영수증은 기준선이 없다(소급 차단 안 함)
+    prev_fh = last.get("fact_hashes") or {}
+    cur = _fact_hashes(wp)
+    changed = {k for k in cur if prev_fh.get(k) != cur[k]}
+    if not changed:
+        return []
+    cur_counts = _lead_verify_counts(wp)
+    out: list[str] = []
+    for f in _read_jsonl(wp.facts):
+        key = f.get("claim_key") or make_claim_key(f.get("context") or {})
+        if key not in changed or f.get("status") != "confirmed":
+            continue
+        # 시각 비교는 못 쓴다 — 타임스탬프가 초 단위라 같은 초에 벌어진 수정과 재검증이
+        # 구분되지 않는다. 대신 '직전 영수증 이후 lead 재검증이 새로 늘었는가'를 본다.
+        if cur_counts.get(key, 0) <= prev_counts.get(key, 0):
+            out.append(f"{f.get('id') or key} 변경됐는데 직전 LV 영수증 이후 lead 재검증이 늘지 않음")
+    return out
+
+
+def _lead_verify_counts(wp: WorkPaths) -> dict[str, int]:
+    """claim_key → 팀리드 재검증 이벤트 수. floor(d) 의 기준선(시계 비의존)."""
+    out: dict[str, int] = {}
+    for f in _read_jsonl(wp.facts):
+        key = f.get("claim_key") or make_claim_key(f.get("context") or {})
+        n = sum(1 for v in (f.get("verify_events") or []) if v.get("by") == "lead")
+        out[key] = out.get(key, 0) + n
+    return out
 
 
 # --- checkpoint ---------------------------------------------------------------
@@ -224,6 +286,7 @@ def checkpoint(work, gate_id: str, verdict: str, evidence: str, phase: str | Non
     gmap = {g["id"]: g for g in gates}
     ledger = _read_ledger(wp)
     fl = _floor_scan(wp)
+    fl["d"] = _stale_reverify_scan(wp, ledger, gate_id)
 
     # 거부 사유는 모으되, 전 진단을 먼저 일괄 출력한다(첫 실패에서 멈추지 않는다).
     refusals: list[str] = []
@@ -271,6 +334,8 @@ def checkpoint(work, gate_id: str, verdict: str, evidence: str, phase: str | Non
         rec["phase"] = phase
     if "facts" in gate["watches"]:
         rec["fact_hashes"] = _fact_hashes(wp)
+    if gate_id == "LV":                     # floor(d) 기준선 — 다음 LV 가 이 수치와 대조한다
+        rec["lead_verify_counts"] = _lead_verify_counts(wp)
 
     _append(wp, ledger, rec, mode=mode)
     print(f"[checkpoint] {gate_id} verdict={final} (요청 {verdict}) generation={gen} "
@@ -487,10 +552,82 @@ def record(work, kind: str, **kw) -> dict | None:
 
 
 # --- append + metadata (crash-safe 재개 진입점) --------------------------------
+_THREAD_LOCK = threading.Lock()      # 같은 프로세스 안의 직렬화(파일락만으로는 부족 — 아래)
+_LOCK_RETRY_SEC = (0.01, 0.03, 0.08, 0.2, 0.5)
+
+
+@contextlib.contextmanager
+def _ledger_lock(path: Path):
+    """대장 쓰기 직렬화 — 프로세스 내부는 스레드 락, 프로세스 간은 사이드카 .lock 파일.
+
+    Windows 의 open(path,'a') 는 seek 후 write 라 원자적이지 않다(레코드가 1KB 를 넘으면 실측
+    손상 보고가 있다). 그래서 락이 필요한데, `msvcrt.locking(LK_LOCK)` 은 경합 시 곧바로
+    OSError(EDEADLOCK, '[Errno 36] Resource deadlock avoided')를 던진다 — 20스레드 실측에서
+    절반이 즉시 실패했다. 예외를 삼키면 방어가 0 이 되므로 (a) 스레드 락으로 프로세스 내부를
+    먼저 직렬화하고, (b) 파일락은 짧은 백오프로 재시도한다. 끝내 못 잡아도 쓰기는 진행하되
+    그 사실을 stderr 로 알린다(조용한 무방비 금지).
+    """
+    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with _THREAD_LOCK:
+        fh, held = None, False
+        try:
+            fh = open(lock_path, "a+b")
+            for i, wait in enumerate((0.0,) + _LOCK_RETRY_SEC):
+                if wait:
+                    time.sleep(wait)
+                try:
+                    if os.name == "nt":
+                        import msvcrt
+                        fh.seek(0)
+                        msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+                    else:
+                        import fcntl
+                        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+                    held = True
+                    break
+                except OSError:
+                    continue                    # 다른 프로세스가 점유 중 — 백오프 후 재시도
+                except Exception:               # noqa: BLE001 — 락 미지원 플랫폼은 degrade
+                    break
+            if not held:
+                print(f"  (경고) 대장 파일락 미획득 — 다른 프로세스와 동시 쓰기 시 경합 가능: "
+                      f"{lock_path.name}", file=sys.stderr)
+            yield
+        finally:
+            if fh is not None:
+                if held:
+                    try:
+                        if os.name == "nt":
+                            import msvcrt
+                            fh.seek(0)
+                            msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+                        else:
+                            import fcntl
+                            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+                    except Exception:           # noqa: BLE001
+                        pass
+                fh.close()
+
+
 def _append(wp: WorkPaths, ledger: list[dict], rec: dict, mode: str | None = None) -> None:
-    ledger.append(rec)
-    _write_jsonl_atomic(_ledger_path(wp), ledger)
-    _update_metadata(wp, ledger, mode=mode)
+    """append-only 대장에 **한 줄만** 덧붙인다.
+
+    종전에는 전체를 읽어 전체를 다시 썼다 — (a) 동시 쓰기에서 나중 쓰기가 앞선 레코드를 통째로
+    덮어(lost update) ask·checkpoint 가 소실되고, (b) 레코드 N 건이면 I/O 가 O(N²)로 팽창했다.
+    호출자가 넘긴 `ledger` 는 읽은 시점의 스냅샷이므로, 실제 상태는 append 후 디스크에서 다시
+    읽는다(다른 프로세스가 그 사이 남긴 레코드까지 반영).
+    """
+    path = _ledger_path(wp)
+    with _ledger_lock(path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+        fresh = _read_ledger(wp)                # 파생 상태는 대장 재생이 정본
+    ledger.append(rec)                          # 호출자 스냅샷도 최신화(반환값 일관성)
+    _update_metadata(wp, fresh or ledger, mode=mode)
 
 
 def _counters(ledger: list[dict]) -> dict:

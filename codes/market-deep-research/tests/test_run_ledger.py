@@ -106,8 +106,10 @@ def floor_b_forces_block():
 
 
 @case
-def legacy_single_ledger_demotes_to_watch():
-    """레거시 단일 대장(evidence.jsonl 부재): 스키마 위반(c)은 WATCH + migration_required 로 강등."""
+def missing_evidence_ledger_is_not_an_excuse():
+    """v7: evidence.jsonl 을 만들지 않으면(또는 지우면) 스키마 위반이 WATCH 로 강등되던
+    '레거시 완화'를 폐지했다 — 완화 조건이 '증거가 없음'인 것 자체가 우회로였다.
+    (완화가 보호하던 구 스키마 폴더는 실데이터가 아니라 테스트 샘플이었음이 확인됨)"""
     with tempfile.TemporaryDirectory() as td:
         wd = resolve_work_dir("legacy", base=td)
         wp = WorkPaths(wd)
@@ -115,9 +117,51 @@ def legacy_single_ledger_demotes_to_watch():
         del bad["grade"]                                  # 스키마 위반, confirmed 아님(b 미발동)
         _write_jsonl_atomic(wp.facts, [bad])
         assert not wp.evidence.exists()
-        rec = run_ledger.checkpoint(wd, "G1", "PASS", "레거시 조사 재개", phase="complete")
-        assert rec["verdict"] == "WATCH", f"레거시 완화 실패: {rec['verdict']}"
-        assert any("migration_required" in b for b in rec["blockers"]), rec["blockers"]
+        rec = run_ledger.checkpoint(wd, "G1", "PASS", "증거 대장 없이 진행 시도", phase="complete")
+        assert rec["verdict"] == "BLOCK", f"완화가 아직 살아있다: {rec['verdict']}"
+        assert any("floor(c)" in b for b in rec["blockers"]), rec["blockers"]
+        assert not any("migration_required" in b for b in rec["blockers"]), rec["blockers"]
+
+
+@case
+def dangling_evidence_reference_blocked():
+    """v7: confirmed 인데 참조 대상이 실재하지 않는 evidence_ids(E999) — '무증거'와 같다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        rows = _read_jsonl(wp.facts)
+        rows[0].update({"status": "confirmed", "evidence_ids": ["E999"],
+                        "verify_events": [{"by": "lead", "at": "2026-01-01T00:00:00",
+                                           "action": "reread", "note": ""}]})
+        _write_jsonl_atomic(wp.facts, rows)
+        rec = run_ledger.checkpoint(wd, "G1", "PASS", "위조행 등재 후 통과 시도", phase="complete")
+        assert rec["verdict"] == "BLOCK", rec["verdict"]
+        assert any("댕글링" in b for b in rec["blockers"]), rec["blockers"]
+
+
+@case
+def changed_fact_needs_new_lead_reverification():
+    """v7/floor(d): 수치를 고친 뒤 재열람 없이 LV 를 다시 PASS 로 찍어 신선도를 되살리는 경로 차단."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, db = _work(td)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                         "source_url": "https://dart.example/x",
+                         "sha256": "a" * 64, "local": None})
+        db.add_verify_event("F001", "lead", "reread")
+        db.set_status("F001", "confirmed")
+        r1 = run_ledger.checkpoint(wd, "LV", "PASS", "전건 재검증 완료")
+        assert r1["verdict"] == "PASS", r1
+
+        rows = _read_jsonl(wp.facts)                       # 수치만 임의 수정(재열람 없음)
+        rows[0]["value"] = {"raw": "999.9", "unit": "KRW_T"}
+        _write_jsonl_atomic(wp.facts, rows)
+        r2 = run_ledger.checkpoint(wd, "LV", "PASS", "델타 재검증 완료(라고만 주장)")
+        assert r2["verdict"] == "BLOCK", f"재검증 없이 신선도 복귀: {r2['verdict']}"
+        assert any("floor(d)" in b for b in r2["blockers"]), r2["blockers"]
+
+        # 긍정형 짝: 실제로 재열람 이벤트를 남기면 통과한다
+        db.add_verify_event("F001", "lead", "reread", "수정본 원문 재대조")
+        r3 = run_ledger.checkpoint(wd, "LV", "PASS", "재열람 후 재검증")
+        assert r3["verdict"] == "PASS", r3["blockers"]
 
 
 @case
@@ -393,6 +437,32 @@ def answer_requires_explicit_resolved_by():
         # 명시하면 정상 기록(긍정형 짝)
         rec = run_ledger.record(wd, "answer", ask_id="A1", answer="승인", resolved_by="user")
         assert rec["resolved_by"] == "user", rec
+
+
+@case
+def concurrent_append_does_not_lose_records():
+    """v7/OPS-1: 대장이 '전체 재작성'이면 동시 쓰기에서 나중 쓰기가 앞선 레코드를 통째로 덮는다.
+    스냅샷을 들고 있던 호출자가 뒤늦게 써도 그 사이 남은 레코드가 살아있어야 한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        run_ledger.record(wd, "ask", ask_id="A1", gate_id="PLAN", question="목차 승인?")
+        stale = _ledger(wp)                       # 프로세스 A 가 읽은 시점의 스냅샷
+        # 그 사이 프로세스 B 가 답을 기록
+        run_ledger.record(wd, "answer", ask_id="A1", answer="승인", resolved_by="user")
+        # 프로세스 A 가 자기 스냅샷을 들고 뒤늦게 append
+        run_ledger._append(wp, stale, {"kind": "steering", "op": "annotate",
+                                       "evidence": "", "rationale": "지연 기록", "at": "x"})
+        kinds = [r["kind"] for r in _ledger(wp)]
+        assert kinds == ["ask", "answer", "steering"], kinds   # answer 가 살아있어야 한다
+
+        # 병렬 스레드 20건이 전부 남는지(락 직렬화)
+        import threading
+        def _w(i):
+            run_ledger._append(wp, [], {"kind": "respawn", "lane": f"L{i}", "at": "x"})
+        ts = [threading.Thread(target=_w, args=(i,)) for i in range(20)]
+        [t.start() for t in ts]; [t.join() for t in ts]
+        lanes = {r.get("lane") for r in _ledger(wp) if r["kind"] == "respawn"}
+        assert lanes == {f"L{i}" for i in range(20)}, sorted(lanes)
 
 
 def main():

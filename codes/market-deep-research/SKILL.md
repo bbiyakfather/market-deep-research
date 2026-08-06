@@ -78,8 +78,10 @@ description: >-
 **게이트 영수증 【v4-L】**: 모든 게이트 통과 주장은 `python scripts/run_ledger.py checkpoint
 <gate> --verdict PASS|WATCH|BLOCK --evidence "..."` 영수증(`audit/run-ledger.jsonl`, append-only)
 으로만 성립한다. 게이트 enum 정본은 `assets/gates.json`(G0·PLAN·G1·LV·BX·G2·G3·G5C·RENDER·
-G4·G5). 기계 하한: confirmed 무증거·스키마 위반 대장은 팀리드가 PASS 를 요청해도 BLOCK 강제
-(레거시 단일 대장은 WATCH+migration_required 완화). 신선도는 fact 단위(claim_key content-hash)
+G4·G5). 기계 하한: confirmed 무증거·댕글링 참조·스키마 위반 대장은 팀리드가 PASS 를 요청해도
+BLOCK 강제. 【v7】 "evidence.jsonl 이 없으면 완화" 규칙은 폐지 — 증거 대장을 안 만드는 것이
+완화 사유가 되면 그게 우회로다. LV 은 추가로 **변경된 fact 에 lead 재검증이 늘었을 때만** PASS
+(수정 후 재열람 없이 신선도를 되살리는 경로 차단). 신선도는 fact 단위(claim_key content-hash)
 — fact 1건 수정은 그 fact 만 재검증 대상(partial_stale), report 파일은 전체 실효. 계획 변경
 (steering)·사용자 개입(ask/answer)·출처 충돌(conflict/disposition)도 같은 대장에 `kind` 레코드로
 기록한다(별도 파일 신설 금지).
