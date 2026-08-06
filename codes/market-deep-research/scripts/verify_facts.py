@@ -419,13 +419,22 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
         metric = ((f.get("context") or {}).get("metric") or "").lower()
         if any(k in metric for k in _HIGH_RISK_METRICS) and f.get("risk") != "high":
             warnings.append(f"[risk태깅] {fid} metric={metric!r} 고위험 지표인데 risk={f.get('risk')!r}")
-        # [Bx] claim-graph 긍정 요건 가시화(warning 만 — failure 승격은 다음 배치).
-        # G4 는 부정 검사(반박 기록·폐기사유·강등재검증)만 넣었을 뿐 이 네 요건을 아무 데도
-        # 읽지 않아 실전 대장(confirmed 76건 전부)이 게이트를 한 번도 안 거친 게 안 보였다.
+        # [Bx] claim-graph 긍정 요건 【v8 — failure 승격】
+        # 승격을 막던 이유는 "구 대장 confirmed 전건이 요건 미달이라 기존 조사가 통째로
+        # 막힌다"였는데, 그 대장이 실데이터가 아니라 테스트 샘플임이 확인돼 사유가 사라졌다.
+        # 범위는 **본문에 실제로 인쇄되는** confirmed high-risk 로 한정한다 — 게이트가 지키는
+        # 것은 고객이 읽는 수치이고, 대장에만 있고 안 쓰인 fact 까지 막으면 과잉 차단이다.
         if f.get("risk") == "high" and f.get("status") == "confirmed":
-            missing = []
-            if len(f.get("independent_groups") or []) < 2:
-                missing.append("독립 관찰그룹 부족")
+            missing, soft = [], []
+            groups = f.get("independent_groups") or []
+            if len(groups) < 2:
+                # 독립 관찰 2개가 원리적으로 불가능한 경우가 있다(그 회사 공시가 곧 유일한
+                # 1차출처인 수치 등). 그때는 '1차출처를 직접 인용했는가'로 대체 충족시킨다 —
+                # 요건을 못 지키면 risk 를 낮춰 회피하는 게임을 유도하는 것보다 낫다.
+                if _cites_primary(f, evidence_raw):
+                    soft.append("독립 관찰그룹 1개(1차출처 직접 인용으로 대체 충족)")
+                else:
+                    missing.append("독립 관찰그룹 부족(2개 미만이면 1차출처 직접 인용 필요)")
             if not f.get("counter_search"):
                 missing.append("반박검색 기록 없음")
             if not f.get("primary_source_ref"):
@@ -433,9 +442,25 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
             if not (f.get("observed_at") or f.get("valid_at")):
                 missing.append("시간증거 없음")
             if missing:
-                warnings.append(f"[반박게이트] {fid}: " + "·".join(missing))
+                if fid in used:
+                    failures.append(f"[반박게이트] {fid}(본문 인용): " + "·".join(missing))
+                else:
+                    warnings.append(f"[반박게이트] {fid}(본문 미사용): " + "·".join(missing))
+            for s in soft:
+                warnings.append(f"[반박게이트] {fid}: {s}")
 
     return failures, warnings
+
+
+def _cites_primary(f: dict, evidence_raw: list[dict]) -> bool:
+    """fact 의 primary_source_ref 가 실제로 '원출처' 역할의 증거를 가리키는가.
+    독립 관찰그룹 2개를 못 채울 때의 대체 충족 조건 — 근거는 대장에 남아 감사 가능하다."""
+    ref = f.get("primary_source_ref")
+    if not ref:
+        return False
+    ev = next((e for e in evidence_raw if e.get("id") == ref), None)
+    return bool(ev and ev.get("source_role") == "원출처"
+                and ev.get("fact_id") == f.get("id"))
 
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.I)

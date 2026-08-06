@@ -105,10 +105,18 @@ entity_id 스윕).
   verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
   ② **반례 쿼리 소진**(계획 시점 반례 쿼리 — research-plan 항목 스키마의 `반례 쿼리` — 전건
-  소진 + `counter_search.found_stronger_refutation=false`, 더 강한 반박 없음; `verify_facts.py`
-  검사는 warning 유지) ③ **기본소스**(`primary_source_ref`)
-  ④ **시간증거**(`observed_at`+`valid_at`). 불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
+  소진 + `counter_search.found_stronger_refutation=false`, 더 강한 반박 없음)
+  ③ **기본소스**(`primary_source_ref`) ④ **시간증거**(`observed_at`+`valid_at`).
+  불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
+- **【v8】 네 요건은 FAIL 이다**(종전 warning). 단 **본문에 인용된** confirmed high-risk 에
+  한정한다 — 게이트가 지키는 것은 고객이 읽는 수치이고, 대장에만 있고 안 쓰인 fact 까지 막으면
+  과잉 차단이다(미사용 건은 WARN 으로 남는다). 승격을 막던 사유("실전 대장 confirmed 전건이
+  요건 미달")는 그 대장이 테스트 샘플임이 확인돼 소멸했다.
+  **단일 1차출처 예외**: 독립 관찰 2개가 원리적으로 불가능한 수치가 있다(그 회사 공시가 곧
+  유일한 1차출처인 경우 등). 이때는 `primary_source_ref` 가 **그 fact 의 `source_role:"원출처"`
+  증거**를 가리키면 ①을 대체 충족한 것으로 보고 WARN 만 남긴다. 예외를 두지 않으면 요건을
+  못 지킬 때 `risk` 를 낮춰 회피하는 게임을 유도하게 되고, 그건 검사 자체를 무의미하게 만든다.
 
 ## G2 증빙 게이트
 confirmed 전건 `source_capture`(capture_pdf 또는 브라우저 MCP 실화면 — 계층·recipe 는

@@ -525,19 +525,34 @@ def _snapshot(wp, fid: str, body: str = "매출 300.9조원(원문 스냅샷)") 
     return rel, hashlib.sha256(p.read_bytes()).hexdigest()
 
 
-def _confirm(db, wp, fid, with_capture=True):
-    """fact 를 confirmed 로 만든다(원문 스냅샷 + 캡처 + 팀리드 재열람).
+def _confirm(db, wp, fid, with_capture=True, claim_graph=True):
+    """fact 를 confirmed 로 만든다(원문 스냅샷 + 캡처 + 팀리드 재열람 + claim-graph 요건).
+
     스냅샷·캡처는 **실파일**이고 sha256 은 그 실해시다 — 픽스처가 위조본이면 결박 검사를
-    도입할 때마다 '그린 유지'가 아니라 '그린 재획득'이 된다(v5 감사에서 실제로 막혔던 부채)."""
+    도입할 때마다 '그린 유지'가 아니라 '그린 재획득'이 된다(v5 감사에서 실제로 막혔던 부채).
+    claim_graph=True 면 [Bx] 긍정 요건까지 채운다(v8 에서 FAIL 로 승격됐고, 고위험 사실의
+    '정당하게 확정된 상태'란 이 요건을 만족한 상태라는 뜻이다). 요건 미달을 시험하는
+    케이스는 claim_graph=False 로 부른다.
+    """
     local, sha = _snapshot(wp, fid)
     ev = {"fact_id": fid, "type": "table_cell", "source_url": "https://dart.example/doc",
-          "sha256": sha, "local": local, "http_status": 200}
+          "sha256": sha, "local": local, "http_status": 200, "source_role": "원출처",
+          "observer_group": "dart"}
     if with_capture:
         cap = f"_captures/{fid}.png"
         raw = _real_png(wp.root / cap)
         ev["capture"] = cap
         ev["capture_sha256"] = hashlib.sha256(raw).hexdigest()
     ev_rec = db.add_evidence(ev)
+    if claim_graph:
+        rows = db.facts()
+        fr = next(r for r in rows if r["id"] == fid)
+        fr.update({"independent_groups": ["dart", "irstatement"],
+                   "counter_search": {"query": f"{fid} 정정 공시", "result": "없음",
+                                      "found_stronger_refutation": False},
+                   "primary_source_ref": ev_rec["id"],
+                   "observed_at": "2026-08-06", "valid_at": "2025-03"})
+        _write_jsonl_atomic(wp.facts, rows)
     db.add_verify_event(fid, "lead", "reread", evidence_id=ev_rec["id"])
     db.set_status(fid, "confirmed")
     return ev_rec
@@ -1246,32 +1261,67 @@ def plan_format_contract():
 
 
 @case
-def claim_graph_fields_warned():
-    """risk=high confirmed fact 에 claim-graph 긍정 요건(독립그룹≥2·반박검색기록·기본소스·
-    시간증거)이 없으면 [반박게이트] warning — G4 는 부정 검사(반박기록·폐기사유·강등재검증)만
-    넣고 이 긍정 요건은 아무 데도 안 읽어 실전 대장이 게이트를 한 번도 안 거친 게 안 보였다.
-    failure 로는 승격 안 함(실전 대장 confirmed 전건이 미충족이라 전면 FAIL 은 다음 배치).
-    긍정형 짝: 네 필드를 다 채우면 warning 이 사라짐."""
+def claim_graph_requirements_enforced():
+    """v8: risk=high confirmed fact 가 **본문에 인용되면** claim-graph 긍정 요건(독립그룹≥2·
+    반박검색·기본소스·시간증거) 미달은 FAIL. 종전에는 warning 이라 고위험 수치가 요건을 한
+    번도 안 거치고 인쇄될 수 있었다(승격을 막던 '실전 대장이 통째로 막힌다'는 사유는 그
+    대장이 테스트 샘플임이 확인돼 소멸). 긍정형 짝: 요건을 채우면 통과."""
+    md = "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n"
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)          # F001 risk=high
         wp = WorkPaths(wd)
-        _confirm(db, wp, "F001")
-        md = "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n"
+        _confirm(db, wp, "F001", claim_graph=False)               # 요건 미충족 상태로 확정
         (wp.root / "r.md").write_text(md, encoding="utf-8")
         rep = verify_facts.verify(wp.root / "r.md", wd)
-        assert rep["ok"], rep                                     # failure 로 승격되면 안 됨
-        assert any("반박게이트" in w for w in rep["warnings"]), rep
+        assert not rep["ok"] and any("반박게이트" in f for f in rep["failures"]), rep
 
+        # 요건별로 하나씩 빠져도 각각 잡히는지(한 요건이 다른 요건을 가리지 않게)
+        base = {"independent_groups": ["dart", "irstatement"],
+                "counter_search": {"query": "q", "result": "없음",
+                                   "found_stronger_refutation": False},
+                "primary_source_ref": "E001", "observed_at": "2026-07-22"}
+        for drop, token in [("counter_search", "반박검색"), ("primary_source_ref", "기본소스"),
+                            ("observed_at", "시간증거")]:
+            rows = db.facts()
+            fr = next(r for r in rows if r["id"] == "F001")
+            fr.update({**base, drop: None})
+            _write_jsonl_atomic(wp.facts, rows)
+            r = verify_facts.verify(wp.root / "r.md", wd)
+            assert not r["ok"] and any(token in f for f in r["failures"]), (drop, r["failures"])
+
+    # 긍정형 짝 ①: 네 요건을 다 채우면 통과
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        assert verify_facts.verify(wp.root / "r.md", wd)["ok"], "정당한 확정이 막힘"
+
+    # 긍정형 짝 ②: 독립 관찰이 1개뿐이어도 1차출처를 직접 인용하면 대체 충족(WARN 으로만)
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        ev = _confirm(db, wp, "F001")
         rows = db.facts()
         fr = next(r for r in rows if r["id"] == "F001")
-        fr.update({"independent_groups": ["dart", "irstatement"],
-                  "counter_search": {"query": "q", "result": "없음",
-                                     "found_stronger_refutation": False},
-                  "primary_source_ref": "E001", "observed_at": "2026-07-22",
-                  "valid_at": "2025-03"})
+        fr["independent_groups"] = ["dart"]                       # 관찰그룹 1개
+        fr["primary_source_ref"] = ev["id"]                       # source_role=원출처
         _write_jsonl_atomic(wp.facts, rows)
-        rep2 = verify_facts.verify(wp.root / "r.md", wd)
-        assert not any("반박게이트" in w for w in rep2["warnings"]), rep2   # 긍정형 짝
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep["ok"], rep["failures"]
+        assert any("대체 충족" in w for w in rep["warnings"]), rep["warnings"]
+
+    # 본문에 안 쓰인 fact 는 FAIL 이 아니라 WARN(게이트가 지키는 것은 인쇄되는 수치다)
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001", claim_graph=False)
+        (wp.root / "r.md").write_text("서술만 있고 태그 없음.\n\n![c](_captures/F001.png)\n",
+                                      encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not any("반박게이트" in f for f in rep["failures"]), rep["failures"]
+        assert any("반박게이트" in w and "미사용" in w for w in rep["warnings"]), rep["warnings"]
 
 
 # --- G2/G8 재작성 회귀(문서정합 — 축 프리셋·종료기준·조사유형 4종·intent-diff) --------------
@@ -1646,6 +1696,11 @@ def v5_doc_code_parity():
     assert "migration_required:" not in rl_src, "레거시 완화 코드가 되살아남"
     assert "폐지" in skill, "SKILL.md 에 완화 폐지 사실 누락"
     assert hasattr(_rl, "_stale_reverify_scan") and hasattr(_rl, "_ledger_lock")
+
+    # ⑧ v8 — [Bx] 승격이 문서·코드 양쪽에 있고, 대체 충족 예외가 규칙으로 적혀 있어야 한다
+    for doc, name in ((skill, "SKILL.md"), (vg, "verification-gates.md")):
+        assert "원출처" in doc and "FAIL" in doc, f"{name} 에 [Bx] 승격/예외 규칙 누락"
+    assert hasattr(verify_facts, "_cites_primary"), "1차출처 대체 충족 판정 함수 없음"
 
 
 def main():

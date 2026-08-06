@@ -173,6 +173,10 @@ BLOCK 강제. 【v7】 "evidence.jsonl 이 없으면 완화" 규칙은 폐지 �
 - 통과 조건(전부): ① ≥2 **독립 관찰그룹**(재전재 제외) 수렴 · ② **1회 능동 반박검색**
   (`counter_search`, 더 강한 반박 없음) · ③ **기본소스**(공시·표준·원데이터, `primary_source_ref`)
   · ④ **시간증거**(`observed_at`/`valid_at`). 불통과 → `disputed`/`Unresolved` 로 남김(기권이 정답).
+- 【v8】 이 네 요건은 **G3 에서 FAIL** 이다(종전 warning). 적용 범위는 **본문에 인용된**
+  confirmed high-risk — 대장에만 있고 안 쓰인 fact 는 WARN. 독립 관찰 2개가 원리적으로
+  불가능하면 `primary_source_ref` 가 그 fact 의 `source_role:"원출처"` 증거를 가리키는 것으로
+  ①을 대체 충족한다(예외가 없으면 risk 를 낮춰 회피하는 게임을 유도하게 된다).
 - 반박검색 산출물은 `negative_search` 증거유형으로 결박.
 
 ### [G2] 증빙 게이트
