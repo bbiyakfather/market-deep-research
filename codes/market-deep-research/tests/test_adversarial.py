@@ -383,6 +383,20 @@ def mojibake_body_not_counted_as_success():
     v = fetch.validate_body(text, 200, mojibake=fetch._mojibake_ratio(text))
     assert v["verdict"] == "partial" and "mojibake" in v["reason"], v
 
+    # [v9] ★비율만 보면 길이에 따라 판정이 뒤집힌다 — 짧은 원문(공시 요약표 등)의 대체문자
+    # 한두 개로 강등되면 정상 증거가 partial 로 떨어진다. 실측: 진짜 실패는 0.333~0.592 인데
+    # 종전 임계는 0.02 였다(16배 낮음). 백지 판정과 같은 계열의 실수.
+    short_ok = "매출 300.9조원 영업이익 32.7조�원 자산총계 455.9조원 부채 92.2조원"
+    n_bad, ratio = fetch._mojibake_stat(short_ok)
+    assert n_bad == 1 and ratio > 0.02, (n_bad, ratio)          # 종전 임계면 강등됐을 본문
+    assert not fetch.is_mojibake(short_ok), "짧은 정상 본문이 대체문자 1개로 모지바케 판정"
+    assert fetch.validate_body(short_ok, 200, mojibake=ratio)["verdict"] != "partial"
+    # 부정형 짝: 개수만 많고 비율이 낮으면(긴 본문에 흩어진 20개) 여전히 강등 아님
+    long_ok = ("가나다라마바사아자차 " * 200)[:1980] + "�" * 20
+    assert not fetch.is_mojibake(long_ok), fetch._mojibake_stat(long_ok)
+    # 그러나 둘 다 넘으면(진짜 미스매치) 잡힌다 — 위 broken 이 그 경우
+    assert fetch.is_mojibake(text), fetch._mojibake_stat(text)
+
 
 @case
 def wayback_snapshot_date_and_https():

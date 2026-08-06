@@ -725,6 +725,9 @@ def check_capture_structure(evidence: dict, wp: WorkPaths) -> list[str]:
             continue                       # 실재 검사는 check_evidence_chain 소관(FAIL)
         warnings += _capture_mode_warnings(e)   # 아래 continue 들보다 앞 — 경로 강도는 항상 표면화
         size = p.stat().st_size
+        # ※ 이 바이트 하한은 **작은 크롭에만 의미가 있다** — 실측(v9): 완전 백지 1440x3000
+        # PNG 도 19KB 라 전면 스크린샷은 이 검사를 항상 통과한다. 대형 캔버스의 백지는
+        # 아래 is_blank_pixmap(전수 계산)이 잡는다.
         if size < 2048:
             warnings.append(f"[캡처구조] {e.get('id')} 캡처 {size}B — 바이트 하한(2KB) 미달")
             continue

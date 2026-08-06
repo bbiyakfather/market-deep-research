@@ -168,7 +168,16 @@ def check_response_ip(r) -> None:
 
 
 # --- 디코드 사다리 · 모지바케 판정 ---------------------------------------------
-MOJIBAKE_MAX = 0.02          # U+FFFD 비율 상한(느슨하게 — 정상 문서의 우연한 대체문자 허용)
+# [v5 → v9 정정] 모지바케 판정. 실측(2026-08-07):
+#   진짜 디코드 미스매치 — cp949 본문을 utf-8 로 45개/76자 = 0.592 · utf-8 을 cp949 로
+#     28개/84자 = 0.333 · euc-kr 표를 utf-8 로 135개/228자 = 0.592
+#   정상 문서에 우연히 섞인 대체문자 — 짧은 표 40자에 1개 = 0.025 · 긴 본문 2000자에 20개 = 0.010
+# 종전 임계 0.02 는 **진짜 실패의 최저(0.333)보다 16배 낮았다.** 게다가 비율만 보면 길이에
+# 따라 판정이 뒤집힌다 — 짧은 본문의 대체문자 **1개**(0.025)는 강등되는데 긴 본문의 20개
+# (0.010)는 통과한다. 공시 요약표처럼 정상적으로 짧은 원문이 여기 걸렸다.
+# 백지 판정과 같은 계열의 실수(비율만으로는 크기에 따라 뒤집힌다) → 절대 개수 하한을 함께 둔다.
+MOJIBAKE_MAX = 0.10          # 비율 상한 — 진짜 실패 최저(0.333)의 1/3, 정상 최대(0.025)의 4배
+MOJIBAKE_MIN_CHARS = 8       # 개수 하한 — 짧은 본문의 우연한 한두 개로 강등되지 않게
 _META_CHARSET = re.compile(rb"""<meta[^>]+charset\s*=\s*["']?\s*([A-Za-z0-9_\-]+)""", re.I)
 
 
@@ -185,8 +194,20 @@ def _decode_body(buf: bytes, charset: str | None) -> str:
     return buf.decode("utf-8", errors="replace")
 
 
+def _mojibake_stat(text: str) -> tuple[int, float]:
+    n = text.count("�") if text else 0
+    return n, (n / len(text) if text else 0.0)
+
+
 def _mojibake_ratio(text: str) -> float:
-    return text.count("�") / len(text) if text else 0.0
+    return _mojibake_stat(text)[1]
+
+
+def is_mojibake(text: str) -> bool:
+    """진짜 디코드 미스매치인가 — 비율과 절대 개수를 **둘 다** 넘어야 한다.
+    비율 하나로는 짧은 본문의 대체문자 1개가 긴 본문의 20개보다 크게 잡힌다."""
+    n, ratio = _mojibake_stat(text)
+    return n >= MOJIBAKE_MIN_CHARS and ratio > MOJIBAKE_MAX
 
 
 # --- 4계층 성공검증 (R2) -----------------------------------------------------
@@ -195,8 +216,9 @@ def validate_body(text: str, status: int, success_selectors: list[str] | None = 
     """{verdict: ok|partial|challenge|empty, reason}. HTTP200 ≠ 성공."""
     if status and status >= 400:                       # ⓪ 상태코드 우선(V17) — 4xx/5xx 본문은 안 믿음
         return {"verdict": "empty", "reason": f"http {status}"}
-    if mojibake is not None and mojibake > MOJIBAKE_MAX:
-        return {"verdict": "partial", "reason": f"mojibake {mojibake:.1%} — 인코딩 판독 실패"}
+    if mojibake is not None and is_mojibake(text or ""):
+        n, ratio = _mojibake_stat(text or "")
+        return {"verdict": "partial", "reason": f"mojibake {ratio:.1%}({n}자) — 인코딩 판독 실패"}
     low = (text or "").lower()
     n = len(text or "")
     if success_selectors and any(s.lower() in low for s in success_selectors):
@@ -265,9 +287,11 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = 5,
         text = "" if is_pdf else _decode_body(buf, charset)
         out = {"ok": True, "status": r.status_code, "text": text, "raw": buf,
                "final_url": cur, "mime": mime, "is_pdf": is_pdf}
-        if text and _mojibake_ratio(text) > MOJIBAKE_MAX:
+        if text and _mojibake_stat(text)[0]:
             # 읽을 수 없는 쓰레기가 '수집 성공'으로 대장에 남으면 재검증이 원문 대조 자체를
-            # 못 한다. 성공에서 배제하고 사유를 실어 상위 판정에서 강등되게 한다.
+            # 못 한다. 강등 여부는 validate_body 의 is_mojibake(비율+개수)가 정하고, 여기서는
+            # **대체문자가 하나라도 있으면 비율을 기록**한다 — 강등에 못 미치는 판독 품질도
+            # 증거에 병기돼야 감사에서 보인다(임계 아래는 아예 안 남던 것이 사각지대였다).
             out["mojibake"] = round(_mojibake_ratio(text), 4)
         return out
     return {"ok": False, "reason": "too many redirects", "status": None, "text": "", "final_url": cur}
