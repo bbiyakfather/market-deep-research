@@ -96,6 +96,8 @@
       "source_role": {"enum_ref": "source_role", "nullable": true},
       "capture": {"type": ["string", "null"], "description": "_captures/E###.png (source_capture)"},
       "capture_sha256": {"type": ["string", "null"], "description": "[v6] capture 파일의 실해시. 서로 다른 evidence 가 같은 해시를 쓰면 캡처 돌려막기(1장으로 전건 증빙 충족)이므로 FAIL."},
+      "capture_mode": {"type": ["string", "null"], "description": "[v9] 실화면 캡처 방식 — print(원문 print 렌더에서 수치를 찾아 크롭, 텍스트레이어로 verbatim 기계확인 가능) | screen(뷰포트 스크린샷, verbatim 기계확인 불가 → 육안 필수) | mcp(브라우저 MCP). 약한 경로는 verify_facts 가 WARN 으로 표면화한다."},
+      "capture_verbatim": {"type": ["string", "null"], "description": "[v9] print 모드에서 **캡처 안에 실재함이 기계로 확인된** 문자열(capture_pdf 가 매칭한 표기변형). print 모드인데 이 값이 없으면 강한 경로를 주장만 한 것이라 WARN."},
       "observer_group": {"type": ["string", "null"], "description": "[v3] 독립성 판정용 관찰그룹 라벨"},
       "observed_at": {"type": ["string", "null"]},
       "verdict": {"type": ["string", "null"], "enum_ref": "evidence_verdict", "description": "[v4-V] 이 증거가 fact 주장을 support|contradict|uncertain 하는지 — 반박·상충 증거의 방향 기록(Bx negative_search 결박과 연동)"}

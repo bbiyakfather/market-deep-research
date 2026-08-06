@@ -184,9 +184,16 @@ BLOCK 강제. 【v7】 "evidence.jsonl 이 없으면 완화" 규칙은 폐지 �
   주변만 오린 국소 크롭은 제목·표머리·단위가 잘려 사용자가 원문을 즉시 확인할 수 없으므로
   증빙으로 쓰지 않는다(`references/evidence-capture.md` 첫 절).
 - confirmed 전건 `source_capture` 생성: 로컬/다운로드 PDF=`capture_pdf.py`(fitz 정확숫자
-  하이라이트 + 전폭·문단 크롭), 접근가능 웹=**agent-browser** 실화면 스크린샷(playwright·claude-in-chrome 폴백,
-  최종URL·시각·viewport·locator 결박). ⚠ agent-browser 는 `selector` 크롭이 백지로 저장되면서도
-  성공을 반환하므로 **뷰포트 캡처 + 팀리드 육안 확인**이 필수(`references/evidence-capture.md`).
+  하이라이트 + 전폭·문단 크롭), 접근가능 웹=**`capture_web.capture_live()`(코어 내장, 1순위)**
+  → agent-browser → playwright → claude-in-chrome(최종URL·시각·viewport·locator 결박).
+  【v9】 **실화면 캡처를 코어에 내장**했다(Chrome CLI, 새 의존성 0) — MCP 미연결이면 증빙 캡처가
+  통째로 불가능하던 상태를 닫았다. ① `--print-to-pdf` → `capture_pdf` 크롭(문서 전체가 렌더돼
+  스크롤 도달 실패가 소멸 + 텍스트레이어로 **verbatim 기계확인**) ② 실패 시 화면 캡처는
+  **오라클이 죽었을 때만**(print 렌더에 텍스트가 남았는데 수치가 없으면 그 수치는 원문에
+  없는 것 → fail-closed, 화면 캡처로 강등 금지). 경로 강도는 `capture_mode`/`capture_verbatim`
+  으로 기록하고 약한 경로는 `[캡처약결박]` WARN. MCP 계층은 **로그인·상호작용 전용**으로 남는다.
+  ⚠ agent-browser 는 `selector` 크롭이 백지로 저장되면서도 성공을 반환하므로 **뷰포트 캡처 +
+  팀리드 육안 확인**이 필수(`references/evidence-capture.md`).
 - **재구성 발췌(htmlbox)는 증빙 불인정** → `capture_web.py` 산출물은 `_reconstructed/`(내부용).
   원본 캡처 불가 시 대체출처 or "미확인" 유지. 핵심수치는 캡처 필수.
 

@@ -57,7 +57,8 @@ def check() -> dict:
         # 강방어 우회는 fetch.py 에 내장됨 — insane-search 스킬 의존 없음(2026-07-31)
         "soft": {m: {"ok": _has_py(m)} for m in SOFT_PY},
         "runtime_check_needed": [
-            "브라우저 MCP: agent-browser(1순위) · playwright · claude-in-chrome",
+            "브라우저 MCP(선택 — 실화면 캡처는 capture_web.capture_live 로 코어 내장됨. "
+            "MCP 는 로그인·상호작용 페이지 전용): agent-browser · playwright · claude-in-chrome",
             "무료 공공 MCP: opendart · KOSIS · KakaoMap 등",
         ],
     }

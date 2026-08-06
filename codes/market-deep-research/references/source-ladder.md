@@ -32,7 +32,10 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 6. **RSS** — `rss.blog.naver.com/{id}.xml` · `/feed` · `/rss` · `/rss.xml` → `archived_url` 구분.
 7. **Wayback**(`archive.org/wayback/available`) → snapshot → `archived_url` 구분.
 8. **OGP 메타**(og:title·og:description) — 본문 실패 시 제목+요약만 `partial` 로(속성 순서 양방향 파싱).
-9. **소진 → `status:"fail"`**: 브라우저 MCP(JS 렌더링 — agent-browser 우선, playwright 폴백) 또는 대체출처로.
+9. **소진 → `status:"fail"`**: 【v9】 JS 렌더링은 먼저 **코어 내장**으로 시도한다 —
+   `capture_web.capture_live()` 가 Chrome 헤드리스로 페이지를 통째로 렌더하므로 증빙 캡처는
+   MCP 없이 확보된다(`references/evidence-capture.md`). 본문 **텍스트**가 더 필요하면 그 다음이
+   브라우저 MCP(agent-browser 우선, playwright 폴백) 또는 대체출처.
 
 **도메인 라우팅**(`fetch.ROUTES`): 네이버 블로그→모바일·RSS, 네이버 뉴스/증권→Jina,
 디시·펨코·요즘IT→모바일, 티스토리→RSS, 미디엄·서브스택→Jina·RSS 등.

@@ -706,6 +706,92 @@ def blank_capture_rejected_at_generation():
             assert r2["ok"] and out2.exists(), (name, r2)
 
 
+_LIVE_PAGE = """<html><head><meta charset="utf-8"><style>{style}</style></head><body>
+<h1>Global Market Report 2024</h1><nav>Home About</nav><div class="main">
+<table border=1><tr><th>Year</th><th>USD mn</th></tr><tr><td>2024</td><td>820.5</td></tr></table>
+<p>The market was valued at USD 820.5 million in 2024, up from 2045 units.</p></div></body></html>"""
+
+
+def _live_url(td: Path, name: str, style: str = "") -> str:
+    p = td / name
+    p.write_text(_LIVE_PAGE.format(style=style), encoding="utf-8")
+    return p.resolve().as_uri()
+
+
+@case
+def live_capture_does_not_degrade_silently():
+    """v9: 실화면 캡처를 코어에 내장하면서 생긴 새 우회로를 막는다 — print 렌더에서 수치를
+    못 찾았을 때 **무조건** 화면 캡처로 내려가면 '그 수치가 없는 이미지'가 source_capture 로
+    등재된다(백지 캡처·캡처 돌려막기와 같은 계열). 화면 폴백은 텍스트 오라클 자체가 죽었을
+    때만 정당하고, 오라클이 살아 있는데 수치가 없으면 fail-closed 여야 한다."""
+    import capture_web
+    with tempfile.TemporaryDirectory() as _td:
+        td = Path(_td)
+        cap = td / "_captures"
+
+        # ★ 오라클 생존 + 수치 부재 → 화면 캡처로 강등되지 않는다(out_png 미생성, V04)
+        bad = cap / "E900.png"
+        r = capture_web.capture_live(_live_url(td, "a.html"), "999999", bad)
+        assert not r["ok"], f"수치가 없는데 캡처가 성립했다: {r}"
+        assert r.get("capture_mode") != "screen", f"조용한 강등: {r}"
+        assert not bad.exists(), "실패인데 정상 캡처 경로에 파일이 생겼다"
+        assert not bad.with_name("E900.FAILED.png").exists(), \
+            "성공 캡처 옆에 남을 실패 사이드카가 정리되지 않았다"
+
+        # 긍정형 짝 ① 수치가 있으면 print 경로로 통과 + verbatim 이 기계로 확인된다
+        ok1 = cap / "E901.png"
+        r1 = capture_web.capture_live(_live_url(td, "b.html"), "820.5", ok1)
+        assert r1["ok"] and r1["capture_mode"] == "print", r1
+        assert r1["capture_verbatim"] == "820.5" and ok1.stat().st_size > 0, r1
+
+        # 긍정형 짝 ② 오라클이 죽은 페이지(print CSS 가 본문 전체를 지움)는 화면 폴백이 정당
+        r2 = capture_web.capture_live(
+            _live_url(td, "c.html", "@media print{body{display:none}}"), "820.5", cap / "E902.png")
+        assert r2["ok"] and r2["capture_mode"] == "screen", r2
+        assert r2["capture_verbatim"] is None, "화면 캡처가 기계확인된 것처럼 보고됐다"
+
+        # 부분문자열 오귀속 차단(V15)이 웹 경로에서도 그대로 물린다 — '45'는 2045/820.5 안에만 있다
+        e45 = cap / "E903.png"
+        assert not capture_web.capture_live(_live_url(td, "d.html"), "45", e45)["ok"]
+        assert not e45.exists()
+
+        # 신뢰경계: 실화면↔재구성 발췌는 서로의 출력 경로를 거부한다(양방향)
+        for fn, path in ((lambda p: capture_web.capture_live("https://x.invalid", "1", p),
+                          td / "_reconstructed" / "x.png"),
+                         (lambda p: capture_web.reconstruct_excerpt("t", "https://x.invalid", p),
+                          cap / "y.png")):
+            try:
+                fn(path); assert False, f"신뢰경계 위반 경로가 통과됨: {path}"
+            except ValueError:
+                pass
+
+
+@case
+def capture_mode_weak_path_surfaced():
+    """v9: print 모드(텍스트레이어로 verbatim 기계확인)와 screen 모드(육안뿐)는 증거 강도가
+    다르다. 차이를 기록만 하고 검사에 반영하지 않으면 조용한 강등이므로 WARN 으로 표면화하고,
+    print 을 '주장'만 하는 것으로 경고를 지울 수 없어야 한다(포징 유인 차단)."""
+    w = verify_facts._capture_mode_warnings
+    assert w({"id": "E1", "capture_mode": "screen"}), "화면 캡처가 무경고로 통과"
+    assert "육안" in w({"id": "E1", "capture_mode": "screen"})[0]
+    assert w({"id": "E2", "capture_mode": "print"}), "verbatim 없는 print 주장이 무경고로 통과"
+    # 긍정형 짝: 기계확인 산출물이 실제로 있으면 경고 없음 / 모드 미기재도 경고 없음(소급 차단 안 함)
+    assert not w({"id": "E3", "capture_mode": "print", "capture_verbatim": "820.5"})
+    assert not w({"id": "E4"})
+
+    # 배선 확인 — 헬퍼만 있고 검사 경로에 안 붙어 있으면 방어가 0
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        rows = db.evidence()
+        rows[0]["capture_mode"] = "screen"
+        _write_jsonl_atomic(wp.evidence, rows)
+        ev = {e["id"]: e for e in db.evidence()}
+        assert any("[캡처약결박]" in x for x in verify_facts.check_capture_structure(ev, wp)), \
+            "check_capture_structure 에 배선되지 않음"
+
+
 @case
 def evidence_hash_unbound_without_snapshot():
     """v6/EV-1: local 스냅샷이 없으면 sha256 은 대조 대상이 없어 아무 64자 hex 나 통과한다.
@@ -1701,6 +1787,20 @@ def v5_doc_code_parity():
     for doc, name in ((skill, "SKILL.md"), (vg, "verification-gates.md")):
         assert "원출처" in doc and "FAIL" in doc, f"{name} 에 [Bx] 승격/예외 규칙 누락"
     assert hasattr(verify_facts, "_cites_primary"), "1차출처 대체 충족 판정 함수 없음"
+
+    # ⑨ v9 — 실화면 캡처가 코어에 내장됐고(MCP 미연결에도 증빙 가능), 등급 차이가 기록된다
+    import capture_web as _cw
+    assert hasattr(_cw, "capture_live") and hasattr(_cw, "_host_rules")
+    assert hasattr(verify_facts, "_capture_mode_warnings")
+    props = json.loads((SKILL_ROOT / "assets" / "facts-schema.json")
+                       .read_text(encoding="utf-8"))["evidence"]["properties"]
+    for f in ("capture_mode", "capture_verbatim"):
+        assert f in props, f"스키마에 {f} 없음"
+    for doc, name in ((skill, "SKILL.md"), (ec, "evidence-capture.md")):
+        assert "capture_live" in doc, f"{name} 에 실화면 캡처 내장 규칙 누락"
+    assert "[캡처약결박]" in ec, "evidence-capture.md 에 경로 강도 WARN 태그 누락"
+    # 임계는 실측 근거와 함께 코드에 있어야 한다(v6 백지 임계와 같은 규율)
+    assert _cw.TEXT_ORACLE_MIN == 1, "텍스트 오라클 임계가 실측 근거 없이 바뀜"
 
 
 def main():

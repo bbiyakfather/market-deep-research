@@ -723,6 +723,7 @@ def check_capture_structure(evidence: dict, wp: WorkPaths) -> list[str]:
         p = wp.root / cap
         if not p.exists():
             continue                       # 실재 검사는 check_evidence_chain 소관(FAIL)
+        warnings += _capture_mode_warnings(e)   # 아래 continue 들보다 앞 — 경로 강도는 항상 표면화
         size = p.stat().st_size
         if size < 2048:
             warnings.append(f"[캡처구조] {e.get('id')} 캡처 {size}B — 바이트 하한(2KB) 미달")
@@ -739,6 +740,27 @@ def check_capture_structure(evidence: dict, wp: WorkPaths) -> list[str]:
         except Exception as ex:            # noqa: BLE001 — 판독 실패는 WARN 으로 표면화
             warnings.append(f"[캡처구조] {e.get('id')} 캡처 판독 불가({type(ex).__name__}) — 육안 확인 필요")
     return warnings
+
+
+def _capture_mode_warnings(e: dict) -> list[str]:
+    """[v9] 캡처 경로의 **강도**를 표면화(WARN 전용).
+
+    capture_live 사다리는 두 등급을 만든다 — print 모드는 PDF 텍스트레이어 덕에 "그 수치가
+    캡처 안에 실재한다"를 기계가 확인하지만, screen 모드(스크린샷)는 확인 장치가 육안뿐이다.
+    등급 차이를 기록만 하고 검사에 반영하지 않으면 조용한 강등이 되므로 둘 다 표면화한다.
+    print 을 **주장**하면서 `capture_verbatim` 이 없으면 강한 경로의 산출물이 없는 것이다 —
+    이 WARN 이 없으면 capture_mode 를 print 로 적어 넣는 것만으로 경고를 지울 수 있다.
+    ※ 한계: capture_verbatim 이 그 fact 의 값과 같은 수인지까지는 대조하지 않는다(단위
+    스케일이 다른 정당한 경우 — 값 820.5 / 원문 표기 820,500,000 — 를 오탐하게 된다).
+    """
+    mode = e.get("capture_mode")
+    if mode == "screen":
+        return [f"[캡처약결박] {e.get('id')} 화면 캡처(텍스트레이어 없음) — 수치 실재를 "
+                f"기계가 확인할 수 없다, 팀리드 육안 확인 필수"]
+    if mode == "print" and not e.get("capture_verbatim"):
+        return [f"[캡처약결박] {e.get('id')} capture_mode=print 인데 capture_verbatim 없음 "
+                f"— 기계확인 산출물 없이 강한 경로를 주장했다"]
+    return []
 
 
 def check_cited_domains(evidence_raw: list[dict], target_spec: Path | str | None) -> list[str]:

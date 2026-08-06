@@ -38,10 +38,57 @@ PDF 는 `capture_pdf.py` 가 이 규격을 강제하고(`_context_clip`), 웹은
   그래도 엉뚱한 표의 같은 숫자를 잡지 않았는지 육안 확인은 유지.
 
 ## 실화면 캡처 — 브라우저 계층 + 메타 결박(필수)
-계층(위에서부터 시도): **1순위 `agent-browser`** → 2순위 playwright MCP → 3순위 claude-in-chrome
-(브라우저에 이미 로그인 세션이 있어야 열리는 페이지). agent-browser 가 1순위인 이유 = `path` 로
-`_captures/E###.png` 에 **직접 저장** · `allowedDomains` 로 대상 도메인 밖 트래픽 차단(`fetch.py`
-보안경계와 정합) · `eval` 로 스크롤·메타를 직접 제어.
+계층(위에서부터 시도): **1순위 `capture_web.capture_live()`(코어 내장)** → 2순위 `agent-browser`
+→ 3순위 playwright MCP → 4순위 claude-in-chrome(브라우저에 이미 로그인 세션이 있어야 열리는 페이지).
+
+### 【v9】 1순위 = 코어 내장 (`capture_web.capture_live`)
+MCP 가 안 붙어 있으면 증빙 캡처가 통째로 불가능하던 상태를 닫았다 — `fetch.py` 가 강방어 우회를
+코어에 내장한 것과 같은 이유로, **증거능력을 외부 연결에 걸지 않는다**. Chrome CLI 만 쓰므로 새
+의존성 0(preflight HARD 의 chrome·fitz 재사용).
+
+```
+capture_live(url, number, out_png, allow_domains=[...], pdf_out=None)
+ ①  chrome --print-to-pdf  →  capture_pdf.capture_number()   # 정확숫자 하이라이트 + V16 크롭
+ ②  chrome --screenshot --window-size=1440,3000               # ①의 텍스트 오라클이 죽었을 때만
+ ③  소진 → 브라우저 MCP(로그인·상호작용) 또는 대체출처
+```
+
+①이 1순위인 이유 두 가지 — **(a) 스크롤 도달 실패가 구조적으로 사라진다**(문서 전체가 렌더되므로
+무한스크롤·비네트 광고·가상스크롤과 무관, 아래 '스크롤 실패 페이지' 절의 문제 자체가 소멸).
+**(b) verbatim 을 기계가 확인한다** — PDF 텍스트레이어에서 그 수치를 찾아 크롭하므로 "캡처 안에
+수치가 실재하는가"가 육안에만 의존하지 않는다(PNG 는 텍스트레이어가 없어 육안이 유일했다).
+
+**②로 내려가는 조건은 좁다(fail-closed).** ①이 실패했는데 print 렌더에 텍스트가 남아 있으면
+그 수치는 **렌더된 원문에 없는 것**이므로 화면 캡처로 내려가지 않고 실패로 돌린다 — 내려가면
+"그 수치가 없는 이미지"가 `source_capture` 로 등재된다(백지 캡처·캡처 돌려막기와 같은 계열).
+②는 텍스트 오라클 자체가 죽었을 때만 정당하다(SPA 가 print 에서 빈 페이지 · print CSS 가 본문을
+통째로 감춤 · 렌더 실패). 실측(2026-08-06): 오라클이 죽은 경우는 전부 **0자**, 정상 짧은 페이지는
+38자, 본문 일부만 print 에서 사라진 경우는 47자 — 낮은 구간에서 길이는 신호가 아니므로 **0자만**
+기계로 잡고, 부분 소실 페이지는 사람이 `number=None` 으로 화면 캡처를 명시하게 한다(조용한
+강등보다 명시적 결정이 감사에 남는다).
+
+**경로 강도 기록**: evidence 에 `capture_mode`(print|screen|mcp) · `capture_verbatim`(기계확인된
+문자열)을 남긴다. `verify_facts` 가 **`[캡처약결박]` WARN** 으로 표면화 — screen 모드는 "수치
+실재를 기계가 확인할 수 없음(육안 필수)", print 인데 `capture_verbatim` 이 없으면 "기계확인
+산출물 없이 강한 경로를 주장". 후자가 없으면 `capture_mode` 를 print 로 적는 것만으로 경고를
+지울 수 있다.
+
+**한계(정직 고지)**: ⓐ Chrome CLI 는 리다이렉트 후 **최종 URL 을 보고하지 않는다** — 결박용
+최종 URL 은 `fetch.py` 가 확정한 값을 넘겨야 한다(`capture_live` 는 받은 URL 을 그대로 기록만
+한다). ⓑ 로그인 세션·동의배너 클릭·펼침 상호작용은 불가 → MCP 계층의 고유 역할로 남는다.
+ⓒ `--screenshot` 은 지정한 창 높이까지만 담는다(기본 1440×3000, `viewport=` 로 조정).
+ⓓ `capture_verbatim` 이 그 fact 의 **값과 같은 수인지**까지는 대조하지 않는다(값 820.5 /
+원문 표기 820,500,000 처럼 단위 스케일이 다른 정당한 경우를 오탐하게 되므로).
+
+**allowedDomains 대체**: `allow_domains=[대상, 자원CDN]` → `--host-resolver-rules=MAP * ~NOTFOUND,
+EXCLUDE …`. 실측 확인(허용 시 본문 렌더 / 미허용 시 Chrome 오류 페이지). 대상 도메인만 남기면
+CSS·이미지 CDN 이 막혀 렌더가 깨지는 페이지가 많으므로 자원 도메인을 함께 넘긴다. ※ DNS 규칙
+이라 `file://` 에는 적용되지 않는다.
+
+### 2순위 = agent-browser (연결돼 있을 때)
+`path` 로 `_captures/E###.png` 에 **직접 저장** · `allowedDomains` 로 대상 도메인 밖 트래픽 차단
+(`fetch.py` 보안경계와 정합) · `eval` 로 스크롤·메타를 직접 제어. 내장 경로가 실패했고 로그인·
+상호작용이 필요할 때 쓴다.
 
 ### 표준 recipe (agent-browser) — 2026-08-03 실측 확인
 1. `agent_browser_open(url, allowedDomains=[대상도메인, 이미지CDN])` — 반환 `data.url` 이 리다이렉트
