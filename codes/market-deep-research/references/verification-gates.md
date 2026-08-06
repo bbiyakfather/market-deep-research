@@ -28,6 +28,14 @@ BX → G2(증빙) → G3 → G5C → RENDER([4]+[4b]) → G4 → G5. 작업 단�
 - **완료 선언 규칙**: "보고서 완성" = run-ledger 에 11개 게이트 전부 신선 PASS 또는
   WATCH(BLOCK 0). WATCH 가 하나라도 있으면 9부 한계 고지 필수. 진행 기억·산문 선언은
   증거가 아니다.
+- **산출물 부재 = 미완료(fail-closed) 【v5】**: 감시 대상 파일이 아예 없는 게이트는
+  `missing_watch` 로 분리되어 완료 집계에서 빠지고, `ROSTER_REQUIRED` audit 산출물이 하나라도
+  없으면 완료 선언이 불가하다. 부재를 '해시 변경 없음'으로 읽으면 아무것도 만들지 않은 run 이
+  전 게이트 PASS 로 보인다(v5 실측 재현).
+- **동의 기록의 한계 【v5】**: `record answer` 는 `--resolved-by` 를 명시해야 하며 기본값이
+  없다. 다만 에이전트가 CLI 를 직접 호출하는 이 실행모델에서 '사용자가 쓴 답'과 '에이전트가 쓴
+  user 답'은 **기계적으로 구분할 수 없다** — 이 레코드는 감사 흔적이지 인증이 아니다.
+  동의가 실제로 필요한 지점에서는 대화 기록이 최종 근거다.
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
@@ -40,6 +48,13 @@ openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공�
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
 (위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록). join 결과는 G1 checkpoint
 `phase`(위 join phase 어휘)로 기록.
+
+**중복 수집의 정규 출구 【v5】**: 병렬 레인이 같은 지표를 독립 수집하는 것은 설계된 정상 동작이다.
+같은 `claim_key` 는 `db.merge_evidence(fact)` 로 합류시킨다 — **값이 같을 때만** evidence 합집합,
+값이 다르면 병합을 거부하고 conflict 처분 경로로 보낸다(자동 채택·유사도 자동병합 금지: 오병합은
+값 위조보다 발견이 어렵다). 반환되는 `observer_groups` 는 **독립 관찰그룹 수 확인용**이다 — 같은
+출처를 여러 번 담아도 그룹은 하나이며, 그래야 [Bx] 의 '독립 그룹 ≥2' 가 병합만으로 가짜 충족되지
+않는다. JSONL 손편집은 원자 쓰기 경로를 우회하므로 금지.
 
 ## 동결 스냅샷 검증 코호트 【v4-V】
 G1 join 후 대장을 동결(파일 sha + fact 단위 content-hash)하고, 3레인이 **같은 동결본**을

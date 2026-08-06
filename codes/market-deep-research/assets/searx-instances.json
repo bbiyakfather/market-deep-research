@@ -10,5 +10,15 @@
   ],
   "health_path": "/search?q=test&format=json",
   "timeout_sec": 10,
-  "backoff_sec": [1, 2, 4]
+  "backoff_sec": [1, 2, 4],
+  "_block_markers_comment": "봇 차단 페이지는 HTTP 200 으로 온다 — 결과 0건이 '무결과'인지 '차단'인지 가르는 본문 마커. 노후하므로 코드가 아니라 여기서 갱신한다.",
+  "block_markers": [
+    "anomaly detection",
+    "anomaly-modal",
+    "challenge-form",
+    "unusual traffic",
+    "are you a robot",
+    "verify you are human",
+    "captcha"
+  ]
 }

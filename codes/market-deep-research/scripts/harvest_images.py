@@ -142,7 +142,10 @@ def page_images(url: str) -> dict:
     """fetch 사다리로 페이지 HTML 확보 → og:image·본문 <img> 후보(절대 URL)."""
     from fetch import fetch as _fetch
     r = _fetch(url)
-    html = r.get("raw") or r.get("text") or ""
+    html = r.get("text") or ""
+    if not html:                                 # 정제본이 비면 원본 bytes 를 디코드해 쓴다
+        raw = r.get("raw")
+        html = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else (raw or "")
     if not html:
         return {"ok": False, "url": url, "note": r.get("note", "fetch 실패"), "candidates": []}
     cands, seen = [], set()
@@ -193,7 +196,7 @@ def _commons(query: str, n: int) -> list[dict]:
 
 
 def _searx_images(query: str, n: int) -> list[dict]:
-    insts = json.loads((ASSETS / "searx-instances.json").read_text(encoding="utf-8"))
+    insts = json.loads((ASSETS / "searx-instances.json").read_text(encoding="utf-8"))["instances"]
     q = urllib.parse.quote(query)
     for inst in insts:
         try:
@@ -284,6 +287,30 @@ def demo() -> None:
             check_url_safe("http://127.0.0.1/x.png"); raise AssertionError("SSRF 미차단")
         except ValueError:
             pass
+
+        # page_images: fetch 는 raw 를 bytes 로 준다(fetch.py `_result`) — str 정규식이 죽지 않아야 한다
+        import types
+        _real = sys.modules.get("fetch")
+        _stub = types.ModuleType("fetch")
+        for _n in ("check_url_safe", "creq", "TIMEOUT", "_CA_BUNDLE"):
+            setattr(_stub, _n, globals()[_n])
+        _stub.fetch = lambda u, **kw: {
+            "final_url": u, "text": "",
+            "raw": b'<html><meta property="og:image" content="https://e.test/f.png">'
+                   b'<img src="/in/body.jpg"><img src="/logo.png"></html>'}
+        sys.modules["fetch"] = _stub
+        try:
+            pi = page_images("https://e.test/a")
+        finally:
+            sys.modules["fetch"] = _real if _real else sys.modules.pop("fetch", None)
+        kinds = {c["kind"] for c in pi["candidates"]}
+        assert pi["ok"] and {"og:image", "img"} <= kinds, pi
+        assert all(c["url"].startswith("http") for c in pi["candidates"]), pi   # 절대 URL 화
+        assert not any("logo" in c["url"] for c in pi["candidates"]), "로고 제외 실패"
+
+        # _searx_images: 인스턴스 목록은 dict 의 "instances" 키 — 키 문자열을 URL 로 조립하면 안 된다
+        _insts = json.loads((ASSETS / "searx-instances.json").read_text(encoding="utf-8"))["instances"]
+        assert _insts and all(u.startswith("https://") for u in _insts), _insts
     print(f"[{_now()}] harvest_images demo OK")
 
 

@@ -20,6 +20,7 @@ import hashlib
 import ipaddress
 import json
 import os
+import re
 import shutil
 import socket
 import sys
@@ -32,6 +33,17 @@ TIMEOUT = 25
 IMPERSONATE_GRID = ["chrome", "safari", "chrome110"]
 ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml", "text/xml",
                 "application/xhtml", "application/pdf", "application/rss")
+
+
+def mime_allowed(mime: str) -> bool:
+    """MIME 허용 판정. 정확일치만 보면 실서비스 피드가 쓰는 application/rss+xml·atom+xml·
+    rdf+xml 이 전량 차단된다(허용목록의 'application/rss' 는 그 아래에서 죽은 상수였다).
+    feedparser 규약대로 '+xml' 접미는 XML 로 인정하되, 그 밖의 타입은 종전대로 차단한다."""
+    if not mime:
+        return True
+    if mime in ALLOWED_MIME:
+        return True
+    return mime.endswith("+xml") and mime.split("/", 1)[0] in ("application", "text")
 CHALLENGE_MARKERS = ("just a moment", "access denied", "cf-challenge", "datadome",
                      "sec-if-cpt-container", "enable javascript and cookies",
                      "verifying you are human", "captcha-delivery")
@@ -155,11 +167,36 @@ def check_response_ip(r) -> None:
         raise SsrfBlocked(f"실접속 차단 IP({ip})")
 
 
+# --- 디코드 사다리 · 모지바케 판정 ---------------------------------------------
+MOJIBAKE_MAX = 0.02          # U+FFFD 비율 상한(느슨하게 — 정상 문서의 우연한 대체문자 허용)
+_META_CHARSET = re.compile(rb"""<meta[^>]+charset\s*=\s*["']?\s*([A-Za-z0-9_\-]+)""", re.I)
+
+
+def _decode_body(buf: bytes, charset: str | None) -> str:
+    """선언 charset → meta charset → utf-8 → cp949 순 strict 재시도, 전부 실패 시 replace.
+    곧장 utf-8 replace 로 떨어지면 EUC-KR 문서가 U+FFFD 범벅으로 '성공' 저장된다."""
+    m = _META_CHARSET.search(buf[:4096])
+    order = [charset, m.group(1).decode("ascii", "ignore") if m else None, "utf-8", "cp949"]
+    for enc in [e for e in order if e]:
+        try:
+            return buf.decode(enc)
+        except (LookupError, UnicodeDecodeError):
+            continue
+    return buf.decode("utf-8", errors="replace")
+
+
+def _mojibake_ratio(text: str) -> float:
+    return text.count("�") / len(text) if text else 0.0
+
+
 # --- 4계층 성공검증 (R2) -----------------------------------------------------
-def validate_body(text: str, status: int, success_selectors: list[str] | None = None) -> dict:
+def validate_body(text: str, status: int, success_selectors: list[str] | None = None,
+                  mojibake: float | None = None) -> dict:
     """{verdict: ok|partial|challenge|empty, reason}. HTTP200 ≠ 성공."""
     if status and status >= 400:                       # ⓪ 상태코드 우선(V17) — 4xx/5xx 본문은 안 믿음
         return {"verdict": "empty", "reason": f"http {status}"}
+    if mojibake is not None and mojibake > MOJIBAKE_MAX:
+        return {"verdict": "partial", "reason": f"mojibake {mojibake:.1%} — 인코딩 판독 실패"}
     low = (text or "").lower()
     n = len(text or "")
     if success_selectors and any(s.lower() in low for s in success_selectors):
@@ -222,18 +259,17 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = 5,
                         "text": "", "final_url": cur, "mime": mime}
         r.close()
         is_pdf = buf[:5] == b"%PDF-"                    # V18a — 매직바이트만 신뢰(확장자/헤더는 위조 가능)
-        if not is_pdf and mime and mime not in ALLOWED_MIME:   # V18b — PDF 판정 뒤에 게이트(옥텟스트림 PDF 보존)
+        if not is_pdf and not mime_allowed(mime):       # V18b — PDF 판정 뒤에 게이트(옥텟스트림 PDF 보존)
             return {"ok": False, "reason": f"mime:{mime}", "status": r.status_code,
                     "text": "", "final_url": cur, "mime": mime}
-        if is_pdf:
-            text = ""
-        else:
-            try:
-                text = buf.decode(charset or "utf-8")   # 선언된 charset 우선(EUC-KR 등 무시 방지)
-            except (LookupError, UnicodeDecodeError):
-                text = buf.decode("utf-8", errors="replace")
-        return {"ok": True, "status": r.status_code, "text": text, "raw": buf,
-                "final_url": cur, "mime": mime, "is_pdf": is_pdf}
+        text = "" if is_pdf else _decode_body(buf, charset)
+        out = {"ok": True, "status": r.status_code, "text": text, "raw": buf,
+               "final_url": cur, "mime": mime, "is_pdf": is_pdf}
+        if text and _mojibake_ratio(text) > MOJIBAKE_MAX:
+            # 읽을 수 없는 쓰레기가 '수집 성공'으로 대장에 남으면 재검증이 원문 대조 자체를
+            # 못 한다. 성공에서 배제하고 사유를 실어 상위 판정에서 강등되게 한다.
+            out["mojibake"] = round(_mojibake_ratio(text), 4)
+        return out
     return {"ok": False, "reason": "too many redirects", "status": None, "text": "", "final_url": cur}
 
 
@@ -247,15 +283,21 @@ def _via_jina(url: str) -> dict:
 
 
 def _via_wayback(url: str) -> dict:
-    api = "http://archive.org/wayback/available?url=" + quote(url, safe="")
+    # https 고정 — 평문이면 중간자가 스냅샷 URL 을 바꿔치기해 증거 원문을 통째로 교체할 수 있다.
+    api = "https://archive.org/wayback/available?url=" + quote(url, safe="")
     meta = _fetch_once(api, "chrome")
     if meta.get("ok"):
         try:
             snap = json.loads(meta["text"]).get("archived_snapshots", {}).get("closest", {})
             if snap.get("available") and snap.get("url"):
-                res = _fetch_once(snap["url"], "chrome")
+                # id_ 는 아카이브 배너·URL 재작성이 없는 원본 그대로의 스냅샷.
+                snap_url = re.sub(r"(/web/\d{14})/", r"\1id_/", snap["url"], count=1)
+                res = _fetch_once(snap_url, "chrome")
                 if res.get("ok"):
-                    res["archived_url"] = snap["url"]
+                    res["archived_url"] = snap_url
+                    ts = str(snap.get("timestamp") or "")
+                    if len(ts) >= 8:      # 시점 병기 — 5년 전 수치가 '현재 원문'으로 결박되는 것 방지
+                        res["snapshot_date"] = f"{ts[:4]}-{ts[4:6]}-{ts[6:8]}"
                 return res
         except Exception as e:
             return {"ok": False, "reason": f"wayback parse: {e}", "status": None, "text": "", "final_url": url}
@@ -291,6 +333,30 @@ def _rss_urls(url: str) -> list[str]:
         out.append(base + "/feed")
     out += [base + "/rss", base + "/feed", base + "/rss.xml"]
     return list(dict.fromkeys(out))
+
+
+_FEED_LINK = re.compile(r"<link[^>]*>([^<]+)</link>|<link[^>]*href=[\"']([^\"']+)", re.I)
+
+
+def _canon_link(u: str) -> str:
+    p = urlparse(u.strip())
+    return (p.netloc.lower().removeprefix("www.") + p.path.rstrip("/")) if p.netloc else u.strip()
+
+
+def _feed_item_verdict(res: dict, target_url: str, v: dict) -> dict:
+    """rss 계층으로 얻은 본문이 '대상 기사'인지 확인. _rss_urls 는 사이트 공용 피드(/rss,
+    /feed)를 합성하므로, 대상이 피드에 없으면 남의 기사 10건 요약이 그 URL 의 원문으로
+    저장·해시된다 — 재검증도 같은 바이트열을 다시 열어 완벽 일치라 원리적으로 미검출이다."""
+    text = res.get("text") or ""
+    if "<item" not in text.lower() and "<entry" not in text.lower():
+        return v                                   # 피드가 아니면(본문 페이지면) 판정 유지
+    want = _canon_link(res.get("final_url") or target_url)
+    for m in _FEED_LINK.finditer(text):
+        link = (m.group(1) or m.group(2) or "")
+        if link and _canon_link(link) == want:
+            return v
+    return {"verdict": "partial",
+            "reason": "feed item mismatch — 대상 URL 이 피드 항목에 없음(사이트 공용 피드)"}
 
 
 def _ogp_partial(html: str) -> str:
@@ -385,7 +451,10 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
                     continue
                 if res.get("is_pdf"):
                     return _result("ok", res, trace, note="pdf")
-                v = validate_body(res["text"], res.get("status", 0), success_selectors)
+                v = validate_body(res["text"], res.get("status", 0), success_selectors,
+                                  mojibake=res.get("mojibake"))
+                if v["verdict"] == "ok" and tier == "rss":
+                    v = _feed_item_verdict(res, url, v)   # 남의 기사를 이 URL 의 원문으로 저장 금지
                 trace.append({"tier": label, "verdict": v["verdict"], "reason": v["reason"]})
                 if v["verdict"] == "ok":
                     return _result("ok", res, trace, note=tier)
@@ -412,10 +481,14 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
 
 
 def _result(status: str, res: dict, trace: list, note: str = "") -> dict:
-    return {"status": status, "final_url": res.get("final_url"), "http_status": res.get("status"),
-            "archived_url": res.get("archived_url"), "mime": res.get("mime"),
-            "text": res.get("text", ""), "raw": res.get("raw"), "is_pdf": res.get("is_pdf", False),
-            "trace": trace, "note": note}
+    out = {"status": status, "final_url": res.get("final_url"), "http_status": res.get("status"),
+           "archived_url": res.get("archived_url"), "mime": res.get("mime"),
+           "text": res.get("text", ""), "raw": res.get("raw"), "is_pdf": res.get("is_pdf", False),
+           "trace": trace, "note": note}
+    for k in ("snapshot_date", "mojibake"):     # 아카이브 시점·판독 품질은 증거에 병기한다
+        if res.get(k) is not None:
+            out[k] = res[k]
+    return out
 
 
 # --- 저장(원본 + 정제본 + 해시) ---------------------------------------------

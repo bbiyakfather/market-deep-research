@@ -49,6 +49,26 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 인터스티셜만 해당) ④ 비정상 크기(<200B). 판정 `ok`(셀렉터 또는 본문≥1000자) / `partial`(얇은 본문) /
 `challenge`/`empty`(실패).
 
+### v5 보강 — '성공했다는 착각' 3종 차단
+- **피드 항목 대조**: `rss` 계층이 낸 본문이 피드(`<item>`/`<entry>`)면, 대상 URL 과 일치하는
+  항목이 있을 때만 `ok`. 없으면 `partial` + `feed item mismatch`. `_rss_urls` 는 사이트 공용
+  피드(`/rss`,`/feed`)를 합성하므로, 이 대조가 없으면 **남의 기사 10건 요약이 그 URL 의 원문으로
+  저장·해시**된다 — 재검증도 같은 바이트열을 다시 열어 완벽 일치라 원리적으로 미검출이다.
+- **인코딩 판독**: 선언 charset → `<meta charset>` → utf-8 → cp949 순 strict 재시도 후에만
+  replace 로 떨어진다. 결과의 U+FFFD 비율이 `MOJIBAKE_MAX`(2%) 초과면 `partial` 로 강등 —
+  읽을 수 없는 문자열이 '수집 성공'으로 남으면 원문 대조 자체가 불가능해진다.
+- **MIME**: 정확일치가 아니라 `+xml` 접미 규칙(feedparser 규약). 종전에는 실서비스 피드가 쓰는
+  `application/rss+xml`·`atom+xml` 이 전량 차단되고 애매한 `text/xml` 만 통과하는 역선택이었다.
+  허용 범위 확대는 XML 계열까지이며 그 밖의 타입(`video/mp4` 등) 차단은 그대로다.
+- **Wayback**: 조회는 `https` 고정(평문이면 중간자가 스냅샷 URL 을 바꿔 증거 원문을 통째로 교체할
+  수 있다), 본문은 배너 없는 `id_` URL, 결과에 `snapshot_date` 병기. **5년 전 스냅샷이 '현재
+  원문'으로 결박되지 않도록 시점은 팀리드가 판단**한다(창을 좁히면 폐업·개편 사이트의 유일한
+  증거가 사라지므로 자동 강등은 하지 않는다).
+- **검색 차단 ≠ 무결과**: `search_with_diagnostics()` 가 `{results, blocked_engines}` 를 준다.
+  봇 차단 페이지는 HTTP 200 으로 오므로 마커(`assets/searx-instances.json` 의 `block_markers`)로
+  판정하고, SearXNG 429/503 은 백오프 재시도한다. **결과 0건 + blocked_engines 비어있지 않음**을
+  '이 주제엔 출처가 없다'로 결론내면 커버리지 공백이 보고서 서술로 굳는다.
+
 ## WAF 조기감지 정찰 (R7) — ⚠ 이 항목만 playwright 우선
 반복의도 조회에서 초기 2~3회 challenge면: 백그라운드로 fetch 격자 계속 + 포어그라운드로
 브라우저 MCP 로 페이지 로드 → 네트워크 요청에서 내부 `/api/`·`/graphql`·`.json` XHR 포착 →

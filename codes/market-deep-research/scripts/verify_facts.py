@@ -85,13 +85,44 @@ def _now() -> str:
 
 
 def split_body_appendix(md: str) -> tuple[str, str]:
-    m = APPX_COMMENT.search(md)
-    if m:
-        idx = m.start()
+    """본문/부록 경계. 주석 마커도 헤딩 폴백과 같이 **최후 출현**을 쓴다 — 최초 출현이면
+    문서 맨 앞에 마커 한 줄만 넣어 본문 전체를 검사 면제로 만들 수 있다(v5). 마커는 렌더된
+    PDF 에 보이지 않으므로 사람 눈으로도 안 잡히는 완전 우회로였다."""
+    marks = list(APPX_COMMENT.finditer(md))
+    if marks:
+        idx = marks[-1].start()
     else:
         heads = list(APPX_HEAD.finditer(md))
         idx = heads[-1].start() if heads else len(md)
     return md[:idx], md[idx:]
+
+
+def check_appendix_boundary(md: str) -> tuple[list[str], list[str]]:
+    """경계 마커 자체의 건전성 + 부록 구간 잔여검사.
+
+    부록은 '값대조·무태그' 면제 구간이지 '플레이스홀더·비밀' 면제 구간이 아니다.
+    경계 건전성은 비율 임계(짧은 보고서에서 오탐) 대신 구조로 판정한다 — 마커는 여러 개일
+    수 없고, 본문이 통째로 비어서도 안 되며, 표준 목차의 '# 부 N.' 챕터가 부록 안에
+    들어가 있어서도 안 된다(마커를 앞당겨 본문을 면제시키는 우회의 실제 형태).
+    """
+    failures: list[str] = []
+    n = len(list(APPX_COMMENT.finditer(md)))
+    if n > 1:
+        failures.append(f"[부록경계] APPENDIX 마커가 {n}개 — 경계는 1개여야 한다(구간 은닉 방지)")
+    body, appendix = split_body_appendix(md)
+    if md.strip() and not body.strip():
+        failures.append("[부록경계] 경계 마커가 문서 선두 — 본문이 비어 전 구간이 검사 면제된다")
+    inside = _PLAN_PART.findall(appendix)
+    if inside:
+        failures.append("[부록경계] 표준 목차 챕터가 부록 구간 안에 있음: "
+                        + ", ".join(f"부 {n_}. {t}" for n_, t in inside[:3]))
+    for m in _PLACEHOLDER_RE.finditer(appendix):
+        failures.append(f"[플레이스홀더] 부록에 미완성 마커 잔존: {m.group(0)!r}")
+    for rx in _SECRET_RES:
+        m = rx.search(appendix)
+        if m:
+            failures.append(f"[비밀유출] 부록에 키/내부경로 노출: {m.group(0)[:40]!r}")
+    return failures, []
 
 
 # 문장 경계: 마침표류 뒤 공백에서 자르되, '...'(줄임표)의 마지막 점은 문장 끝이 아니다
@@ -766,6 +797,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     fp_fail, fp_warn = check_forbidden_patterns(body)
     failures += fp_fail
     warnings += fp_warn
+    ab_fail, ab_warn = check_appendix_boundary(md)
+    failures += ab_fail
+    warnings += ab_warn
     warnings += check_capture_structure(evidence, wp)
     warnings += check_cited_domains(evidence_raw, target_spec)
     warnings += check_out_of_scope(body, target_spec)

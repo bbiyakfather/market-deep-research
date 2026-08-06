@@ -19,6 +19,7 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 from skill_paths import ASSETS, WorkPaths
 
@@ -221,6 +222,39 @@ class FactsDB:
         rows.append(fact)
         _write_jsonl_atomic(self.wp.facts, rows)
         return fact
+
+    def merge_evidence(self, fact: dict) -> dict:
+        """같은 claim_key 를 이미 가진 fact 에 새 관찰을 합류시킨다(add_fact 가 안내하는 경로).
+
+        병렬 레인이 같은 지표를 독립 수집하는 것은 설계된 정상 동작인데, 그동안 이 함수가
+        없어서 실제 출구가 claim_key 비틀기나 JSONL 손편집이었다. 규칙은 fail-closed:
+        값이 다르면 병합하지 않고 conflict 로 떨어뜨린다(자동 채택 금지) — 유사도 자동병합은
+        값 위조보다 발견이 어려운 오병합을 만든다.
+        """
+        rows = self.facts()
+        key = fact.get("claim_key") or make_claim_key(fact.get("context", {}))
+        base = next((r for r in rows if r.get("claim_key") == key), None)
+        if base is None:
+            raise ValidationError(f"병합 대상 없음: claim_key={key} → add_fact 를 쓰라")
+        new_v, old_v = fact.get("value") or {}, base.get("value") or {}
+        if (str(new_v.get("raw")), new_v.get("unit")) != (str(old_v.get("raw")), old_v.get("unit")):
+            return {"merged": False, "fact_id": base["id"], "conflict": True,
+                    "reason": f"값 불일치: {old_v.get('raw')}{old_v.get('unit') or ''} "
+                              f"vs {new_v.get('raw')}{new_v.get('unit') or ''} — "
+                              f"conflict 처분 후 supersede 하라(자동 채택 금지)"}
+        added = [e for e in (fact.get("evidence_ids") or []) if e not in base.get("evidence_ids", [])]
+        base.setdefault("evidence_ids", []).extend(added)
+        validate_fact(base, self.schema)
+        _write_jsonl_atomic(self.wp.facts, rows)
+        # 병합 결과의 독립 관찰그룹 수를 되돌려준다 — 같은 출처 재수집을 '독립 2건'으로 세면
+        # [Bx] 의 독립 그룹 ≥2 조건이 병합만으로 가짜 충족된다(evidence.observer_group 이 정본,
+        # 없으면 도메인으로 근사). 대장에 파생값을 쓰지는 않는다.
+        ev_by_id = {e["id"]: e for e in self.evidence()}
+        groups = sorted({(ev_by_id[e].get("observer_group")
+                          or (urlparse(ev_by_id[e].get("source_url", "")).hostname or ""))
+                         for e in base["evidence_ids"] if e in ev_by_id} - {""})
+        return {"merged": True, "fact_id": base["id"], "conflict": False,
+                "evidence_added": added, "observer_groups": groups}
 
     def add_evidence(self, ev: dict) -> dict:
         """검증 후 등재 + 연결된 fact 의 evidence_ids 갱신. fact_id 가 대장에 없으면 거부

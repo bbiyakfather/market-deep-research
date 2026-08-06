@@ -6,6 +6,7 @@ __pycache__ · *.pyc · 작업폴더(research_*) 는 제외.
 CLI: python install.py            # 기본 대상 ~/.claude/skills/market-deep-research
      python install.py --target <dir>
      python install.py --dry-run
+     python install.py --check     # 설치 없이 드리프트만 대조(불일치 시 exit 1)
 """
 from __future__ import annotations
 
@@ -75,6 +76,22 @@ def install(target: Path | str = DEFAULT_TARGET, dry_run: bool = False) -> dict:
             "verified": len(verified), "failed": failed, "dry_run": dry_run, "removed": removed}
 
 
+def check(target: Path | str = DEFAULT_TARGET) -> dict:
+    """저장소↔설치본 드리프트 대조(읽기전용). 설치본이 정본보다 뒤처지면 새 방어가
+    '넣었다'고 기록되는데 라이브에는 없는 상태가 된다 — 그 침묵을 깨는 가드."""
+    target = Path(target).resolve()
+    if not (target / "SKILL.md").exists():
+        return {"ok": False, "target": str(target), "installed": False,
+                "changed": [], "missing": [], "extra": []}
+    src_rel = {str(p.relative_to(SKILL_ROOT)): _sha(p) for p in _iter_files(SKILL_ROOT)}
+    dst_rel = {str(p.relative_to(target)): _sha(p) for p in _iter_files(target)}
+    changed = sorted(r for r, h in src_rel.items() if r in dst_rel and dst_rel[r] != h)
+    missing = sorted(r for r in src_rel if r not in dst_rel)          # 설치본에 없음
+    extra = sorted(r for r in dst_rel if r not in src_rel)            # 설치본에만 있음
+    return {"ok": not (changed or missing or extra), "target": str(target),
+            "installed": True, "changed": changed, "missing": missing, "extra": extra}
+
+
 def demo() -> None:
     import tempfile
     with tempfile.TemporaryDirectory() as td:
@@ -107,6 +124,16 @@ def demo() -> None:
             assert False, "자기복사 가드 미작동"
         except SystemExit:
             pass
+
+        # --check: 방금 설치했으니 동기 상태여야 하고, 변조하면 그 경로가 잡혀야 한다
+        c0 = check(target)
+        assert c0["ok"] and c0["installed"], c0
+        (target / "scripts" / "facts_db.py").write_text("tampered", encoding="utf-8")
+        c1 = check(target)
+        assert not c1["ok"] and "scripts/facts_db.py" in [p.replace("\\", "/") for p in c1["changed"]], c1
+        (target / "SKILL.md").unlink()
+        c2 = check(target)
+        assert not c2["installed"], "SKILL.md 부재인데 설치본으로 인식"
     from datetime import datetime
     print(f"[{datetime.now().isoformat(timespec='seconds')}] install demo OK ({r['count']} 파일 해시검증, stale 정리 포함)")
 
@@ -116,8 +143,18 @@ if __name__ == "__main__":
     if args and args[0] == "demo":
         demo()
     else:
-        tgt = args[args.index("--target") + 1] if "--target" in args else DEFAULT_TARGET
-        r = install(tgt, dry_run="--dry-run" in args)
         import json
+        tgt = args[args.index("--target") + 1] if "--target" in args else DEFAULT_TARGET
+        if "--check" in args:
+            r = check(tgt)
+            print(json.dumps(r, ensure_ascii=False, indent=2))
+            if not r["installed"]:
+                print("설치본 없음 — python install.py 로 먼저 설치하십시오.", file=sys.stderr)
+            elif not r["ok"]:
+                print(f"드리프트: 변경 {len(r['changed'])} · 설치본 누락 {len(r['missing'])} "
+                      f"· 설치본 잉여 {len(r['extra'])} → python install.py 로 재동기화",
+                      file=sys.stderr)
+            sys.exit(0 if r["ok"] else 1)
+        r = install(tgt, dry_run="--dry-run" in args)
         print(json.dumps(r, ensure_ascii=False, indent=2))
         sys.exit(0 if r["ok"] else 1)

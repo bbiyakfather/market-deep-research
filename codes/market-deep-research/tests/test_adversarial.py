@@ -126,6 +126,45 @@ def dup_fact_and_claimkey():
 
 
 @case
+def merge_evidence_join_and_conflict():
+    """v5: 같은 claim_key 재수집의 정규 출구(add_fact 가 안내하던 함수가 실재하지 않았다).
+    값 일치면 evidence 합류, 값 불일치면 병합 거부 — 자동 채택 금지."""
+    import search as _search                                  # 차단/무결과 분리도 같은 배치
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                         "source_url": "https://dart.fss.or.kr/x", "sha256": _H})
+        same = {"claim": "동일 관찰", "risk": "normal", "status": "pending",
+                "context": {"metric": "revenue", "entity": "삼성", "geography": "KR",
+                            "period": "2024"},
+                "value": {"raw": "300.9", "unit": "KRW_T"},
+                "grade": {"authority": "B", "independence": "B", "directness": "B",
+                          "recency": "B"},
+                "evidence_ids": ["E001"]}
+        r = db.merge_evidence(same)
+        assert r["merged"] and r["fact_id"] == "F001", r
+        assert len(db.facts()) == 1, "병합인데 행이 늘었다"
+        assert r["observer_groups"] == ["dart.fss.or.kr"], r    # 같은 출처는 그룹 1개
+
+        diff = dict(same, value={"raw": "412.0", "unit": "KRW_T"})
+        r2 = db.merge_evidence(diff)
+        assert not r2["merged"] and r2["conflict"], r2
+        assert len(db.facts()) == 1 and db.facts()[0]["value"]["raw"] == "300.9", db.facts()
+
+    # 검색: 200 차단 페이지는 '결과 없음'이 아니라 차단으로 분리돼야 한다
+    assert _search.is_blocked_page("<html>...unusual traffic detected...</html>")
+    assert not _search.is_blocked_page("<html><a class='result__a' href='x'>정상</a></html>")
+    blocked = []
+    orig_get = _search._get
+    _search._get = lambda u, timeout=12: (200, "<html>anomaly detection triggered</html>")
+    try:
+        res = _search._ddg("수소 시장", 5, blocked)
+    finally:
+        _search._get = orig_get
+    assert res == [] and blocked == ["ddg:blocked"], (res, blocked)
+
+
+@case
 def no_source_confirm():
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)
@@ -303,6 +342,71 @@ def disallowed_mime_rejected():
         assert r2["ok"] and r2["is_pdf"], r2
     finally:
         fetch.creq, socket.getaddrinfo = orig_creq, orig_gai
+
+
+@case
+def feed_mime_allowed_and_item_matched():
+    """v5: application/rss+xml 류가 정확일치 규칙에 막혀 전량 차단되던 것 해소(긍정형).
+    반대편: 사이트 공용 피드에 대상 URL 이 없으면 '남의 기사'를 원문으로 인정하지 않는다."""
+    for mime in ("application/rss+xml", "application/atom+xml", "application/rdf+xml"):
+        assert fetch.mime_allowed(mime), mime
+    assert not fetch.mime_allowed("video/mp4"), "허용 범위가 과도하게 열림"
+
+    feed = ("<rss><channel>" + "".join(
+        f"<item><title>기사{i}</title><link>https://news.example/other{i}</link>"
+        f"<description>{'본문 내용 ' * 60}</description></item>" for i in range(5))
+        + "</channel></rss>")
+    res = {"text": feed, "final_url": "https://news.example/target", "status": 200}
+    v = fetch._feed_item_verdict(res, "https://news.example/target",
+                                 {"verdict": "ok", "reason": "body"})
+    assert v["verdict"] == "partial" and "feed item mismatch" in v["reason"], v
+
+    hit = feed.replace("https://news.example/other2", "https://www.news.example/target/")
+    res2 = dict(res, text=hit)
+    v2 = fetch._feed_item_verdict(res2, "https://news.example/target",
+                                  {"verdict": "ok", "reason": "body"})
+    assert v2["verdict"] == "ok", v2                  # 일치 item 이 있으면 그대로 인정
+
+
+@case
+def mojibake_body_not_counted_as_success():
+    """v5: 인코딩 판독 실패로 U+FFFD 범벅이 된 본문이 '수집 성공'으로 저장되면 안 된다.
+    긍정형 짝: meta charset 만 선언한 EUC-KR 문서는 사다리 폴백으로 깨끗이 디코드된다."""
+    korean = "수소 산업 시장 전망 보고서 " * 200
+    html = ('<html><head><meta charset="euc-kr"></head><body>' + korean + "</body></html>")
+    decoded = fetch._decode_body(html.encode("euc-kr"), None)   # 헤더 charset 미선언
+    assert decoded.count("�") == 0 and korean[:20] in decoded, decoded[:60]
+
+    broken = ("가나다 " * 500).encode("euc-kr")                  # 선언과 실체 불일치 + 폴백 불가
+    text = broken.decode("utf-8", errors="replace")
+    assert fetch._mojibake_ratio(text) > fetch.MOJIBAKE_MAX
+    v = fetch.validate_body(text, 200, mojibake=fetch._mojibake_ratio(text))
+    assert v["verdict"] == "partial" and "mojibake" in v["reason"], v
+
+
+@case
+def wayback_snapshot_date_and_https():
+    """v5: 아카이브 조회는 https + 스냅샷 시점 병기 + 배너 없는 id_ 본문."""
+    calls = []
+
+    def _fake_once(u, imp, **kw):
+        calls.append(u)
+        if "archive.org/wayback/available" in u:
+            return {"ok": True, "status": 200, "text": json.dumps({"archived_snapshots": {
+                "closest": {"available": True, "timestamp": "20210317120000",
+                            "url": "https://web.archive.org/web/20210317120000/https://x.test/ir"}}}),
+                "final_url": u}
+        return {"ok": True, "status": 200, "text": "본문 " * 500, "raw": b"x", "final_url": u}
+
+    orig = fetch._fetch_once
+    fetch._fetch_once = _fake_once
+    try:
+        r = fetch._via_wayback("https://x.test/ir")
+    finally:
+        fetch._fetch_once = orig
+    assert calls[0].startswith("https://"), calls[0]
+    assert r.get("snapshot_date") == "2021-03-17", r.get("snapshot_date")
+    assert "id_/" in r["archived_url"], r["archived_url"]
 
 
 @case
@@ -528,6 +632,53 @@ def appendix_forward_bypass():
         (wp.root / "g.md").write_text(good, encoding="utf-8")
         rgood = verify_facts.verify(wp.root / "g.md", wd)
         assert rgood["ok"], rgood
+
+
+@case
+def appendix_marker_at_top_blocked():
+    """v5: 문서 맨 앞 마커 한 줄로 본문 전체를 검사 면제시키는 우회 → 최후 출현 규칙으로 차단.
+    긍정형 짝: 마커가 실제 부록 앞(정상 위치)이면 종전대로 통과."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        md = ("<!-- FACTSHEET:APPENDIX -->\n본론\n시장은 45조원 규모다.\n"
+              "매출은 300.9조원이다.\n")
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("부록경계" in f for f in rep["failures"]), rep
+
+        # 서론만 남기고 마커를 앞당겨 표준 챕터를 통째로 부록에 넣는 형태도 구조로 검출
+        mid = ("# 부 0. 서론\n요약 문장.\n<!-- FACTSHEET:APPENDIX -->\n"
+               "# 부 3. 조사 결과\n시장은 45조원 규모다.\n")
+        (wp.root / "m.md").write_text(mid, encoding="utf-8")
+        rep_mid = verify_facts.verify(wp.root / "m.md", wd)
+        assert not rep_mid["ok"] and any("부록경계" in f for f in rep_mid["failures"]), rep_mid
+
+        _confirm(db, wp, "F001")
+        good = ("본론 정상 서술.\n\n![증빙](_captures/F001.png)\n"
+                "<!-- FACTSHEET:APPENDIX -->\n## 부록\n- 소스: 사내(F001)\n")
+        (wp.root / "g.md").write_text(good, encoding="utf-8")
+        assert verify_facts.verify(wp.root / "g.md", wd)["ok"], "정상 부록 마커가 막힘"
+
+
+@case
+def appendix_marker_multiplied_or_leaky():
+    """v5: 마커 2개로 중간 구간을 은닉하는 우회 + 부록에 남은 플레이스홀더·비밀 잔존 검출."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        two = ("본론.\n\n![증빙](_captures/F001.png)\n<!-- FACTSHEET:APPENDIX -->\n"
+               "숨긴 구간: 시장은 45조원 규모다.\n<!-- FACTSHEET:APPENDIX -->\n## 부록\n- 소스(F001)\n")
+        (wp.root / "two.md").write_text(two, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "two.md", wd)
+        assert not rep["ok"] and any("부록경계" in f for f in rep["failures"]), rep
+
+        leak = ("본론.\n\n![증빙](_captures/F001.png)\n<!-- FACTSHEET:APPENDIX -->\n"
+                "## 부록\n- 소스(F001)\n- 확인필요: " + "TO" + "DO 수치 보강\n")
+        (wp.root / "leak.md").write_text(leak, encoding="utf-8")
+        rep2 = verify_facts.verify(wp.root / "leak.md", wd)
+        assert not rep2["ok"] and any("플레이스홀더" in f for f in rep2["failures"]), rep2
 
 
 @case
@@ -1284,6 +1435,37 @@ def lane_contract_parity():
         assert anchor in briefs, f"agent-briefs.md 에 {anchor!r} 누락"
     for anchor in ("PLANNING-STUCK", "restated_goal", "반례 쿼리", "consent"):
         assert anchor in plan, f"research-plan.md 에 {anchor!r} 누락"
+
+
+@case
+def v5_doc_code_parity():
+    """v5: 새로 만든 방어가 문서(정본)와 코드 양쪽에 같이 존재하는지 — 한쪽만 바뀌면 거짓 안내."""
+    import run_ledger as _rl
+    import search as _search
+    skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+    vg = (REFERENCES / "verification-gates.md").read_text(encoding="utf-8")
+    rf = (REFERENCES / "report-format.md").read_text(encoding="utf-8")
+    sl = (REFERENCES / "source-ladder.md").read_text(encoding="utf-8")
+
+    # ① 산출물 부재 = 미완료
+    assert "missing_watch" in skill and "missing_watch" in vg, "완료 fail-closed 규칙 문서 누락"
+    assert _rl.MISSING and _rl._completion_possible({}, ["bx-report.md"]) is False, \
+        "로스터 누락인데 완료 가능으로 판정"    # 동작 검증(상태머신 상세는 test_run_ledger)
+    # ② 동의 기록의 한계 명문화 — 반쯤 구현하고 '막았다'고 쓰면 그게 순증 위험이다
+    assert "인증이 아니다" in vg, "동의 기록 한계 명문화 누락"
+    # ③ 부록 경계 건전성
+    assert "[부록경계]" in rf, "report-format.md 부록 경계 규칙 누락"
+    assert hasattr(verify_facts, "check_appendix_boundary")
+    # ④ 수집 스택 v5 보강
+    for anchor in ("feed item mismatch", "MOJIBAKE_MAX", "snapshot_date", "blocked_engines"):
+        assert anchor in sl, f"source-ladder.md 에 {anchor!r} 누락"
+    assert hasattr(fetch, "mime_allowed") and hasattr(fetch, "_feed_item_verdict")
+    assert hasattr(_search, "search_with_diagnostics")
+    assert _search._BLOCK_MARKERS, "차단 마커가 assets 에서 로드되지 않음"
+    # ⑤ 중복 수집의 정규 출구가 실재해야 한다(안내만 하고 함수가 없던 것이 v5 이전 상태)
+    assert "merge_evidence" in vg, "verification-gates.md 병합 경로 안내 누락"
+    from facts_db import FactsDB as _FDB
+    assert callable(getattr(_FDB, "merge_evidence", None)), "merge_evidence 미구현"
 
 
 def main():

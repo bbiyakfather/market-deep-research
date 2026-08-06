@@ -260,13 +260,23 @@ def record_kind_field_validation():
         assert kinds == ["conflict", "disposition"], kinds
 
 
+def _finish_artifacts(wp):
+    """완료 선언의 전제인 산출물 실재 상태를 만든다 — 보고서 2종 + 필수 audit 로스터."""
+    wp.report_md.write_text("# 보고서", encoding="utf-8")
+    wp.report_pdf.write_bytes(b"%PDF-1.4 fake")
+    wp.audit.mkdir(parents=True, exist_ok=True)
+    for name in run_ledger.ROSTER_REQUIRED:
+        p = wp.audit / name
+        if not p.exists():
+            p.write_text("", encoding="utf-8")
+
+
 @case
 def completion_declaration_rules():
-    """완료 선언: 11게이트 전건 신선 PASS/WATCH 면 가능, BLOCK 1개면 불가."""
+    """완료 선언: 11게이트 전건 신선 PASS/WATCH + 산출물 실재면 가능, BLOCK 1개면 불가."""
     with tempfile.TemporaryDirectory() as td:
         wd, wp, _ = _work(td)
-        wp.report_md.write_text("# 보고서", encoding="utf-8")
-        wp.report_pdf.write_bytes(b"%PDF-1.4 fake")
+        _finish_artifacts(wp)
         for g in run_ledger.load_gates():
             kw = {"phase": "complete"} if g["id"] == "G1" else {}
             run_ledger.checkpoint(wd, g["id"], "PASS", f"{g['id']} 통과", **kw)
@@ -293,6 +303,96 @@ def generation_increments_on_facts_change():
         r3 = run_ledger.checkpoint(wd, "G1", "PASS", "일괄 보수 후 재동결",
                                    phase="complete")
         assert r3["generation"] == 2, r3["generation"]
+
+
+@case
+def missing_watch_blocks_completion():
+    """v5: 산출물을 만들지 않고 전 게이트 PASS 를 선언해도 완료가 성립하면 안 된다.
+    (실측 재현: 부재 파일을 해시맵에서 생략하면 기록 None == 현재 None 이라 fresh 로 보였다)"""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        for g in run_ledger.load_gates():                 # report.md/pdf 없이 전 게이트 PASS
+            kw = {"phase": "complete"} if g["id"] == "G1" else {}
+            run_ledger.checkpoint(wd, g["id"], "PASS", f"{g['id']} 통과했다고 선언만 함", **kw)
+        st = run_ledger.status(wd)
+        for gid in ("RENDER", "G4", "G5"):
+            assert st["gates"][gid]["state"] == "missing_watch", st["gates"][gid]
+        assert not st["completion_possible"], "산출물 0개인데 완료 선언 가능"
+        meta = json.loads(wp.journal("run-metadata.json").read_text(encoding="utf-8"))
+        assert meta["completedAt"] is None, meta
+
+        # 긍정형 짝: 산출물을 실제로 만들고 재-checkpoint 하면 fresh 로 복귀해 완료 가능
+        _finish_artifacts(wp)
+        for gid in ("G3", "RENDER", "G4", "G5"):        # 보고서 파일을 감시하는 게이트 전부
+            run_ledger.checkpoint(wd, gid, "PASS", f"{gid} 산출물 생성 후 재확인")
+        st2 = run_ledger.status(wd)
+        assert st2["completion_possible"], {k: v["state"] for k, v in st2["gates"].items()}
+
+
+@case
+def duplicate_claim_key_not_masked():
+    """v5: 같은 claim_key 행이 둘일 때 뒤 행이 앞 행 해시를 덮어써 변경이 마스킹되면 안 된다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        rows = _read_jsonl(wp.facts)
+        dup = dict(rows[0]); dup["id"] = "F002"; dup["claim"] = "위조본"
+        _write_jsonl_atomic(wp.facts, rows + [dup])       # 같은 claim_key 2행(앞=원본, 뒤=위조본)
+        run_ledger.checkpoint(wd, "G1", "PASS", "join", phase="complete")
+
+        rows2 = _read_jsonl(wp.facts)
+        rows2[0]["value"] = {"raw": "999.9", "unit": "KRW_T"}     # 앞 행만 변조
+        _write_jsonl_atomic(wp.facts, rows2)
+        g1 = run_ledger.status(wd)["gates"]["G1"]
+        assert g1["state"] == "partial_stale" and g1["changed_claim_keys"], g1
+
+        # 순서 독립: 두 행을 뒤바꿔도 결합 해시는 같아야 한다(정렬 후 결합)
+        h1 = run_ledger._fact_hashes(wp)
+        _write_jsonl_atomic(wp.facts, list(reversed(_read_jsonl(wp.facts))))
+        assert run_ledger._fact_hashes(wp) == h1, "행 순서에 해시가 흔들림"
+
+
+@case
+def counters_and_active_ask_persisted():
+    """v5: 런타임 상한 카운터와 미답 ask 가 재개 진입점(run-metadata)에 남는지 — 대장 재생이 정본."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        run_ledger.record(wd, "wave", index=1)
+        run_ledger.record(wd, "respawn", lane="market", rationale="죽은 소스 교체")
+        run_ledger.record(wd, "respawn", lane="market")
+        run_ledger.record(wd, "engine_suspend", engine="ddg", rationale="429 반복")
+        run_ledger.record(wd, "ask", ask_id="A1", gate_id="PLAN", question="목차 승인?")
+        meta = json.loads(wp.journal("run-metadata.json").read_text(encoding="utf-8"))
+        assert meta["counters"]["respawn_by_lane"]["market"] == 2, meta["counters"]
+        assert meta["counters"]["wave"] == 1 and meta["counters"]["suspended_engines"] == ["ddg"]
+        assert meta["active_ask"]["ask_id"] == "A1", meta["active_ask"]
+
+        run_ledger.record(wd, "answer", ask_id="A1", answer="승인", resolved_by="user")
+        meta2 = json.loads(wp.journal("run-metadata.json").read_text(encoding="utf-8"))
+        assert meta2["active_ask"] is None, meta2["active_ask"]
+        # 메타데이터를 지우고 재계산해도 같은 값(파생 상태의 정본은 대장)
+        wp.journal("run-metadata.json").unlink()
+        run_ledger.record(wd, "engine_resume", engine="ddg")
+        meta3 = json.loads(wp.journal("run-metadata.json").read_text(encoding="utf-8"))
+        assert meta3["counters"]["respawn_by_lane"]["market"] == 2, meta3["counters"]
+        assert meta3["counters"]["suspended_engines"] == [], meta3["counters"]
+
+
+@case
+def answer_requires_explicit_resolved_by():
+    """v5: --resolved-by 기본값 'user' 제거 — 플래그 생략 자가 답변이 동의로 봉인되면 안 된다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        run_ledger.record(wd, "ask", ask_id="A1", gate_id="PLAN", question="승인?")
+        try:
+            run_ledger.main(["--work", str(wd), "record", "answer",
+                             "--ask-id", "A1", "--answer", "승인"])
+            raise AssertionError("--resolved-by 없이 answer 가 기록됨")
+        except SystemExit as e:
+            assert e.code != 0, e.code
+        assert not any(r.get("kind") == "answer" for r in _ledger(wp)), "거부됐는데 기록됨"
+        # 명시하면 정상 기록(긍정형 짝)
+        rec = run_ledger.record(wd, "answer", ask_id="A1", answer="승인", resolved_by="user")
+        assert rec["resolved_by"] == "user", rec
 
 
 def main():

@@ -34,6 +34,7 @@ except Exception:
 
 _CURATED = json.loads((ASSETS / "curated-sources.json").read_text(encoding="utf-8"))
 _SEARX = json.loads((ASSETS / "searx-instances.json").read_text(encoding="utf-8"))
+_BLOCK_MARKERS = tuple(m.lower() for m in _SEARX.get("block_markers", []))
 
 
 def _now() -> str:
@@ -53,13 +54,27 @@ def _get(url: str, timeout: int = 12) -> tuple[int, str]:
 
 
 # --- 백엔드들 ----------------------------------------------------------------
-def _ddg(query: str, n: int) -> list[dict]:
+def is_blocked_page(text: str) -> bool:
+    """봇 차단 페이지는 200 으로 온다 — 파싱 0매치를 '결과 없음'과 구분하기 위한 마커 판정.
+    판독 실패는 '차단 아님'으로 안전측 처리(cloudscraper 규약)."""
+    low = (text or "").lower()
+    return any(m in low for m in _BLOCK_MARKERS)
+
+
+def _ddg(query: str, n: int, blocked: list[str] | None = None) -> list[dict]:
     """DuckDuckGo HTML. 결과 링크는 //duckduckgo.com/l/?uddg=<encoded> 리다이렉트 → 디코드."""
     try:
         url = "https://html.duckduckgo.com/html/?q=" + quote(query)
         _, html = _get(url)
     except Exception as e:                     # 1차 백엔드도 다른 백엔드처럼 실패는 건너뜀(V28)
         print(f"  ⚠ ddg 실패(건너뜀): {e}", file=sys.stderr)
+        if blocked is not None:
+            blocked.append("ddg:error")
+        return []
+    if is_blocked_page(html):
+        print("  ⚠ ddg 차단 페이지(200) — '결과 없음'이 아니라 차단됨", file=sys.stderr)
+        if blocked is not None:
+            blocked.append("ddg:blocked")
         return []
     out = []
     for m in re.finditer(r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>', html, re.S):
@@ -81,24 +96,34 @@ def _decode_ddg(href: str) -> str | None:
     return href if href.startswith("http") else None
 
 
-def _searx(query: str, n: int) -> list[dict]:
+def _searx(query: str, n: int, blocked: list[str] | None = None) -> list[dict]:
     """공개 SearXNG 로테이션 + 백오프. JSON 미지원/죽은 인스턴스는 다음으로."""
     for inst in _SEARX["instances"]:
+        host = urlparse(inst).hostname
         for delay in [0] + _SEARX["backoff_sec"]:
             if delay:
                 time.sleep(delay)
             try:
                 st, txt = _get(f"{inst}/search?q={quote(query)}&format=json", timeout=_SEARX["timeout_sec"])
-                if st == 200 and txt.lstrip().startswith("{"):
-                    data = json.loads(txt)
-                    res = [{"title": r.get("title", ""), "url": r.get("url", ""),
-                            "snippet": r.get("content", ""), "source": f"searx:{urlparse(inst).hostname}"}
-                           for r in data.get("results", [])[:n]]
-                    if res:
-                        return res
             except Exception:
+                break                                    # 접속 자체 실패 → 다음 인스턴스
+            if st in (429, 503):
+                # 레이트리밋은 재시도가 의미 있는 유일한 경우다. 종전에는 여기서도 즉시
+                # break 해 backoff_sec 리스트가 한 번도 소비되지 않는 데드코드였다.
+                if blocked is not None and f"searx:{host}" not in blocked:
+                    blocked.append(f"searx:{host}")
                 continue
-            break                                        # 이 인스턴스 1회만(백오프는 429 등서만 의미)
+            if st == 200 and txt.lstrip().startswith("{"):
+                try:
+                    data = json.loads(txt)
+                except json.JSONDecodeError:
+                    break
+                res = [{"title": r.get("title", ""), "url": r.get("url", ""),
+                        "snippet": r.get("content", ""), "source": f"searx:{host}"}
+                       for r in data.get("results", [])[:n]]
+                if res:
+                    return res
+            break                                        # 그 밖의 응답은 이 인스턴스 포기
     return []
 
 
@@ -155,21 +180,34 @@ def _wikipedia(query: str, n: int, lang: str = "en") -> list[dict]:
 
 
 # --- 디스패치 ----------------------------------------------------------------
-def search(query: str, n: int = 10, type: str = "web") -> list[dict]:
+def search_with_diagnostics(query: str, n: int = 10, type: str = "web") -> dict:
+    """{results, blocked_engines}. 빈 결과가 '이 주제에 출처가 없다'인지 '차단당했다'인지
+    구분해야 커버리지 공백이 보고서 서술로 굳는 것을 막는다."""
     backends = _CURATED["type_backends"]
     if type not in backends:
         raise ValueError(f"미지원 --type: {type!r} (지원: {list(backends)})")
     backend = backends[type]["backend"]
+    blocked: list[str] = []
     if backend in ("ddg+searx",):
-        res = _ddg(query, n)
+        res = _ddg(query, n, blocked)
         if len(res) < max(3, n // 2):                    # 부족하면 SearXNG 보강
-            res += [r for r in _searx(query, n) if r["url"] not in {x["url"] for x in res}]
-        return res[:n]
-    if backend == "arxiv":
-        return _arxiv(query, n)
-    if backend == "sec_edgar":
-        return _sec_edgar(query, n)
-    raise ValueError(f"백엔드 미구현: {backend}")
+            res += [r for r in _searx(query, n, blocked) if r["url"] not in {x["url"] for x in res}]
+        res = res[:n]
+    elif backend == "arxiv":
+        res = _arxiv(query, n)
+    elif backend == "sec_edgar":
+        res = _sec_edgar(query, n)
+    else:
+        raise ValueError(f"백엔드 미구현: {backend}")
+    if not res and blocked:
+        print(f"  ⚠ 결과 0건이지만 차단된 엔진이 있다: {', '.join(blocked)} "
+              f"— '출처 없음'으로 결론내지 말 것", file=sys.stderr)
+    return {"results": res, "blocked_engines": blocked}
+
+
+def search(query: str, n: int = 10, type: str = "web") -> list[dict]:
+    """호환 유지용 얇은 래퍼 — 진단이 필요하면 search_with_diagnostics 를 쓴다."""
+    return search_with_diagnostics(query, n, type)["results"]
 
 
 def wikipedia(query: str, n: int = 5, lang: str = "en") -> list[dict]:

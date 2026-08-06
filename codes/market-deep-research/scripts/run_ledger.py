@@ -134,24 +134,35 @@ def _canon_sha(obj: dict) -> str:
 
 
 def _fact_hashes(wp: WorkPaths) -> dict[str, str]:
-    """fact 단위 content-hash 맵 — 신선도를 fact 단위로 판정하는 근거(claim_key→sha)."""
-    out: dict[str, str] = {}
+    """fact 단위 content-hash 맵 — 신선도를 fact 단위로 판정하는 근거(claim_key→sha).
+
+    같은 claim_key 가 여러 행이면 덮어쓰지 않고 정렬 후 결합한다. 덮어쓰면 뒤 행만 봉인돼
+    앞 행(예: 원본) 변경이 신선도에서 마스킹된다(v5 실측). 정렬이라 행 순서에는 불변.
+    """
+    import hashlib
+    groups: dict[str, list[str]] = {}
     for f in _read_jsonl(wp.facts):
         key = f.get("claim_key") or make_claim_key(f.get("context") or {})
-        out[key] = _canon_sha(f)
-    return out
+        groups.setdefault(key, []).append(_canon_sha(f))
+    return {k: (v[0] if len(v) == 1
+                else hashlib.sha256("".join(sorted(v)).encode("utf-8")).hexdigest())
+            for k, v in groups.items()}
 
 
 def _watch_file(wp: WorkPaths, watch: str) -> Path:
     return {"facts": wp.facts, "report_md": wp.report_md, "report_pdf": wp.report_pdf}[watch]
 
 
+MISSING = "<missing>"          # 부재를 '없는 값'이 아니라 명시 상태로(fail-closed 센티널)
+
+
 def _target_hashes(wp: WorkPaths, watches: list[str]) -> dict[str, str]:
+    """감시 대상 파일 해시. 부재는 생략하지 않고 MISSING 으로 기록한다 — 생략하면
+    기록 None == 현재 None 이라 '산출물을 만든 적 없는' 게이트가 fresh 로 보인다(v5 실측)."""
     th: dict[str, str] = {}
     for w in watches:
         p = _watch_file(wp, w)
-        if p.exists():
-            th[w] = sha256_file(p)
+        th[w] = sha256_file(p) if p.exists() else MISSING
         if w == "facts" and wp.evidence.exists():
             th["evidence"] = sha256_file(wp.evidence)
     return th
@@ -276,28 +287,39 @@ def _gate_states(wp: WorkPaths, ledger: list[dict], gates: list[dict]) -> dict[s
                      if r.get("kind") == "checkpoint" and r.get("gate") == g["id"]), None)
         if last is None:
             out[g["id"]] = {"state": "missing", "verdict": None,
-                            "changed_claim_keys": [], "stale_watches": []}
+                            "changed_claim_keys": [], "stale_watches": [],
+                            "missing_watches": []}
             continue
         changed: list[str] = []
         stale: list[str] = []
+        missing: list[str] = []
         for w in g["watches"]:
+            p = _watch_file(wp, w)
+            if not p.exists():                  # 산출물 자체가 없다 — 신선도 이전의 문제
+                missing.append(w)
+                continue
             if w == "facts":
                 rec_fh = last.get("fact_hashes") or {}
                 changed = sorted({k for k in cur_fh if rec_fh.get(k) != cur_fh[k]}
                                  | {k for k in rec_fh if k not in cur_fh})
             else:
-                p = _watch_file(wp, w)
-                cur = sha256_file(p) if p.exists() else None
+                cur = sha256_file(p)
                 if (last.get("target_hashes") or {}).get(w) != cur:
                     stale.append(w)
-        state = "stale" if stale else ("partial_stale" if changed else "fresh")
+        state = ("missing_watch" if missing else
+                 "stale" if stale else ("partial_stale" if changed else "fresh"))
         out[g["id"]] = {"state": state, "verdict": last.get("verdict"),
                         "generation": last.get("generation"),
-                        "changed_claim_keys": changed, "stale_watches": stale}
+                        "changed_claim_keys": changed, "stale_watches": stale,
+                        "missing_watches": missing}
     return out
 
 
-def _completion_possible(states: dict[str, dict]) -> bool:
+def _completion_possible(states: dict[str, dict], roster_missing: list[str] | None = None) -> bool:
+    """완료 = 11게이트 신선 PASS/WATCH + 필수 audit 산출물 실재.
+    missing_watch(산출물 부재)는 fresh 가 아니므로 여기서 자동 배제된다."""
+    if roster_missing:
+        return False
     return all(s["state"] == "fresh" and s["verdict"] in ("PASS", "WATCH")
                for s in states.values())
 
@@ -305,17 +327,28 @@ def _completion_possible(states: dict[str, dict]) -> bool:
 def status(work) -> dict:
     wp = _wp(work)
     gates = load_gates()
-    states = _gate_states(wp, _read_ledger(wp), gates)
+    ledger = _read_ledger(wp)
+    states = _gate_states(wp, ledger, gates)
+    roster_missing = _roster_check(wp)["missing"]
     for g in gates:
         s = states[g["id"]]
         print(f"{g['id']:<7} {s['state']:<14} verdict={s['verdict'] or '<none>'}"
               f"  실효 watches: {', '.join(s['stale_watches']) or '<none>'}"
               f"  변경 claim_key: {', '.join(s['changed_claim_keys']) or '<none>'}")
+        if s["missing_watches"]:
+            print(f"        └ 산출물 부재(선언만 있고 물건이 없음): {', '.join(s['missing_watches'])}")
         if s["changed_claim_keys"]:
             print(f"        └ 재검증 대상(fact 단위 — 전건 재검증 아님): {len(s['changed_claim_keys'])}건")
-    done = _completion_possible(states)
-    print(f"완료 선언 가능(11게이트 신선 PASS/WATCH, BLOCK 0): {'가능' if done else '불가'}")
-    return {"gates": states, "completion_possible": done}
+    ask = _active_ask(ledger)
+    if ask:
+        print(f"[미답 ask] {ask['ask_id']}({ask.get('gate_id') or '-'}): {ask.get('question') or ''}")
+    if roster_missing:
+        print(f"[로스터] 필수 audit 산출물 부재: {', '.join(roster_missing)}")
+    done = _completion_possible(states, roster_missing)
+    print(f"완료 선언 가능(11게이트 신선 PASS/WATCH, BLOCK 0, 필수 산출물 실재): "
+          f"{'가능' if done else '불가'}")
+    return {"gates": states, "completion_possible": done,
+            "roster_missing": roster_missing, "active_ask": ask}
 
 
 # --- validate (읽기전용) ------------------------------------------------------
@@ -429,6 +462,22 @@ def record(work, kind: str, **kw) -> dict | None:
                "rationale": kw.get("rationale", ""), "decided_by": kw.get("decided_by", "lead"),
                "at": now}
 
+    elif kind in ("wave", "respawn", "engine_suspend", "engine_resume"):
+        # 런타임 상한(깊이캡·재스폰·엔진 격리) 카운터의 영속 근거. 세션 기억에만 두면
+        # 중단·재개마다 리셋되어 상한이 없는 것과 같다 — 별도 파일 신설 없이 같은 대장에.
+        rec = {"kind": kind, "at": now}
+        if kind == "wave":
+            rec["index"] = int(kw.get("index") or 0) or None
+        if kind == "respawn":
+            if not kw.get("lane"):
+                raise LedgerError("respawn 필수 필드 누락: lane")
+            rec["lane"] = kw["lane"]
+        if kind in ("engine_suspend", "engine_resume"):
+            if not kw.get("engine"):
+                raise LedgerError(f"{kind} 필수 필드 누락: engine")
+            rec["engine"] = kw["engine"]
+        rec["rationale"] = kw.get("rationale", "")
+
     else:
         raise LedgerError(f"미정의 record kind: {kind}")
 
@@ -444,6 +493,29 @@ def _append(wp: WorkPaths, ledger: list[dict], rec: dict, mode: str | None = Non
     _update_metadata(wp, ledger, mode=mode)
 
 
+def _counters(ledger: list[dict]) -> dict:
+    """런타임 상한 카운터를 대장 재생으로 산출(파생 상태를 직접 쓰지 않는다 — 재생이 정본).
+    세션 기억에만 있던 값들이라 중단·재개 때 리셋되어 상한이 실질 무력화됐다."""
+    c = {"wave": 0, "respawn_by_lane": {}, "interview_round": 0,
+         "autoconfirm_streak": 0, "suspended_engines": []}
+    for r in ledger:
+        k = r.get("kind")
+        if k == "wave":
+            c["wave"] = max(c["wave"], int(r.get("index") or c["wave"] + 1))
+        elif k == "respawn":
+            lane = r.get("lane") or "?"
+            c["respawn_by_lane"][lane] = c["respawn_by_lane"].get(lane, 0) + 1
+        elif k == "ask":
+            c["interview_round"] += 1
+        elif k == "engine_suspend":
+            eng = r.get("engine")
+            if eng and eng not in c["suspended_engines"]:
+                c["suspended_engines"].append(eng)
+        elif k == "engine_resume":
+            c["suspended_engines"] = [e for e in c["suspended_engines"] if e != r.get("engine")]
+    return c
+
+
 def _update_metadata(wp: WorkPaths, ledger: list[dict], mode: str | None = None) -> None:
     gates = load_gates()
     states = _gate_states(wp, ledger, gates)
@@ -456,11 +528,17 @@ def _update_metadata(wp: WorkPaths, ledger: list[dict], mode: str | None = None)
             old = json.loads(_meta_path(wp).read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             old = {}                       # 손상 감지 시 현재 run 스코프만 재시드
+    ask = _active_ask(ledger)
     meta = {
         "mode": mode or old.get("mode") or "research",
-        "completedAt": _now() if _completion_possible(states) else None,
+        "completedAt": _now() if _completion_possible(states, _roster_check(wp)["missing"]) else None,
         "last_fresh_gate": max(fresh, key=lambda g: g["order"])["id"] if fresh else None,
         "fact_count": len(_read_jsonl(wp.facts)),
+        # 재개 진입점에 미답 ask 를 노출한다 — 없으면 재개 세션이 교착의 원인을 못 본다.
+        "active_ask": ({"ask_id": ask["ask_id"], "gate_id": ask.get("gate_id"),
+                        "question": ask.get("question"), "asked_at": ask.get("at")}
+                       if ask else None),
+        "counters": _counters(ledger),
         "updated_at": _now(),
     }
     _write_json_atomic(_meta_path(wp), meta)
@@ -486,7 +564,8 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("validate")
 
     r = sub.add_parser("record")
-    r.add_argument("kind", choices=["steering", "ask", "answer", "conflict", "disposition"])
+    r.add_argument("kind", choices=["steering", "ask", "answer", "conflict", "disposition",
+                                    "wave", "respawn", "engine_suspend", "engine_resume"])
     r.add_argument("--op")
     r.add_argument("--evidence", default="")
     r.add_argument("--rationale", default="")
@@ -497,8 +576,12 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--recommended")
     r.add_argument("--supersedes")
     r.add_argument("--answer")
-    r.add_argument("--resolved-by", dest="resolved_by", default="user",
-                   choices=["user", "timeout"])
+    # 기본값 없음(필수 지정) — 기본 'user' 는 플래그를 생략한 자가 답변을 사용자 동의로
+    # 봉인해버린다. 지정을 강제해도 '에이전트가 쓴 user 답'은 기계로 못 가르는 한계는 남는다.
+    r.add_argument("--resolved-by", dest="resolved_by", choices=["user", "timeout"])
+    r.add_argument("--lane")
+    r.add_argument("--engine")
+    r.add_argument("--index", type=int)
     r.add_argument("--conflict-id", dest="conflict_id")
     r.add_argument("--fact-id", action="append", default=[], dest="fact_ids")
     r.add_argument("--source", action="append", default=[], dest="sources")
@@ -525,11 +608,14 @@ def main(argv: list[str] | None = None) -> None:
         elif args.cmd == "validate":
             sys.exit(1 if validate(args.work)["block_level"] else 0)
         elif args.cmd == "record":
+            if args.kind == "answer" and not args.resolved_by:
+                raise LedgerError("answer 는 --resolved-by user|timeout 명시 필수 "
+                                  "(기본값 없음 — 자가 답변이 동의로 봉인되는 것을 막는다)")
             kw = {k: getattr(args, k) for k in
                   ("op", "evidence", "rationale", "ask_id", "gate_id", "question",
                    "options", "recommended", "supersedes", "answer", "resolved_by",
                    "conflict_id", "fact_ids", "sources", "ref_id", "disposition",
-                   "decided_by")}
+                   "decided_by", "lane", "engine", "index")}
             rec = record(args.work, args.kind, **kw)
             sys.exit(1 if rec and rec.get("kind") == "conflict"
                      and args.kind == "answer" else 0)
