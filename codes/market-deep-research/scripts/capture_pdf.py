@@ -122,36 +122,36 @@ def _context_clip(page, r, pad: int) -> "fitz.Rect":
     return fitz.Rect(0, max(0, y0), page.rect.width, min(page.rect.height, y1))
 
 
-# [v6/SC-4] 백지 판정 임계 — 추정이 아니라 실측으로 잡았다(4000픽셀 표본, 2026-08-06):
-#   완전 백지 unique=1 ink=0.000 | 정상 표 unique=3 ink=0.0097 | 텍스트1줄 unique=7 ink=0.0067
-#   본문 30줄 unique=8 ink=0.0042 | 캡처 픽스처 unique=13 ink=0.0077
-# 유니크 컬러 수는 신호가 아니다(정상 표 3 < 텍스트 7) — 첫 시도의 'unique<8' 임계는 정상
-# 문서를 잡았다. 확실히 가를 수 있는 것은 '사실상 단일색 화면'뿐이라 거기까지만 기계로 잡고,
-# 얇지만 비어있지 않은 캡처는 여전히 사람 눈의 몫으로 남긴다(과잉 차단이 더 나쁘다).
-BLANK_MAX_COLORS = 2            # 이하이면 사실상 단일색
-BLANK_MAX_INK = 0.0005          # 최빈색과 다른 픽셀 비율 하한(정상 최저 0.0032 대비 6배 여유)
+# [v6/SC-4 → v9 정정] 백지 판정 임계.
+# v6 은 ~4000픽셀 **표본**으로 최빈색 비율을 추정했다. 표본 간격이 이미지 크기에 비례해
+# 벌어지는 탓에 **큰 캔버스에서는 글자를 통째로 건너뛴다** — 실측(1440x3000 전면 스크린샷):
+# 정상 페이지조차 unique=1 · ink=0.0 으로 '백지' 판정이 났다. v9 에서 웹 전면 캡처가
+# 들어오면서 드러났다(크롭 크기에서만 재고 넘어간 임계의 대가). PyMuPDF `color_topusage()`
+# 는 C 레벨 전수 계산이라 표본보다 빠르고 정확하므로 추정을 걷어낸다.
+#
+# 실측(2026-08-06, 잉크픽셀 = 최빈색과 다른 픽셀 수):
+#   완전 백지 0 | 짧은 선 1개(최소 내용) 160 | 스크린샷 한 줄 896 | 크롭 텍스트1줄 2,488
+#   크롭 표 20,760 | 스크린샷 정상 페이지 28,744 | 크롭 본문30줄 54,008
+# **비율이 아니라 절대 잉크픽셀 수가 크기에 무관한 신호다**(같은 내용도 캔버스가 크면
+# 비율이 떨어진다). 0 과 160 사이에서 실제 최소 내용의 1/10 에 해당하는 16 으로 잡는다.
+# 유니크 컬러 수 조건은 뺐다 — v6 때 이미 '신호가 아니다'로 판명됐고(표본 표 3 < 텍스트 7),
+# 전수 계산에서는 안티에일리어싱 탓에 늘 수백이라 판별력이 없다.
+BLANK_MAX_INK_PX = 16           # 이하이면 사실상 아무것도 안 담긴 렌더
 
 
 def is_blank_pixmap(pix) -> tuple[bool, dict]:
-    """[v6/SC-4] 렌더 결과가 백지·단색인지 픽셀로 판정.
+    """[v6/SC-4] 렌더 결과가 백지·단색인지 픽셀로 판정(전수 계산).
 
     종전에는 '백지 캡처'를 팀리드 육안(PNG Read)만이 잡을 수 있었다 — 확정 사실 수에 비례해
     이미지 토큰이 들어서 비용 압박이 오면 표본만 보게 되고, 그 순간 유일한 검출 장치가 사라진다.
     생성 시점에 기계로 거르면 육안은 '기계 통과분의 표본'으로 줄어든다.
     """
     try:
-        import collections
-        s, n = pix.samples, pix.n
-        step = max(1, (len(s) // n) // 4000) * n            # 최대 ~4000픽셀만 표본
-        px = [s[i:i + n] for i in range(0, len(s) - n, step)]
-        if not px:
-            return False, {"unique": -1, "ink_ratio": -1}
-        cnt = collections.Counter(px)
-        ink = 1 - cnt.most_common(1)[0][1] / len(px)
-        stat = {"unique": len(cnt), "ink_ratio": round(ink, 5)}
-        return (len(cnt) <= BLANK_MAX_COLORS and ink <= BLANK_MAX_INK), stat
+        ratio, _modal = pix.color_topusage()                 # (최빈색 점유율, 색) — C 레벨 전수
+        inked = round((1 - ratio) * pix.width * pix.height)
+        return inked <= BLANK_MAX_INK_PX, {"inked_px": inked, "ink_ratio": round(1 - ratio, 6)}
     except Exception:
-        return False, {"unique": -1, "ink_ratio": -1}        # 판독 불가는 실패로 위장하지 않는다
+        return False, {"inked_px": -1, "ink_ratio": -1}      # 판독 불가는 실패로 위장하지 않는다
 
 
 def _save_checked(pix, out_png: Path) -> dict | None:
@@ -163,7 +163,7 @@ def _save_checked(pix, out_png: Path) -> dict | None:
     failed.parent.mkdir(parents=True, exist_ok=True)
     pix.save(str(failed))
     return {"ok": False, "type": "source_capture",
-            "reason": f"백지·단색 렌더(유니크 {stat['unique']}, 잉크율 {stat['ink_ratio']})",
+            "reason": f"백지·단색 렌더(잉크픽셀 {stat['inked_px']}, 잉크율 {stat['ink_ratio']})",
             "path": str(failed), "captured_at": _now()}
 
 

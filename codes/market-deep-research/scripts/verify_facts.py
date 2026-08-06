@@ -736,7 +736,7 @@ def check_capture_structure(evidence: dict, wp: WorkPaths) -> list[str]:
             blank, stat = capture_pdf.is_blank_pixmap(pix)
             if blank:
                 warnings.append(f"[캡처구조] {e.get('id')} 백지·단색 의심"
-                                f"(유니크 {stat['unique']}, 잉크율 {stat['ink_ratio']})")
+                                f"(잉크픽셀 {stat['inked_px']}, 잉크율 {stat['ink_ratio']})")
         except Exception as ex:            # noqa: BLE001 — 판독 실패는 WARN 으로 표면화
             warnings.append(f"[캡처구조] {e.get('id')} 캡처 판독 불가({type(ex).__name__}) — 육안 확인 필요")
     return warnings

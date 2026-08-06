@@ -20,7 +20,6 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import fitz
 
@@ -151,7 +150,7 @@ def capture_live(url: str, number: str | None, out_png: Path | str, *,
         if tmp.exists() and tmp.stat().st_size:
             blank, stat = capture_pdf.is_blank_pixmap(fitz.Pixmap(str(tmp)))
             if blank:
-                tried.append(f"screen:백지·단색(유니크 {stat['unique']}, 잉크율 {stat['ink_ratio']})")
+                tried.append(f"screen:백지·단색(잉크픽셀 {stat['inked_px']}, 잉크율 {stat['ink_ratio']})")
             else:
                 out_png.parent.mkdir(parents=True, exist_ok=True)
                 out_png.write_bytes(tmp.read_bytes())

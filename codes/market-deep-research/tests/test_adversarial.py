@@ -705,6 +705,23 @@ def blank_capture_rejected_at_generation():
             r2 = capture_pdf.capture_page(good, 1, out2)
             assert r2["ok"] and out2.exists(), (name, r2)
 
+        # [v9] ★큰 캔버스 회귀. v6 판정은 ~4000픽셀 **표본**이라 간격이 이미지 크기에 비례해
+        # 벌어졌고, 1440x3000 전면 스크린샷에서는 글자를 통째로 건너뛰어 **정상 페이지도
+        # 백지**로 잡았다(실측). 크롭 크기에서만 재고 넘어간 임계의 대가 — 전수 계산으로 교체.
+        big = Path(td) / "big.pdf"
+        doc = fitz.open(); pg = doc.new_page(width=1440, height=3000)
+        pg.insert_text((80, 120), "valued at USD 820.5 million in 2024")   # 여백 대비 아주 성김
+        doc.save(str(big)); doc.close()
+        pix = fitz.open(str(big))[0].get_pixmap()
+        blank, stat = capture_pdf.is_blank_pixmap(pix)
+        assert not blank, f"성긴 대형 캔버스를 백지로 오판(표본 판정 회귀): {stat}"
+        assert stat["inked_px"] > capture_pdf.BLANK_MAX_INK_PX, stat
+        # 부정형 짝: 같은 크기라도 진짜 아무것도 없으면 백지로 잡혀야 한다
+        doc = fitz.open(); doc.new_page(width=1440, height=3000)
+        empty = Path(td) / "big_empty.pdf"; doc.save(str(empty)); doc.close()
+        blank2, stat2 = capture_pdf.is_blank_pixmap(fitz.open(str(empty))[0].get_pixmap())
+        assert blank2 and stat2["inked_px"] == 0, stat2
+
 
 _LIVE_PAGE = """<html><head><meta charset="utf-8"><style>{style}</style></head><body>
 <h1>Global Market Report 2024</h1><nav>Home About</nav><div class="main">
@@ -1774,7 +1791,7 @@ def v5_doc_code_parity():
         (SKILL_ROOT / "assets" / "facts-schema.json").read_text(encoding="utf-8")
     )["evidence"]["properties"], "스키마에 capture_sha256 없음"
     # 임계는 실측 근거와 함께 코드에 있어야 한다(추정 임계 재도입 방지)
-    assert capture_pdf.BLANK_MAX_COLORS == 2 and capture_pdf.BLANK_MAX_INK == 0.0005
+    assert capture_pdf.BLANK_MAX_INK_PX == 16, "백지 임계가 실측 근거 없이 바뀜"
 
     # ⑦ v7 — 레거시 완화가 문서·코드 어디에도 되살아나 있지 않아야 한다
     rl_src = (SKILL_ROOT / "scripts" / "run_ledger.py").read_text(encoding="utf-8")
