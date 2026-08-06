@@ -469,6 +469,23 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                     actual = manifest.sha256_file(p)      # 새 해시 유틸 신설 금지 — manifest 재사용
                     if actual.lower() != sha.lower():
                         failures.append(f"[해시불일치] {eid} local 파일 실해시가 sha256 필드와 다름")
+            else:
+                # [v6/EV-1] local 이 없으면 sha256 은 대조할 대상이 없어 '아무 64자 hex' 나 통과한다
+                # — 원문을 열지 않고 만든 evidence 가 A등급 1차출처로 인쇄되던 경로. 스키마
+                # required 는 건드리지 않고(additive 원칙) 검증 쪽에서 닫는다.
+                failures.append(f"[해시미결박] {eid} local 스냅샷 없음 — sha256 을 대조할 원문이 없다"
+                                f"(fetch.py 가 저장한 _sources 경로를 local 에 실을 것)")
+            # [v6/EV-5] 팀리드 재검증이 '무엇을' 재열람했는지 결박 + 시간 순서(증거 확보 이후)
+            evs = [v for v in f.get("verify_events", []) if v.get("by") == "lead"]
+            if evs and not any(v.get("evidence_id") for v in evs):
+                failures.append(f"[재검증미결박] {f['id']} lead 재검증 이벤트에 evidence_id 없음 "
+                                f"— 무엇을 재열람했는지 지목되지 않는다")
+            for v in evs:
+                tgt, at = v.get("evidence_id"), v.get("at")
+                if tgt and at and (evidence.get(tgt) or {}).get("accessed_at"):
+                    if at < evidence[tgt]["accessed_at"]:
+                        failures.append(f"[재검증시각] {f['id']} 재검증이 증거 확보보다 먼저 기록됨"
+                                        f"({at} < {evidence[tgt]['accessed_at']})")
         # G2 증빙: 본문에 쓰인 confirmed '핵심수치'(raw 가 Decimal 로 파싱되는 값)는 source_capture 필수.
         # risk=high 태깅 여부와 무관하게 강제 — [Bx] 반박게이트 미실행 시 캡처 0 통과되던 구멍 차단.
         is_core_num = _vals((f.get("value") or {}).get("raw", "")) is not None
@@ -489,6 +506,40 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                 if not ok_cap:
                     failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
     return failures
+
+
+def check_capture_binding(evidence: dict, wp: WorkPaths) -> tuple[list[str], list[str]]:
+    """[v6/EV-2·EV-3] 캡처가 '어느 fact 의 화면인가'를 결박.
+
+    종전 검사는 파일 존재(exists)뿐이라 정당한 캡처 1장을 E002~E080.png 로 복제하면
+    evidence 80건이 전부 통과했다 — 실제 수치가 찍힌 캡처는 0장인 채로.
+    ① capture_sha256 이 있으면 실파일 해시와 일치해야 하고(사후 교체 검출),
+    ② 같은 내용의 캡처가 **서로 다른 fact** 의 증빙으로 쓰이면 돌려막기다.
+    """
+    failures: list[str] = []
+    warnings: list[str] = []
+    by_content: dict[str, list[tuple[str, str]]] = {}       # 내용해시 → [(evidence id, fact id)]
+    for e in evidence.values():
+        cap = e.get("capture")
+        if not cap:
+            continue
+        p = wp.root / cap
+        if not p.exists():
+            continue                                         # 실재 검사는 check_evidence_chain 담당
+        actual = manifest.sha256_file(p)
+        declared = e.get("capture_sha256")
+        if declared and declared.lower() != actual.lower():
+            failures.append(f"[캡처해시] {e['id']} capture 실해시가 capture_sha256 과 다름 "
+                            f"— 등재 후 이미지가 교체됐다")
+        elif not declared:
+            warnings.append(f"[캡처미봉인] {e['id']} capture_sha256 없음 — 사후 교체를 검출할 수 없다")
+        by_content.setdefault(actual, []).append((e["id"], e.get("fact_id", "?")))
+    for _h, owners in by_content.items():
+        facts_sharing = {fid for _eid, fid in owners}
+        if len(facts_sharing) > 1:
+            failures.append("[캡처재사용] 같은 캡처가 서로 다른 fact 의 증빙으로 쓰임: "
+                            + ", ".join(f"{eid}({fid})" for eid, fid in sorted(owners)))
+    return failures, warnings
 
 
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
@@ -636,7 +687,8 @@ def check_forbidden_patterns(body: str) -> tuple[list[str], list[str]]:
 
 def check_capture_structure(evidence: dict, wp: WorkPaths) -> list[str]:
     """[v4-Q] 캡처 파일 구조검사(WARN 전용) — '파일이 존재한다'와 '원문 화면이 담겼다'를 분리.
-    바이트 하한 + fitz 픽셀 샘플 유니크 컬러 하한(백지·단색 검출). fitz 미가용/판독 불가는
+    바이트 하한 + 백지·단색 판정(기준은 capture_pdf.is_blank_pixmap 이 정본 — 생성 시점에
+    이미 .FAILED 로 걸러지므로 여기 걸리면 외부 도구로 만든 캡처다). fitz 미가용/판독 불가는
     판독불가 WARN(실패 위장 금지 — honest unknown)."""
     warnings: list[str] = []
     for e in evidence.values():
@@ -652,13 +704,13 @@ def check_capture_structure(evidence: dict, wp: WorkPaths) -> list[str]:
             continue
         try:
             import fitz                    # preflight HARD 의존성 — 신규 의존 아님
+            import capture_pdf             # 백지 판정 기준은 한 곳(생성기)이 정본
             with fitz.open(p) as doc:
                 pix = doc[0].get_pixmap()
-            step = max(1, (pix.width * pix.height) // 4096)   # ~4096 픽셀 샘플
-            samples = {pix.pixel(i % pix.width, (i // pix.width) % pix.height)
-                       for i in range(0, pix.width * pix.height, step)}
-            if len(samples) < 8:
-                warnings.append(f"[캡처구조] {e.get('id')} 유니크 컬러 {len(samples)}종 — 백지/단색 의심")
+            blank, stat = capture_pdf.is_blank_pixmap(pix)
+            if blank:
+                warnings.append(f"[캡처구조] {e.get('id')} 백지·단색 의심"
+                                f"(유니크 {stat['unique']}, 잉크율 {stat['ink_ratio']})")
         except Exception as ex:            # noqa: BLE001 — 판독 실패는 WARN 으로 표면화
             warnings.append(f"[캡처구조] {e.get('id')} 캡처 판독 불가({type(ex).__name__}) — 육안 확인 필요")
     return warnings
@@ -778,6 +830,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures += li_fail
     warnings += li_warn
     failures += check_evidence_chain(facts, evidence, wp, used)
+    cb_fail, cb_warn = check_capture_binding(evidence, wp)
+    failures += cb_fail
+    warnings += cb_warn
 
     fig_fail, fig_warn = check_figures(body, evidence, wp)
     failures += fig_fail
@@ -826,6 +881,17 @@ def _print(rep: dict) -> None:
     print("  결과:", "PASS" if rep["ok"] else f"FAIL ({len(rep['failures'])}건)")
 
 
+def _fitz_doc_with_text(text: str):
+    """데모용 실제 PNG 소스 — 4바이트 스텁은 백지검사·해시결박을 받을 수 없다(v6)."""
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page(width=420, height=200)
+    page.draw_rect(fitz.Rect(10, 10, 410, 190), color=(0.1, 0.2, 0.6), width=2)
+    page.insert_text((28, 70), text, fontsize=13)
+    page.insert_text((28, 110), "source: https://dart.fss.or.kr", fontsize=9)
+    return doc
+
+
 def demo() -> None:
     import hashlib
     import tempfile
@@ -841,18 +907,27 @@ def demo() -> None:
                      "value": {"raw": "300.9", "unit": "KRW_T"},
                      "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
                      "risk": "normal", "status": "pending"})
-        db.add_evidence({"fact_id": "F001", "type": "table_cell",
-                         "source_url": "https://dart.fss.or.kr", "sha256": _h("F001-E001"),
-                         "capture": "_captures/f001.jpg"})   # 핵심수치 증빙 결박
-        db.add_verify_event("F001", "lead", "reread")
-        db.set_status("F001", "confirmed")
-
+        # 증거는 실파일 결박(v6) — 스냅샷 실해시 + 캡처 실해시 + 재검증 대상 지목
         wp = WorkPaths(wd)
-        (wp.root / "_captures").mkdir(parents=True, exist_ok=True)
-        (wp.root / "_captures" / "f001.jpg").write_bytes(b"\xff\xd8\xff")  # 더미 캡처 파일
+        wp.sources.mkdir(parents=True, exist_ok=True)
+        snap = wp.root / "_sources" / "F001.txt"
+        snap.write_text("삼성전자 2024년 매출 300.9조원", encoding="utf-8")
+        wp.captures.mkdir(parents=True, exist_ok=True)
+        cap_file = wp.root / "_captures" / "f001.png"
+        _doc = _fitz_doc_with_text("매출 300.9조원")
+        _doc[0].get_pixmap(dpi=110).save(str(cap_file))
+        _doc.close()
+        ev1 = db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                               "source_url": "https://dart.fss.or.kr",
+                               "local": "_sources/F001.txt",
+                               "sha256": hashlib.sha256(snap.read_bytes()).hexdigest(),
+                               "capture": "_captures/f001.png",
+                               "capture_sha256": hashlib.sha256(cap_file.read_bytes()).hexdigest()})
+        db.add_verify_event("F001", "lead", "reread", evidence_id=ev1["id"])
+        db.set_status("F001", "confirmed")
         # 정상 = 핵심수치에 캡처 결박 + 본문에 대표 이미지 존재
         good = ("삼성전자 2024년 매출은 300.9조원(F001) 입니다.\n\n"
-                "![매출 증빙](_captures/f001.jpg)\n")
+                "![매출 증빙](_captures/f001.png)\n")
         (wp.root / "good.md").write_text(good, encoding="utf-8")
         assert verify(wp.root / "good.md", wd)["ok"], verify(wp.root / "good.md", wd)
 

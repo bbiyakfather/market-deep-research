@@ -103,6 +103,51 @@ def _context_clip(page, r, pad: int) -> "fitz.Rect":
     return fitz.Rect(0, max(0, y0), page.rect.width, min(page.rect.height, y1))
 
 
+# [v6/SC-4] 백지 판정 임계 — 추정이 아니라 실측으로 잡았다(4000픽셀 표본, 2026-08-06):
+#   완전 백지 unique=1 ink=0.000 | 정상 표 unique=3 ink=0.0097 | 텍스트1줄 unique=7 ink=0.0067
+#   본문 30줄 unique=8 ink=0.0042 | 캡처 픽스처 unique=13 ink=0.0077
+# 유니크 컬러 수는 신호가 아니다(정상 표 3 < 텍스트 7) — 첫 시도의 'unique<8' 임계는 정상
+# 문서를 잡았다. 확실히 가를 수 있는 것은 '사실상 단일색 화면'뿐이라 거기까지만 기계로 잡고,
+# 얇지만 비어있지 않은 캡처는 여전히 사람 눈의 몫으로 남긴다(과잉 차단이 더 나쁘다).
+BLANK_MAX_COLORS = 2            # 이하이면 사실상 단일색
+BLANK_MAX_INK = 0.0005          # 최빈색과 다른 픽셀 비율 하한(정상 최저 0.0032 대비 6배 여유)
+
+
+def is_blank_pixmap(pix) -> tuple[bool, dict]:
+    """[v6/SC-4] 렌더 결과가 백지·단색인지 픽셀로 판정.
+
+    종전에는 '백지 캡처'를 팀리드 육안(PNG Read)만이 잡을 수 있었다 — 확정 사실 수에 비례해
+    이미지 토큰이 들어서 비용 압박이 오면 표본만 보게 되고, 그 순간 유일한 검출 장치가 사라진다.
+    생성 시점에 기계로 거르면 육안은 '기계 통과분의 표본'으로 줄어든다.
+    """
+    try:
+        import collections
+        s, n = pix.samples, pix.n
+        step = max(1, (len(s) // n) // 4000) * n            # 최대 ~4000픽셀만 표본
+        px = [s[i:i + n] for i in range(0, len(s) - n, step)]
+        if not px:
+            return False, {"unique": -1, "ink_ratio": -1}
+        cnt = collections.Counter(px)
+        ink = 1 - cnt.most_common(1)[0][1] / len(px)
+        stat = {"unique": len(cnt), "ink_ratio": round(ink, 5)}
+        return (len(cnt) <= BLANK_MAX_COLORS and ink <= BLANK_MAX_INK), stat
+    except Exception:
+        return False, {"unique": -1, "ink_ratio": -1}        # 판독 불가는 실패로 위장하지 않는다
+
+
+def _save_checked(pix, out_png: Path) -> dict | None:
+    """백지면 저장 자체를 실패로 돌린다(.FAILED 사이드카로). 통과 시 None."""
+    blank, stat = is_blank_pixmap(pix)
+    if not blank:
+        return None
+    failed = out_png.with_name(out_png.stem + ".FAILED" + out_png.suffix)
+    failed.parent.mkdir(parents=True, exist_ok=True)
+    pix.save(str(failed))
+    return {"ok": False, "type": "source_capture",
+            "reason": f"백지·단색 렌더(유니크 {stat['unique']}, 잉크율 {stat['ink_ratio']})",
+            "path": str(failed), "captured_at": _now()}
+
+
 def capture_page(pdf_path: Path | str, page: int, out_png: Path | str, zoom: float = 2.0) -> dict:
     """지정 페이지를 **전면** 캡처(하이라이트 없음). 텍스트레이어가 없거나(스캔) 폰트 인코딩이
     깨져 `search_for` 가 원문을 못 찾는 PDF 의 정당한 증빙 경로. 페이지 전체라 발췌 조작 여지가
@@ -113,6 +158,9 @@ def capture_page(pdf_path: Path | str, page: int, out_png: Path | str, zoom: flo
         pno = max(0, min(page - 1, doc.page_count - 1))
         p = doc.load_page(pno)
         pix = p.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
+        bad = _save_checked(pix, out_png)
+        if bad:
+            return {**bad, "mode": "page", "page": pno + 1}
         out_png.parent.mkdir(parents=True, exist_ok=True)
         pix.save(str(out_png))
         return {"ok": True, "type": "source_capture", "mode": "page", "page": pno + 1,
@@ -151,6 +199,9 @@ def capture_number(pdf_path: Path | str, number: str, out_png: Path | str,
                     pass                                  # 경우가 있다 → 하이라이트만 포기, 크롭은 유지
             clip = _context_clip(page, r, pad)
             pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=clip)
+            bad = _save_checked(pix, out_png)      # 숫자는 찾았는데 렌더가 백지면 증빙이 아니다
+            if bad:
+                return {**bad, "page": pno + 1, "matched": matched}
             out_png.parent.mkdir(parents=True, exist_ok=True)
             pix.save(str(out_png))
             return {"ok": True, "type": "source_capture", "page": pno + 1,

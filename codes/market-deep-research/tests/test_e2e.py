@@ -75,12 +75,17 @@ def main():
                                          "period": "2024" if fid == "F001" else "2030"},
                              "value": {"raw": raw, "unit": unit},
                              "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
-            db.add_evidence({"fact_id": f["id"], "type": "table_cell",
-                             "source_url": "https://dart.fss.or.kr/e2e",
-                             "sha256": hashlib.sha256(("e2e-" + fid).encode()).hexdigest(),
-                             "locator": {"page": 1}, "capture": cap, "source_role": "원출처",
-                             "observer_group": "dart" if fid == "F001" else "market_report"})
-            db.add_verify_event(f["id"], "lead", "reread", "원문 표셀 재열람 일치")
+            # 증거는 실파일 결박 — sha256 은 _sources 스냅샷의 실해시, capture_sha256 은 캡처 실해시
+            ev = db.add_evidence({"fact_id": f["id"], "type": "table_cell",
+                                  "source_url": "https://dart.fss.or.kr/e2e",
+                                  "local": "_sources/source.pdf",
+                                  "sha256": hashlib.sha256(src.read_bytes()).hexdigest(),
+                                  "locator": {"page": 1}, "capture": cap, "source_role": "원출처",
+                                  "capture_sha256": hashlib.sha256(
+                                      (wp.root / cap).read_bytes()).hexdigest(),
+                                  "observer_group": "dart" if fid == "F001" else "market_report"})
+            db.add_verify_event(f["id"], "lead", "reread", "원문 표셀 재열람 일치",
+                                evidence_id=ev["id"])
             if risk == "high":                          # claim-graph 필드(데모)
                 rows = db.facts()                       # 한 번만 읽어 그 원소를 갱신(재독으로 덮이지 않게)
                 fr = [x for x in rows if x["id"] == fid][0]

@@ -95,6 +95,7 @@
       "verbatim": {"type": ["string", "null"], "description": "text_quote 일 때 필수(원문 그대로)"},
       "source_role": {"enum_ref": "source_role", "nullable": true},
       "capture": {"type": ["string", "null"], "description": "_captures/E###.png (source_capture)"},
+      "capture_sha256": {"type": ["string", "null"], "description": "[v6] capture 파일의 실해시. 서로 다른 evidence 가 같은 해시를 쓰면 캡처 돌려막기(1장으로 전건 증빙 충족)이므로 FAIL."},
       "observer_group": {"type": ["string", "null"], "description": "[v3] 독립성 판정용 관찰그룹 라벨"},
       "observed_at": {"type": ["string", "null"]},
       "verdict": {"type": ["string", "null"], "enum_ref": "evidence_verdict", "description": "[v4-V] 이 증거가 fact 주장을 support|contradict|uncertain 하는지 — 반박·상충 증거의 방향 기록(Bx negative_search 결박과 연동)"}

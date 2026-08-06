@@ -277,12 +277,22 @@ class FactsDB:
         _write_jsonl_atomic(self.wp.facts, facts)
         return ev
 
-    def add_verify_event(self, fact_id: str, by: str, action: str, note: str = "") -> None:
+    def add_verify_event(self, fact_id: str, by: str, action: str, note: str = "",
+                         evidence_id: str | None = None) -> None:
+        """[v6] evidence_id 는 '무엇을 재열람했는가' — 팀리드 재검증이 문자열 한 줄이 아니라
+        특정 증거를 가리키게 한다. 지정하면 그 evidence 가 이 fact 의 것인지 확인한다."""
         facts = self.facts()
         for fr in facts:
             if fr["id"] == fact_id:
-                fr.setdefault("verify_events", []).append(
-                    {"by": by, "at": _now(), "action": action, "note": note})
+                if evidence_id:
+                    ev = next((e for e in self.evidence() if e["id"] == evidence_id), None)
+                    if ev is None or ev.get("fact_id") != fact_id:
+                        raise ValidationError(
+                            f"verify_event.evidence_id 불일치: {evidence_id} 는 {fact_id} 의 증거가 아님")
+                rec = {"by": by, "at": _now(), "action": action, "note": note}
+                if evidence_id:
+                    rec["evidence_id"] = evidence_id
+                fr.setdefault("verify_events", []).append(rec)
                 _write_jsonl_atomic(self.wp.facts, facts)
                 return
         raise ValidationError(f"fact 없음: {fact_id}")

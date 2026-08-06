@@ -502,18 +502,45 @@ def dns_rebinding_post_connect():
 
 
 # --- G3 재작성 회귀(V02·V13·V10·V09) ------------------------------------------
+def _real_png(path: Path, text: str = "매출 300.9조원") -> bytes:
+    """진짜 PNG 캡처(fitz 렌더). 4바이트 스텁은 픽셀 검사·해시 결박을 원리적으로 못 받는다."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    doc = fitz.open()
+    page = doc.new_page(width=420, height=200)
+    page.draw_rect(fitz.Rect(10, 10, 410, 190), color=(0.1, 0.2, 0.6), width=2)
+    page.insert_text((28, 70), text, fontsize=13)
+    page.insert_text((28, 110), "source: https://dart.example/doc", fontsize=9)
+    page.get_pixmap(dpi=110).save(str(path))
+    doc.close()
+    return path.read_bytes()
+
+
+def _snapshot(wp, fid: str, body: str = "매출 300.9조원(원문 스냅샷)") -> tuple[str, str]:
+    """_sources 에 원문 스냅샷 실파일을 쓰고 (상대경로, 실해시)를 돌려준다.
+    evidence.sha256 이 '아무 64자 hex'가 아니라 실제 바이트의 해시여야 결박이 성립한다."""
+    wp.sources.mkdir(parents=True, exist_ok=True)
+    rel = f"_sources/{fid}_clean.txt"
+    p = wp.root / rel
+    p.write_text(body, encoding="utf-8")
+    return rel, hashlib.sha256(p.read_bytes()).hexdigest()
+
+
 def _confirm(db, wp, fid, with_capture=True):
-    """fact 를 confirmed 로 만든다(증거+팀리드 재열람). with_capture 면 실파일까지 결박해
-    check_evidence_chain 의 [증빙] 실패가 값대조 assert 를 오염시키지 않게 한다."""
-    ev = {"fact_id": fid, "type": "table_cell", "source_url": "https://x", "sha256": _H}
+    """fact 를 confirmed 로 만든다(원문 스냅샷 + 캡처 + 팀리드 재열람).
+    스냅샷·캡처는 **실파일**이고 sha256 은 그 실해시다 — 픽스처가 위조본이면 결박 검사를
+    도입할 때마다 '그린 유지'가 아니라 '그린 재획득'이 된다(v5 감사에서 실제로 막혔던 부채)."""
+    local, sha = _snapshot(wp, fid)
+    ev = {"fact_id": fid, "type": "table_cell", "source_url": "https://dart.example/doc",
+          "sha256": sha, "local": local, "http_status": 200}
     if with_capture:
         cap = f"_captures/{fid}.png"
-        (wp.captures).mkdir(parents=True, exist_ok=True)
-        (wp.root / cap).write_bytes(b"\x89PNG")
+        raw = _real_png(wp.root / cap)
         ev["capture"] = cap
-    db.add_evidence(ev)
-    db.add_verify_event(fid, "lead", "reread")
+        ev["capture_sha256"] = hashlib.sha256(raw).hexdigest()
+    ev_rec = db.add_evidence(ev)
+    db.add_verify_event(fid, "lead", "reread", evidence_id=ev_rec["id"])
     db.set_status(fid, "confirmed")
+    return ev_rec
 
 
 @case
@@ -632,6 +659,141 @@ def appendix_forward_bypass():
         (wp.root / "g.md").write_text(good, encoding="utf-8")
         rgood = verify_facts.verify(wp.root / "g.md", wd)
         assert rgood["ok"], rgood
+
+
+@case
+def blank_capture_rejected_at_generation():
+    """v6/SC-4: 백지·단색 렌더는 생성 시점에 .FAILED 로 돌린다 — 종전에는 팀리드 육안만이
+    유일한 검출 장치라, 비용 압박으로 표본만 보면 방어가 통째로 사라졌다."""
+    with tempfile.TemporaryDirectory() as td:
+        blank = Path(td) / "blank.pdf"
+        doc = fitz.open(); doc.new_page(); doc.save(str(blank)); doc.close()   # 완전 백지
+        out = Path(td) / "cap.png"
+        r = capture_pdf.capture_page(blank, 1, out)
+        assert not r["ok"] and "백지" in r["reason"], r
+        assert not out.exists(), "백지인데 정상 캡처 경로에 저장됨"
+        assert out.with_name("cap.FAILED.png").exists(), "실패 사이드카가 없다"
+
+        # 긍정형 짝: 잉크가 옅은 페이지도 통과해야 한다 — 과잉 차단이 백지 통과보다 나쁘다.
+        # (실측 기준: 정상 최저는 표 형태 unique=3·잉크율 0.0097, 임계는 unique<=2 & 0.0005)
+        for name, build in [
+            ("표 형태", lambda p: ([p.draw_line(fitz.Point(50, 80 + i * 25),
+                                             fitz.Point(500, 80 + i * 25)) for i in range(8)],
+                                 [p.insert_text((60, 95 + i * 25), f"항목{i}  300.9  45.2")
+                                  for i in range(7)])),
+            ("텍스트 1줄", lambda p: p.insert_text((72, 100), "Revenue 2024: 300.9 KRW trillion")),
+        ]:
+            good = Path(td) / f"{name}.pdf"
+            doc = fitz.open(); pg = doc.new_page(); build(pg)
+            doc.save(str(good)); doc.close()
+            out2 = Path(td) / f"{name}.png"
+            r2 = capture_pdf.capture_page(good, 1, out2)
+            assert r2["ok"] and out2.exists(), (name, r2)
+
+
+@case
+def evidence_hash_unbound_without_snapshot():
+    """v6/EV-1: local 스냅샷이 없으면 sha256 은 대조 대상이 없어 아무 64자 hex 나 통과한다.
+    원문을 열지 않고 만든 evidence 가 A등급 1차출처로 인쇄되던 경로를 검증 쪽에서 닫는다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _real_png(wp.captures / "F001.png")
+        db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                         "source_url": "https://dart.example/없는문서",   # 열어본 적 없는 URL
+                         "sha256": hashlib.sha256("지어낸 값".encode()).hexdigest(),
+                         "capture": "_captures/F001.png"})
+        db.add_verify_event("F001", "lead", "reread")
+        db.set_status("F001", "confirmed")
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n",
+                                      encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"], rep
+        assert any("해시미결박" in f for f in rep["failures"]), rep["failures"]
+        assert any("재검증미결박" in f for f in rep["failures"]), rep["failures"]
+
+    # 긍정형 짝: 실파일 스냅샷 + evidence_id 결박이면 통과(정상 경로를 막지 않는다)
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n",
+                                      encoding="utf-8")
+        assert verify_facts.verify(wp.root / "r.md", wd)["ok"], "정상 결박이 막힘"
+
+
+@case
+def capture_reuse_and_swap_blocked():
+    """v6/EV-2·EV-3: 캡처 1장을 여러 fact 의 증빙으로 돌려막기 + 등재 후 이미지 교체 검출."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        db.add_fact({"claim": "시장 45조", "risk": "normal", "status": "pending",
+                     "context": {"metric": "market_size", "entity": "수소", "geography": "KR",
+                                 "period": "2030"},
+                     "value": {"raw": "45", "unit": "KRW_T"},
+                     "grade": {"authority": "B", "independence": "B", "directness": "B",
+                               "recency": "B"}})
+        _confirm(db, wp, "F001")
+        # F002 가 F001 의 캡처를 그대로 재사용(복제) — 실제 수치가 찍힌 캡처는 1장뿐
+        raw = (wp.captures / "F001.png").read_bytes()
+        (wp.captures / "F002.png").write_bytes(raw)
+        local, sha = _snapshot(wp, "F002")
+        ev2 = db.add_evidence({"fact_id": "F002", "type": "table_cell",
+                               "source_url": "https://other.example/x", "sha256": sha,
+                               "local": local, "capture": "_captures/F002.png",
+                               "capture_sha256": hashlib.sha256(raw).hexdigest()})
+        db.add_verify_event("F002", "lead", "reread", evidence_id=ev2["id"])
+        db.set_status("F002", "confirmed")
+        (wp.root / "r.md").write_text(
+            "매출은 300.9조원(F001), 시장은 45조원(F002).\n\n![c](_captures/F001.png)\n",
+            encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("캡처재사용" in f for f in rep["failures"]), rep["failures"]
+
+    # 등재 후 캡처 교체(파일만 바꿔치기) → capture_sha256 불일치로 검출
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        _real_png(wp.captures / "F001.png", text="전혀 다른 화면")     # 사후 교체
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n",
+                                      encoding="utf-8")
+        rep2 = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep2["ok"] and any("캡처해시" in f for f in rep2["failures"]), rep2["failures"]
+
+
+@case
+def verify_event_time_order_enforced():
+    """v6/EV-5: '재검증'이 증거 확보보다 먼저 기록된 대장은 재열람이 성립하지 않는다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        rows = db.facts()
+        rows[0]["verify_events"][0]["at"] = "2000-01-01T00:00:00"      # 증거보다 과거로 조작
+        _write_jsonl_atomic(wp.facts, rows)
+        (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n",
+                                      encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("재검증시각" in f for f in rep["failures"]), rep["failures"]
+
+    # 남의 fact 증거를 재검증 대상으로 지목하는 것은 등재 시점에 거부된다
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        ev = _confirm(db, wp, "F001")
+        db.add_fact({"claim": "시장 45조", "risk": "normal", "status": "pending",
+                     "context": {"metric": "market_size", "entity": "수소", "geography": "KR",
+                                 "period": "2030"},
+                     "value": {"raw": "45", "unit": "KRW_T"},
+                     "grade": {"authority": "B", "independence": "B", "directness": "B",
+                               "recency": "B"}})
+        try:
+            db.add_verify_event("F002", "lead", "reread", evidence_id=ev["id"])
+            raise AssertionError("남의 증거를 가리키는 재검증이 통과됨")
+        except ValidationError:
+            pass
 
 
 @case
@@ -1466,6 +1628,17 @@ def v5_doc_code_parity():
     assert "merge_evidence" in vg, "verification-gates.md 병합 경로 안내 누락"
     from facts_db import FactsDB as _FDB
     assert callable(getattr(_FDB, "merge_evidence", None)), "merge_evidence 미구현"
+
+    # ⑥ v6 증거 결박 — 문서의 실패 태그가 실제로 코드에서 나는 것과 같아야 한다
+    ec = (REFERENCES / "evidence-capture.md").read_text(encoding="utf-8")
+    for tag in ("[해시미결박]", "[캡처해시]", "[캡처재사용]", "[재검증미결박]", "[재검증시각]"):
+        assert tag in ec, f"evidence-capture.md 에 {tag} 규칙 누락"
+    assert hasattr(verify_facts, "check_capture_binding")
+    assert "capture_sha256" in json.loads(
+        (SKILL_ROOT / "assets" / "facts-schema.json").read_text(encoding="utf-8")
+    )["evidence"]["properties"], "스키마에 capture_sha256 없음"
+    # 임계는 실측 근거와 함께 코드에 있어야 한다(추정 임계 재도입 방지)
+    assert capture_pdf.BLANK_MAX_COLORS == 2 and capture_pdf.BLANK_MAX_INK == 0.0005
 
 
 def main():
