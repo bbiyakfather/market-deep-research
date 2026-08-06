@@ -23,7 +23,8 @@ import os
 import shutil
 import socket
 import sys
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote, urljoin, urlparse
 
@@ -111,6 +112,41 @@ _CA_BUNDLE = _ascii_ca()
 
 def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def _audit_fetch_attempt(url: str, tier: str, result: dict | None = None,
+                         failure_reason: str | None = None) -> str:
+    """Append one machine-readable fetch receipt without affecting the ladder."""
+    receipt_id = uuid.uuid4().hex
+    try:
+        result = result or {}
+        text = result.get("text") or ""
+        body = extract_text(text)
+        body_bytes = body.encode("utf-8")
+        snapshot_path: str | None = None
+        audit = Path("audit")
+        snapshots = audit / "_fetch_snapshots"
+        snapshots.mkdir(parents=True, exist_ok=True)
+        if result.get("ok"):
+            snapshot = snapshots / f"{receipt_id}.txt"
+            snapshot.write_bytes(body_bytes)
+            snapshot_path = str(snapshot).replace("\\", "/")
+        row = {
+            "id": receipt_id,
+            "url": url,
+            "ts": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "tier": tier,
+            "http_status": result.get("status"),
+            "failure_reason": failure_reason or (None if result.get("ok") else result.get("reason")),
+            "body_sha256": hashlib.sha256(body_bytes).hexdigest() if body_bytes else None,
+            "snapshot_path": snapshot_path,
+        }
+        with (audit / "fetch-log.jsonl").open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+    except Exception:
+        # Audit is observational; a logging filesystem error must not alter fetch/SSRF behavior.
+        pass
+    return receipt_id
 
 
 # --- 보안경계 (SSRF) ---------------------------------------------------------
@@ -373,6 +409,7 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
     구 버전의 `delegate`(insane-search 스킬 위임)는 사다리에 흡수돼 사라졌다.
     """
     trace: list[dict] = []
+    fetch_refs: list[str] = []
     partial_res: dict | None = None
     last_html: str = ""
     check_url_safe(url)                                 # 진입 전 1차 검증
@@ -380,15 +417,19 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
     for tier in _tier_order(url):
         try:
             for label, res in _candidates(tier, url):
+                ref = _audit_fetch_attempt(url, label, res)
+                fetch_refs.append(ref)
                 if not res or not res.get("ok"):
-                    trace.append({"tier": label, "fail": (res or {}).get("reason")})
+                    trace.append({"tier": label, "fail": (res or {}).get("reason"), "fetch_ref": ref})
                     continue
+                res["_fetch_ref"] = ref
                 if res.get("is_pdf"):
-                    return _result("ok", res, trace, note="pdf")
+                    return _result("ok", res, trace, note="pdf", fetch_refs=fetch_refs)
                 v = validate_body(res["text"], res.get("status", 0), success_selectors)
-                trace.append({"tier": label, "verdict": v["verdict"], "reason": v["reason"]})
+                trace.append({"tier": label, "verdict": v["verdict"], "reason": v["reason"],
+                              "fetch_ref": ref})
                 if v["verdict"] == "ok":
-                    return _result("ok", res, trace, note=tier)
+                    return _result("ok", res, trace, note=tier, fetch_refs=fetch_refs)
                 if v["verdict"] == "partial" and partial_res is None:
                     partial_res = res
                 if res.get("text"):
@@ -396,26 +437,29 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
         except SsrfBlocked:
             raise
         except Exception as e:
+            ref = _audit_fetch_attempt(url, tier, failure_reason=str(e))
+            fetch_refs.append(ref)
             trace.append({"tier": tier, "error": str(e)})
 
     if partial_res is not None:
-        return _result("partial", partial_res, trace)
+        return _result("partial", partial_res, trace, fetch_refs=fetch_refs)
     # OGP 메타만이라도 — 제목+요약 확보 시 partial 인정
     if last_html:
         og = _ogp_partial(last_html)
         if len(og) >= 40:
             trace.append({"tier": "ogp", "verdict": "partial"})
             return _result("partial", {"final_url": url, "text": og, "mime": "text/html"},
-                           trace, note="ogp")
-    return {"status": "fail", "final_url": url, "trace": trace,
+                           trace, note="ogp", fetch_refs=fetch_refs)
+    return {"status": "fail", "final_url": url, "trace": trace, "fetch_refs": fetch_refs,
             "hint": "자체 사다리 전 계층 소진 — 브라우저 MCP(agent-browser 우선, JS 렌더링) 또는 대체출처를 찾을 것"}
 
 
-def _result(status: str, res: dict, trace: list, note: str = "") -> dict:
+def _result(status: str, res: dict, trace: list, note: str = "", fetch_refs: list[str] | None = None) -> dict:
     return {"status": status, "final_url": res.get("final_url"), "http_status": res.get("status"),
             "archived_url": res.get("archived_url"), "mime": res.get("mime"),
             "text": res.get("text", ""), "raw": res.get("raw"), "is_pdf": res.get("is_pdf", False),
-            "trace": trace, "note": note}
+            "trace": trace, "note": note, "fetch_ref": res.get("_fetch_ref"),
+            "fetch_refs": fetch_refs or []}
 
 
 # --- 저장(원본 + 정제본 + 해시) ---------------------------------------------
