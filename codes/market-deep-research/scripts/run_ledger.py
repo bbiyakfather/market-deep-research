@@ -8,16 +8,20 @@
 
 레코드 스키마 정본(A4 — references 문서는 이 docstring 을 참조한다):
   checkpoint  {kind, gate, verdict, lane_verdicts[], evidence, blockers[], phase?,
-               target_hashes{facts?, evidence?, report_md?, report_pdf?},
-               fact_hashes{claim_key: content_sha}?, generation, at}
+               target_hashes{facts?, evidence?, report_md?, report_pdf?, run_receipt?},
+               fact_hashes{claim_key: content_sha}?, generation, at, prev_hash}
   steering    {kind, op: add_item|split_item|reorder|revise_wording|supersede_item|annotate,
-               evidence, rationale, at}
-  ask         {kind, ask_id, gate_id, question, options[], recommended?, supersedes?, at}
-  answer      {kind, ask_id, answer, resolved_by: user|timeout, at}
-  conflict    {kind, conflict_id, fact_ids[], sources[], at}
-  disposition {kind, ref_id(conflict_id|finding_id), disposition, rationale, decided_by, at}
+               evidence, rationale, at, prev_hash}
+  ask         {kind, ask_id, gate_id, question, options[], recommended?, supersedes?, at, prev_hash}
+  answer      {kind, ask_id, answer, resolved_by: user|timeout, at, prev_hash}
+  conflict    {kind, conflict_id, fact_ids[], sources[], at, prev_hash}
+  disposition {kind, ref_id(conflict_id|finding_id), disposition, rationale, decided_by, at, prev_hash}
     - conflict 처분값: accept_a|accept_b|synthesize_range|defer_to_report_caveat|reject_both
     - 검증 발견 처분값: accept|rebut
+  【v10-I4】 prev_hash: append 시 자동 부여(직전 레코드의 _canon_sha, 최초는 'GENESIS') —
+    append-only 를 이름만이 아니라 실제로 강제한다. 레코드를 직접 열어 지우거나 위조해도
+    체인이 끊겨 validate/status 가 잡는다. prev_hash 필드가 없는 레거시 레코드는 체인
+    검사에서 건너뛴다(소급 차단 금지).
 
 기계 하한(floor) — checkpoint 시 스크립트가 대장을 직접 스캔, 요청 verdict 를 강제 하향:
   (b) confirmed 인데 evidence_ids 가 비었거나 참조 대상이 실재하지 않음(댕글링) → BLOCK
@@ -26,6 +30,13 @@
   (d) LV 한정: 직전 LV 영수증 이후 내용이 바뀐 confirmed fact 에 lead 재검증이 늘지 않음 → BLOCK
       (수정 후 재열람 없이 checkpoint 만 다시 찍어 신선도를 되살리는 경로 차단. 기준선은
        영수증에 실린 claim_key 별 lead 재검증 횟수 — 타임스탬프가 초 단위라 시각 비교는 못 쓴다)
+  (e) 【v10-C4】 G2 이상 게이트(order 기준): 대응 disposition(ref_id=conflict_id) 없는
+      kind:conflict 가 대장에 남아 있으면 → BLOCK(SKILL.md:167-168 "미처분 충돌 잔존 시
+      G2 진입 불가"의 기계화)
+  (f) 【v10-C10】 G5C 한정: derivation=computed fact 또는 evidence.type=calculation 대상이
+      있는데 audit/verify-*.md 산출물이 하나도 없으면 → BLOCK(verification-gates.md:138-141
+      약속의 기계화. slug 1:1 대조 규칙 정본이 없어 '대상 존재 시 최소 1개 실재'로 최소
+      요건만 강제한다 — 근거는 _g5c_target_scan() 주석)
 
 join 4상+1: G1 checkpoint 는 --phase 필수
   complete | awaiting_verification | failed | cancelled | blocked_partial
@@ -156,7 +167,11 @@ def _fact_hashes(wp: WorkPaths) -> dict[str, str]:
 
 
 def _watch_file(wp: WorkPaths, watch: str) -> Path:
-    return {"facts": wp.facts, "report_md": wp.report_md, "report_pdf": wp.report_pdf}[watch]
+    # 【v10-C5/C12】 evidence·run_receipt 을 정식 watch 어휘로 추가 — gates.json 에서
+    # 이 이름을 쓰는 게이트만 실제로 대조된다(_gate_states 루프가 g["watches"] 를 순회).
+    return {"facts": wp.facts, "evidence": wp.evidence,
+            "report_md": wp.report_md, "report_pdf": wp.report_pdf,
+            "run_receipt": wp.journal("run-receipt.md")}[watch]
 
 
 MISSING = "<missing>"          # 부재를 '없는 값'이 아니라 명시 상태로(fail-closed 센티널)
@@ -169,8 +184,6 @@ def _target_hashes(wp: WorkPaths, watches: list[str]) -> dict[str, str]:
     for w in watches:
         p = _watch_file(wp, w)
         th[w] = sha256_file(p) if p.exists() else MISSING
-        if w == "facts" and wp.evidence.exists():
-            th["evidence"] = sha256_file(wp.evidence)
     return th
 
 
@@ -214,6 +227,10 @@ def _print_floor(fl: dict) -> None:
     print(f"[floor(c)] 대장 스키마 위반: {'; '.join(fl['c']) or '<none>'}")
     if fl.get("d"):
         print(f"[floor(d)] 변경 후 재검증 없음: {', '.join(fl['d'])}")
+    if fl.get("e"):
+        print(f"[floor(e)] 미처분 충돌 잔존(G2+): {', '.join(fl['e'])}")
+    if fl.get("f"):
+        print(f"[floor(f)] G5C 대상 존재하는데 verify-*.md 부재: {', '.join(fl['f'])}")
 
 
 def _clamp(requested: str, fl: dict, blockers: list[str]) -> str:
@@ -228,6 +245,12 @@ def _clamp(requested: str, fl: dict, blockers: list[str]) -> str:
     if fl.get("d"):
         final = "BLOCK"
         blockers += [f"floor(d): {i}" for i in fl["d"]]
+    if fl.get("e"):
+        final = "BLOCK"
+        blockers += [f"floor(e): 미처분 충돌 {i} 잔존 — G2 이상 게이트 진입 불가" for i in fl["e"]]
+    if fl.get("f"):
+        final = "BLOCK"
+        blockers += [f"floor(f): G5C 대상 {i} 인데 verify-*.md 산출물 부재" for i in fl["f"]]
     return final
 
 
@@ -277,16 +300,80 @@ def _lead_verify_counts(wp: WorkPaths) -> dict[str, int]:
     return out
 
 
+def _unresolved_conflict_scan(ledger: list[dict], gate_id: str, gmap: dict) -> list[str]:
+    """floor(e) 【v10-C4】 — G2 이상 게이트(order 기준)는 미처분 kind:conflict 가 있으면 BLOCK.
+
+    SKILL.md:167-168 이 문서로만 약속하던 "미처분 충돌 잔존 시 G2 진입 불가"를 기계화한다.
+    disposition 이 conflict 를 가리키는 필드는 record() 의 기존 관례를 그대로 쓴다 — ref_id
+    가 conflict_id 를 가리킨다(tests/test_run_ledger.py 의 conflict→disposition 사용례 정본,
+    다른 이름의 참조 필드는 대장 어디에도 없다).
+    """
+    if gate_id not in gmap or gmap[gate_id]["order"] < gmap["G2"]["order"]:
+        return []
+    disposed = {r.get("ref_id") for r in ledger if r.get("kind") == "disposition"}
+    return sorted({r.get("conflict_id") or "?" for r in ledger
+                   if r.get("kind") == "conflict" and r.get("conflict_id") not in disposed})
+
+
+def _g5c_target_scan(wp: WorkPaths, gate_id: str) -> list[str]:
+    """floor(f) 【v10-C10】 — G5C 대상(derivation=computed 인 fact 또는 evidence.type=calculation
+    이 딸린 fact)이 있는데 audit/verify-*.md 산출물이 하나도 없으면 BLOCK
+    (verification-gates.md:138-141, SKILL.md:224-227 약속의 기계화).
+
+    slug 규칙 정본 없음(문서·기존 코드 어디에도 fact_id→slug 변환 규칙이 없다): fact 별 1:1
+    파일명 매칭을 새로 발명하면 그 자체가 새 규약을 창설하는 것이라, 대신 '대상이 있으면
+    verify-*.md 가 최소 1개는 실재해야 한다'는 최소 요건만 기계화한다. 이 결정은 이 주석이
+    정본이다 — 더 엄격한 1:1 대조가 필요해지면 slug 규칙부터 문서에 먼저 정의할 것.
+    """
+    if gate_id != "G5C":
+        return []
+    ev = _read_jsonl(wp.evidence) if wp.evidence.exists() else []
+    calc_fact_ids = {e.get("fact_id") for e in ev if e.get("type") == "calculation"}
+    targets = sorted({f.get("id") for f in _read_jsonl(wp.facts)
+                      if f.get("derivation") == "computed" or f.get("id") in calc_fact_ids})
+    if not targets:
+        return []
+    has_verify_md = (wp.audit.exists()
+                     and any(p.name.startswith("verify-") and p.name.endswith(".md")
+                             for p in wp.audit.iterdir() if p.is_file()))
+    return [] if has_verify_md else targets
+
+
+def _chain_scan(ledger: list[dict]) -> list[str]:
+    """prev_hash 해시체인 검증 【v10-I4】 — append-only 를 이름만이 아니라 실제로 강제한다.
+
+    레거시 레코드(prev_hash 필드 없음)는 검사 대상에서 제외한다 — floor(d) 의 prev_counts
+    부재 처리(위 _stale_reverify_scan) 선례와 동일하게, 기준선이 없으면 소급 차단하지 않는다
+    (안 그러면 이 기능을 넣기 전에 완료된 기존 조사폴더가 다음 status 호출에서 전부 오탐
+    BLOCK 된다). 체인이 한 번이라도 시작된 뒤에는 그 앞의 레거시 레코드 내용이 다음 체인
+    레코드의 prev_hash 앵커로 쓰이므로, 이후 그 레거시 레코드를 변조해도 잡힌다(의도적 부수
+    효과 — 탐지 능력을 일부러 줄이지 않는다).
+    """
+    out: list[str] = []
+    for i, r in enumerate(ledger):
+        if "prev_hash" not in r:
+            continue
+        expected = _canon_sha(ledger[i - 1]) if i > 0 else "GENESIS"
+        if r["prev_hash"] != expected:
+            out.append(f"#{i}({r.get('kind')}/{r.get('gate') or r.get('ask_id') or ''})")
+    return out
+
+
 # --- checkpoint ---------------------------------------------------------------
 def checkpoint(work, gate_id: str, verdict: str, evidence: str, phase: str | None = None,
                lane_verdicts: list[dict] | None = None, blockers: list[str] | None = None,
                mode: str | None = None) -> dict:
     wp = _wp(work)
+    # 【v10-C13】 게이트 id 대소문자 무시 — SKILL.md 는 "G5c" 소문자로 표기하는데 enum 은
+    # 대문자다. 문서 5곳을 고치는 대신 여기서 정규화(향후 표기 흔들림도 함께 흡수).
+    gate_id = (gate_id or "").upper()
     gates = load_gates()
     gmap = {g["id"]: g for g in gates}
     ledger = _read_ledger(wp)
     fl = _floor_scan(wp)
     fl["d"] = _stale_reverify_scan(wp, ledger, gate_id)
+    fl["e"] = _unresolved_conflict_scan(ledger, gate_id, gmap)
+    fl["f"] = _g5c_target_scan(wp, gate_id)
 
     # 거부 사유는 모으되, 전 진단을 먼저 일괄 출력한다(첫 실패에서 멈추지 않는다).
     refusals: list[str] = []
@@ -312,11 +399,10 @@ def checkpoint(work, gate_id: str, verdict: str, evidence: str, phase: str | Non
     final = _clamp(verdict, fl, blk)
 
     gate = gmap[gate_id]
+    # 【v10-C12】 run-receipt.md 무결성(AP1, G5 영수증 자기참조)은 이제 gates.json 의 G5
+    # watches 에 "run_receipt" 이 있어 _target_hashes 가 일반 경로로 기록·대조한다(write-only
+    # 였던 특례 분기 제거 — G5 PASS 후 run-receipt.md 를 고쳐도 잡히지 않던 결함의 실제 수정).
     th = _target_hashes(wp, gate["watches"])
-    if gate_id == "G5":                     # run-receipt.md 무결성: G5 영수증 자기참조(AP1)
-        receipt = wp.journal("run-receipt.md")
-        if receipt.exists():
-            th["run_receipt"] = sha256_file(receipt)
 
     # generation: facts 파일 해시가 직전 기록과 달라질 때 +1
     ckpts = [r for r in ledger if r.get("kind") == "checkpoint"]
@@ -380,10 +466,12 @@ def _gate_states(wp: WorkPaths, ledger: list[dict], gates: list[dict]) -> dict[s
     return out
 
 
-def _completion_possible(states: dict[str, dict], roster_missing: list[str] | None = None) -> bool:
-    """완료 = 11게이트 신선 PASS/WATCH + 필수 audit 산출물 실재.
-    missing_watch(산출물 부재)는 fresh 가 아니므로 여기서 자동 배제된다."""
-    if roster_missing:
+def _completion_possible(states: dict[str, dict], roster_missing: list[str] | None = None,
+                         chain_breaks: list[str] | None = None) -> bool:
+    """완료 = 11게이트 신선 PASS/WATCH + 필수 audit 산출물 실재 + 대장 해시체인 무결.
+    missing_watch(산출물 부재)는 fresh 가 아니므로 여기서 자동 배제된다.
+    chain_breaks(【v10-I4】)는 대장 자체가 변조됐다는 신호라 완료 선언을 무조건 막는다."""
+    if roster_missing or chain_breaks:
         return False
     return all(s["state"] == "fresh" and s["verdict"] in ("PASS", "WATCH")
                for s in states.values())
@@ -395,6 +483,7 @@ def status(work) -> dict:
     ledger = _read_ledger(wp)
     states = _gate_states(wp, ledger, gates)
     roster_missing = _roster_check(wp)["missing"]
+    chain_breaks = _chain_scan(ledger)
     for g in gates:
         s = states[g["id"]]
         print(f"{g['id']:<7} {s['state']:<14} verdict={s['verdict'] or '<none>'}"
@@ -409,11 +498,13 @@ def status(work) -> dict:
         print(f"[미답 ask] {ask['ask_id']}({ask.get('gate_id') or '-'}): {ask.get('question') or ''}")
     if roster_missing:
         print(f"[로스터] 필수 audit 산출물 부재: {', '.join(roster_missing)}")
-    done = _completion_possible(states, roster_missing)
-    print(f"완료 선언 가능(11게이트 신선 PASS/WATCH, BLOCK 0, 필수 산출물 실재): "
+    if chain_breaks:
+        print(f"[체인] prev_hash 무결성 위반(변조 의심): {', '.join(chain_breaks)}")
+    done = _completion_possible(states, roster_missing, chain_breaks)
+    print(f"완료 선언 가능(11게이트 신선 PASS/WATCH, BLOCK 0, 필수 산출물 실재, 해시체인 무결): "
           f"{'가능' if done else '불가'}")
     return {"gates": states, "completion_possible": done,
-            "roster_missing": roster_missing, "active_ask": ask}
+            "roster_missing": roster_missing, "active_ask": ask, "chain_breaks": chain_breaks}
 
 
 # --- validate (읽기전용) ------------------------------------------------------
@@ -435,6 +526,7 @@ def validate(work) -> dict:
     ledger = _read_ledger(wp)
     fl = _floor_scan(wp)
     roster = _roster_check(wp)
+    chain_breaks = _chain_scan(ledger)      # 【v10-I4】 대장 해시체인 무결성(변조 탐지)
     g1_last = next((r for r in reversed(ledger)
                     if r.get("kind") == "checkpoint" and r.get("gate") == "G1"), None)
     g1_halted = bool(g1_last and g1_last.get("phase") in _HALT_PHASES)
@@ -445,10 +537,15 @@ def validate(work) -> dict:
     print(f"[로스터] legacy(이벤트성 대장 — run-ledger kind 로 이관 대상): "
           f"{', '.join(roster['legacy']) or '<none>'}")
     print(f"[G1] 후속 게이트 진행 차단 상태(failed|cancelled): {'예' if g1_halted else '<none>'}")
+    print(f"[체인] prev_hash 무결성 위반(변조 의심): {', '.join(chain_breaks) or '<none>'}")
 
-    block_level = bool(fl["b"] or (fl["c"] and not fl["legacy"]))
+    # 【v10】 종전 `fl["c"] and not fl["legacy"]` 는 _floor_scan 이 반환하지 않는 키를 읽어
+    # (b)가 비고 (c)만 찬 조합에서 KeyError 로 죽었다(v7 에서 레거시 완화를 폐지할 때 남은 잔재).
+    # 완화는 폐지됐고 checkpoint 의 _clamp 는 이미 (c)를 무조건 BLOCK 시킨다 — 두 경로를 정렬한다.
+    block_level = bool(fl["b"] or fl["c"] or chain_breaks)
     print(f"[판정] checkpoint 시 BLOCK 강제될 위반: {'있음' if block_level else '<none>'}")
-    return {"floor": fl, "roster": roster, "g1_halted": g1_halted, "block_level": block_level}
+    return {"floor": fl, "roster": roster, "g1_halted": g1_halted,
+            "chain_breaks": chain_breaks, "block_level": block_level}
 
 
 # --- record -------------------------------------------------------------------
@@ -615,19 +712,28 @@ def _append(wp: WorkPaths, ledger: list[dict], rec: dict, mode: str | None = Non
 
     종전에는 전체를 읽어 전체를 다시 썼다 — (a) 동시 쓰기에서 나중 쓰기가 앞선 레코드를 통째로
     덮어(lost update) ask·checkpoint 가 소실되고, (b) 레코드 N 건이면 I/O 가 O(N²)로 팽창했다.
-    호출자가 넘긴 `ledger` 는 읽은 시점의 스냅샷이므로, 실제 상태는 append 후 디스크에서 다시
-    읽는다(다른 프로세스가 그 사이 남긴 레코드까지 반영).
+    호출자가 넘긴 `ledger` 는 읽은 시점의 스냅샷이므로, 실제 상태는 락 안에서 디스크를 다시
+    읽어 판단한다(다른 프로세스가 그 사이 남긴 레코드까지 반영).
+
+    【v10-I4】 prev_hash: 락 안에서 읽은 디스크 최신 마지막 레코드를 앵커로 건다(호출자의
+    `ledger` 스냅샷을 쓰면 안 된다 — 동시 쓰기에서 다른 프로세스가 먼저 끼워넣은 레코드를
+    놓쳐 체인이 끊긴다). 최초 레코드는 'GENESIS'.
     """
     path = _ledger_path(wp)
     with _ledger_lock(path):
         path.parent.mkdir(parents=True, exist_ok=True)
+        disk_ledger = _read_jsonl(path) if path.exists() else []
+        rec["prev_hash"] = _canon_sha(disk_ledger[-1]) if disk_ledger else "GENESIS"
         with open(path, "a", encoding="utf-8", newline="\n") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             f.flush()
             os.fsync(f.fileno())
-        fresh = _read_ledger(wp)                # 파생 상태는 대장 재생이 정본
+        fresh = disk_ledger + [rec]              # 파생 상태는 대장 재생이 정본
+        # 메타데이터 쓰기도 락 안에서 — 밖에서 하면 20스레드가 같은 run-metadata.json 에
+        # 동시에 os.replace 해 Windows 에서 WinError 5(액세스 거부)로 죽는다(실측). prev_hash
+        # 계산으로 락 내부 구간이 짧아지며 원래도 있던 이 경합이 실제로 드러났다.
+        _update_metadata(wp, fresh, mode=mode)
     ledger.append(rec)                          # 호출자 스냅샷도 최신화(반환값 일관성)
-    _update_metadata(wp, fresh or ledger, mode=mode)
 
 
 def _counters(ledger: list[dict]) -> dict:
@@ -666,9 +772,13 @@ def _update_metadata(wp: WorkPaths, ledger: list[dict], mode: str | None = None)
         except (json.JSONDecodeError, OSError):
             old = {}                       # 손상 감지 시 현재 run 스코프만 재시드
     ask = _active_ask(ledger)
+    # 【v10-I4】 해시체인이 끊겼으면(대장 변조 의심) completedAt 도 완료로 봉인하지 않는다 —
+    # status() 가 보고하는 완료 가능 여부와 메타데이터가 서로 다른 말을 하면 안 된다.
+    chain_breaks = _chain_scan(ledger)
     meta = {
         "mode": mode or old.get("mode") or "research",
-        "completedAt": _now() if _completion_possible(states, _roster_check(wp)["missing"]) else None,
+        "completedAt": (_now() if _completion_possible(
+            states, _roster_check(wp)["missing"], chain_breaks) else None),
         "last_fresh_gate": max(fresh, key=lambda g: g["order"])["id"] if fresh else None,
         "fact_count": len(_read_jsonl(wp.facts)),
         # 재개 진입점에 미답 ask 를 노출한다 — 없으면 재개 세션이 교착의 원인을 못 본다.

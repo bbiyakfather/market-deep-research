@@ -102,6 +102,8 @@ class WorkPaths:
     def report_md(self) -> Path: return self.root / "report.md"
     @property
     def report_pdf(self) -> Path: return self.root / "report.pdf"
+    @property
+    def bm_summary(self) -> Path: return self.root / "bm-summary.md"  # 【v10】C6: BM 조사 유형 전용(존재하지 않으면 그냥 미사용)
 
 
 def _stamp() -> str:

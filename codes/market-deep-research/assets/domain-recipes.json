@@ -1,0 +1,13 @@
+{
+  "_comment": "도메인별 실측 수집 레시피(source-ladder.md 100-105행 — G5 완료 후 도메인 키드 머지, 전체 재작성 금지). fetch.py _tier_order 가 ROUTES 보다 먼저 참조한다: 하드코딩된 라우팅표보다 최신 실측이 우선이어야 한다. 도메인 키는 접미 매칭(example.com 항목이 sub.example.com 도 매칭). 파일 부재·JSON 손상은 조용히 무시되고 기존 ROUTES 로 진행한다(수집 스택을 죽이면 안 됨).",
+  "_updated": "2026-08-07",
+  "_schema_example": {
+    "example.com": {
+      "tiers": ["mobile", "rss"],
+      "success_selectors": ["<article", "og:description"],
+      "blocked": "데스크톱 지문 3종 전부 403 — Cloudflare",
+      "last_verified": "2026-08-07"
+    }
+  },
+  "recipes": {}
+}

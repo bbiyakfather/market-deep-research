@@ -21,6 +21,8 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 1. **보안경계(선제+사후)**: HTTP(S)만 · private/loopback/link-local/reserved IP 및 리다이렉트 대상
    차단(SSRF, DNS 사전검증) · **연결 후 실접속 IP(primary_ip) 재검증**(DNS 리바인딩 TOCTOU 방지)
    · 크기(8MB)·시간(25s)·**MIME 허용목록**(실제 게이트 — PDF 는 매직바이트`%PDF-` 로 판정, 확장자/헤더는 불신).
+   Content-Type 이 비어있거나 없는 서버는 화이트리스트를 통째로 우회하지 못한다 — 본문 앞
+   8000바이트에 NUL 이 있으면(git 식 바이너리 판정) 거부, 없으면(정상 텍스트) 통과.
    원문=불신뢰(추출만, 실행 금지).
 2. **curl_cffi TLS 그리드**(chrome/safari/chrome110 전수, R6). 각 홉 SSRF 재검증. CA 번들은 ASCII 경로로.
 3. **모바일**(`safari180_ios` TLS 지문 + iPhone UA + ko-KR). 모바일 URL 재작성 —
@@ -76,8 +78,11 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
   증거가 사라지므로 자동 강등은 하지 않는다).
 - **검색 차단 ≠ 무결과**: `search_with_diagnostics()` 가 `{results, blocked_engines}` 를 준다.
   봇 차단 페이지는 HTTP 200 으로 오므로 마커(`assets/searx-instances.json` 의 `block_markers`)로
-  판정하고, SearXNG 429/503 은 백오프 재시도한다. **결과 0건 + blocked_engines 비어있지 않음**을
-  '이 주제엔 출처가 없다'로 결론내면 커버리지 공백이 보고서 서술로 굳는다.
+  판정하고, SearXNG 429/503 은 백오프 재시도한다. `_searx()` 는 200+비JSON 응답도 조용히 다음
+  인스턴스로 넘기지 않고 `is_blocked_page()` 로 판별해 `searx:{host}:blocked`(봇확인 페이지)
+  또는 `searx:{host}:no-json`(JSON 미지원 설정문제)으로 사유를 구분해 `blocked_engines` 에
+  남긴다. **결과 0건 + blocked_engines 비어있지 않음**을 '이 주제엔 출처가 없다'로 결론내면
+  커버리지 공백이 보고서 서술로 굳는다.
 
 ## WAF 조기감지 정찰 (R7) — ⚠ 이 항목만 playwright 우선
 반복의도 조회에서 초기 2~3회 challenge면: 백그라운드로 fetch 격자 계속 + 포어그라운드로
@@ -103,6 +108,11 @@ G5 완료 선언 후, 이번 조사에서 실측으로 확인된 도메인별 �
 보존). 기록 항목: 도달한 사다리 계층 · 성공 셀렉터/엔드포인트(WAF 정찰로 포착한 내부 API 포함) ·
 차단 양상 · 마지막 확인일. 계획 단계 실행가능성 리뷰의 fetch.py 실측 프로브 결과도 같은 파일에
 머지한다(실측 실패는 REJECT 사유가 아니라 진단 — 레시피 갱신 입력).
+
+`fetch._tier_order()` 는 실제로 이 파일을 읽어 도메인이 매치되면(접미 매칭, `example.com` ⊇
+`sub.example.com`) 하드코딩 `ROUTES` 보다 **먼저** 적용한다 — 실측이 정본이고 `ROUTES` 는 그
+실측이 아직 없을 때의 폴백이다. 파일 부재·JSON 손상은 조용히 무시하고 종전 `ROUTES` 결과로
+진행한다(수집 스택이 죽지 않는다).
 
 ### 휴리스틱 원칙 (verbatim)
 > 메모리는 절차·과거 결정에 유용한 휴리스틱 맥락일 뿐 현재 상태의 권위가 아니다. 메모리 유래

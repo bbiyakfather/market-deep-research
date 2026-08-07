@@ -16,11 +16,21 @@ BX → G2(증빙) → G3 → G5C → RENDER([4]+[4b]) → G4 → G5. 작업 단�
   --verdict PASS|WATCH|BLOCK --evidence "..."` 가 `audit/run-ledger.jsonl` 에 append 하는
   레코드로만 성립. verdict 는 `PASS|WATCH|BLOCK` 3값 고정 — 리뷰 레인 원어(CLEAR/OKAY/
   APPROVE 등)는 `lane_verdicts: [{lane, token}]` 에 원어 보존, 게이트 verdict 환산은 팀리드가 기록.
+  `<gate>` 는 대소문자 무관(`g5c`·`G5c`·`G5C` 모두 `G5C` 로 정규화되어 기록) — 이 문서가 관례상
+  쓰는 소문자 표기(`G5c`)를 CLI 입력 그대로 써도 된다.
 - **신선도는 fact 단위**: watches 에 facts 가 든 게이트는 영수증의 `fact_hashes`(claim_key→sha)
   와 현재 대장을 대조 — 변경 0 이면 fresh, 있으면 partial_stale + 변경 claim_key 목록만
-  재검증(전건 재검증 강제 아님 — 아래 델타 라체트와 정합). report_md/report_pdf 는 파일 해시
-  전체 실효(렌더 산출물은 원자 단위가 파일). `generation` 카운터·대조 규칙의 구현 정본은
-  `run_ledger.py` — 이 문서는 절차만 서술한다.
+  재검증(전건 재검증 강제 아님 — 아래 델타 라체트와 정합). report_md/report_pdf/evidence(G2 이상)/
+  run_receipt(G5) 는 파일 해시 전체 실효(렌더 산출물·증거대장·영수증은 원자 단위가 파일 그 자체).
+  `evidence.jsonl` 이 watches 에 들지 않으면 G2 PASS 이후 증거 원문(verbatim·source_url)만
+  바꿔치기해도 아무도 대조하지 않아 fresh 로 남는다 — 그래서 G2/G3/G5C/G5 는 반드시 `evidence`
+  를 watches 에 둔다. `generation` 카운터·대조 규칙의 구현 정본은 `run_ledger.py` — 이 문서는
+  절차만 서술한다.
+- **해시체인(append-only 의 실질)**: `run-ledger.jsonl` 의 각 레코드는 `prev_hash`(직전 레코드의
+  canonical sha, 최초는 `GENESIS`)를 갖는다 — 대장을 직접 열어 과거 판정을 지우거나 답변을
+  위조하면 체인이 끊겨 `status`/`validate` 가 `chain_breaks` 로 잡고 완료 선언을 무조건 막는다.
+  `prev_hash` 필드가 없는 레거시 레코드(이 기능 도입 이전 완료된 조사폴더)는 검사 대상에서
+  제외한다 — 소급 BLOCK 은 하지 않는다.
 - **join phase 어휘**(G1 checkpoint `phase`): `complete | awaiting_verification | failed |
   cancelled | blocked_partial`. 다음 게이트 checkpoint 거부는 **failed·cancelled 만**.
   awaiting_verification 은 [2] 진입이 정상 경로. blocked_partial(human_blocked 레인 잔존)은
@@ -28,10 +38,13 @@ BX → G2(증빙) → G3 → G5C → RENDER([4]+[4b]) → G4 → G5. 작업 단�
 - **완료 선언 규칙**: "보고서 완성" = run-ledger 에 11개 게이트 전부 신선 PASS 또는
   WATCH(BLOCK 0). WATCH 가 하나라도 있으면 9부 한계 고지 필수. 진행 기억·산문 선언은
   증거가 아니다.
-- **기계 하한(floor) 【v7】**: 팀리드가 PASS 를 요청해도 스크립트가 강제로 낮추는 사유 —
+- **기계 하한(floor) 【v7~v10】**: 팀리드가 PASS 를 요청해도 스크립트가 강제로 낮추는 사유 —
   `floor(b)` confirmed 인데 증거 참조가 없거나 대상이 실재하지 않음(댕글링) · `floor(c)` 대장
   스키마 위반 · `floor(d)` **LV 한정**, 직전 LV 영수증 이후 내용이 바뀐 confirmed fact 에 lead
-  재검증이 늘지 않음. (블로커 문자열이 그대로 영수증에 남으므로 이 태그로 grep 하면 된다.)
+  재검증이 늘지 않음 · `floor(e)` **G2 이상 게이트 한정**, `kind:conflict` 가 대응 `kind:disposition`
+  없이 잔존 · `floor(f)` **G5C 한정**, G5C 대상(`derivation=computed` 또는 `evidence.type=
+  calculation`)이 있는데 `audit/verify-*.md` 산출물이 하나도 없음. (블로커 문자열이 그대로
+  영수증에 남으므로 이 태그로 grep 하면 된다.)
   `floor(d)`가 없으면 "수치를 고치고 재열람 없이 checkpoint 만 다시 찍어 신선도 복귀"가 성립해 fact
   단위 신선도 모델 자체가 무의미해진다. 기준선은 영수증에 실린 claim_key 별 재검증 횟수다 —
   타임스탬프는 초 단위라 같은 초에 벌어진 수정과 재검증을 구분하지 못한다.
@@ -83,8 +96,8 @@ entity_id 스윕).
 - **출처 충돌 typed 처분**: 모순 수치 자동 채택 금지(abort-and-report) — run-ledger
   `kind:conflict` 기록 후 `kind:disposition`(`accept_a|accept_b|synthesize_range|
   defer_to_report_caveat|reject_both` + rationale)이 있어야 해당 fact 재검증 통과.
-  **미처분 충돌 잔존 시 G2 진입 불가**(fail-closed) — 여기서 G2 는 아래 **증빙 게이트**를
-  말한다.
+  **미처분 충돌 잔존 시 G2 진입 불가**(fail-closed, `floor(e)` 기계 강제) — 여기서 G2 는 아래
+  **증빙 게이트**를 말한다.
 - **모순 트리거 4종**:
   | 트리거 | 처리 |
   |---|---|
@@ -137,8 +150,10 @@ high-risk 캡처 실재 · **목차 기계검사**(`--plan` 미지정 시 `audit
 
 ## G5c 실행코드 검증(계산·상충) 【v4-N】
 자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
-- **대상 선별**: `evidence.type=calculation` 존재 OR fact `derivation=computed`. 대상인데
-  `verify-<slug>.md` 없으면 G5 에서 지적.
+- **대상 선별**: `evidence.type=calculation` 존재 OR fact `derivation=computed`. 대상이 있는데
+  `audit/` 에 `verify-*.md` 가 하나도 없으면 `floor(f)` 가 G5C checkpoint 자체를 BLOCK 한다
+  (fact 별 1:1 slug 매칭 정본은 없음 — "대상 존재 시 최소 1개 실재"만 기계 강제, 더 엄격한
+  대조가 필요해지면 slug 규칙부터 문서에 먼저 정의할 것).
 - **verify-<slug>.md 표준 템플릿** — 계산 하나 = 기록 하나:
   ```
   입력: <fact_id> · <값>

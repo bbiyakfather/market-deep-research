@@ -12,6 +12,7 @@ CLI:
 """
 from __future__ import annotations
 
+import html as html_lib                                  # _ddg 의 지역변수 html(페이지 원문)과 이름 충돌 방지
 import json
 import re
 import sys
@@ -19,7 +20,7 @@ import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import parse_qs, quote, unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urljoin, urlparse
 
 from skill_paths import ASSETS
 
@@ -41,16 +42,59 @@ def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-def _get(url: str, timeout: int = 12) -> tuple[int, str]:
+def _get(url: str, timeout: int = 12, max_redirects: int = 5) -> tuple[int, str]:
+    """C1 — allow_redirects 기본값(True)에 맡기면 리다이렉트를 사전검증 없이 자동추종해
+    첫 URL 만 검증하고 내부망으로 튀는 홉은 그냥 통과한다(blind SSRF). fetch.py:_fetch_once
+    의 홉별 검증 루프와 동일하게 매 홉 check_url_safe 를 태운다."""
     check_url_safe(url)
     if creq is None:
-        from urllib.request import Request, urlopen
-        with urlopen(Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=timeout) as r:
-            return r.status, r.read().decode("utf-8", errors="replace")
+        return _get_urllib(url, timeout, max_redirects)
     kw = {"verify": _CA_BUNDLE} if _CA_BUNDLE else {}
-    r = creq.get(url, impersonate="chrome", timeout=timeout, **kw)
-    check_response_ip(r)                                # V26 — 실접속 IP 사후 재검증(TOCTOU)
-    return r.status_code, r.text
+    cur = url
+    for _ in range(max_redirects + 1):
+        r = creq.get(cur, impersonate="chrome", timeout=timeout, allow_redirects=False, **kw)
+        check_response_ip(r)                            # V26 — 실접속 IP 사후 재검증(TOCTOU)
+        if r.status_code in (301, 302, 303, 307, 308):
+            loc = r.headers.get("location") or r.headers.get("Location")
+            if not loc:
+                return r.status_code, r.text
+            cur = urljoin(cur, loc)
+            check_url_safe(cur)                         # 매 홉 SSRF 사전검증(리다이렉트 우회 차단)
+            continue
+        return r.status_code, r.text
+    return r.status_code, r.text                        # 상한 도달 — 마지막 응답으로 종료(무한루프 방지)
+
+
+def _get_urllib(url: str, timeout: int, max_redirects: int) -> tuple[int, str]:
+    """curl_cffi 미설치 폴백. urllib 의 기본 리다이렉트 핸들러도 검증 없이 자동추종하므로
+    같은 성질(C1)이다 — redirect_request 가 None 을 돌려주면 자동추종을 끄고 우리가 직접 돈다."""
+    from urllib.error import HTTPError
+    from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+    class _NoRedirect(HTTPRedirectHandler):
+        def redirect_request(self, *a, **kw):
+            return None
+
+    opener = build_opener(_NoRedirect)
+    cur = url
+    last_code = None
+    for _ in range(max_redirects + 1):
+        req = Request(cur, headers={"User-Agent": "Mozilla/5.0"})
+        try:
+            with opener.open(req, timeout=timeout) as r:
+                return r.status, r.read().decode("utf-8", errors="replace")
+        except HTTPError as e:
+            # 파이썬은 except 블록을 벗어나면 e 를 암묵적으로 del 한다 — 루프 밖에서 쓰려면
+            # 블록 안에서 값을 꺼내둬야 한다(안 그러면 상한 도달 시 NameError).
+            last_code = e.code
+            if e.code not in (301, 302, 303, 307, 308):
+                raise
+            loc = e.headers.get("Location")
+            if not loc:
+                return e.code, ""
+            cur = urljoin(cur, loc)
+            check_url_safe(cur)                         # 매 홉 SSRF 사전검증
+    return last_code, ""                                # 상한 도달 — 마지막 상태코드로 종료(무한루프 방지)
 
 
 # --- 백엔드들 ----------------------------------------------------------------
@@ -78,7 +122,10 @@ def _ddg(query: str, n: int, blocked: list[str] | None = None) -> list[dict]:
         return []
     out = []
     for m in re.finditer(r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>', html, re.S):
-        href, title = m.group(1), re.sub(r"<[^>]+>", "", m.group(2)).strip()
+        href = m.group(1)
+        # C14 — 태그만 제거하고 엔티티(&amp; 등)는 그대로 두면 "Growth &amp; Forecast" 처럼
+        # 회사명·문구가 손상된 채 대장·최종 보고서에 실린다. unescape 로 원문 표기를 복원한다.
+        title = html_lib.unescape(re.sub(r"<[^>]+>", "", m.group(2)).strip())
         real = _decode_ddg(href)
         if real:
             out.append({"title": title, "url": real, "snippet": "", "source": "ddg"})
@@ -123,6 +170,16 @@ def _searx(query: str, n: int, blocked: list[str] | None = None) -> list[dict]:
                        for r in data.get("results", [])[:n]]
                 if res:
                     return res
+            elif st == 200:
+                # C2 — is_blocked_page() 배선. 200+비JSON 을 조용히 다음 인스턴스로 넘기면
+                # 결과0건+blocked 비어있음이 되어 "출처 없음"으로 오판된다(source-ladder.md
+                # 계약 위반). 봇확인 페이지('차단 의심')와 JSON 미지원('설정 문제')을 구분해
+                # 사유와 함께 남긴다 — 둘 다 blocked 에 남아야 무결과와 구분된다.
+                if blocked is not None:
+                    reason = "blocked" if is_blocked_page(txt) else "no-json"
+                    tag = f"searx:{host}:{reason}"
+                    if tag not in blocked:
+                        blocked.append(tag)
             break                                        # 그 밖의 응답은 이 인스턴스 포기
     return []
 
@@ -241,6 +298,52 @@ def demo() -> None:
     globals()["_get"] = lambda url, timeout=12: (_ for _ in ()).throw(TimeoutError("stub timeout"))
     try:
         assert _ddg("x", 5) == []
+    finally:
+        globals()["_get"] = _get_orig
+
+    # C1: allow_redirects 자동추종 대신 매 홉 검증 — 내부망으로 튀는 리다이렉트는 차단돼야 한다
+    if creq is not None:
+        from fetch import SsrfBlocked
+        _real_creq_get = creq.get
+
+        class _FakeResp:
+            def __init__(self, status_code, headers):
+                self.status_code, self.headers, self.text, self.primary_ip = status_code, headers, "", None
+
+        creq.get = lambda url, **kw: _FakeResp(302, {"location": "http://127.0.0.1/admin"})
+        try:
+            try:
+                _get("https://example.com/redir")
+                assert False, "내부망 리다이렉트가 검증 없이 통과함(blind SSRF)"
+            except SsrfBlocked:
+                pass
+        finally:
+            creq.get = _real_creq_get
+
+    # C2: is_blocked_page() 가 _searx() 에 배선됐는지 — 200+비JSON 을 조용히 넘기면
+    # 결과0건+blocked 비어있음이 "출처 없음"으로 오판된다. 차단 의심/설정 문제를 구분해 기록해야 함.
+    globals()["_get"] = lambda url, timeout=12: (200, "please complete the captcha to continue")
+    try:
+        blocked_a: list[str] = []
+        assert _searx("x", 5, blocked_a) == []
+        assert any(":blocked" in b for b in blocked_a), blocked_a
+    finally:
+        globals()["_get"] = _get_orig
+    globals()["_get"] = lambda url, timeout=12: (200, "<html>not json, no results here</html>")
+    try:
+        blocked_b: list[str] = []
+        assert _searx("x", 5, blocked_b) == []
+        assert any(":no-json" in b for b in blocked_b), blocked_b
+    finally:
+        globals()["_get"] = _get_orig
+
+    # C14: DDG title 의 HTML 엔티티 미해제 — "Growth &amp; Forecast" 가 리터럴로 새던 결함
+    ddg_html = ('<a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fx">'
+                'Growth &amp; Forecast</a>')
+    globals()["_get"] = lambda url, timeout=12: (200, ddg_html)
+    try:
+        r = _ddg("x", 5)
+        assert r and r[0]["title"] == "Growth & Forecast", r
     finally:
         globals()["_get"] = _get_orig
 

@@ -37,6 +37,7 @@ import json
 import re
 import sys
 from datetime import datetime
+from difflib import SequenceMatcher
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urlparse
@@ -233,13 +234,62 @@ def _vals(txt: str) -> list[Decimal] | None:
     return v
 
 
-def _qty(numtxt: str, pre: str, unit: str) -> tuple[str | None, list[Decimal] | None]:
-    """본문에서 매치된 (수치, 수사프리픽스, 단위) → (단위차원, 정규화 Decimal 리스트)."""
+# 【v10/C11】 좌→우 누적합산: '4천5백억원'에서 METRIC_NUM 은 '5백억원'만 잡는다(PRE=[천백만억조]*
+# 가 탐욕적으로 '백억'까지 삼켜 UNIT 은 '원'만 남는다 — 실측 확인됨). 이미 매치된 수치('5') 바로
+# 앞에 공백 없이 붙은 더 큰 자릿수 소단위 토큰('4천')을 찾아 같은 자릿수 그룹에 합산한다.
+# 대단위(만/억/조)를 leading 으로 삼지 않는다 — 자릿수 그룹 자체를 넘나드는 복합수사
+# ('1억 2천만원')는 서로 다른 밑을 그냥 더하는 꼴이 되어 오답이므로 대상에서 뺀다. _vals() 의
+# ponytail 주석이 알려진 천장으로 남겨둔 그 케이스와 동일 사유.
+_LEAD_CHAIN = re.compile(r"(\d[\d,]*(?:\.\d+)?)([천백])$")
+_SMALL_PRE = {"천", "백"}         # 자릿수 그룹 '안'의 소단위 — leading 과 합산 가능
+_LARGE_PRE = {"만", "억", "조"}   # 자릿수 그룹 '경계' — 이미 매치된 수치·leading 양쪽에 공통 적용
+
+
+def _split_pre(pre: str) -> tuple[Decimal, Decimal]:
+    """PRE 문자열을 소단위(천/백, 그룹 내부 배수)와 대단위(만/억/조, 그룹 경계 배수)로 나눠
+    각각의 곱을 돌려준다. '백억' → (100, 1e8). 실사용 표기는 소→대 순서지만 여기선 순서
+    무관하게 문자 종류로만 분류한다(둘 다 곱셈이라 순서가 결과에 영향 없음)."""
+    small = large = Decimal(1)
+    for ch in pre:
+        if ch in _SMALL_PRE:
+            small *= PRE_MUL[ch]
+        else:
+            large *= PRE_MUL[ch]
+    return small, large
+
+
+def _leading_compound(seg: str, start: int, in_group_mul: Decimal) -> Decimal:
+    """seg[:start] 끝에 공백 없이 붙은 '숫자+소단위(천/백)' 토큰의 절대값(스케일 전)을
+    돌려준다. leading 배수가 in_group_mul(현재 매치 PRE 의 소단위 곱) 보다 클 때만(자릿수가
+    더 높을 때만) 인정한다 — 순서가 거꾸로('5백4천' 등)면 애초에 유효한 한국어 표기가 아니므로
+    0(무시)."""
+    m = _LEAD_CHAIN.search(seg[:start])
+    if not m:
+        return Decimal(0)
+    lead_mul = PRE_MUL[m.group(2)]
+    if lead_mul <= in_group_mul:
+        return Decimal(0)
+    try:
+        return Decimal(m.group(1).replace(",", "")) * lead_mul
+    except InvalidOperation:
+        return Decimal(0)
+
+
+def _qty(seg: str, m: re.Match) -> tuple[str | None, list[Decimal] | None]:
+    """본문에서 매치된 (수치, 수사프리픽스, 단위) → (단위차원, 정규화 Decimal 리스트).
+    【v10/C11】 단일값(포인트)이면 _leading_compound 로 선행 소단위 복합수사를 합산하고,
+    합산된 그룹 전체에 현재 매치의 대단위(만/억/조) 배수를 공통 적용한다 — 범위(~)/오차(±)
+    표기는 항별로 나눠 더할 근거가 없어 대상에서 뺀다(기존과 동일하게 fail-open)."""
+    numtxt, pre, unit = m.group(1), m.group(2), m.group(3)
     v = _vals(numtxt)
     dim, mul = _resolve_unit(unit)
-    if pre:
-        mul = mul * _mul_of_prefix(pre)
-    return dim, (None if v is None else [x * mul for x in v])
+    small_mul, large_mul = _split_pre(pre)
+    if v is None:
+        return dim, None
+    if len(v) == 1:
+        lead = _leading_compound(seg, m.start(1), small_mul)
+        return dim, [v[0] * small_mul * large_mul * mul + lead * large_mul * mul]
+    return dim, [x * small_mul * large_mul * mul for x in v]
 
 
 def _ledger_qty(fact: dict) -> tuple[str | None, list[Decimal] | None]:
@@ -316,7 +366,7 @@ def check_bound_numbers(body: str, facts: dict) -> tuple[list[str], list[str]]:
         tags = list(TAG.finditer(seg))
         bind = _bind_pairs(seg, nums, tags)
         for idx, m in enumerate(nums):
-            bd, bvals = _qty(m.group(1), m.group(2), m.group(3))
+            bd, bvals = _qty(seg, m)
             j = bind.get(idx)
             if j is None:
                 # 직접 결박 실패(태그 없음 또는 표 셀 경계) → 같은 세그먼트 내 값일치 폴백.
@@ -464,12 +514,53 @@ def _cites_primary(f: dict, evidence_raw: list[dict]) -> bool:
 
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.I)
+_WS_RE = re.compile(r"\s+")
 
 
-def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[str]) -> list[str]:
-    """evidence 필수필드 + text_quote verbatim + sha256 형식/실해시 대조 + confirmed 핵심수치
-    source_capture 실재(신뢰경계 포함)."""
+def _norm_ws(s: str) -> str:
+    return _WS_RE.sub(" ", s).strip()
+
+
+def check_quote_verbatim(e: dict, wp: WorkPaths) -> list[str]:
+    """【v10/I3】 text_quote 의 verbatim ↔ 원문 스냅샷(clean 우선, 없으면 local) 대조.
+
+    종전엔 verbatim 이 '비어있지 않은지'만 봤다 — 출처는 진짜(sha256 결박)인데 인용문은
+    지어낸 상태가 통과했다. fetch.py save() 가 이미 만드는 trafilatura 정제본(clean 키)을
+    여기서 처음 소비한다(죽은 의존성이 아니라 절반짜리 배선이었다).
+    완전 substring 이면 통과, 아니면 difflib(stdlib)로 최장일치 길이가 needle 의 90% 이상이면
+    근사 통과 — 파라프레이즈·말줄임표까지 완전일치를 요구하면 오탐이 너무 잦다.
+    clean/local 이 둘 다 없거나 실재하지 않으면 조용히 건너뛴다(기존 evidence 와 호환).
+    ※ WARN 전용 — [캡처약결박] 선례를 그대로 따른다. 한국어 무공백 텍스트에서 오탐 가능성이
+    실재해 FAIL 로 넣으면 정당한 인용까지 막을 수 있다(오탐 관측 후 승격 검토)."""
+    verbatim = e.get("verbatim")
+    if not verbatim:
+        return []
+    snap = e.get("clean") or e.get("local")
+    if not snap:
+        return []
+    p = wp.root / snap
+    if not p.exists():
+        return []
+    try:
+        hay = p.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return []
+    needle, hay = _norm_ws(verbatim), _norm_ws(hay)
+    if not needle or needle in hay:
+        return []
+    ratio = SequenceMatcher(None, needle, hay).find_longest_match(0, len(needle), 0, len(hay)).size
+    if ratio >= len(needle) * 0.9:
+        return []
+    return [f"[인용불일치] {e.get('id')} text_quote verbatim 이 원문 스냅샷({Path(snap).name})에서 "
+            f"확인되지 않음"]
+
+
+def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths,
+                         used: set[str]) -> tuple[list[str], list[str]]:
+    """evidence 필수필드 + text_quote verbatim(필수 FAIL) + verbatim↔원문 대조(I3, WARN) +
+    sha256 형식/실해시 대조 + confirmed 핵심수치 source_capture 실재(신뢰경계 포함)."""
     failures = []
+    warnings = []
     for f in facts.values():
         if f.get("status") != "confirmed":
             continue
@@ -480,8 +571,11 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
             for k in ("source_url", "type", "sha256", "accessed_at"):
                 if not e.get(k):
                     failures.append(f"[증거필드] {eid} '{k}' 누락")
-            if e.get("type") == "text_quote" and not e.get("verbatim"):
-                failures.append(f"[verbatim] {eid} text_quote 인데 verbatim 없음")
+            if e.get("type") == "text_quote":
+                if not e.get("verbatim"):
+                    failures.append(f"[verbatim] {eid} text_quote 인데 verbatim 없음")
+                else:
+                    warnings += check_quote_verbatim(e, wp)
             sha = e.get("sha256")
             if sha and not _SHA256_RE.match(sha):
                 failures.append(f"[해시형식] {eid} sha256 형식 오류(64자리 16진수 아님): {sha!r}")
@@ -530,7 +624,7 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                         ok_cap = True
                 if not ok_cap:
                     failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
-    return failures
+    return failures, warnings
 
 
 def check_capture_binding(evidence: dict, wp: WorkPaths) -> tuple[list[str], list[str]]:
@@ -749,8 +843,9 @@ def _capture_mode_warnings(e: dict) -> list[str]:
     """[v9] 캡처 경로의 **강도**를 표면화(WARN 전용).
 
     capture_live 사다리는 두 등급을 만든다 — print 모드는 PDF 텍스트레이어 덕에 "그 수치가
-    캡처 안에 실재한다"를 기계가 확인하지만, screen 모드(스크린샷)는 확인 장치가 육안뿐이다.
-    등급 차이를 기록만 하고 검사에 반영하지 않으면 조용한 강등이 되므로 둘 다 표면화한다.
+    캡처 안에 실재한다"를 기계가 확인하지만, screen 모드(스크린샷)·mcp 모드(브라우저 MCP)는
+    확인 장치가 육안뿐이다. 등급 차이를 기록만 하고 검사에 반영하지 않으면 조용한 강등이
+    되므로 셋 다 표면화한다.
     print 을 **주장**하면서 `capture_verbatim` 이 없으면 강한 경로의 산출물이 없는 것이다 —
     이 WARN 이 없으면 capture_mode 를 print 로 적어 넣는 것만으로 경고를 지울 수 있다.
     ※ 한계: capture_verbatim 이 그 fact 의 값과 같은 수인지까지는 대조하지 않는다(단위
@@ -760,6 +855,14 @@ def _capture_mode_warnings(e: dict) -> list[str]:
     if mode == "screen":
         return [f"[캡처약결박] {e.get('id')} 화면 캡처(텍스트레이어 없음) — 수치 실재를 "
                 f"기계가 확인할 수 없다, 팀리드 육안 확인 필수"]
+    if mode == "mcp":
+        # 【v10/C3】 facts-schema.json:99 가 "약한 경로는 verify_facts 가 WARN 으로 표면화한다"
+        # 고 약속하는 대상인데 종전엔 여기서 빠져 return [] 였다 — mcp 도 screen 과 마찬가지로
+        # 텍스트레이어가 없어 capture_verbatim 기계확인이 불가하고, evidence-capture.md 는
+        # agent-browser 가 백지를 저장하며 success:true 를 반환한 실제 사고를 기록하고 있다.
+        # 메시지는 screen 과 구분해 팀리드가 어느 경로였는지 바로 알 수 있게 한다.
+        return [f"[캡처약결박] {e.get('id')} 브라우저 MCP 캡처(텍스트레이어 없음) — 수치 실재를 "
+                f"기계가 확인할 수 없다, 백지저장 사고 이력이 있는 경로이니 팀리드 육안 확인 필수"]
     if mode == "print" and not e.get("capture_verbatim"):
         return [f"[캡처약결박] {e.get('id')} capture_mode=print 인데 capture_verbatim 없음 "
                 f"— 기계확인 산출물 없이 강한 경로를 주장했다"]
@@ -879,7 +982,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     li_fail, li_warn = check_ledger_integrity(facts, used, facts_raw, evidence_raw, wp)
     failures += li_fail
     warnings += li_warn
-    failures += check_evidence_chain(facts, evidence, wp, used)
+    ec_fail, ec_warn = check_evidence_chain(facts, evidence, wp, used)
+    failures += ec_fail
+    warnings += ec_warn
     cb_fail, cb_warn = check_capture_binding(evidence, wp)
     failures += cb_fail
     warnings += cb_warn
@@ -893,10 +998,31 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     warnings += toc_warn
 
     if conversion:
+        # 【v10/C8】 종전엔 decimal 필드 '존재 여부'만 봤고, 그마저 unit.startswith(('USD','$'))
+        # 조건이라 이 코드베이스가 UNIT_SCALE 에 이미 정의한 한국어 표기(억달러·조원 등)는
+        # 검사 자체가 발동하지 않았다. UNIT_SCALE(_resolve_unit)을 정본으로 raw×scale 을
+        # 실제 재계산해 decimal 과 대조한다 — 명백히 틀린 환산값도 0 경고였던 구멍을 닫는다.
         for f in facts.values():
-            v = f.get("value", {})
-            if v.get("unit", "").startswith(("USD", "$")) and not v.get("decimal"):
+            v = f.get("value") or {}
+            vals = _vals(v.get("raw") or "")
+            if vals is None or len(vals) != 1:
+                continue                          # 범위/자유서식은 환산 검산 대상 아님(fail-open)
+            dim, scale = _resolve_unit(v.get("unit") or "")
+            if dim is None:
+                continue                          # 단위 인식 불가 — 기존과 동일하게 조용히 생략
+            decl = v.get("decimal")
+            if not decl:
                 warnings.append(f"[환산] {f['id']} decimal 검산값 없음")
+                continue
+            try:
+                actual = Decimal(decl)
+            except InvalidOperation:
+                warnings.append(f"[환산] {f['id']} decimal 파싱 불가: {decl!r}")
+                continue
+            expected = vals[0] * scale
+            if actual != expected:
+                warnings.append(f"[환산불일치] {f['id']} decimal={decl} ≠ raw({v.get('raw')!r})"
+                                f"×scale({v.get('unit')!r}) 재계산값 {expected}")
 
     # [v4-Q] 금지 패턴·캡처 구조·기대출처·정량 하한·품질 메트릭
     fp_fail, fp_warn = check_forbidden_patterns(body)
@@ -947,7 +1073,6 @@ def demo() -> None:
     import tempfile
     from skill_paths import resolve_work_dir
     from facts_db import FactsDB as DB
-    _h = lambda tag: hashlib.sha256(tag.encode()).hexdigest()  # 유효한 sha256 fixture 생성
     with tempfile.TemporaryDirectory() as td:
         wd = resolve_work_dir("검증 데모", base=td)
         db = DB(wd)
@@ -1001,20 +1126,62 @@ def demo() -> None:
                      "value": {"raw": "4", "unit": "GW"},
                      "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
                      "risk": "normal", "status": "pending"})
-        db.add_evidence({"fact_id": "F002", "type": "text_quote", "verbatim": "surpass 4 GW",
-                         "source_url": "https://iea.org", "sha256": _h("F002-E002")})   # capture 없음
-        db.add_verify_event("F002", "lead", "reread")
+        # 【v10/I3】 local(해시결박용 원본) + clean(정제본, 인용대조용) — 둘 다 실파일이어야
+        # 기존 [해시미결박]/[재검증미결박] 게이트를 정직하게 통과한다(위조 픽스처 금지, v5 관행)
+        local_f002 = wp.root / "_sources" / "F002.txt"
+        local_f002.parent.mkdir(parents=True, exist_ok=True)
+        local_f002.write_text("Global capacity will surpass 4 GW by 2025.", encoding="utf-8")
+        clean_f002 = wp.root / "_sources" / "F002_clean.txt"
+        clean_f002.write_text("Global capacity will surpass 4 GW by 2025.", encoding="utf-8")
+        ev2 = db.add_evidence({"fact_id": "F002", "type": "text_quote", "verbatim": "surpass 4 GW",
+                               "local": "_sources/F002.txt", "clean": "_sources/F002_clean.txt",
+                               "source_url": "https://iea.org",
+                               "sha256": hashlib.sha256(local_f002.read_bytes()).hexdigest()})  # capture 없음
+        db.add_verify_event("F002", "lead", "reread", evidence_id=ev2["id"])
         db.set_status("F002", "confirmed")
         nocap = "신규 용량은 4GW(F002) 이다.\n\n![](_captures/f001.jpg)\n"
         (wp.root / "nc.md").write_text(nocap, encoding="utf-8")
         r2 = verify(wp.root / "nc.md", wd)
         assert not r2["ok"] and any("증빙" in x for x in r2["failures"]), r2
+        assert not any("[인용불일치]" in x for x in r2["warnings"]), "실제 인용인데 오탐(긍정형 짝)"
 
         # 대표 이미지 0장 → 도판게이트 FAIL
         noimg = "삼성전자 2024년 매출은 300.9조원(F001) 입니다.\n"
         (wp.root / "ni.md").write_text(noimg, encoding="utf-8")
         r3 = verify(wp.root / "ni.md", wd)
         assert not r3["ok"] and any("도판" in x for x in r3["failures"]), r3
+
+        # 【v10/C3】 mcp 캡처 경로도 screen 과 동일하게 WARN 표면화(종전엔 return [] 로 빠짐) +
+        # 팀리드가 경로를 구분할 수 있게 메시지가 서로 달라야 한다
+        mcp_w = _capture_mode_warnings({"id": "E1", "capture_mode": "mcp"})
+        scr_w = _capture_mode_warnings({"id": "E1", "capture_mode": "screen"})
+        assert mcp_w, "mcp 경로가 무경고로 통과(C3 회귀)"
+        assert mcp_w != scr_w, "mcp/screen 경고 메시지가 구분되지 않음"
+
+        # 【v10/C11】 좌→우 누적합산 — '4천5백억원'에서 '4천'을 놓치면 500억(오답), 살리면 4500억(정답)
+        seg_c11 = "총 4천5백억원(F001) 규모다."
+        m_c11 = next(iter(METRIC_NUM.finditer(seg_c11)))
+        _, bvals_c11 = _qty(seg_c11, m_c11)
+        assert bvals_c11 == [Decimal(4500) * Decimal(10) ** 8], bvals_c11
+
+        # 【v10/I3】 지어낸 인용은 WARN(FAIL 아님) — 원문에 진짜 있는 인용은 무경고(긍정형 짝)
+        q_snap = wp.root / "_sources" / "Q1_clean.txt"
+        q_snap.write_text("2024년 매출은 300.9조원을 기록했다.", encoding="utf-8")
+        q_ok = {"id": "EQ1", "verbatim": "매출은 300.9조원을 기록했다", "clean": "_sources/Q1_clean.txt"}
+        q_bad = {"id": "EQ2", "verbatim": "매출은 5000조원을 돌파했다", "clean": "_sources/Q1_clean.txt"}
+        assert check_quote_verbatim(q_ok, wp) == [], check_quote_verbatim(q_ok, wp)
+        assert any("[인용불일치]" in x for x in check_quote_verbatim(q_bad, wp)), "지어낸 인용이 통과됨"
+
+        # 【v10/C8】 --conversion 이 decimal 을 raw×scale(UNIT_SCALE) 로 실제 재계산해 대조한다 —
+        # 종전엔 존재여부만 봤고 그마저 USD/$ 접두만 봐서 '억달러' 같은 한국어 표기는 미발동이었다
+        db.add_fact({"claim": "환산검증용", "context": {"metric": "conv_test", "entity": "테스트",
+                     "geography": "GL", "period": "2025"},
+                     "value": {"raw": "100", "unit": "억달러", "decimal": "999999999999"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"},
+                     "risk": "normal", "status": "pending"})
+        r_conv = verify(wp.root / "good.md", wd, conversion=True)
+        assert r_conv["ok"], "환산 WARN 이 FAIL 로 잘못 승격됨"                      # WARN 티어 유지
+        assert any("[환산불일치]" in x for x in r_conv["warnings"]), r_conv["warnings"]  # 오답 검출
     print(f"[{_now()}] verify_facts demo OK")
 
 

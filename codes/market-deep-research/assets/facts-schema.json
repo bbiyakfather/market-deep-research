@@ -88,6 +88,7 @@
       "source_url": {"type": "string"},
       "archived_url": {"type": ["string", "null"], "description": "Jina/Wayback 등. 원 URL과 구분 기록."},
       "local": {"type": ["string", "null"], "description": "_sources/ 로컬 스냅샷 경로"},
+      "clean": {"type": ["string", "null"], "description": "[v10/I3] fetch.py save() 가 만드는 trafilatura 정제본 경로. text_quote verbatim ↔ 원문 대조(check_quote_verbatim)가 local 보다 우선 사용 — HTML 태그가 섞이지 않아 substring 대조가 더 정확하다."},
       "sha256": {"type": "string"},
       "accessed_at": {"type": "string"},
       "http_status": {"type": ["integer", "null"]},

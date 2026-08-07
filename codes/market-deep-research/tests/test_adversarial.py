@@ -69,13 +69,24 @@ class _FakeResp:
 
 
 class _FakeCreq:
-    """스크립트한 응답을 순서대로(소진되면 마지막 것 반복) 반환하는 오프라인 creq 대체."""
+    """스크립트한 응답을 순서대로(소진되면 마지막 것 반복) 반환하는 오프라인 creq 대체.
+
+    【v10-C1】 종전엔 kw 를 통째로 무시해 allow_redirects=False 전달 여부를 검증할 수
+    없었다(dns_rebinding_post_connect 의 사각지대). kw 를 기록(self.kws)하고, 호출자가
+    allow_redirects 를 명시하지 않으면(기본값 True) 실제 curl_cffi 처럼 3xx 를 자동추종해
+    호출자의 수동 홉검증을 건너뛴다 — allow_redirects=False 를 빠뜨리는 회귀가 실제로
+    잡히게 만드는 장치다."""
     def __init__(self, responses):
         self.responses = list(responses)
         self.calls = []
+        self.kws = []
 
     def get(self, url, **kw):
         self.calls.append(url)
+        self.kws.append(kw)
+        while (kw.get("allow_redirects", True) and len(self.responses) > 1
+               and 300 <= self.responses[0].status_code < 400):
+            self.responses.pop(0)          # 자동추종 흉내 — 호출자가 3xx 를 볼 기회 자체가 없다
         if len(self.responses) > 1:
             return self.responses.pop(0)
         return self.responses[0]
@@ -123,6 +134,31 @@ def dup_fact_and_claimkey():
             raise AssertionError("동일 claim_key 미차단")
         except ValidationError:
             pass
+
+
+@case
+def refuted_without_superseded_by_rejected():
+    """【v10-C9】 dispute_kind='refuted'(새 증거가 뒤집음)인데 superseded_by 가 없으면 대장에
+    영구 미해결로 남는다(SKILL.md:168·verification-gates.md:97 supersede 체인 요구). superseded_by
+    를 채우면 통과, definition_conflict 는 supersede 없이도 정당한 종착(회귀 가드)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        rows = db.facts()
+        fr = rows[0]
+        fr["status"] = "disputed"
+        fr["dispute_kind"] = "refuted"
+        try:
+            validate_fact(fr)
+            raise AssertionError("refuted 인데 superseded_by 없이 통과됨")
+        except ValidationError:
+            pass
+        fr["superseded_by"] = "F002"
+        validate_fact(fr)                          # 통과(예외 없음) — 긍정형 짝
+
+        fr2 = dict(fr)
+        fr2["dispute_kind"] = "definition_conflict"
+        fr2["superseded_by"] = None
+        validate_fact(fr2)                          # 통과(예외 없음) — 회귀 가드
 
 
 @case
@@ -248,6 +284,23 @@ def manifest_capture_swap():
         assert not v["ok"] and v["changed"], v
 
 
+@case
+def bm_summary_resealing_tracked():
+    """【v10-C6】 bm-summary.md(BM 조사 전용 산출물, report-format.md:134)가 manifest 재봉인
+    대상에 실제로 배선됐는지 — report_md/report_pdf 와 동일하게 변조 시 changed 로 잡혀야 한다."""
+    assert any(label == "bm_summary" and pattern == "bm-summary.md" for label, pattern in manifest.TRACKED), \
+        manifest.TRACKED
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("BM재봉인", base=td)
+        wp = WorkPaths(wd)
+        wp.bm_summary.write_text("# BM 요약 원본", encoding="utf-8")
+        manifest.build(wp)
+        assert manifest.verify(wp)["ok"]                                   # 긍정형 짝(변조 전)
+        wp.bm_summary.write_text("# BM 요약 위조본", encoding="utf-8")      # 변조
+        v = manifest.verify(wp)
+        assert not v["ok"] and "bm-summary.md" in v["changed"], v
+
+
 # --- G5 재작성 회귀(V04) -------------------------------------------------------
 @case
 def failed_capture_claimed_as_evidence():
@@ -345,6 +398,29 @@ def disallowed_mime_rejected():
 
 
 @case
+def mime_allowed_empty_header_binary_rejected():
+    """【v10-C15】 mime_allowed() 의 'Content-Type 비면 무조건 통과' 버그 회귀 — 빈 헤더 서버가
+    바이너리를 주면 거부, 정상 텍스트를 주면 통과(긍정형 짝, 헤더 없는 정상 사이트 회귀 방지)."""
+    orig_creq, orig_gai = fetch.creq, socket.getaddrinfo
+    fetch.creq, socket.getaddrinfo = _FakeCreq(
+        [_FakeResp(200, {}, b"\x00\x01binary junk" + b"\x00" * 20)]
+    ), _fake_getaddrinfo()
+    try:
+        r = fetch._fetch_once("https://origin.example/blank-ct", "chrome")
+        assert not r["ok"] and r["reason"].startswith("mime:"), r
+    finally:
+        fetch.creq, socket.getaddrinfo = orig_creq, orig_gai
+    fetch.creq, socket.getaddrinfo = _FakeCreq(
+        [_FakeResp(200, {"content-type": ""}, ("<html>" + "정상 텍스트 " * 100 + "</html>").encode("utf-8"))]
+    ), _fake_getaddrinfo()
+    try:
+        r2 = fetch._fetch_once("https://origin.example/blank-ct2", "chrome")
+        assert r2["ok"], r2
+    finally:
+        fetch.creq, socket.getaddrinfo = orig_creq, orig_gai
+
+
+@case
 def feed_mime_allowed_and_item_matched():
     """v5: application/rss+xml 류가 정확일치 규칙에 막혀 전량 차단되던 것 해소(긍정형).
     반대편: 사이트 공용 피드에 대상 URL 이 없으면 '남의 기사'를 원문으로 인정하지 않는다."""
@@ -396,6 +472,50 @@ def mojibake_body_not_counted_as_success():
     assert not fetch.is_mojibake(long_ok), fetch._mojibake_stat(long_ok)
     # 그러나 둘 다 넘으면(진짜 미스매치) 잡힌다 — 위 broken 이 그 경우
     assert fetch.is_mojibake(text), fetch._mojibake_stat(text)
+
+
+@case
+def domain_recipe_overrides_routes():
+    """【v10-C16】 assets/domain-recipes.json 실측이 있으면 하드코딩 ROUTES 보다 먼저 적용돼야
+    한다. 손상 JSON·파일 부재는 조용히 무시하고 종전 ROUTES 결과로 폴백(수집 스택 안 죽음)."""
+    orig_path = fetch.DOMAIN_RECIPES_PATH
+    baseline = fetch._tier_order("https://blog.naver.com/a/1")
+    assert baseline[:3] == ["direct", "mobile", "rss"], baseline   # ROUTES 정본
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            recipe = Path(td) / "domain-recipes.json"
+            recipe.write_text(json.dumps({"recipes": {
+                "blog.naver.com": {"tiers": ["jina", "rss"]}}}), encoding="utf-8")
+            fetch.DOMAIN_RECIPES_PATH = recipe
+            order = fetch._tier_order("https://blog.naver.com/a/1")
+            assert order[:3] == ["direct", "jina", "rss"], order   # 레시피가 ROUTES 를 덮어씀
+
+            broken = Path(td) / "broken.json"
+            broken.write_text("{not json", encoding="utf-8")
+            fetch.DOMAIN_RECIPES_PATH = broken
+            assert fetch._tier_order("https://blog.naver.com/a/1") == baseline, "손상 JSON 폴백 실패"
+
+            fetch.DOMAIN_RECIPES_PATH = Path(td) / "missing.json"
+            assert fetch._tier_order("https://blog.naver.com/a/1") == baseline, "파일 부재 폴백 실패"
+    finally:
+        fetch.DOMAIN_RECIPES_PATH = orig_path
+
+
+@case
+def fetch_ladder_hint_mentions_capture_live():
+    """【v10-C7】 전 계층 소진 시 hint 문구가 v9 정책(코어 내장 capture_live 우선)을 가리키는지
+    — 낡은 'MCP 부터' 문구로 되돌아가면 에이전트가 capture_live() 를 건너뛴다."""
+    orig_once = fetch._fetch_once
+    orig_gai = socket.getaddrinfo
+    fetch._fetch_once = lambda url, imp, **kw: {"ok": False, "reason": "stub", "status": None,
+                                                 "text": "", "final_url": url}
+    socket.getaddrinfo = _fake_getaddrinfo()
+    try:
+        r = fetch.fetch("https://origin.example/dead")
+    finally:
+        fetch._fetch_once, socket.getaddrinfo = orig_once, orig_gai
+    assert r["status"] == "fail", r
+    assert "capture_live" in r["hint"], r["hint"]
 
 
 @case
@@ -515,6 +635,65 @@ def dns_rebinding_post_connect():
         search.creq, socket.getaddrinfo = orig_screq, orig_gai2
 
 
+@case
+def blind_redirect_ssrf_via_get():
+    """【v10-C1】 search._get() 이 allow_redirects 기본값(True)에 의존하면 내부망 리다이렉트
+    홉이 사전검증 없이 자동추종된다(blind SSRF). _FakeCreq 를 kw 관찰 가능하게 승격했으니
+    (dns_rebinding_post_connect 의 사각지대 보강) allow_redirects=False 가 실제로 전달됐는지도
+    직접 확인한다 — 이게 없으면 이 케이스는 방어를 못 받는다."""
+    with_internal = _FakeResp(302, {"location": "http://127.0.0.1/admin"})
+    final = _FakeResp(200, {"content-type": "text/html"}, b"<html>ok</html>", primary_ip="93.184.216.34")
+    orig_screq, orig_gai = search.creq, socket.getaddrinfo
+    fake = _FakeCreq([with_internal, final])
+    search.creq, socket.getaddrinfo = fake, _fake_getaddrinfo()
+    try:
+        try:
+            search._get("https://origin.example/redir")
+            assert False, "내부망 리다이렉트 홉이 검증 없이 통과함(blind SSRF)"
+        except fetch.SsrfBlocked:
+            pass
+        assert fake.kws and fake.kws[0].get("allow_redirects") is False, fake.kws
+    finally:
+        search.creq, socket.getaddrinfo = orig_screq, orig_gai
+
+
+@case
+def searx_blocked_wiring_distinguishes_reason():
+    """【v10-C2】 is_blocked_page() 가 _searx() 에 배선돼 200+비JSON 을 차단 의심/설정 문제로
+    구분해 blocked 에 남기는지 — 안 남으면 결과0건+blocked비어있음이 '출처 없음'으로
+    오판된다(source-ladder.md 계약 위반)."""
+    orig_get = search._get
+    search._get = lambda url, timeout=12: (200, "please complete the captcha to continue")
+    try:
+        blocked_a: list[str] = []
+        assert search._searx("x", 5, blocked_a) == []
+        assert any(":blocked" in b for b in blocked_a), blocked_a
+    finally:
+        search._get = orig_get
+    search._get = lambda url, timeout=12: (200, "<html>not json, no results here</html>")
+    try:
+        blocked_b: list[str] = []
+        assert search._searx("x", 5, blocked_b) == []
+        assert any(":no-json" in b for b in blocked_b), blocked_b
+    finally:
+        search._get = orig_get
+
+
+@case
+def ddg_title_html_entity_unescaped():
+    """【v10-C14】 DDG title 파싱이 태그만 지우고 &amp; 등 HTML 엔티티를 리터럴로 남기면
+    'Procter & Gamble' 류 회사명이 손상된 채 대장·보고서에 실린다."""
+    ddg_html = ('<a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fx">'
+                'Growth &amp; Forecast</a>')
+    orig_get = search._get
+    search._get = lambda url, timeout=12: (200, ddg_html)
+    try:
+        r = search._ddg("x", 5)
+        assert r and r[0]["title"] == "Growth & Forecast", r
+    finally:
+        search._get = orig_get
+
+
 # --- G3 재작성 회귀(V02·V13·V10·V09) ------------------------------------------
 def _real_png(path: Path, text: str = "매출 300.9조원") -> bytes:
     """진짜 PNG 캡처(fitz 렌더). 4바이트 스텁은 픽셀 검사·해시 결박을 원리적으로 못 받는다."""
@@ -613,6 +792,98 @@ def scale_unit_bypass():
         (wp.root / "scale.md").write_text("매출은 300.9억원(F001).\n", encoding="utf-8")
         rs = verify_facts.verify(wp.root / "scale.md", wd)
         assert not rs["ok"] and any(("값불일치" in f or "단위불일치" in f) for f in rs["failures"]), rs
+
+
+@case
+def compound_numeral_left_to_right_sum():
+    """【v10-C11】 한국어 복합 수사 좌→우 누적합산 — '4천5백억원'에서 '4천'을 놓치면 500억
+    (오답)으로 계산돼 정상 원문이 [값불일치] 거짓 FAIL 이 났다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("복합수사", base=td)
+        db = FactsDB(wd)
+        db.add_fact({"claim": "매출 4500억원", "risk": "normal", "status": "pending",
+                     "context": {"metric": "revenue", "entity": "테스트", "geography": "KR", "period": "2024"},
+                     "value": {"raw": "4500", "unit": "억원"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "ok.md").write_text(
+            "총 4천5백억원(F001) 규모다.\n\n![증빙](_captures/F001.png)\n", encoding="utf-8")
+        rok = verify_facts.verify(wp.root / "ok.md", wd)
+        assert rok["ok"], rok
+        assert not any("값불일치" in f for f in rok["failures"]), rok
+
+
+@case
+def conversion_decimal_mismatch_detected():
+    """【v10-C8】 --conversion 이 decimal 을 UNIT_SCALE 기반 raw×scale 로 실제 재계산해
+    대조하는지 — 한국어 표기(억달러 등)도 대상이어야 한다(구현 전엔 unit.startswith('USD','$')
+    조건이라 한국어 표기는 검사 자체가 미발동이었다). 명백히 틀린 환산값도 FAIL 아닌 WARN."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)          # F001 raw=300.9 unit=KRW_T
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        db.add_fact({"claim": "환산검증용", "risk": "normal", "status": "pending",
+                     "context": {"metric": "conv_test", "entity": "테스트", "geography": "GL", "period": "2025"},
+                     "value": {"raw": "100", "unit": "억달러", "decimal": "999999999999"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        (wp.root / "ok.md").write_text(
+            "매출은 300.9조원(F001).\n\n![증빙](_captures/F001.png)\n", encoding="utf-8")
+        r_off = verify_facts.verify(wp.root / "ok.md", wd, conversion=False)
+        assert not any("[환산불일치]" in w for w in r_off["warnings"]), r_off["warnings"]  # 플래그 없으면 미발동
+        r_on = verify_facts.verify(wp.root / "ok.md", wd, conversion=True)
+        assert r_on["ok"], "환산 WARN 이 FAIL 로 잘못 승격됨"
+        assert any("[환산불일치]" in w for w in r_on["warnings"]), r_on["warnings"]
+
+
+@case
+def quote_verbatim_mismatch_warns_not_fails():
+    """【v10-I3】 text_quote verbatim 이 원문 스냅샷(clean)에 없으면 [인용불일치] WARN(FAIL 로
+    승격 안 함) — 그 하나만으로 overall ok 가 False 로 떨어지면 안 된다. 긍정형 짝: 실제로
+    원문에 있는 인용은 무경고."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("인용대조", base=td)
+        wp = WorkPaths(wd)
+        wp.sources.mkdir(parents=True, exist_ok=True)
+        snap = wp.root / "_sources" / "Q1_clean.txt"
+        snap.write_text("2024년 매출은 300.9조원을 기록했다.", encoding="utf-8")
+        q_ok = {"id": "EQ1", "verbatim": "매출은 300.9조원을 기록했다", "clean": "_sources/Q1_clean.txt"}
+        q_bad = {"id": "EQ2", "verbatim": "매출은 5000조원을 돌파했다", "clean": "_sources/Q1_clean.txt"}
+        assert verify_facts.check_quote_verbatim(q_ok, wp) == [], verify_facts.check_quote_verbatim(q_ok, wp)
+        assert any("[인용불일치]" in x for x in verify_facts.check_quote_verbatim(q_bad, wp)), \
+            "지어낸 인용이 통과됨"
+
+        # 배선 확인 — verify() 전체 경로에서도 WARN 으로만 표면화되는지(FAIL 승격 아님).
+        # risk=normal 로 둬서 claim-graph[Bx] 반박게이트(risk=high 전용, 이 케이스와 무관)가
+        # 섞여 들어오지 않게 한다 — local(해시결박) + capture(증빙) 는 실파일이어야 다른
+        # 게이트가 정직하게 통과한다(위조 픽스처 금지, v5 관행).
+        wd2 = resolve_work_dir("인용와이어링", base=td)
+        db2 = FactsDB(wd2)
+        db2.add_fact({"claim": "매출 300.9조", "risk": "normal", "status": "pending",
+                     "context": {"metric": "revenue", "entity": "삼성", "geography": "KR", "period": "2024"},
+                     "value": {"raw": "300.9", "unit": "KRW_T"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        wp2 = WorkPaths(wd2)
+        wp2.sources.mkdir(parents=True, exist_ok=True)
+        local2 = wp2.root / "_sources" / "F001.txt"
+        local2.write_text("2024년 매출은 300.9조원을 기록했다.", encoding="utf-8")
+        clean2 = wp2.root / "_sources" / "F001_clean.txt"
+        clean2.write_text("2024년 매출은 300.9조원을 기록했다.", encoding="utf-8")
+        cap_bytes = _real_png(wp2.captures / "F001.png")
+        ev2 = db2.add_evidence({"fact_id": "F001", "type": "text_quote",
+                                "verbatim": "매출은 5000조원을 돌파했다",   # 원문에 없는 지어낸 인용
+                                "source_url": "https://dart.example/doc",
+                                "local": "_sources/F001.txt", "clean": "_sources/F001_clean.txt",
+                                "sha256": hashlib.sha256(local2.read_bytes()).hexdigest(),
+                                "capture": "_captures/F001.png",
+                                "capture_sha256": hashlib.sha256(cap_bytes).hexdigest()})
+        db2.add_verify_event("F001", "lead", "reread", evidence_id=ev2["id"])
+        db2.set_status("F001", "confirmed")
+        (wp2.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![증빙](_captures/F001.png)\n",
+                                       encoding="utf-8")
+        r = verify_facts.verify(wp2.root / "r.md", wd2)
+        assert any("[인용불일치]" in w for w in r["warnings"]), r["warnings"]
+        assert r["ok"], (r["failures"], r["warnings"])
 
 
 @case
@@ -809,6 +1080,11 @@ def capture_mode_weak_path_surfaced():
     # 긍정형 짝: 기계확인 산출물이 실제로 있으면 경고 없음 / 모드 미기재도 경고 없음(소급 차단 안 함)
     assert not w({"id": "E3", "capture_mode": "print", "capture_verbatim": "820.5"})
     assert not w({"id": "E4"})
+    # 【v10-C3】 mcp(브라우저 MCP) 도 screen 과 동일하게 WARN 표면화(종전엔 return [] 로 빠짐) —
+    # 메시지는 팀리드가 경로를 구분할 수 있게 screen 과 달라야 한다
+    assert w({"id": "E5", "capture_mode": "mcp"}), "mcp 경로가 무경고로 통과(C3 회귀)"
+    assert w({"id": "E5", "capture_mode": "mcp"}) != w({"id": "E1", "capture_mode": "screen"}), \
+        "mcp/screen 경고 메시지가 구분되지 않음"
 
     # 배선 확인 — 헬퍼만 있고 검사 경로에 안 붙어 있으면 방어가 0
     with tempfile.TemporaryDirectory() as td:
@@ -821,6 +1097,12 @@ def capture_mode_weak_path_surfaced():
         ev = {e["id"]: e for e in db.evidence()}
         assert any("[캡처약결박]" in x for x in verify_facts.check_capture_structure(ev, wp)), \
             "check_capture_structure 에 배선되지 않음"
+
+        rows[0]["capture_mode"] = "mcp"                    # 【v10-C3】 mcp 경로도 같은 배선 확인
+        _write_jsonl_atomic(wp.evidence, rows)
+        ev2 = {e["id"]: e for e in db.evidence()}
+        assert any("[캡처약결박]" in x for x in verify_facts.check_capture_structure(ev2, wp)), \
+            "mcp 경로가 check_capture_structure 에 배선되지 않음(C3 회귀)"
 
 
 @case
@@ -1490,6 +1772,14 @@ def axis_preset_parity():
 
     assert rf_axes("기관·기업 실사")   # SKILL.md 비교대상 없음(대상기반 분할) — 존재만
 
+    # 【v10-C17】 비즈니스 모델 조사: rf_axes() 의 "3부\s*축=" 패턴은 고정 목록 전제라 BM 의
+    # "3부 축 — 기본 4=.../... + 선택 2=..." (기본+선택 혼합, G0 시점 동적 확정) 형식엔 안 맞는다
+    # — 억지로 끼워맞추면 파싱 자체가 새 규약을 창설하는 셈이라, 기관·기업 실사와 같은 패턴으로
+    # 존재·참조 관계만 확인한다(SKILL.md 는 축 이름을 다시 나열하지 않고 report-format.md 의
+    # "BM 프리셋" 을 참조만 한다 — 다른 4종처럼 SKILL.md 안에 축 이름이 중복되지 않는다).
+    assert "비즈니스 모델 조사" in rfmt and "3부 축" in rfmt.split("비즈니스 모델 조사", 1)[1][:400]
+    assert "BM 프리셋" in skill, "SKILL.md 가 report-format.md 의 BM 프리셋을 참조하지 않음"
+
 
 @case
 def termination_terms_unified():
@@ -1548,13 +1838,14 @@ def expand_marker_has_axis():
 
 @case
 def survey_type_parity():
-    """report-format.md 조사유형별 절의 유형 수(4)와 SKILL.md 조사 분할의 유형 수(4)가 같고,
-    양쪽 다 '기술사업화 실사' 를 포함하는지."""
+    """report-format.md 조사유형별 절의 유형 수(5)와 SKILL.md 조사 분할의 유형 수(5)가 같고,
+    양쪽 다 '기술사업화 실사'·'비즈니스 모델 조사' 를 포함하는지.
+    【v10-C17】 종전엔 4종만 순회해 BM 프리셋 축이 드리프트해도 72개 전부 그린이었다."""
     rfmt = _read("references/report-format.md")
     skill = _read("SKILL.md")
     m_sec = re.search(r"## 조사유형별.*?(?=\n##|\Z)", rfmt, re.S)
     assert m_sec, "조사유형별 절을 못 찾음"
-    types = ["기술동향", "산업동향", "기관·기업", "기술사업화 실사"]
+    types = ["기술동향", "산업동향", "기관·기업", "기술사업화 실사", "비즈니스 모델 조사"]
     for t in types:
         assert t in m_sec.group(0), f"report-format.md 조사유형별 절에 {t} 없음"
     m_block = re.search(r"- 조사 분할:.*?(?=\n- )", skill, re.S)

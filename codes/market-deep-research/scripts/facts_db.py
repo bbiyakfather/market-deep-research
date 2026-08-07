@@ -80,6 +80,10 @@ def validate_fact(fact: dict, schema: dict | None = None) -> dict:
     sb = fact.get("superseded_by")
     if sb and not (isinstance(sb, str) and sb.startswith("F") and sb[1:].isdigit() and len(sb) >= 4):
         raise ValidationError(f"{fid}: superseded_by 형식 오류: {sb!r} (F### 이상)")
+    # 【v10】C9: refuted(새 증거가 뒤집음)는 SKILL.md:168·verification-gates.md:97 이 supersede
+    # 체인을 요구한다 — definition_conflict/unresolved 는 정당한 종착이라 제외(fail-closed 최소화).
+    if fact.get("status") == "disputed" and fact.get("dispute_kind") == "refuted" and not sb:
+        raise ValidationError(f"{fid}: dispute_kind=refuted 인데 superseded_by 없음 — supersede 체인 필요")
 
     # confirmed 는 최소 1 evidence + 팀리드 verify_event 필요(무출처 confirm 금지)
     if fact["status"] == "confirmed":
@@ -423,6 +427,32 @@ def demo() -> None:
         db.add_verify_event("F001", by="lead", action="reread", note="재조사 후 재열람")
         db.set_status("F001", "confirmed")           # 긍정형 짝: 새 검증 있으면 재승급 성공
         assert db.facts()[0]["status"] == "confirmed"
+
+        # 【v10】C9: dispute_kind=refuted 인데 superseded_by 없으면 대장에 영구 미해결로 남는다 —
+        # set_status 로 disputed 전이 시 validate_fact 가 이를 거부해야 한다(supersede 체인 강제).
+        facts = db.facts()
+        fr = next(r for r in facts if r["id"] == "F001")
+        fr["dispute_kind"] = "refuted"
+        _write_jsonl_atomic(wp.facts, facts)
+        try:
+            db.set_status("F001", "disputed")
+            assert False, "refuted 인데 superseded_by 없이 disputed 전이가 통과됨"
+        except ValidationError:
+            pass
+        facts = db.facts()
+        fr = next(r for r in facts if r["id"] == "F001")
+        fr["superseded_by"] = "F002"                  # supersede 체인 채운 뒤엔 정상 통과(긍정형 짝)
+        _write_jsonl_atomic(wp.facts, facts)
+        db.set_status("F001", "disputed")
+        assert db.facts()[0]["status"] == "disputed"
+        # definition_conflict 는 supersede 없이도 정당한 종착(verification-gates.md:97) — 회귀 방지
+        facts = db.facts()
+        fr = next(r for r in facts if r["id"] == "F001")
+        fr["dispute_kind"] = "definition_conflict"
+        fr["superseded_by"] = None
+        _write_jsonl_atomic(wp.facts, facts)
+        db.set_status("F001", "disputed")             # 예외 없이 통과해야 함
+        assert db.facts()[0]["status"] == "disputed"
 
         # diff: 같은 claim_key, 값만 변동
         old = Path(td) / "old.jsonl"; new = Path(td) / "new.jsonl"

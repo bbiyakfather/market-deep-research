@@ -69,9 +69,11 @@ capture_live(url, number, out_png, allow_domains=[...], pdf_out=None)
 
 **경로 강도 기록**: evidence 에 `capture_mode`(print|screen|mcp) · `capture_verbatim`(기계확인된
 문자열)을 남긴다. `verify_facts` 가 **`[캡처약결박]` WARN** 으로 표면화 — screen 모드는 "수치
-실재를 기계가 확인할 수 없음(육안 필수)", print 인데 `capture_verbatim` 이 없으면 "기계확인
-산출물 없이 강한 경로를 주장". 후자가 없으면 `capture_mode` 를 print 로 적는 것만으로 경고를
-지울 수 있다.
+실재를 기계가 확인할 수 없음(육안 필수)", **mcp(브라우저 MCP) 도 텍스트레이어가 없어 같은
+사유로 WARN** — 메시지는 screen 과 구분되며 "백지저장 사고 이력이 있는 경로이니 팀리드 육안
+확인 필수"를 명시한다(2순위 `agent-browser` 의 selector 백지 사고, 위 ⛔ 절 참조). print 인데
+`capture_verbatim` 이 없으면 "기계확인 산출물 없이 강한 경로를 주장". 후자가 없으면
+`capture_mode` 를 print 로 적는 것만으로 경고를 지울 수 있다.
 
 **한계(정직 고지)**: ⓐ Chrome CLI 는 리다이렉트 후 **최종 URL 을 보고하지 않는다** — 결박용
 최종 URL 은 `fetch.py` 가 확정한 값을 넘겨야 한다(`capture_live` 는 받은 URL 을 그대로 기록만
@@ -132,6 +134,12 @@ CSS·이미지 CDN 이 막혀 렌더가 깨지는 페이지가 많으므로 자�
 - **재검증 결박(EV-5)**: 팀리드 재검증은 `add_verify_event(..., evidence_id=E###)` 로 **무엇을
   재열람했는지** 지목한다. 지목이 없으면 `[재검증미결박]`, 재검증 시각이 증거 확보보다 앞서면
   `[재검증시각]` FAIL. 남의 fact 의 증거를 지목하면 등재 시점에 거부된다.
+- **인용 대조(I3)**: `text_quote` evidence 는 `verbatim` 이 **비어있지 않은지**뿐 아니라 원문
+  스냅샷(`evidence.clean` 우선, 없으면 `local`)에 실제로 있는지도 대조한다 — sha256 결박(EV-1)은
+  파일이 진짜인지만 보증하고 그 안에서 인용을 지어냈는지는 못 잡는다. 완전 substring 이면 통과,
+  아니면 `difflib` 최장일치가 인용문 길이의 90% 이상이면 근사 통과(파라프레이즈 허용), 그 밖은
+  `[인용불일치]` **WARN**(FAIL 아님 — `[캡처약결박]` 선례처럼 오탐 관측 후 승격 검토). `clean`/
+  `local` 이 둘 다 없거나 실재하지 않으면 조용히 생략(기존 evidence 호환).
 - **백지 캡처(SC-4)**: `capture_pdf` 가 생성 시점에 픽셀로 판정해 백지·단색이면 `.FAILED` 로
   돌린다. 【v9 정정】 판정 기준은 **절대 잉크픽셀 수**(최빈색과 다른 픽셀 수) `<= 16` — 전수
   계산(`color_topusage()`)이다. 종전 v6 은 ~4000픽셀 **표본**으로 비율을 추정했는데, 표본 간격이

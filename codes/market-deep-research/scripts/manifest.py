@@ -28,6 +28,7 @@ TRACKED = [
     ("evidence", "evidence.jsonl"),
     ("report_md", "report.md"),
     ("report_pdf", "report.pdf"),
+    ("bm_summary", "bm-summary.md"),  # 【v10】C6: BM 조사 전용 별도 산출물도 재봉인 대상(report-format.md:134)
 ]
 
 

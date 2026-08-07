@@ -57,7 +57,9 @@ def gates_json_authoritative():
                                         "G5C", "RENDER", "G4", "G5"]
     assert [g["order"] for g in gates] == list(range(11)), "order 불연속"
     for g in gates:
-        assert set(g["watches"]) <= {"facts", "report_md", "report_pdf"}, g
+        # 【v10】 C5/C12: evidence.jsonl·run-receipt.md 가 정식 watch 어휘로 승격됨
+        assert set(g["watches"]) <= {"facts", "evidence", "report_md",
+                                      "report_pdf", "run_receipt"}, g
     with tempfile.TemporaryDirectory() as td:
         wd, wp, _ = _work(td)
         try:
@@ -121,6 +123,27 @@ def missing_evidence_ledger_is_not_an_excuse():
         assert rec["verdict"] == "BLOCK", f"완화가 아직 살아있다: {rec['verdict']}"
         assert any("floor(c)" in b for b in rec["blockers"]), rec["blockers"]
         assert not any("migration_required" in b for b in rec["blockers"]), rec["blockers"]
+
+
+@case
+def validate_agrees_with_checkpoint_on_schema_violation():
+    """【v10】 같은 대장을 checkpoint 는 BLOCK 하는데 validate 는 KeyError 로 죽던 비대칭.
+
+    v7 에서 레거시 완화를 폐지하며 _floor_scan 이 'legacy' 키를 더는 반환하지 않게 됐는데
+    validate() 의 `fl["c"] and not fl["legacy"]` 한 줄만 남았다. (b)가 비고 (c)만 찬 조합
+    — 즉 confirmed 는 없고 스키마 위반만 있는 대장 — 에서만 단락평가를 못 피해 터진다.
+    위 missing_evidence_ledger_is_not_an_excuse 가 checkpoint 경로만 태워 6개월을 살아남았다.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("validate_floor_c", base=td)
+        wp = WorkPaths(wd)
+        bad = {**_fact(), "id": "F001", "claim_key": "k|삼성|KR|2024|na|na"}
+        del bad["grade"]                                  # 스키마 위반, confirmed 아님(b 미발동)
+        _write_jsonl_atomic(wp.facts, [bad])
+        fl = run_ledger._floor_scan(wp)
+        assert not fl["b"] and fl["c"], f"전제 불성립(b 비고 c 참이어야 함): {fl}"
+        r = run_ledger.validate(wd)                       # 수정 전엔 여기서 KeyError('legacy')
+        assert r["block_level"] is True, f"checkpoint 와 판정이 어긋난다: {r['block_level']}"
 
 
 @case
@@ -463,6 +486,156 @@ def concurrent_append_does_not_lose_records():
         [t.start() for t in ts]; [t.join() for t in ts]
         lanes = {r.get("lane") for r in _ledger(wp) if r["kind"] == "respawn"}
         assert lanes == {f"L{i}" for i in range(20)}, sorted(lanes)
+
+
+@case
+def unresolved_conflict_blocks_g2plus():
+    """【v10-C4】 floor(e): 미처분 kind:conflict 가 남아있으면 G2(이상) checkpoint 가 BLOCK
+    강제된다(SKILL.md:167-168 의 기계화). disposition(ref_id=conflict_id) 기록 후엔 통과(긍정형 짝)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        run_ledger.checkpoint(wd, "G1", "PASS", "join", phase="complete")
+        run_ledger.record(wd, "conflict", conflict_id="C001",
+                          fact_ids=["F001"], sources=["a.com", "b.com"])
+        rec = run_ledger.checkpoint(wd, "G2", "PASS", "미처분 충돌 있는데 통과 요청")
+        assert rec["verdict"] == "BLOCK", rec
+        assert any("floor(e)" in b for b in rec["blockers"]), rec["blockers"]
+
+        run_ledger.record(wd, "disposition", ref_id="C001",
+                          disposition="synthesize_range", rationale="범위 병기",
+                          decided_by="lead")
+        rec2 = run_ledger.checkpoint(wd, "G2", "PASS", "처분 후 재시도")
+        assert rec2["verdict"] == "PASS", rec2                # 긍정형 짝
+
+
+@case
+def g5c_target_requires_verify_md():
+    """【v10-C10】 floor(f): derivation=computed fact 가 있는데 audit/verify-*.md 가 하나도
+    없으면 G5C checkpoint 가 BLOCK. 산출물 생성 후엔 통과(긍정형 짝)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, db = _work(td)
+        rows = db.facts()
+        rows[0]["derivation"] = "computed"
+        _write_jsonl_atomic(wp.facts, rows)
+        rec = run_ledger.checkpoint(wd, "G5C", "PASS", "검산 없이 통과 요청")
+        assert rec["verdict"] == "BLOCK", rec
+        assert any("floor(f)" in b for b in rec["blockers"]), rec["blockers"]
+
+        wp.audit.mkdir(parents=True, exist_ok=True)
+        (wp.audit / "verify-cagr.md").write_text("# 검산", encoding="utf-8")
+        rec2 = run_ledger.checkpoint(wd, "G5C", "PASS", "검산 산출물 생성 후 재시도")
+        assert rec2["verdict"] == "PASS", rec2                # 긍정형 짝
+
+
+@case
+def evidence_tamper_stales_gate():
+    """【v10-C5】 evidence.jsonl 이 gates.json watches 에 실제로 배선됐는지 — G2 PASS 이후
+    evidence 의 source_url 만 바꿔치기해도 status() 가 stale 로 잡아야 한다(종전엔 기록만
+    되고 어디서도 대조되지 않아 fresh 로 남았다)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, db = _work(td)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                         "source_url": "https://dart.example/x",
+                         "sha256": "a" * 64, "local": None})
+        run_ledger.checkpoint(wd, "G1", "PASS", "join", phase="complete")
+        run_ledger.checkpoint(wd, "G2", "PASS", "증빙 확인")
+        assert run_ledger.status(wd)["gates"]["G2"]["state"] == "fresh"
+
+        rows = _read_jsonl(wp.evidence)
+        rows[0]["source_url"] = "https://위조.example/바꿔치기"
+        _write_jsonl_atomic(wp.evidence, rows)
+        st = run_ledger.status(wd)
+        assert st["gates"]["G2"]["state"] == "stale", st["gates"]["G2"]
+        assert "evidence" in st["gates"]["G2"]["stale_watches"], st["gates"]["G2"]
+
+
+@case
+def run_receipt_tamper_stales_g5():
+    """【v10-C12】 run-receipt.md 가 이제 write-only 특례가 아니라 일반 watch 로 대조된다 —
+    G5 PASS 이후 고쳐도 잡히지 않던 결함의 실제 수정 확인."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        wp.report_md.write_text("# 보고서", encoding="utf-8")
+        wp.report_pdf.write_bytes(b"%PDF-1.4 fake")
+        wp.audit.mkdir(parents=True, exist_ok=True)
+        wp.journal("run-receipt.md").write_text("# 영수증 v1", encoding="utf-8")
+        run_ledger.checkpoint(wd, "G5", "PASS", "최종 무결성 확인")
+        assert run_ledger.status(wd)["gates"]["G5"]["state"] == "fresh"
+
+        wp.journal("run-receipt.md").write_text("# 영수증 v2 — 무단 수정", encoding="utf-8")
+        st = run_ledger.status(wd)
+        assert st["gates"]["G5"]["state"] == "stale", st["gates"]["G5"]
+        assert "run_receipt" in st["gates"]["G5"]["stale_watches"], st["gates"]["G5"]
+
+
+@case
+def gate_id_case_insensitive():
+    """【v10-C13】 SKILL.md 는 'G5c'(소문자) 로 표기하는데 CLI enum 은 'G5C'(대문자) —
+    checkpoint() 가 대소문자를 무시하고 정규화해 기록하는지."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        rec = run_ledger.checkpoint(wd, "g1", "PASS", "소문자 입력", phase="complete")
+        assert rec["gate"] == "G1", rec
+        rec2 = run_ledger.checkpoint(wd, "G5c", "PASS", "혼합 대소문자 입력")
+        assert rec2["gate"] == "G5C", rec2
+        rows = _ledger(wp)
+        assert rows[-1]["gate"] == "G5C", rows[-1]
+
+
+@case
+def prev_hash_chain_tamper_detected():
+    """【v10-I4】 checkpoint 2건 이상 기록 후 과거 레코드를 직접 편집하면 chain_breaks 가
+    비지 않고 completion_possible=False, block_level=True 가 되는지."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        run_ledger.checkpoint(wd, "G1", "PASS", "join", phase="complete")
+        run_ledger.checkpoint(wd, "LV", "PASS", "재검증")
+        p = wp.journal("run-ledger.jsonl")
+        lines = p.read_text(encoding="utf-8").splitlines()
+        rec0 = json.loads(lines[0])
+        rec0["evidence"] = "위조된 사유"          # 과거 레코드 내용 변조(체인 해시 불일치 유발)
+        lines[0] = json.dumps(rec0, ensure_ascii=False)
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+        st = run_ledger.status(wd)
+        assert st["chain_breaks"], "체인 절단이 검출되지 않음"
+        assert not st["completion_possible"], "체인 절단인데 완료 선언 가능"
+        v = run_ledger.validate(wd)
+        assert v["block_level"], "체인 절단인데 block_level 미승격"
+
+
+@case
+def legacy_records_skip_chain_scan():
+    """【v10-I4】 호환: prev_hash 필드가 없는 레거시 레코드만 있는 대장은 chain_breaks=[] 로
+    소급 BLOCK 되지 않는다(빠뜨리면 이 기능을 넣기 전 완료된 조사폴더가 전부 오탐 BLOCK)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        legacy = {"kind": "checkpoint", "gate": "G1", "verdict": "PASS",
+                  "lane_verdicts": [], "evidence": "레거시", "blockers": [],
+                  "target_hashes": {}, "generation": 1, "at": "2020-01-01T00:00:00"}
+        wp.journal("run-ledger.jsonl").write_text(
+            json.dumps(legacy, ensure_ascii=False) + "\n", encoding="utf-8")
+        st = run_ledger.status(wd)
+        assert st["chain_breaks"] == [], st["chain_breaks"]
+
+
+@case
+def concurrent_metadata_write_no_winerror5():
+    """【v10-I4】 run-metadata.json 갱신이 이제 append 락 안에서 일어난다(부수 수정) — 20건
+    동시 append 를 여러 라운드 반복해도 Windows os.replace 경합(WinError 5)이 재발하지
+    않는지, 메타데이터가 매 라운드 유효 JSON 으로 남는지 확인."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp, _ = _work(td)
+        import threading
+        for rnd in range(3):
+            def _w(i, rnd=rnd):
+                run_ledger.record(wd, "respawn", lane=f"R{rnd}-{i}", rationale="")
+            ts = [threading.Thread(target=_w, args=(i,)) for i in range(20)]
+            [t.start() for t in ts]; [t.join() for t in ts]
+            meta = json.loads(wp.journal("run-metadata.json").read_text(encoding="utf-8"))
+            assert meta["counters"]["respawn_by_lane"], meta["counters"]
+        lanes = {r.get("lane") for r in _ledger(wp) if r["kind"] == "respawn"}
+        assert len(lanes) == 60, sorted(lanes)
 
 
 def main():

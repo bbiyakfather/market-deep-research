@@ -35,12 +35,17 @@ ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml"
                 "application/xhtml", "application/pdf", "application/rss")
 
 
-def mime_allowed(mime: str) -> bool:
+def mime_allowed(mime: str, buf: bytes | None = None) -> bool:
     """MIME 허용 판정. 정확일치만 보면 실서비스 피드가 쓰는 application/rss+xml·atom+xml·
     rdf+xml 이 전량 차단된다(허용목록의 'application/rss' 는 그 아래에서 죽은 상수였다).
-    feedparser 규약대로 '+xml' 접미는 XML 로 인정하되, 그 밖의 타입은 종전대로 차단한다."""
+    feedparser 규약대로 '+xml' 접미는 XML 로 인정하되, 그 밖의 타입은 종전대로 차단한다.
+    【v10-C15】 Content-Type 을 비우거나 생략한 서버는 화이트리스트를 통째로 건너뛰던 것을
+    고침 — 빈 헤더는 무조건 통과시키지 않고, 이미 있는 매직바이트 판정 경로에 넘긴다(PDF 는
+    is_pdf 가 별도로 처리하므로 여기 buf 는 그 나머지). buf 앞 8000바이트에 NUL 이 있으면
+    바이너리로 보고 거부한다(git 의 바이너리 판정과 동일한 발견법) — 헤더 없는 정상 텍스트
+    사이트(회귀 대상)는 buf 에 NUL 이 없어 그대로 통과한다."""
     if not mime:
-        return True
+        return buf is None or b"\x00" not in buf[:8000]
     if mime in ALLOWED_MIME:
         return True
     return mime.endswith("+xml") and mime.split("/", 1)[0] in ("application", "text")
@@ -281,7 +286,7 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = 5,
                         "text": "", "final_url": cur, "mime": mime}
         r.close()
         is_pdf = buf[:5] == b"%PDF-"                    # V18a — 매직바이트만 신뢰(확장자/헤더는 위조 가능)
-        if not is_pdf and not mime_allowed(mime):       # V18b — PDF 판정 뒤에 게이트(옥텟스트림 PDF 보존)
+        if not is_pdf and not mime_allowed(mime, buf):  # V18b — PDF 판정 뒤에 게이트(옥텟스트림 PDF 보존)
             return {"ok": False, "reason": f"mime:{mime}", "status": r.status_code,
                     "text": "", "final_url": cur, "mime": mime}
         text = "" if is_pdf else _decode_body(buf, charset)
@@ -439,6 +444,32 @@ def _candidates(tier: str, url: str):
         yield "wayback", _via_wayback(url)
 
 
+# 【v10-C16】 G5 실측으로 채워지는 도메인별 레시피(source-ladder.md 100-105행) — 문서는 4곳에서
+# "머지" 를 약속했지만 코드가 안 읽으면 죽은 약속이다. optional 배선: 없거나 깨져도 무시.
+DOMAIN_RECIPES_PATH = Path(__file__).resolve().parent.parent / "assets" / "domain-recipes.json"
+
+
+def _load_domain_recipes() -> dict:
+    """도메인 레시피 오버레이. 파일 부재·JSON 손상은 조용히 무시 — 수집 스택을 죽이면 안 된다."""
+    try:
+        data = json.loads(DOMAIN_RECIPES_PATH.read_text(encoding="utf-8"))
+        recipes = data.get("recipes") if isinstance(data, dict) else None
+        return recipes if isinstance(recipes, dict) else {}
+    except Exception:
+        return {}
+
+
+def _recipe_head(host: str, recipes: dict) -> list[str] | None:
+    """host 에 매칭되는 레시피의 tiers 를(있으면) 반환. 접미 매칭(example.com ⊇ sub.example.com)."""
+    for dom, rec in recipes.items():
+        if not isinstance(rec, dict) or not (host == dom or host.endswith("." + dom)):
+            continue
+        tiers = rec.get("tiers")
+        if isinstance(tiers, list) and tiers:
+            return [t for t in tiers if t != "direct"]
+    return None
+
+
 def _tier_order(url: str) -> list[str]:
     """`direct`(원 URL·원본 충실도 최고)를 항상 먼저 타고, 도메인 라우팅은 **폴백 순서만** 바꾼다.
 
@@ -446,14 +477,19 @@ def _tier_order(url: str) -> list[str]:
     이 스택의 1계층 curl_cffi(TLS 위장)는 WebFetch보다 강해 대개 direct로 뚫린다.
     라우팅을 앞세우면 헛요청이 늘고, 더 나쁘게는 RSS 요약본이 본문보다 먼저 partial 로
     잡혀 원문 대신 반환될 수 있다(한경 실측).
+
+    도메인 레시피(assets/domain-recipes.json)가 있으면 하드코딩 ROUTES 보다 먼저 본다 —
+    실측이 정본이고 ROUTES 는 그 실측이 아직 없을 때의 폴백이다.
     """
     import re
     host = (urlparse(url).hostname or "").lower()
-    head: list[str] = []
-    for pat, tiers in ROUTES:
-        if re.search(pat, host):
-            head = [t for t in tiers if t != "direct"]
-            break
+    head = _recipe_head(host, _load_domain_recipes())
+    if head is None:
+        head = []
+        for pat, tiers in ROUTES:
+            if re.search(pat, host):
+                head = [t for t in tiers if t != "direct"]
+                break
     return ["direct"] + head + [t for t in DEFAULT_ORDER if t not in head and t != "direct"]
 
 
@@ -501,7 +537,11 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
             return _result("partial", {"final_url": url, "text": og, "mime": "text/html"},
                            trace, note="ogp")
     return {"status": "fail", "final_url": url, "trace": trace,
-            "hint": "자체 사다리 전 계층 소진 — 브라우저 MCP(agent-browser 우선, JS 렌더링) 또는 대체출처를 찾을 것"}
+            # 【v10-C7】 v9 부터 JS 렌더링은 먼저 코어 내장(capture_web.capture_live, Chrome 헤드리스)으로
+            # 시도한다(source-ladder.md 35-38행) — 낡은 문구가 이 계층을 통째로 건너뛰게 하면 안 된다.
+            "hint": "자체 사다리 전 계층 소진 — 코어 내장 capture_web.capture_live()로 실화면 캡처 먼저 "
+                    "시도(Chrome 헤드리스 렌더, MCP 불필요), 본문 텍스트가 더 필요하면 그 다음 브라우저 "
+                    "MCP(agent-browser 우선, playwright 폴백) 또는 대체출처를 찾을 것"}
 
 
 def _result(status: str, res: dict, trace: list, note: str = "") -> dict:
@@ -581,6 +621,41 @@ def demo() -> None:
     for u in ("https://blog.naver.com/a/1", "https://example.com/a"):
         order = _tier_order(u)
         assert len(order) == len(set(order)) == len(DEFAULT_ORDER), order
+
+    # 【v10-C16】 도메인 레시피(assets/domain-recipes.json) — ROUTES 보다 우선, 부재/손상은 무시
+    assert _recipe_head("blog.naver.com", {"blog.naver.com": {"tiers": ["jina"]}}) == ["jina"]
+    assert _recipe_head("sub.example.com", {"example.com": {"tiers": ["mobile", "direct"]}}) \
+        == ["mobile"], "direct 는 head 에서 제거"
+    assert _recipe_head("other.com", {"example.com": {"tiers": ["mobile"]}}) is None
+    assert _recipe_head("x.com", {"x.com": {"tiers": []}}) is None, "빈 tiers 는 매치 없음 취급"
+    assert _load_domain_recipes() == {}, "저장소 스켈레톤은 recipes 비어있음(현재)"
+    global DOMAIN_RECIPES_PATH
+    _orig_recipe_path = DOMAIN_RECIPES_PATH
+    try:
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            broken = Path(td) / "broken.json"
+            broken.write_text("{not json", encoding="utf-8")
+            DOMAIN_RECIPES_PATH = broken
+            assert _load_domain_recipes() == {}, "손상 JSON 은 조용히 무시"
+
+            good = Path(td) / "good.json"
+            good.write_text(json.dumps({"recipes": {"example.com": {"tiers": ["jina", "rss"]}}}),
+                            encoding="utf-8")
+            DOMAIN_RECIPES_PATH = good
+            order = _tier_order("https://sub.example.com/a")
+            assert order[:3] == ["direct", "jina", "rss"], order  # 레시피가 ROUTES 보다 우선
+
+            DOMAIN_RECIPES_PATH = Path(td) / "missing.json"
+            assert _load_domain_recipes() == {}, "파일 부재도 조용히 무시"
+    finally:
+        DOMAIN_RECIPES_PATH = _orig_recipe_path
+
+    # 【v10-C15】 빈 Content-Type 무조건 통과 금지 — buf 매직바이트 판정으로 넘긴다
+    assert mime_allowed("") is True                          # buf 없는 레거시 호출은 종전처럼 통과
+    assert mime_allowed("", b"plain text body") is True       # 텍스트로 보이면 통과
+    assert mime_allowed("", b"\x00\x01\x02binary junk") is False  # NUL 포함 → 바이너리로 거부
+    assert mime_allowed("video/mp4", b"\x00\x01") is False    # 화이트리스트 밖은 buf 무관 거부(회귀)
 
     # 네이버 블로그: 숫자 logNo 일 때만 PostView 변환(오변환 방지)
     mu = _mobile_urls("https://blog.naver.com/navion/223456789")
