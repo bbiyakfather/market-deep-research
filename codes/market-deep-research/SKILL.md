@@ -200,6 +200,10 @@ BLOCK 강제. 【v7】 "evidence.jsonl 이 없으면 완화" 규칙은 폐지 �
 ### [3] 보고서 작성
 - 고객용 `report.md`: **11부 표준목차**(표지→Executive→개요→테마별 본론→시장수치→플레이어→
   검증요약→상충→상태변화→한계·반론→요약·인사이트→부록). 조사유형별 변형은 `report-format.md`.
+- ★ **문체·문단·인용은 `references/deliverable-style-ko.md` 를 선로드 후 적용**(한국어 산출물
+  필수). 문단은 "(키워드) 주제 → 세부 불릿 복수(90~130자) → 근거자료(캡처·표·인포그래픽)
+  + `* 출처 :`" 3층 세트로 고정하고, 각주는 **용어·기관 해설 전용**(출처 인용 아님)으로 쓴다.
+  조사용 1줄 1사실 서식을 그대로 납품하면 과잉 축약으로 전량 재작성된다(실측).
 - 내부 `audit/`: facts 전수·폐기목록+사유·실패소스·검증이력·raw·세션 저널.
 - **세부주제별 대표 이미지(도판)**: `harvest_images.py` 로 ① 소스 PDF 도판 크롭(출처 자동
   일치·최우선) ② 확보 페이지 이미지 ③ 이미지 검색(openverse·commons) 순 수확 → 팀리드
@@ -265,6 +269,7 @@ BLOCK 강제. 【v7】 "evidence.jsonl 이 없으면 완화" 규칙은 폐지 �
 | `references/extract-recipes.md` | 증거유형별 추출·PDF fitz·특수소스 recipe·derivation/verdict 결박 |
 | `references/evidence-capture.md` | source_capture vs reconstructed_excerpt·크롭 원칙(V16)·메타 결박·표면별 증거 규칙·캡처 구조검사 |
 | `references/report-format.md` | 고객 11부 목차·유형변형(BM 프리셋·bm-summary)·audit 로스터(고정 표면)·run-receipt/handoff/드래프트 규약 |
+| `references/deliverable-style-ko.md` | **한국어 납품 문체**(문단 3층 세트·라벨·명사형 종결·각주=용어해설·F태그 제거·프로파일 양식) — 한국어 산출물 작성 전 필수 |
 | `references/image-research.md` | 세부주제 대표 이미지(도판) 수확·선별·라이선스 |
 | `references/verification-gates.md` | G0~G5 상세·run-ledger 영수증·동결 코호트·라체트·asks 정본·4차원 등급·claim-graph·환산 |
 | `references/research-plan.md` | G0 인터뷰 규율·조사계획 확정(항목 스키마·반례 선설계·의도 확정·계획 합의 루프·깊이캡·승인 목차) |
