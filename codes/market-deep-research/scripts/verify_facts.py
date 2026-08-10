@@ -585,6 +585,12 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     if n_appx > 1:
         failures.append(f"[부록마커중복] FACTSHEET:APPENDIX 마커 {n_appx}개 — 첫 마커 뒤 본문이 검사 면제됨")
 
+    # 본문이 비면 본문 결박 검사 전체가 '대상 없음'으로 조용히 통과한다(마커가 문서 최상단에
+    # 있는 경우 등 — 이때 뜨는 건 [도판] 뿐이라 원인을 오도). 침묵 대신 공백 자체를 FAIL 로
+    # 명명한다. (회귀: empty_body_blocked)
+    if not body.strip():
+        failures.append("[본문공백] 부록 경계 이전 본문이 비어 있음 — 본문 결박 검사가 통째로 침묵")
+
     bn_fail, bn_warn = check_bound_numbers(body, facts)
     failures += bn_fail
     warnings += bn_warn

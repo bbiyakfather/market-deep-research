@@ -60,8 +60,9 @@ content-hash 멱등 + 사전 전건검증 트랜잭션.
 
 `split_body_appendix`의 첫 마커 절단 특성상, 본문 앞쪽의 중복(실수·위조) 마커가 그 뒤 본문
 전체를 결박 검사에서 면제시키는 우회 → `[부록마커중복]` FAIL 로 수리(verify_facts.py, 회귀:
-`duplicate_appendix_marker_blocked`). 잔여 천장: 마커가 1개여도 문서 최상단에 있으면 body가
-비어 무태그 검사가 통째로 침묵한다(별개 불변식 "본문 공백 FAIL" 필요 — 미착수).
+`duplicate_appendix_marker_blocked`). 잔여 천장이었던 본문 공백 침묵(마커 1개가 최상단이면
+body가 비어 본문 검사 전체가 침묵, [도판]만 떠 원인 오도)도 `[본문공백]` FAIL 로 함께
+수리(회귀: `empty_body_blocked`).
 
 ## 5. 부활 조건 + 부활 시 설계 재료
 

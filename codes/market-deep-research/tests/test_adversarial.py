@@ -198,6 +198,19 @@ def duplicate_appendix_marker_blocked():
 
 
 @case
+def empty_body_blocked():
+    """마커가 1개뿐이어도 문서 최상단이면 body='' — 무태그 등 본문 검사 전체가 대상 없음으로
+    침묵([도판]만 떠 원인 오도) → 본문 공백 자체를 FAIL 로 차단."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        md = "<!-- FACTSHEET:APPENDIX -->\n시장은 45조원 규모다.\n"
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("본문공백" in f for f in rep["failures"]), rep
+
+
+@case
 def high_risk_without_capture():
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)
