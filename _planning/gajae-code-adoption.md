@@ -1,8 +1,9 @@
-# gajae-code 하네싱 차용 — mdr 고도화 방안 (v1.2, 비채택 9종 조건부 채택)
+# gajae-code 하네싱 차용 — mdr 고도화 방안 (v1.3, 비채택 9종 조건부 채택)
 
 > 작성 2026-08-06 · 출처 벤치마크: `Yeachan-Heo/gajae-code`(GJC, MIT) — skills 4종(deep-interview·ralplan·ultragoal·team) SKILL.md 전문 + docs 20여 편(session/compaction/retry/handoff/rulebook/ttsr/tools) 정독
 > 분석 방법: 병렬 분석 에이전트 7기(gjc 6영역 + mdr 기준선) → 팀리드 종합 → **적대적 크리틱 2기(과잉설계·무결성) 라운드 1회** → blocking 10건·advisory 6건 전건 반영 개정. 각 항목에 gjc 원문 근거(file:line) 결박.
 > **v1.2 (2026-08-06)**: 사용자 결정으로 비채택 9종을 전량 **조건부 채택**(N군 신설) — 각 항목의 원래 탈락 사유를 설계 제약으로 전환하고, 그 사유를 중화하는 mdr식 트위스트를 결박. 원 비채택 표는 "탈락 사유 = 트위스트가 지켜야 할 제약" 기록으로 대체.
+> **v1.3 (2026-08-10)**: `deusyu/translate-book` 하네싱 분석(9후보 적대검증, 채택 1·기각 8) 반영 — R4에 G1 join 멱등(content-hash applied 스킵)·전부-아니면-전무 제약 추가, R3에 그 멱등을 전제조건으로 결박. 신규 독립 항목 없음(기존 항목 스펙 제약으로만 흡수). 분석 전문·기각 근거·부활 조건: `translate-book-adoption.md`.
 > 성격: **방향 추천 메모(취사선택용)**. `enhancement-directions.md`(oh-my-openagent 벤치마크)와 같은 결이며, 거기서 이미 계획·선반영된 항목은 제외하고 **gjc 고유 기여분만** 수록.
 
 ## 한 줄 요약
@@ -71,6 +72,7 @@ gajae-code가 mdr에 주는 것은 새 기능이 아니라 **강제 계층(enfor
   - 완전일치 감지만으로는 워커 B가 period를 "FY2024"로만 써도 빠져나간다(크리틱 지적) — **metric+entity 동일 & period/geo 정규화 기반 conflict 후보**를 disposition 필수는 아니되 경고로 표면화하는 2단 감지.
 - **얼마나**: **中上~上**(초안 '中'은 과소평가 — add_fact 유일성 불변식·ledger-integrity·diff 로직까지 손대는 불변식 개정급). 유지비: claim_key 정규화 규칙이 살아있는 유지 대상이 된다.
 - **위험**: '같은 지표' 오탐이 리드를 소모 — 후보 경고는 처분 강제 없이 시작하고, 정규화 렉시콘은 실전 조사에서 축적.
+- **[v1.3] 전제조건 결박**: shadowed 등재 허용 후에는 재시도 join이 동일 evidence 파일을 재등재하면 중복 shadowed 행 + 허위 conflict 레코드가 생긴다(현행은 add_fact의 동일 claim_key 거부(facts_db.py:208-210)가 우연히 중복 등재를 막아주지만 이 개정으로 그 방어가 사라짐) — **R4의 content-hash 멱등 스킵을 R3 적용의 전제조건으로 결박**한다. (`translate-book-adoption.md`)
 
 ---
 
@@ -83,6 +85,7 @@ gajae-code가 mdr에 주는 것은 새 기능이 아니라 **강제 계층(enfor
   - `scripts/parse_markers.py`(신규): 워커 반환 텍스트 → 마커 블록 파싱·검증. **검출 범위는 구조 검사로 한정**(크리틱 반영): CLAIMS/EXPAND/요약 블록 존재, SOURCES 필드 비어있음, evidence JSONL 스키마 위반, blocker_class 누락. ~~"출처 결박 없는 사실 주장" 산문 검출~~은 LLM 판단 과제라 파서 범위 밖 — 리드 몫으로 명시(과탐·허위안심 양쪽 방지). EXPAND 블록 누락 검출이 확장루프의 조용한 조기수렴을 막는 핵심.
   - 반려 시 **폐기-교정-재발주** 규약(TTSR 번역, ttsr-injection-lifecycle:96-107): 위반 마커는 버리고, 위반 규칙 본문을 인용한 재발주 프롬프트로 재디스패치. 항목별 재발주 카운터를 expansion-log에 기록, 상한(기본 2회) 도달 시 '미확인' 확정 — 무한 재발주 방지(repeat policy, ttsr:141-147). 반려는 자동 폐기가 아니라 "재발주 대상 지정"까지만, 최종 폐기는 리드 판단.
   - `expansion-log.md`를 파싱 가능 형식으로 개정 + parse_markers가 웨이브 수·축별 잔여 리드를 집계 출력 → 수렴 판정이 감각이 아니라 카운터가 된다. 깊이캡 도달 시 **RESEARCH-STUCK 명시 종결**(ralplan:93-94 번역): 미수렴 축은 '미확정(상충 병기)'로 강등 등재하되 확정 수치 승격 금지.
+  - **[v1.3, translate-book 차용] G1 join 멱등·전부-아니면-전무**: join(파싱 통과분의 facts.jsonl 등재)은 워커 evidence 파일 단위로 `facts_db validate` 전건 통과 후에만 변이를 시작하고(부분 등재 금지), 등재 완료한 evidence 파일의 sha256을 `audit/join-log.jsonl`에 applied 기록해 **동일 해시 재제출 시 스킵**(멱등 — 세션 재시도·재개가 몇 번 돌아도 대장 중복 등재 없음). applied 기록은 manifest TRACKED 밖인 audit/에 둔다(manifest.py:22-23 audit 미봉인 규칙 준수). (translate-book merge_meta.py의 content-hash 멱등 + transactional apply 패턴 — `translate-book-adoption.md`)
 - **얼마나**: 中. 신규 파서 1개 + expansion-log 형식 개정 + SKILL.md [E]·G1 절차 갱신.
 
 ### R5. 캡처 검증 — 소비자측 전수 검사 (경로 독립)
