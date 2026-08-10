@@ -1275,6 +1275,61 @@ def axis_figure_coverage_is_warning_only():
         assert rep["ok"] and len(coverage) == 1 and "축: 정책" in coverage[0], rep
 
 
+@case
+def empty_source_label_fails():
+    """`출처:` 라벨만 있고 값이 비면 [도판출처] FAIL 이어야 한다 — 서식만 갖춘 무출처 차단."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("빈출처", base=td)
+        wp = WorkPaths(wd)
+        (wp.root / "_images").mkdir(exist_ok=True)
+        (wp.root / "_images" / "a.png").write_bytes(b"\x89PNG")
+        wp.report_md.write_text(
+            "본문.\n\n![](_images/a.png)\n[그림] 제목 — 출처:\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.report_md, wd)
+        assert not rep["ok"] and any("[도판출처]" in f for f in rep["failures"]), rep
+
+
+@case
+def every_missing_figure_path_is_reported():
+    """참조 경로는 건별 판정한다 — 한 장만 실재하면 나머지 깨진 경로가 묻히면 안 된다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("경로건별", base=td)
+        wp = WorkPaths(wd)
+        (wp.root / "_images").mkdir(exist_ok=True)
+        (wp.root / "_images" / "real.png").write_bytes(b"\x89PNG")
+        body = "".join(f"![](_images/miss{i}.png)\n[그림] 제목{i} — 출처: 기관\n" for i in range(3))
+        wp.report_md.write_text(
+            body + "![](_images/real.png)\n[그림] 진짜 — 출처: 기관\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.report_md, wd)
+        missing = [f for f in rep["failures"] if "[도판경로]" in f]
+        assert not rep["ok"] and len(missing) == 3, rep
+
+
+@case
+def dotdot_path_cannot_borrow_captures_exemption():
+    """`_captures/../assets/...` 는 실제로 assets 차트다 — 증빙캡처 면제를 빌려쓰지 못한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("경로우회", base=td)
+        wp = WorkPaths(wd)
+        (wp.gen_assets / "chart.svg").write_text("<svg/>", encoding="utf-8")
+        wp.report_md.write_text(
+            "본문.\n\n![](_captures/../assets/chart.svg)\n캡션 없음\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.report_md, wd)
+        assert not rep["ok"] and any("[도판출처]" in f for f in rep["failures"]) \
+            and any("[도판무결박]" in f for f in rep["failures"]), rep
+
+
+@case
+def figure_tag_without_image_is_not_a_figure():
+    """`<figure>` 만 있고 이미지 참조가 없으면 0장이다 — 결박검사 대상 밖으로 새지 않게."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("빈figure", base=td)
+        wp = WorkPaths(wd)
+        wp.report_md.write_text("본문.\n\n<figure>도표 자리</figure>\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.report_md, wd)
+        assert not rep["ok"] and any("[도판]" in f for f in rep["failures"]), rep
+
+
 def main():
     import traceback
     ok = 0

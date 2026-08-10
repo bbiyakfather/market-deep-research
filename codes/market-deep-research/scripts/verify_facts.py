@@ -27,6 +27,7 @@ CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--plan <resea
 from __future__ import annotations
 
 import json
+import posixpath
 import re
 import sys
 from datetime import datetime
@@ -456,6 +457,8 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 _IMG_HTML = re.compile(r'<img\b[^>]*\bsrc=["\']([^"\']+)["\']', re.I | re.S)
 _FIGURE_TOKEN = re.compile(r"!\[[^\]]*\]\([^)]+\)|<img\b|<figure\b", re.I)
+# `출처:` 뒤에 실제 값이 오는지 — 라벨만 적고 비워두는 것을 출처로 인정하지 않는다.
+_SOURCE_VALUE = re.compile(r"출처\s*:\s*\S")
 # 도판 축별 커버리지(check_figures)와 목차검사(check_toc)가 같이 쓴다 — 정의는 여기 하나뿐.
 # 두 곳에서 각각 정의하면 나중 정의가 앞엣것을 조용히 덮어써서, 한쪽 정규식을 손볼 때
 # 무관해 보이는 다른 검사의 판정이 함께 바뀐다(에러 없이 통과하므로 발견도 늦다).
@@ -471,10 +474,13 @@ def _figure_refs(body: str) -> list[tuple[int, int, str]]:
 
 
 def _scoped_ref(path: str, dirname: str) -> bool:
-    """작업폴더 기준 ``dirname/`` 이하의 상대 참조인지 판정한다."""
-    normalized = path.split("#", 1)[0].split("?", 1)[0].replace("\\", "/")
-    while normalized.startswith("./"):
-        normalized = normalized[2:]
+    """작업폴더 기준 ``dirname/`` 이하의 상대 참조인지 판정한다.
+
+    `..` 를 normpath 로 접은 뒤 판정한다 — 접지 않으면 `_captures/../assets/chart.svg` 가
+    문자열상 `_captures/` 로 시작해 증빙캡처 면제를 받는다(실제로는 assets 차트인데
+    출처·F태그 검사를 통째로 건너뛴다, 실측 확인).
+    """
+    normalized = posixpath.normpath(path.split("#", 1)[0].split("?", 1)[0].replace("\\", "/"))
     return normalized == dirname or normalized.startswith(f"{dirname}/")
 
 
@@ -529,25 +535,32 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], 
     """대표 이미지 존재·경로·출처·차트 F태그 결박과 축별 커버리지를 검사한다."""
     failures: list[str] = []
     warnings: list[str] = []
-    if not _FIGURE_TOKEN.search(body):
+    refs = _figure_refs(body)
+    # 0장 판정은 결박검사가 실제로 훑는 참조(_figure_refs)를 기준으로 한다 — 판정 기준이
+    # 서로 다르면 `<figure>` 처럼 한쪽만 인정하는 표기가 "도판 있음"으로 0장 검사를 통과하면서
+    # 결박검사 대상에서는 빠져 출처·F태그 검사를 통째로 건너뛴다(실측 확인).
+    if not refs:
         failures.append("[도판] 본문 대표 이미지 0장(증빙캡처·차트·도식 누락)")
     else:
-        paths = _IMG_MD.findall(body) + _IMG_HTML.findall(body)
-        if paths:
-            def _exists(p: str) -> bool:
-                p = p.split("#")[0]
-                if p.startswith(("http://", "https://", "data:")):
-                    return True  # 외부/데이터 URI 는 경로 실재 검사 대상 아님
-                return (wp.root / p).exists() or Path(p).exists()
-            if not any(_exists(p) for p in paths):
-                failures.append(f"[도판경로] 참조 이미지 경로 실재 없음: {paths[0]}")
+        def _exists(p: str) -> bool:
+            p = p.split("#")[0]
+            if p.startswith(("http://", "https://", "data:")):
+                return True  # 외부/데이터 URI 는 경로 실재 검사 대상 아님
+            return (wp.root / p).exists() or Path(p).exists()
+        # 참조마다 개별 판정한다 — any() 로 묶으면 10장 중 1장만 실재해도 통과해
+        # 깨진 그림 9장이 그대로 고객 PDF 로 나간다(실측 확인).
+        for path in dict.fromkeys(p for _s, _e, p in refs):
+            if not _exists(path):
+                failures.append(f"[도판경로] 참조 이미지 경로 실재 없음: {path}")
 
-    for _start, end, path in _figure_refs(body):
+    for _start, end, path in refs:
         # 증빙캡처는 G2/check_evidence_chain 의 신뢰경계·실재 검사가 정본이므로 이중 판정하지 않는다.
         if _scoped_ref(path, "_captures"):
             continue
         caption = _caption_within_two_lines(body, end)
-        if not caption or "출처:" not in caption:
+        # 출처는 문자열 존재가 아니라 값 존재를 본다 — `출처:` 뒤가 비어도 통과하면
+        # "무출처 도판 사용 불가" 철칙이 서식만 갖추면 뚫린다(실측 확인).
+        if not caption or not _SOURCE_VALUE.search(caption):
             failures.append(f"[도판출처] [그림] 캡션 또는 출처 누락: {path}")
         if _scoped_ref(path, "assets") and (not caption or not TAG.search(caption)):
             failures.append(f"[도판무결박] assets 차트 캡션에 F태그 없음: {path}")

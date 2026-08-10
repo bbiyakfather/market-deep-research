@@ -6,6 +6,7 @@ __pycache__ · *.pyc · 작업폴더(research_*) 는 제외.
 CLI: python install.py            # 기본 대상 ~/.claude/skills/market-deep-research
      python install.py --target <dir>
      python install.py --dry-run
+     python install.py --check    # 쓰지 않고 대조만(드리프트 감시, 불일치 시 exit 1)
 """
 from __future__ import annotations
 
@@ -25,6 +26,19 @@ EXCLUDE_SUFFIX = {".pyc", ".tmp"}
 def _sha(p: Path) -> str:
     h = hashlib.sha256()
     h.update(p.read_bytes())
+    return h.hexdigest()
+
+
+def _sha_text(p: Path) -> str:
+    """줄바꿈 정규화 해시 — 드리프트 대조 전용.
+
+    install() 은 복사 직후 원본과 사본을 비교하므로 원바이트 해시가 맞다. 반면 --check 는
+    시점이 다른 두 트리를 비교하는데, Windows 에서 git 이 체크아웃하며 LF→CRLF 로 바꾸면
+    내용이 같은데도 전 파일이 불일치로 뜬다(실측: SKILL.md 내용 동일, CRLF 184 vs 178).
+    매번 전건 불일치를 외치는 감시는 아무도 안 보게 되므로 줄바꿈은 차이로 세지 않는다.
+    """
+    h = hashlib.sha256()
+    h.update(p.read_bytes().replace(b"\r\n", b"\n"))
     return h.hexdigest()
 
 
@@ -75,6 +89,24 @@ def install(target: Path | str = DEFAULT_TARGET, dry_run: bool = False) -> dict:
             "verified": len(verified), "failed": failed, "dry_run": dry_run, "removed": removed}
 
 
+def check(target: Path | str = DEFAULT_TARGET) -> dict:
+    """설치본이 개발본과 같은지 **쓰지 않고** 대조한다(드리프트 감시).
+
+    install() 은 대조 전에 복사부터 하므로 "설치본이 최신인가"를 물을 수단이 못 된다 —
+    물어보는 행위가 답을 바꿔버린다. 조사 직전에 이 명령으로 확인하면, 옛 코드로 조사가
+    돌아가는 사고를 미리 잡는다.
+    """
+    target = Path(target).resolve()
+    src_root = SKILL_ROOT.resolve()
+    src = {str(p.relative_to(src_root)): p for p in _iter_files(src_root)}
+    dst = {str(p.relative_to(target)): p for p in _iter_files(target)} if target.exists() else {}
+    missing = sorted(k for k in src if k not in dst)          # 설치본에 없음
+    stale = sorted(k for k in dst if k not in src)            # 개발본에서 사라졌는데 남아있음
+    differs = sorted(k for k in src if k in dst and _sha_text(src[k]) != _sha_text(dst[k]))
+    return {"ok": not (missing or stale or differs), "target": str(target),
+            "count": len(src), "missing": missing, "stale": stale, "differs": differs}
+
+
 def demo() -> None:
     import tempfile
     with tempfile.TemporaryDirectory() as td:
@@ -101,6 +133,16 @@ def demo() -> None:
         assert any(Path(x) == Path("scripts/zzz_stale.py") for x in r2["removed"]), r2["removed"]
         assert keep.exists(), "EXCLUDE 대상(__pycache__)이 오폭 삭제됨"
 
+        # --check: 방금 설치한 직후는 일치, 파일을 건드리면 즉시 differs 로 잡혀야 한다
+        c = check(target)
+        assert c["ok"] and not (c["missing"] or c["stale"] or c["differs"]), c
+        (target / "SKILL.md").write_text("변조", encoding="utf-8")
+        c2 = check(target)
+        assert not c2["ok"] and "SKILL.md" in c2["differs"], c2
+        (target / "scripts" / "facts_db.py").unlink()
+        c3 = check(target)
+        assert any(Path(x) == Path("scripts/facts_db.py") for x in c3["missing"]), c3
+
         # 자기복사 가드: 소스==타깃이면 SystemExit
         try:
             install(SKILL_ROOT)
@@ -115,6 +157,12 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if args and args[0] == "demo":
         demo()
+    elif "--check" in args:
+        tgt = args[args.index("--target") + 1] if "--target" in args else DEFAULT_TARGET
+        r = check(tgt)
+        import json
+        print(json.dumps(r, ensure_ascii=False, indent=2))
+        sys.exit(0 if r["ok"] else 1)
     else:
         tgt = args[args.index("--target") + 1] if "--target" in args else DEFAULT_TARGET
         r = install(tgt, dry_run="--dry-run" in args)
