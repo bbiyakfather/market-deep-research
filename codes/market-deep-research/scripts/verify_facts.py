@@ -10,8 +10,8 @@
   4. check_ledger_integrity — confirmed 인데 본문 미사용 사실(유실 점검)
   5·6. check_evidence_chain — evidence 필수필드 누락 0 · text_quote verbatim 필수 ·
                              본문에 쓰인 confirmed 핵심수치(raw 가 Decimal 로 파싱되는 값) source_capture 실재
-  7. check_figures         — 본문 대표 이미지(증빙캡처·차트·도식) 존재 + 참조 경로 실재([도판경로]) +
-                             생성했으나 미결박 캡처 표면화
+  7. check_figures         — 본문 대표 이미지 존재 + 참조 경로 실재([도판경로]) + [그림] 출처 캡션 +
+                             assets 차트 F태그 결박 + 3부 축별 도판 커버리지 경고 + 미결박 캡처 표면화
   8. check_toc             — 목차 기계검사(G9). references/research-plan.md 의 승인 목차
                              ('# 부 N. 제목'/'## 축: 이름')를 파싱해 본문 헤딩·빈 챕터·축
                              커버리지를 대조. 계획 파일이 없으면 검사 생략(warning 만).
@@ -454,14 +454,82 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
 
 
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
-_IMG_HTML = re.compile(r'<img\b[^>]*\bsrc=["\']([^"\']+)["\']', re.I)
+_IMG_HTML = re.compile(r'<img\b[^>]*\bsrc=["\']([^"\']+)["\']', re.I | re.S)
+_FIGURE_TOKEN = re.compile(r"!\[[^\]]*\]\([^)]+\)|<img\b|<figure\b", re.I)
+# 도판 축별 커버리지(check_figures)와 목차검사(check_toc)가 같이 쓴다 — 정의는 여기 하나뿐.
+# 두 곳에서 각각 정의하면 나중 정의가 앞엣것을 조용히 덮어써서, 한쪽 정규식을 손볼 때
+# 무관해 보이는 다른 검사의 판정이 함께 바뀐다(에러 없이 통과하므로 발견도 늦다).
+_MD_HEADING = re.compile(r"^(#{1,6})\s*(.+?)\s*$", re.M)
+_PART_THREE = re.compile(r"^(?:부\s*)?3(?:\s*부)?(?:\s*[.．:：-])?(?:\s+|$)")
+
+
+def _figure_refs(body: str) -> list[tuple[int, int, str]]:
+    """본문 도판 참조를 문서 순서대로 (시작, 끝, 경로) 형태로 돌려준다."""
+    refs = [(m.start(), m.end(), m.group(1)) for m in _IMG_MD.finditer(body)]
+    refs += [(m.start(), m.end(), m.group(1)) for m in _IMG_HTML.finditer(body)]
+    return sorted(refs)
+
+
+def _scoped_ref(path: str, dirname: str) -> bool:
+    """작업폴더 기준 ``dirname/`` 이하의 상대 참조인지 판정한다."""
+    normalized = path.split("#", 1)[0].split("?", 1)[0].replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized == dirname or normalized.startswith(f"{dirname}/")
+
+
+def _caption_within_two_lines(body: str, ref_end: int) -> str | None:
+    """도판 참조가 끝난 줄 다음 두 줄에서 ``[그림]`` 캡션을 찾는다."""
+    lines = body.splitlines()
+    ref_line = body.count("\n", 0, ref_end)
+    for line in lines[ref_line + 1:ref_line + 3]:
+        if re.match(r"^[ \t]*\[그림\]", line):
+            return line.strip()
+    return None
+
+
+def _axis_figure_warnings(body: str) -> list[str]:
+    """3부의 직계 하위 헤딩을 축 챕터로 해석해 도판 공백을 경고한다.
+
+    축 이름은 조사 유형마다 달라지므로 코드에 열거하지 않고, 실제 보고서의 헤딩 구조에서
+    3부 아래 가장 얕은 헤딩 레벨을 동적으로 구한다.
+    """
+    headings = list(_MD_HEADING.finditer(body))
+    part_index = next((i for i, h in enumerate(headings)
+                       if _PART_THREE.match(h.group(2).strip())
+                       or "테마별 본론" in h.group(2)), None)
+    if part_index is None:
+        return []
+
+    part = headings[part_index]
+    part_level = len(part.group(1))
+    section_end = len(body)
+    inner: list[re.Match] = []
+    for heading in headings[part_index + 1:]:
+        level = len(heading.group(1))
+        if level <= part_level:
+            section_end = heading.start()
+            break
+        inner.append(heading)
+    if not inner:
+        return []
+
+    axis_level = min(len(h.group(1)) for h in inner)
+    axes = [h for h in inner if len(h.group(1)) == axis_level]
+    warnings: list[str] = []
+    for i, axis in enumerate(axes):
+        end = axes[i + 1].start() if i + 1 < len(axes) else section_end
+        if not _FIGURE_TOKEN.search(body, axis.end(), end):
+            title = axis.group(2).strip()
+            warnings.append(f"[도판커버리지] 3부 축 챕터에 도판 없음: {title}")
+    return warnings
 
 
 def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], list[str]]:
-    """대표 이미지(증빙캡처·차트·도식) 존재 + 참조 경로 실재 + 생성했으나 미결박 캡처 표면화."""
+    """대표 이미지 존재·경로·출처·차트 F태그 결박과 축별 커버리지를 검사한다."""
     failures: list[str] = []
     warnings: list[str] = []
-    if not re.search(r"!\[[^\]]*\]\([^)]+\)|<img\b|<figure\b", body, re.I):
+    if not _FIGURE_TOKEN.search(body):
         failures.append("[도판] 본문 대표 이미지 0장(증빙캡처·차트·도식 누락)")
     else:
         paths = _IMG_MD.findall(body) + _IMG_HTML.findall(body)
@@ -473,6 +541,18 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], 
                 return (wp.root / p).exists() or Path(p).exists()
             if not any(_exists(p) for p in paths):
                 failures.append(f"[도판경로] 참조 이미지 경로 실재 없음: {paths[0]}")
+
+    for _start, end, path in _figure_refs(body):
+        # 증빙캡처는 G2/check_evidence_chain 의 신뢰경계·실재 검사가 정본이므로 이중 판정하지 않는다.
+        if _scoped_ref(path, "_captures"):
+            continue
+        caption = _caption_within_two_lines(body, end)
+        if not caption or "출처:" not in caption:
+            failures.append(f"[도판출처] [그림] 캡션 또는 출처 누락: {path}")
+        if _scoped_ref(path, "assets") and (not caption or not TAG.search(caption)):
+            failures.append(f"[도판무결박] assets 차트 캡션에 F태그 없음: {path}")
+
+    warnings += _axis_figure_warnings(body)
 
     for e in evidence.values():
         cap = e.get("capture")
@@ -502,9 +582,6 @@ def parse_plan_toc(text: str) -> tuple[list[tuple[int, str]], list[str]]:
             axes = [a.strip() for a in _PLAN_AXIS.findall(text[m.end():end])]
             break
     return parts, axes
-
-
-_MD_HEADING = re.compile(r"^(#{1,6})\s*(.+?)\s*$", re.M)
 
 
 def check_toc(md: str, wp: WorkPaths, plan: Path | str | None = None) -> tuple[list[str], list[str]]:
@@ -688,7 +765,7 @@ def demo() -> None:
         r2 = verify(wp.root / "nc.md", wd)
         assert not r2["ok"] and any("증빙" in x for x in r2["failures"]), r2
 
-        # 대표 이미지 0장 → 도판게이트 FAIL
+        # 대표 이미지 0장 → G3 도판검사 FAIL
         noimg = "삼성전자 2024년 매출은 300.9조원(F001) 입니다.\n"
         (wp.root / "ni.md").write_text(noimg, encoding="utf-8")
         r3 = verify(wp.root / "ni.md", wd)

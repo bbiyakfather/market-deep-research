@@ -1211,6 +1211,70 @@ def g5_receipt_owned_by_manifest_verify():
         assert r3.returncode == 1 and tail["gate"] == "G5" and tail["exit"] == 1, (r3.returncode, tail)
 
 
+@case
+def figure_caption_without_source_fails():
+    """도판 바로 뒤에 [그림] 캡션이 있어도 출처가 없으면 [도판출처] FAIL 이어야 한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("도판출처누락", base=td)
+        wp = WorkPaths(wd)
+        wp.report_md.write_text(
+            "본문.\n\n![외부 도판](https://example.com/chart.png)\n[그림] 시장 구조\n",
+            encoding="utf-8",
+        )
+        rep = verify_facts.verify(wp.report_md, wd)
+        assert not rep["ok"] and any("[도판출처]" in f for f in rep["failures"]), rep
+
+
+@case
+def generated_chart_without_fact_binding_fails():
+    """assets/ 생성 차트의 캡션에 출처가 있어도 F태그가 없으면 [도판무결박] FAIL 이어야 한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("도판무결박", base=td)
+        wp = WorkPaths(wd)
+        (wp.gen_assets / "market.png").write_bytes(b"\x89PNG")
+        wp.report_md.write_text(
+            "본문.\n\n![시장 차트](assets/market.png)\n[그림] 시장 추이 · 출처: 자체 계산\n",
+            encoding="utf-8",
+        )
+        rep = verify_facts.verify(wp.report_md, wd)
+        assert not rep["ok"] and any("[도판무결박]" in f for f in rep["failures"]), rep
+
+
+@case
+def sourced_and_fact_bound_chart_passes():
+    """캡션·출처·F태그를 모두 갖춘 assets/ 도판은 새 강제 검사에서 통과해야 한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.gen_assets / "market.png").write_bytes(b"\x89PNG")
+        wp.report_md.write_text(
+            "본문.\n\n![시장 차트](assets/market.png)\n"
+            "[그림] 매출 추이 (F001) · 출처: 자체 계산\n",
+            encoding="utf-8",
+        )
+        rep = verify_facts.verify(wp.report_md, wd)
+        assert rep["ok"], rep
+
+
+@case
+def axis_figure_coverage_is_warning_only():
+    """3부 축 이름은 헤딩에서 동적으로 읽고, 도판 없는 축은 FAIL 아닌 경고로만 표면화한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("도판커버리지", base=td)
+        wp = WorkPaths(wd)
+        wp.report_md.write_text(
+            "# 부 3. 테마별 본론\n"
+            "## 축: 시장\n![시장](https://example.com/market.png)\n"
+            "[그림] 시장 구조 · 출처: 공식 통계\n"
+            "## 축: 정책\n정책 환경 서술.\n",
+            encoding="utf-8",
+        )
+        rep = verify_facts.verify(wp.report_md, wd)
+        coverage = [w for w in rep["warnings"] if "[도판커버리지]" in w]
+        assert rep["ok"] and len(coverage) == 1 and "축: 정책" in coverage[0], rep
+
+
 def main():
     import traceback
     ok = 0
