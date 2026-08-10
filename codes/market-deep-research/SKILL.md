@@ -147,13 +147,14 @@ description: >-
   없어 매니페스트에 영구 누락되므로, 렌더 직후 다시 build 해 **기존 항목(source/capture/
   facts/evidence/report_md)은 그대로 둔 채** report.pdf 등 렌더 산출물의 해시만 추가한다.
   재봉인을 건너뛰면 report.pdf 는 변조·삭제해도 [G5] 가 잡지 못한다.
-- **영수증**: `render_pdf.py` CLI는 렌더 성공 직후 manifest build와 [4b] 자기기록을 자동 수행하며, `manifest.py verify`는 [4b] 영수증 없이는 실패한다.
+- **영수증**: `render_pdf.py` CLI는 렌더 성공 직후 manifest build와 [4b] 자기기록을 자동 수행한다. `manifest.py verify`는 [4b]·G4 영수증 없이는 실패하며, 대조 결과를 **G5 영수증으로 자기기록**한다(실패도 기록 — 실패 이력이 원장에서 사라지지 않게).
 - `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 + **intent-diff 축별 대조**(64-65행
   개시분과 실제 발견 대조, 절차·복귀 규칙은 `references/verification-gates.md` G4 절 참조).
 - 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`(재봉인 기준 — 이 시점부턴
   신규 파일도 실패로 판정). 복귀 규칙은 `references/verification-gates.md` 참조(파일 변경/
   intent-diff gap 각각 다른 복귀처).
 - **영수증**: preview 전 `python scripts/gates.py check G4 <work_dir>`로 G0 계획 해시 드리프트를 검사하고, 확인 후 `record G4`로 기록한다.
+- **영수증 커버리지**: 원장 영수증은 G0·G1·[2]·G3·[4b]·G4·G5 — 소유 스크립트 게이트(G3·[4b]·G5)는 CLI 손기록이 차단되고 소유 스크립트만 기록한다. G2·G5c 는 원장 대신 내용검사로 강제된다(G2=verify_facts 의 캡처 실재 검사, G5c=`audit/verify-<slug>.md` 산출물).
 - **참고**: [G2]가 만드는 실패 캡처 `.FAILED` 산출물도 `_captures/**` 글롭에 잡힌다 — 재봉인
   이후 캡처를 재시도하면 그 결과물이 신규 파일로 잡혀 verify 가 실패로 뜬다. 의도된 동작이며
   이 경우도 재봉인이 해법이다.

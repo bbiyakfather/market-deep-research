@@ -5,7 +5,8 @@
 
 CLI:
   python manifest.py build  <work_dir>   # 현재 상태 해시 기록 → manifest.json
-  python manifest.py verify <work_dir>   # 저장본과 대조 → 변경/유실/신규 리포트(변경 시 exit 1)
+  python manifest.py verify <work_dir>   # [4b]·G4 영수증 확인 후 저장본 대조, 결과를 G5 로
+                                         # 자기기록(변경 시 exit 1)
 """
 from __future__ import annotations
 
@@ -118,10 +119,16 @@ if __name__ == "__main__":
         wp = WorkPaths(args[1])
         try:
             gates.require_receipt(wp, "[4b]")
+            checked = gates.check_gate(wp, "G5")          # G5 선행 = G4(팀리드 육안검증)
+            if not checked["ok"]:
+                raise gates.GateError("; ".join(checked["issues"]))
         except gates.GateError as exc:
-            print(f"[4b] 영수증 전제조건 미충족: {exc}", file=sys.stderr)
+            print(f"[G5] 전제조건 미충족: {exc}", file=sys.stderr)
             sys.exit(1)
         v = verify(wp)
+        # 검증 결과 자체를 G5 영수증으로 남긴다 — PASS 만 기록하면 실패 이력이 원장에서 사라진다
+        gates.record_script_result(wp, "G5", 0 if v["ok"] else 1,
+                                   json.dumps(v, ensure_ascii=False, sort_keys=True), wp.facts)
         print(json.dumps(v, ensure_ascii=False, indent=2))
         sys.exit(0 if v["ok"] else 1)
     else:

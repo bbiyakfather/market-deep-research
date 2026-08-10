@@ -1153,6 +1153,64 @@ def skill_frontmatter_intact():
     assert "기술사업화 실사" in desc, "description 에 기술사업화 실사 없음"
 
 
+# --- 게이트 원장 소유권(영수증 위조·G5 자기기록 회귀) --------------------------
+
+@case
+def owned_gate_cli_forgery_blocked():
+    """소유 스크립트 게이트(G3/[4b]/G5)를 gates.py CLI 손기록으로 위조하면 거부되는지 —
+    소유자를 우회한 손기록은 스크립트를 돌리지 않은 영수증과 구분되지 않는다.
+    긍정형 짝: 무소유 게이트(G1)는 CLI 기록이 여전히 된다."""
+    import gates
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("원장위조", base=td)
+        wp = WorkPaths(wd)
+        for g in ("G3", "[4b]", "G5"):
+            rc = gates.main(["record_script_result", g, "0", str(wd)])
+            assert rc == 1, f"{g} CLI 손기록이 통과됨"
+        assert not gates.ledger_path(wp).exists(), "거부됐는데 원장에 기록이 남음"
+        assert gates.main(["record_script_result", "G1", "0", str(wd), "--summary", "join"]) == 0
+        assert gates.successful_receipt(wp, "G1"), "무소유 게이트(G1) CLI 기록 실패"
+
+
+@case
+def g5_receipt_owned_by_manifest_verify():
+    """manifest.py verify CLI 가 G4 영수증 없이는 거부하고, 정상 체인에선 결과를 G5 로
+    자기기록하며, 변조 후 FAIL 도 원장에 남는지(실패 이력 소실 방지)."""
+    import subprocess
+    import gates
+    cli = [sys.executable, str(SKILL_ROOT / "scripts" / "manifest.py"), "verify"]
+
+    def run_cli(wd):
+        return subprocess.run(cli + [str(wd)], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace")
+
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("지5소유", base=td)
+        wp = WorkPaths(wd)
+        (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
+        wp.facts.write_text("", encoding="utf-8")
+        (wp.root / "report.md").write_text("# r\n", encoding="utf-8")
+        gates.record_manual(wp, "G0", "approved")
+        gates.record_script_result(wp, "G1", 0, "join PASS")
+        gates.record_manual(wp, "[2]", "lead reread")
+        gates.record_script_result(wp, "G3", 0, "verify PASS")
+        manifest.build(wp)
+        gates.record_script_result(wp, "[4b]", 0, "reseal PASS")
+
+        r1 = run_cli(wd)
+        assert r1.returncode == 1 and "G4" in r1.stderr, f"G4 없이 verify 통과: {r1.stderr!r}"
+
+        gates.record_manual(wp, "G4", "preview OK")
+        r2 = run_cli(wd)
+        assert r2.returncode == 0, f"정상 체인인데 verify 실패: {r2.stderr!r}"
+        assert gates.successful_receipt(wp, "G5"), "G5 영수증 미기록"
+
+        (wp.root / "report.md").write_text("# tampered\n", encoding="utf-8")
+        r3 = run_cli(wd)
+        tail = json.loads(gates.ledger_path(wp).read_text(encoding="utf-8").splitlines()[-1])
+        assert r3.returncode == 1 and tail["gate"] == "G5" and tail["exit"] == 1, (r3.returncode, tail)
+
+
 def main():
     import traceback
     ok = 0
