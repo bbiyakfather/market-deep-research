@@ -25,11 +25,12 @@ from skill_paths import ASSETS
 
 try:
     from curl_cffi import requests as creq
-    from fetch import _CA_BUNDLE, check_url_safe
+    from fetch import _CA_BUNDLE, check_url_safe, check_response_ip
 except Exception:
     creq = None
     _CA_BUNDLE = None
     def check_url_safe(u): return urlparse(u).hostname
+    def check_response_ip(r): pass   # ponytail: urllib 폴백엔 primary_ip 가 없음 — TOCTOU 방어는 curl_cffi 전제
 
 _CURATED = json.loads((ASSETS / "curated-sources.json").read_text(encoding="utf-8"))
 _SEARX = json.loads((ASSETS / "searx-instances.json").read_text(encoding="utf-8"))
@@ -47,14 +48,19 @@ def _get(url: str, timeout: int = 12) -> tuple[int, str]:
             return r.status, r.read().decode("utf-8", errors="replace")
     kw = {"verify": _CA_BUNDLE} if _CA_BUNDLE else {}
     r = creq.get(url, impersonate="chrome", timeout=timeout, **kw)
+    check_response_ip(r)                                # V26 — 실접속 IP 사후 재검증(TOCTOU)
     return r.status_code, r.text
 
 
 # --- 백엔드들 ----------------------------------------------------------------
 def _ddg(query: str, n: int) -> list[dict]:
     """DuckDuckGo HTML. 결과 링크는 //duckduckgo.com/l/?uddg=<encoded> 리다이렉트 → 디코드."""
-    url = "https://html.duckduckgo.com/html/?q=" + quote(query)
-    _, html = _get(url)
+    try:
+        url = "https://html.duckduckgo.com/html/?q=" + quote(query)
+        _, html = _get(url)
+    except Exception as e:                     # 1차 백엔드도 다른 백엔드처럼 실패는 건너뜀(V28)
+        print(f"  ⚠ ddg 실패(건너뜀): {e}", file=sys.stderr)
+        return []
     out = []
     for m in re.finditer(r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>', html, re.S):
         href, title = m.group(1), re.sub(r"<[^>]+>", "", m.group(2)).strip()
@@ -123,10 +129,16 @@ def _sec_edgar(query: str, n: int) -> list[dict]:
     out = []
     for h in hits:
         src = h.get("_source", {})
-        cik = (src.get("cik") or [""])[0] if isinstance(src.get("cik"), list) else src.get("cik", "")
+        ciks = src.get("ciks") or []                    # V22 — 실응답 필드는 복수형 'ciks' 뿐(단수 'cik' 없음)
+        cik = ciks[0] if ciks else ""
+        acc, _, fname = (h.get("_id") or "").partition(":")   # accession:filename → 공시 문서 직행 URL
+        if cik and acc and fname:
+            url = (f"https://www.sec.gov/Archives/edgar/data/{cik.lstrip('0') or '0'}/"
+                   f"{acc.replace('-', '')}/{fname}")
+        else:
+            url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}"
         out.append({"title": src.get("display_names", [""])[0] if src.get("display_names") else h.get("_id", ""),
-                    "url": f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}",
-                    "snippet": src.get("form", ""), "source": "sec_edgar"})
+                    "url": url, "snippet": src.get("form", ""), "source": "sec_edgar"})
     return out
 
 
@@ -173,6 +185,27 @@ def demo() -> None:
     # uddg 디코드
     assert _decode_ddg("//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fa&rut=1") == "https://example.com/a"
     assert "ddg+searx" == _CURATED["type_backends"]["web"]["backend"]
+
+    # V22: EDGAR 고정 픽스처 — 실응답 필드는 'ciks'(복수형)뿐. CIK 가 비어 있지 않아야 함(긍정형)
+    _get_orig = globals()["_get"]
+    fixture = json.dumps({"hits": {"hits": [{"_id": "0001193125-10-068933:d8k.htm",
+                          "_source": {"ciks": ["0001318605"], "display_names": ["Tesla, Inc."], "form": "8-K"}}]}})
+    globals()["_get"] = lambda url, timeout=12: (200, fixture)
+    try:
+        r = _sec_edgar("Tesla", 3)
+        assert "1318605" in r[0]["url"], r
+        assert not r[0]["url"].rstrip().endswith("CIK="), r    # 옛 cik 단수필드 버그면 빈 CIK= 로 끝남
+    finally:
+        globals()["_get"] = _get_orig
+
+    # V28: 1차 백엔드(ddg) 밑단(_get)이 타임아웃해도 예외가 전파되지 않고 빈 리스트로 강등되는지
+    # (_searx 의 인스턴스×백오프 재시도는 느려서 demo 에선 건드리지 않음 — 별도 적대적 케이스에서 검증)
+    globals()["_get"] = lambda url, timeout=12: (_ for _ in ()).throw(TimeoutError("stub timeout"))
+    try:
+        assert _ddg("x", 5) == []
+    finally:
+        globals()["_get"] = _get_orig
+
     print(f"[{_now()}] search demo OK (curl_cffi={'Y' if creq else 'N'})")
 
 

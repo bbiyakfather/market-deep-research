@@ -23,6 +23,13 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
+# stdout/stderr 를 UTF-8 로 고정(cp949 콘솔·파이프에서 한글/기호 출력이 프로세스를
+# 죽이는 것을 방지). 이 모듈을 import 하는 모든 스크립트에 프로세스 전역으로 전파된다.
+for _stream in (sys.stdout, sys.stderr):
+    _reconf = getattr(_stream, "reconfigure", None)
+    if _reconf:
+        _reconf(encoding="utf-8", errors="replace")
+
 # --- 스킬 루트 ---------------------------------------------------------------
 SKILL_ROOT = Path(__file__).resolve().parent.parent          # .../market-deep-research/
 REFERENCES = SKILL_ROOT / "references"

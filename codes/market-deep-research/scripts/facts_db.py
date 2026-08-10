@@ -77,12 +77,45 @@ def validate_fact(fact: dict, schema: dict | None = None) -> dict:
         if not fact.get("evidence_ids"):
             raise ValidationError(f"{fid}: confirmed 인데 evidence_ids 비어있음")
         events = fact.get("verify_events") or []
-        if not any((e.get("by") == "lead") for e in events):
+        lead_events = [e for e in events if e.get("by") == "lead"]
+        if not lead_events:
             raise ValidationError(f"{fid}: confirmed 인데 팀리드(lead) verify_event 없음")
+        # G4: status 전이 무제약 차단 — 반박이 기록됐거나 폐기 사유가 남은 채로,
+        # 또는 강등 이후 새 lead 재검증 없이 confirmed 로 (재)승급하는 것을 막는다.
+        cs = fact.get("counter_search") or {}
+        if cs.get("found_stronger_refutation"):
+            raise ValidationError(f"{fid}: 더 강한 반박(counter_search)이 기록된 채 confirmed 불가")
+        if fact.get("discard_reason"):
+            raise ValidationError(f"{fid}: 폐기 사유가 남은 채 confirmed 불가(discard_reason 미해제)")
+        demoted_at = fact.get("demoted_at")
+        if demoted_at and max((e.get("at") or "" for e in lead_events)) <= demoted_at:
+            raise ValidationError(
+                f"{fid}: 강등({demoted_at}) 이후 새 lead verify_event 없이 confirmed 재승급 불가")
     return fact
 
 
-def validate_evidence(ev: dict, schema: dict | None = None) -> dict:
+def check_capture_path(capture: str, work: WorkPaths | None = None) -> str | None:
+    """capture 경로 신뢰경계 판정 — 위반 있으면 사유 문자열, 없으면 None.
+    재구성 발췌(_reconstructed/)는 SKILL.md·evidence-capture.md·verification-gates.md 세 곳이
+    '증빙 불인정'으로 규정하므로 경로 어디에 있든 즉시 거부. work 가 있으면 정규화 경로가
+    작업폴더의 캡처 디렉터리(_captures/) 하위가 아닌 것도 거부(절대경로·../ 탈출 포함) —
+    resolve()+relative_to 는 manifest.py·install.py 가 이미 쓰는 관행이라 그대로 따른다."""
+    if not capture:
+        return None
+    if "_reconstructed" in Path(capture).as_posix().split("/"):
+        return "재구성 발췌(_reconstructed/)는 증빙 불인정"
+    if work is None:
+        return None
+    p = Path(capture)
+    target = p.resolve() if p.is_absolute() else (work.root / p).resolve()
+    try:
+        target.relative_to(work.captures.resolve())
+    except ValueError:
+        return f"작업폴더 캡처 디렉터리(_captures/) 밖: {capture}"
+    return None
+
+
+def validate_evidence(ev: dict, schema: dict | None = None, work: WorkPaths | None = None) -> dict:
     schema = schema or load_schema()
     enums = schema["enums"]
     spec = schema["evidence"]
@@ -91,11 +124,18 @@ def validate_evidence(ev: dict, schema: dict | None = None) -> dict:
     eid = ev["id"]
     if not (isinstance(eid, str) and eid.startswith("E") and eid[1:].isdigit() and len(eid) >= 4):
         raise ValidationError(f"evidence.id 형식 오류: {eid!r} (E### 이상)")
+    fid = ev.get("fact_id")
+    if not (isinstance(fid, str) and fid.startswith("F") and fid[1:].isdigit() and len(fid) >= 4):
+        raise ValidationError(f"{eid}: evidence.fact_id 형식 오류: {fid!r} (F### 이상)")
     _check_enum(ev["type"], "evidence_type", enums, "evidence.type")
     if ev.get("source_role"):
         _check_enum(ev["source_role"], "source_role", enums, "evidence.source_role")
     if ev["type"] == "text_quote" and not ev.get("verbatim"):
         raise ValidationError(f"{eid}: text_quote 는 verbatim 필수")
+    if ev.get("capture"):
+        violation = check_capture_path(ev["capture"], work)
+        if violation:
+            raise ValidationError(f"{eid}: capture 신뢰경계 위반 — {violation}")
     return ev
 
 
@@ -173,24 +213,24 @@ class FactsDB:
         return fact
 
     def add_evidence(self, ev: dict) -> dict:
-        """검증 후 등재 + 연결된 fact 의 evidence_ids 갱신."""
+        """검증 후 등재 + 연결된 fact 의 evidence_ids 갱신. fact_id 가 대장에 없으면 거부
+        (G4: orphan evidence 가 evidence.jsonl 에만 조용히 쌓이던 구멍 차단) — 쓰기 전에 확인."""
         rows = self.evidence()
         ev.setdefault("id", self._next_id(rows, "E"))
         ev.setdefault("accessed_at", _now())
-        validate_evidence(ev, self.schema)
+        validate_evidence(ev, self.schema, self.wp)
         if any(r["id"] == ev["id"] for r in rows):
             raise ValidationError(f"중복 evidence.id: {ev['id']}")
+        facts = self.facts()
+        target = next((fr for fr in facts if fr["id"] == ev["fact_id"]), None)
+        if target is None:
+            raise ValidationError(f"{ev['fact_id']}: 존재하지 않는 fact_id — orphan evidence 거부")
         rows.append(ev)
         _write_jsonl_atomic(self.wp.evidence, rows)
-        # fact 연결
-        facts = self.facts()
-        for fr in facts:
-            if fr["id"] == ev["fact_id"]:
-                fr.setdefault("evidence_ids", [])
-                if ev["id"] not in fr["evidence_ids"]:
-                    fr["evidence_ids"].append(ev["id"])
-                _write_jsonl_atomic(self.wp.facts, facts)
-                break
+        target.setdefault("evidence_ids", [])
+        if ev["id"] not in target["evidence_ids"]:
+            target["evidence_ids"].append(ev["id"])
+        _write_jsonl_atomic(self.wp.facts, facts)
         return ev
 
     def add_verify_event(self, fact_id: str, by: str, action: str, note: str = "") -> None:
@@ -207,9 +247,14 @@ class FactsDB:
         facts = self.facts()
         for fr in facts:
             if fr["id"] == fact_id:
+                if fr.get("status") == "confirmed" and status != "confirmed":
+                    fr["demoted_at"] = _now()      # G4: 강등 시각 기록 → 재승급엔 그 이후 lead 재검증 요구
+                if status == "discarded":
+                    if reason:
+                        fr["discard_reason"] = reason
+                else:
+                    fr["discard_reason"] = None    # discarded 아닌 상태로 옮기면 폐기 사유 해제
                 fr["status"] = status
-                if status == "discarded" and reason:
-                    fr["discard_reason"] = reason
                 validate_fact(fr, self.schema)
                 _write_jsonl_atomic(self.wp.facts, facts)
                 return fr
@@ -239,11 +284,14 @@ def diff_facts(old_path: Path | str, new_path: Path | str) -> dict:
 
 # --- CLI / self-check --------------------------------------------------------
 def demo() -> None:
+    import hashlib
     import tempfile as _tf
     from skill_paths import resolve_work_dir
+    _h = lambda tag: hashlib.sha256(tag.encode()).hexdigest()  # 유효한 sha256 fixture 생성
     with _tf.TemporaryDirectory() as td:
         wd = resolve_work_dir("데모 주제", base=td)
         db = FactsDB(wd)
+        wp = WorkPaths(wd)
 
         f = db.add_fact({
             "claim": "삼성전자 2024 연결기준 매출은 300.9조원",
@@ -262,9 +310,27 @@ def demo() -> None:
         except ValidationError:
             pass
 
+        # orphan evidence(존재하지 않는 fact_id) 거부 — G4
+        try:
+            db.add_evidence({"fact_id": "F999", "type": "table_cell",
+                             "source_url": "https://x", "sha256": _h("orphan")})
+            assert False, "orphan evidence 가 통과됨"
+        except ValidationError:
+            pass
+        assert db.evidence() == [], "orphan evidence 가 파일에 남으면 안 됨"
+
+        # capture 가 _captures/ 밖(작업폴더 탈출)이면 거부 — G4
+        try:
+            db.add_evidence({"fact_id": "F001", "type": "table_cell",
+                             "source_url": "https://x", "sha256": _h("escape"),
+                             "capture": "../../etc/passwd"})
+            assert False, "작업폴더 밖 capture 경로가 통과됨"
+        except ValidationError:
+            pass
+
         db.add_evidence({
             "fact_id": "F001", "type": "table_cell",
-            "source_url": "https://dart.fss.or.kr/x", "sha256": "abc",
+            "source_url": "https://dart.fss.or.kr/x", "sha256": _h("F001-E001"),
             "locator": {"page": 12, "row": 3, "col": 2}, "source_role": "원출처",
         })
         db.add_verify_event("F001", by="lead", action="reread", note="DART 원문 표셀 재열람 일치")
@@ -274,10 +340,35 @@ def demo() -> None:
         # text_quote 는 verbatim 필수
         try:
             db.add_evidence({"fact_id": "F001", "type": "text_quote",
-                             "source_url": "https://x", "sha256": "z"})
+                             "source_url": "https://x", "sha256": _h("noverbatim")})
             assert False, "verbatim 누락이 통과됨"
         except ValidationError:
             pass
+
+        # G4: 반박이 기록된 채 confirmed 재승급 차단, 폐기 사유 남은 채 confirmed 차단,
+        # 강등 이후 새 lead 재검증 없으면 재승급 차단 — 새 lead 재검증 추가 후엔 성공(긍정형 짝)
+        db.set_status("F001", "disputed")
+        facts = db.facts()
+        fr = next(r for r in facts if r["id"] == "F001")
+        fr["counter_search"] = {"query": "정정 검색", "result": "더 강한 반박 발견",
+                                 "found_stronger_refutation": True}
+        _write_jsonl_atomic(wp.facts, facts)
+        try:
+            db.set_status("F001", "confirmed")
+            assert False, "반박 기록된 채 confirmed 재승급이 통과됨"
+        except ValidationError:
+            pass
+        # 반박 해제 + 폐기 사유 없이 새 lead 재검증 추가 → 재승급 성공
+        facts = db.facts()
+        fr = next(r for r in facts if r["id"] == "F001")
+        fr["counter_search"]["found_stronger_refutation"] = False
+        _write_jsonl_atomic(wp.facts, facts)
+        # _now() 가 초 단위라 demoted_at 과 같은 초에 재검증하면 '이후'인지 판정이 흔들린다 —
+        # 자동화 테스트에서 확실히 다음 초가 되게 잠깐 대기(운영 흐름에선 재조사 자체가 걸림).
+        import time as _time; _time.sleep(1.1)
+        db.add_verify_event("F001", by="lead", action="reread", note="재조사 후 재열람")
+        db.set_status("F001", "confirmed")           # 긍정형 짝: 새 검증 있으면 재승급 성공
+        assert db.facts()[0]["status"] == "confirmed"
 
         # diff: 같은 claim_key, 값만 변동
         old = Path(td) / "old.jsonl"; new = Path(td) / "new.jsonl"

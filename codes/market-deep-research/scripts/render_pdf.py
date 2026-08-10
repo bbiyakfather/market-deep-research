@@ -9,6 +9,7 @@ CLI: python render_pdf.py <report.md> [out.pdf]
 """
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -16,6 +17,9 @@ from datetime import datetime
 from pathlib import Path
 
 from skill_paths import ASSETS
+import gates
+import manifest
+from skill_paths import WorkPaths
 from preflight import _find_chrome
 
 STYLE = ASSETS / "style.html"
@@ -28,10 +32,12 @@ def _now() -> str:
 def _pandoc_html(md_path: Path, html_out: Path, resource_dir: Path) -> None:
     # title 은 문서 자체 H1 을 쓰도록 비워 둔다(하드코딩 제목이 표지에 찍히는 것 방지).
     # pandoc 은 빈 title 에 경고만 내고 정상 산출한다.
+    # --fail-if-warnings: 리소스(이미지 등) 미발견 경고가 exit 0 으로 조용히 넘어가던 것을
+    # 승격 — 증빙 이미지가 통째로 빠진 PDF 가 ok=True 로 반환되는 사각지대를 막는다(G6a).
     cmd = ["pandoc", str(md_path), "-f", "gfm", "-t", "html5", "--standalone",
            "--embed-resources", f"--resource-path={resource_dir}",
            f"--include-in-header={STYLE}", "--metadata", "title=",
-           "-o", str(html_out)]
+           "--fail-if-warnings", "-o", str(html_out)]
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:
         raise RuntimeError(f"pandoc 실패: {r.stderr.strip()}")
@@ -95,8 +101,27 @@ if __name__ == "__main__":
     if not args or args[0] == "demo":
         demo()
     elif len(args) >= 1:
+        md_path = Path(args[0])
         out = args[1] if len(args) >= 2 else None
-        import json
-        print(json.dumps(render(args[0], out), ensure_ascii=False))
+        wp = WorkPaths(md_path.parent)
+        try:
+            gates.require_receipt(wp, "G3")
+        except gates.GateError as exc:
+            print(f"[render] G3 PASS 영수증 전제조건 미충족: {exc}", file=sys.stderr)
+            sys.exit(1)
+        try:
+            rendered = render(md_path, out)
+            sealed = manifest.build(wp)
+            receipt = gates.record_script_result(
+                wp, "[4b]", 0,
+                json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"])},
+                           ensure_ascii=False, sort_keys=True),
+                wp.facts,
+            )
+        except (gates.GateError, OSError, RuntimeError) as exc:
+            print(f"[render] 실패: {exc}", file=sys.stderr)
+            sys.exit(1)
+        print(json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"]),
+                          "receipt": receipt}, ensure_ascii=False))
     else:
         print(__doc__); sys.exit(2)
