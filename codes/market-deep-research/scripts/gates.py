@@ -10,8 +10,10 @@ CLI::
     python gates.py check G4 <work_dir>
     python gates.py status <work_dir>
 
-The public ``record_script_result`` function is used by script entry points
-so a script gate cannot be claimed by a separate manual command.
+The public ``record_script_result`` function is used by script entry points.
+The CLI refuses to record script-owned gates (G3/[4b]/G5) so an owned gate
+cannot be claimed by hand; ownerless script gates (G1·G2·G5c) remain
+recordable through the CLI because no script exists to claim them.
 """
 from __future__ import annotations
 
@@ -28,6 +30,12 @@ from skill_paths import WorkPaths, resolve_work_dir
 
 
 MANUAL_GATES = frozenset({"G0", "[2]", "G4"})
+
+# 소유 스크립트가 자기기록하는 게이트 — CLI record_script_result 로는 기록 불가.
+# (G3=verify_facts.py · [4b]=render_pdf.py · G5=manifest.py verify)
+# 소유자가 있는 게이트의 손기록을 허용하면 스크립트를 돌리지 않은 영수증과
+# 구분할 수 없다 — 위조 가능한 영수증은 영수증이 아니다.
+SCRIPT_OWNED = frozenset({"G3", "[4b]", "G5"})
 
 # The order follows SKILL.md.  G4 also has a separate N8 plan-hash check
 # against G0; keeping that check independent makes drift explicit in errors.
@@ -467,8 +475,12 @@ def demo(base: Path | str | None = None) -> dict:
         plan.write_text("# drifted plan\n", encoding="utf-8")
         drift = check_gate(wp, "G4")
         assert not drift["ok"] and any("드리프트" in issue for issue in drift["issues"]), drift
+        # 소유 게이트 CLI 손기록 차단 — API(소유 스크립트 경로)는 위에서 이미 통과했다
+        assert main(["record_script_result", "G3", "0", str(wd)]) == 1, "G3 CLI 손기록 미차단"
+        assert main(["record_script_result", "G1", "1", str(wd), "--summary", "rejoin"]) == 0, \
+            "무소유 게이트(G1) CLI 기록이 막힘"
         result = {"status": snapshot, "refs_tamper_detected": True,
-                  "plan_drift_detected": True}
+                  "plan_drift_detected": True, "owned_gate_cli_blocked": True}
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return result
 
@@ -491,6 +503,11 @@ def main(argv: list[str] | None = None) -> int:
             result = status(work)
         elif args.command == "record_script_result":
             work = _work_arg(parser, args.work_dir, args.work_dir_opt)
+            canonical = normalize_gate(args.gate)
+            if canonical in SCRIPT_OWNED:
+                raise GateError(
+                    f"{canonical} 는 소유 스크립트만 기록 가능(CLI 손기록 금지): "
+                    "G3=verify_facts.py · [4b]=render_pdf.py · G5=manifest.py verify")
             result = record_script_result(
                 work, args.gate, args.exit_code, args.summary, args.facts_db,
                 result_summary_sha256=args.result_summary_sha256,

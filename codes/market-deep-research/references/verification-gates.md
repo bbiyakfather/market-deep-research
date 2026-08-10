@@ -19,7 +19,7 @@ openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공�
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
 (위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록).
 
-## G2 팀리드 재검증(전건) + [Bx] claim-graph
+## [2] 팀리드 재검증(전건) + [Bx] claim-graph
 - 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람 → `add_verify_event(by="lead")`.
   verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
@@ -52,9 +52,16 @@ report.pdf 생성 후 **재봉인**(`manifest.py build` 재실행 — [G3] 항�
 렌더 산출물 해시를 추가) → `preview_pdf.py` 육안검증 + **intent-diff 축별 대조**
 (`audit/intent-diff.md` 개시분의 축별 "참이어야 하는가" 목록을 실제 보고서 발견과 대조 —
 축마다 gap 유무 판정, 결과를 `audit/intent-diff.md` 에 추기) → PDF F태그·링크·캡처 수 재검사
-+ `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정).
++ `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정. [4b]·G4 영수증 확인 후
+결과를 G5 영수증으로 자기기록).
 **복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
 **[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님).
+
+## 영수증 커버리지
+원장(`audit/gates.jsonl`) 영수증: G0·[2]·G4=수동(`gates.py record`), G3·[4b]·G5=소유
+스크립트 자기기록(CLI 손기록 차단 — verify_facts.py·render_pdf.py·manifest.py verify),
+G1·G5c 등 무소유 게이트=`gates.py record_script_result`. G2·G5c 의 실질 강제는 원장이
+아니라 내용검사다(G2=verify_facts 캡처 실재, G5c=`audit/verify-<slug>.md`).
 
 ## 환산 옵션(기본 OFF)
 ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시), 표시 반올림 일관, 본문 영어통화단어 0.
