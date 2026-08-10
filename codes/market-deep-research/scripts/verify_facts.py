@@ -577,6 +577,14 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures: list[str] = []
     warnings: list[str] = []
 
+    # 부록 경계 마커는 최대 1개 — split_body_appendix 는 첫 마커 기준이라, 본문 앞쪽의
+    # 중복(실수·위조) 마커 하나가 그 뒤 본문 전체를 결박 검사에서 조용히 면제시킨다.
+    # '조용히 하나 고르기' 대신 중복 자체를 FAIL 로 명명한다 — [중복ID] 관행과 동일.
+    # (회귀: duplicate_appendix_marker_blocked)
+    n_appx = len(APPX_COMMENT.findall(md))
+    if n_appx > 1:
+        failures.append(f"[부록마커중복] FACTSHEET:APPENDIX 마커 {n_appx}개 — 첫 마커 뒤 본문이 검사 면제됨")
+
     bn_fail, bn_warn = check_bound_numbers(body, facts)
     failures += bn_fail
     warnings += bn_warn

@@ -184,6 +184,20 @@ def appendix_bypass_blocked():
 
 
 @case
+def duplicate_appendix_marker_blocked():
+    """본문 앞쪽에 APPENDIX 마커를 하나 더 심으면 첫 마커 기준 절단이라 그 뒤 본문 전체가
+    부록 취급(무태그 검출 침묵) → 마커 중복 자체를 FAIL 로 차단."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        md = ("<!-- FACTSHEET:APPENDIX -->\n시장은 45조원 규모다.\n"
+              "<!-- FACTSHEET:APPENDIX -->\n## 부록\n")
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("부록마커중복" in f for f in rep["failures"]), rep
+
+
+@case
 def high_risk_without_capture():
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)
