@@ -79,8 +79,8 @@ description: >-
 - 조사원 = **sonnet**(병렬·저비용, background). 에이전트별 `_research/<agent>/` 임시폴더에만
   쓴다(파일충돌 방지). 워커는 **읽기전용**(공식 대장 미기록) — 반환은 마커로. 【v3-F】
 - 반환 마커(`agent-briefs.md`): evidence 스키마 JSONL + `## CLAIMS`(CLAIM/RISK/SOURCES/
-  COUNTER/PRIMARY) + `## EXPAND`(LEAD/WHY/ANGLE, DEAD END) + `## 인사이트`(사실/추론 구분,
-  근거 F-ID) + `## 요약`.
+  COUNTER/PRIMARY) + `## EXPAND`(LEAD/WHY/ANGLE, DEAD END) + `## FIGURES`(원문 도판 위치·캡션)
+  + `## 인사이트`(사실/추론 구분, 근거 F-ID) + `## 요약`.
 - **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에
   축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0
   에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건,
@@ -123,9 +123,9 @@ description: >-
 - 고객용 `report.md`: **11부 표준목차**(표지→Executive→개요→테마별 본론→시장수치→플레이어→
   검증요약→상충→상태변화→한계·반론→요약·인사이트→부록). 조사유형별 변형은 `report-format.md`.
 - 내부 `audit/`: facts 전수·폐기목록+사유·실패소스·검증이력·raw·세션 저널.
-- **세부주제별 대표 이미지(도판)**: `harvest_images.py` 로 ① 소스 PDF 도판 크롭(출처 자동
-  일치·최우선) ② 확보 페이지 이미지 ③ 이미지 검색(openverse·commons) 순 수확 → 팀리드
-  육안 선별(Read) → `[그림]` 캡션+출처 결박(`references/image-research.md`). `_images/` 저장.
+- **세부주제별 대표 이미지(도판)**: ⓪ 원문을 읽은 워커의 `## FIGURES` 신고분부터 처리해 중복 탐색을 막은 뒤
+  `harvest_images.py` 로 ① 소스 PDF 크롭 ② 확보 페이지 ③ 이미지 검색 순 수확한다. 모두
+  소진해야 `make_chart.py` 자작 차트를 최후수단으로 쓰며, 상세 결박은 `references/image-research.md`.
 
 ### [G3] verify_facts + manifest (실패 0)
 - `scripts/verify_facts.py`: 본문/생성부록 분리 파싱(부록 경계는 주석 우선, 없으면 헤딩 최후

@@ -51,4 +51,7 @@ verify_facts.py 가 이 마커 이후를 부록으로 보고 '본문 사용'에�
 ## 렌더
 `render_pdf.py`(pandoc gfm→html --embed-resources + style.html → HeadlessChrome, 오프라인·한글경로).
 증빙 이미지는 `_captures/` 상대경로로 참조 → pandoc 이 data URI 내장.
-대표 이미지(도판)는 `_images/` 상대경로 + `[그림]` 캡션·출처 병기(`image-research.md` 규율).
+대표 이미지(도판)는 이미지 참조 뒤 2줄 이내의 `[그림]` 캡션에 `출처:`를 병기하고,
+`assets/` 자작 차트면 같은 캡션에 `(Fxxx)`도 둔다(`image-research.md` 정본 규율). `_captures/`
+증빙캡처는 G2 소관이라 이 도판 규율에서 제외한다 — 작성 서식과 기계검사 경계를 같게 해야
+문서대로 쓴 보고서가 G3에서 실패하지 않는다.
