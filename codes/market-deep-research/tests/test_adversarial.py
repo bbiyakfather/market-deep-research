@@ -521,8 +521,7 @@ def evidence_table_row_forgery():
 
 @case
 def numeral_and_energy_units_untagged():
-    """V13-7: 한국식 수사 삽입형(1천억)·TWh 무태그 사실주장 검출. '12건'·'3개사' 같은 구조
-    카운트(계수 단위)는 오탐하지 않아야 한다(긍정형 짝)."""
+    """V13-7: 한국식 수사 삽입형(1천억)·TWh 무태그 사실주장 검출."""
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)
         wp = WorkPaths(wd)
@@ -531,9 +530,75 @@ def numeral_and_energy_units_untagged():
             rep = verify_facts.verify(wp.root / "x.md", wd)
             assert not rep["ok"] and any("무태그" in f for f in rep["failures"]), (text, rep)
 
-        (wp.root / "cnt.md").write_text("총 12건의 프로젝트를 3개사가 진행한다.\n", encoding="utf-8")
-        rcnt = verify_facts.verify(wp.root / "cnt.md", wd)
-        assert not any("무태그" in f for f in rcnt["failures"]), rcnt
+
+@case
+def currency_prefix_untagged_and_mistagged():
+    """H2 ①: 접두 통화 표기는 무태그도 오값도 통과하던 사각지대(probe B/C 실측). 긍정형 짝: 값 일치는 통과,
+    대장 'USD_million' ↔ 본문 bare 'million' 호환도 유지."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        db.add_fact({"claim": "딜 120M", "risk": "normal", "status": "pending",
+                     "context": {"metric": "deal", "entity": "x", "geography": "US", "period": "2025"},
+                     "value": {"raw": "120", "unit": "USD_million"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        _confirm(db, wp, "F002")
+        for text in ("시장 규모는 $4.5B 에 달한다.\n", "US$4.5 billion 규모다.\n", "€120M 를 투자했다.\n",
+                     "₩300조 시장이다.\n", "USD 45 billion 이다.\n"):
+            (wp.root / "u.md").write_text(text, encoding="utf-8")
+            rep = verify_facts.verify(wp.root / "u.md", wd)
+            assert sum("무태그" in f for f in rep["failures"]) == 1, (text, rep)      # 중복 매치 없이 정확히 1건
+        (wp.root / "v.md").write_text("딜 규모는 $999M(F002) 이다.\n", encoding="utf-8")
+        rv = verify_facts.verify(wp.root / "v.md", wd)
+        assert not rv["ok"] and any("값불일치" in f for f in rv["failures"]), rv
+        (wp.root / "s.md").write_text("딜 규모는 $120B(F002) 이다.\n", encoding="utf-8")
+        rs = verify_facts.verify(wp.root / "s.md", wd)
+        assert not rs["ok"] and any("값불일치" in f for f in rs["failures"]), rs
+        for ok_text in ("딜 규모는 $120M(F002) 이다.\n\n![c](_captures/F002.png)\n",
+                        "딜 규모는 US$120 million(F002) 이다.\n\n![c](_captures/F002.png)\n",
+                        "딜 규모는 120 million(F002) 이다.\n\n![c](_captures/F002.png)\n"):
+            (wp.root / "ok.md").write_text(ok_text, encoding="utf-8")
+            rok = verify_facts.verify(wp.root / "ok.md", wd)
+            assert rok["ok"], (ok_text, rok)
+
+
+@case
+def count_units_are_claims():
+    """H2 ②: 건·명·개사·기·위·배·대·kt·Mt·㎡·ha·배럴·EUR 무태그 사실주장 검출. 긍정형 짝: 연도·각주·페이지·
+    표 행번호·F태그·연령대·'3대 과제'·'3기 신도시'·'6개월'·'4개 축'·'KT'·'has' 는 오탐하지 않는다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        claims = ("직원은 4,500명이다.", "특허 1,234건을 보유한다.", "업계 2위로 부상했다.", "매출이 3.2배 늘었다.",
+                  "120기를 설치했다.", "100만대를 판매했다.", "1,200대를 보급했다.", "3개사가 참여한다.",
+                  "연 30 kt 생산한다.", "배출량 5 Mt 이다.", "부지 3,000㎡ 규모다.", "3,000만 배럴을 수입했다.",
+                  "EUR 120 million 을 조달했다.")
+        for text in claims:
+            (wp.root / "c.md").write_text(text + "\n", encoding="utf-8")
+            rep = verify_facts.verify(wp.root / "c.md", wd)
+            assert any("무태그" in f for f in rep["failures"]), (text, rep)
+        clean = ("2024년 기준 3부 테마별 본론을 본다. 표 3 과 각주[12], p.45 참조. (F001) 태그. 2026-08-21 접근.\n"
+                 "| 3 | 건수 | 12월 건설 |\n\n"
+                 "20~30대 소비자와 50대 여성, 3대 핵심 과제, 3기 신도시, 6개월 연장, 4개 축으로 구성.\n"
+                 "2023 KT 매출 보고서(EUROPE 2024)는 2024 has grown 이라 썼다. 제25조 규정.\n")
+        (wp.root / "ok.md").write_text(clean, encoding="utf-8")
+        rok = verify_facts.verify(wp.root / "ok.md", wd)
+        assert not any("무태그" in f for f in rok["failures"]), rok
+
+
+@case
+def korean_numeral_warned():
+    """H2 ③: 한글 수사('삼백조원')는 값 파싱을 못 하므로 FAIL 대신 [한글수사] WARN 으로 표면화한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "k.md").write_text("매출은 삼백조원 규모이며 300.9조원(F001) 이다.\n\n![c](_captures/F001.png)\n",
+                                      encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "k.md", wd)
+        assert rep["ok"] and any("한글수사" in w for w in rep["warnings"]), rep
+        (wp.root / "n.md").write_text("삼성전자와 일부 원인을 본다.\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        assert not any("한글수사" in w for w in verify_facts.verify(wp.root / "n.md", wd)["warnings"])
 
 
 @case

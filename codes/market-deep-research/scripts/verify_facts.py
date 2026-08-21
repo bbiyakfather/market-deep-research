@@ -8,7 +8,9 @@
                              (표 행 등) 안의 값일치 폴백을 거쳐도 실패하면 [무태그].
                              부록은 같은 함수를 lenient_untagged=True 로 한 번 더 호출:
                              [오태그]·[미확정]·[값불일치]·[단위불일치] 는 FAIL, [무태그] 만
-                             [부록무태그] WARN.
+                             [부록무태그] WARN. 접두 통화($4.5B 등)는 CUR_NUM 이 METRIC_NUM 보다
+                             우선하고, 건·명·개사·기·위·배·대 계수 단위는 숫자에 붙을 때만 사실주장.
+                             한글 수사(삼백조원)는 [한글수사] WARN.
   3. (2 안에 포함) 본문에 등장한 모든 (Fxxx) 태그의 대장 존재 + status∈{confirmed}
   4. check_ledger_integrity — confirmed 인데 본문 미사용 사실(유실 점검)
   5·6. check_evidence_chain — evidence 필수필드 누락 0 · text_quote verbatim 필수 ·
@@ -57,24 +59,48 @@ PRE = r"[천백만억조]*"
 # 사실주장으로 취급하는 단위(통화·비율·전력·에너지·질량). 연도 단독/섹션번호는 제외.
 # 순서 주의: 겹치는 접두 문자열은 긴 것을 먼저(TWh 를 GW 보다 먼저 등) 둬야 오매칭이 없다.
 UNIT = (r"TWh|GWh|MWh|kWh|조원|억원|만원|억달러|백만달러|Nm³/h|Nm3/h|GW|MW|kW|㎿|톤|t/y|USD|KRW"
-        r"|billion|million|퍼센트|원|달러|조|억|%")
+        # 통화코드(후행 영문 금지: 'EUROPE' 의 EUR 오탐 차단), 질량·면적(kt 는 소문자만 — 'KT'(통신사) 오탐 차단;
+        # ha 는 'has/have' 오탐 차단). (?-i:…) 는 re.I 아래서 이 토큰만 대소문자 구분.
+        r"|EUR(?![A-Za-z])|JPY(?![A-Za-z])|CNY(?![A-Za-z])|GBP(?![A-Za-z])"
+        r"|(?-i:kt|Mt)(?![A-Za-z])|ha(?![A-Za-z])|㎡|배럴"
+        r"|billion|million|퍼센트|원|달러|조|억|%"
+        # 계수 단위(한국 실사 관행: 특허 1,234건·직원 4,500명·업계 2위·3.2배·120기·100만대·3개사).
+        # bare '개' 는 넣지 않는다 — '4개 축'·'6개월' 같은 보고서 구조어 오탐(실측). 전부 _TIGHT 로 숫자에 붙을 때만.
+        r"|건|명|개사|기|위|배|대")
 # 주의: 한국어는 교착어라 단위 뒤에 조사가 붙는다("45조원으로") → 후행 \b 금지(매칭 실패).
 # 선행 (?<!제) 는 '제25조'(법조문 조항) 를 '25조'(25兆원) 로 오독하는 것을 막는다 — '조' 는
 # 兆(trillion)·條(조항) 동음이의어라 실전 픽스처에서 실측된 오탐(법령 인용 표). (?<!\d) 는 숫자
 # 런의 중간에서 시작하는 부분매치를 막는다 — 이게 없으면 (?<!제) 에 막힌 '25' 대신 엔진이
 # '5' 만 떼어 재시도해 '제25조' 가 '5조' 로 여전히 오매칭됐다(실측).
-METRIC_NUM = re.compile(rf"(?<!제)(?<!\d)({NUM})\s*({PRE})\s*({UNIT})", re.I)
+METRIC_NUM = re.compile(rf"(?<!제)(?<!\d)({NUM})\s*({PRE})\s*({UNIT})", re.I)   # 변경 없음
+# 접두 통화(H2): '$4.5B'·'US$175M'·'€120M'·'₩300조'·'USD 45 billion'. 배수어가 없으면 1 배.
+# (?<![\w$€£¥₩]) 는 'US$' 를 '$' 로 다시 잡는 중복과 'S$' 부분매치를 막는다. [BMK] 뒤 영문 금지('Mt' 혼동).
+CUR_NUM = re.compile(
+    rf"(?<![\w$€£¥₩])(US\$|\$|€|£|¥|₩|USD|EUR|GBP|JPY|CNY|KRW)\s*({NUM})\s*"
+    rf"(bn|billion|mn|million|[BMK](?![A-Za-z])|조|억|만)?", re.I)
+# 한글 수사(H2 ③): '삼백조원'·'오천억원'·'이십 퍼센트' — 값 파싱은 안 하고 WARN 으로만 표면화.
+KO_NUMERAL = re.compile(r"(?<![가-힣])[일이삼사오육칠팔구십백천]+[만억조]?\s*(?:원|달러|퍼센트|%|톤|건|명|기|대|배)")
 TAG = re.compile(r"\(F\d{3,}\)")
 # '원/조/억(원)' 은 조(兆)/조(條) 처럼 다른 한글 단어의 첫 음절과 겹치는 동음이의 단위라, 숫자와
 # 공백 없이 바짝 붙을 때만 화폐 표기로 인정한다("45조원"은 화폐, "2025 원문"의 '원'은 남의 단어).
-# 실전 픽스처에서 "2025 원문: ..."(원문=source text) 오매칭이 실측됐다.
-_TIGHT_KRW_UNITS = {"원", "조", "억", "조원", "억원", "만원"}
+# 실전 픽스처에서 "2025 원문: ..."(원문=source text) 오매칭이 실측됐다. 계수 단위도 동일.
+_TIGHT_KRW_UNITS = {"원", "조", "억", "조원", "억원", "만원", "건", "명", "개사", "기", "위", "배", "대"}
+# 약한 계수 단위: 수사 접두(만/천/억)·콤마·값≥100 중 하나가 없으면 사실주장으로 안 본다 —
+# '3대 핵심 과제'(수사)·'20~30대 소비자'(연령대)·'3기 신도시'(고유명) 오탐 실측.
+_WEAK_COUNT_UNITS = {"대", "기"}
+_CUR_DIM = {"$": "USD", "US$": "USD", "USD": "USD", "€": "EUR", "EUR": "EUR", "£": "GBP", "GBP": "GBP",
+            "¥": "JPY", "JPY": "JPY", "₩": "KRW", "KRW": "KRW", "CNY": "CNY"}   # ponytail: ¥=JPY 고정(CNY 혼용은 천장)
+_CURRENCY_DIMS = set(_CUR_DIM.values())
 
 
 def _plausible(seg: str, m: re.Match) -> bool:
     unit = m.group(3)
     if unit in _TIGHT_KRW_UNITS and re.search(r"\s", seg[m.end(1):m.start(3)]):
         return False
+    if unit in _WEAK_COUNT_UNITS and not m.group(2) and "," not in m.group(1):
+        v = _vals(m.group(1))
+        if v is not None and v[0] < 100:
+            return False
     return True
 
 
@@ -132,6 +158,10 @@ def _p(n: int) -> Decimal:
     return Decimal(10) ** n
 
 
+_CUR_SCALE = {"bn": _p(9), "billion": _p(9), "b": _p(9), "mn": _p(6), "million": _p(6), "m": _p(6),
+              "k": _p(3), "조": _p(12), "억": _p(8), "만": _p(4)}
+
+
 UNIT_SCALE: dict[str, tuple[str, Decimal]] = {
     "조원": ("KRW", _p(12)), "억원": ("KRW", _p(8)), "만원": ("KRW", _p(4)), "원": ("KRW", Decimal(1)),
     "krw_t": ("KRW", _p(12)), "krw": ("KRW", Decimal(1)), "조": ("KRW", _p(12)), "억": ("KRW", _p(8)),
@@ -142,6 +172,11 @@ UNIT_SCALE: dict[str, tuple[str, Decimal]] = {
     "nm3/h": ("NM3H", Decimal(1)), "nm³/h": ("NM3H", Decimal(1)),
     "%": ("PCT", Decimal(1)), "퍼센트": ("PCT", Decimal(1)), "percent": ("PCT", Decimal(1)),
     "billion": ("N", _p(9)), "million": ("N", _p(6)),
+    "eur": ("EUR", Decimal(1)), "jpy": ("JPY", Decimal(1)), "cny": ("CNY", Decimal(1)), "gbp": ("GBP", Decimal(1)),
+    "kt": ("TON", _p(3)), "mt": ("TON", _p(6)), "㎡": ("M2", Decimal(1)), "ha": ("M2", _p(4)),
+    "배럴": ("BBL", Decimal(1)), "bbl": ("BBL", Decimal(1)),
+    "건": ("건", Decimal(1)), "명": ("명", Decimal(1)), "개사": ("개사", Decimal(1)), "개": ("개사", Decimal(1)),
+    "기": ("기", Decimal(1)), "위": ("RANK", Decimal(1)), "배": ("X", Decimal(1)), "대": ("대", Decimal(1)),
 }
 PRE_MUL = {"천": _p(3), "백": _p(2), "만": _p(4), "억": _p(8), "조": _p(12)}
 # 대장 value.unit 은 자유서식이라 "MW (PEM portion, per 2021 plan)" 같은 부연설명이 붙거나
@@ -149,8 +184,10 @@ PRE_MUL = {"천": _p(3), "백": _p(2), "만": _p(4), "억": _p(8), "조": _p(12)
 # (1) million/billion 배수어를 먼저 찾아 배수를 곱하고 — 통화 기호(EUR/AUD 등)는 본문 쪽에서도
 #     접두 통화기호를 못 읽어 어차피 차원을 못 맞추므로 배수만 취하고 차원은 "N"(일반 배수)으로
 #     통일해 본문의 bare "million" 표기와 차원을 맞춘다 —, (2) 그래도 없으면 물리/통화 토큰만 찾는다.
-_SCALE_TOKEN = re.compile(r"million|billion", re.I)
-_UNIT_TOKEN = re.compile(r"TWh|GWh|MWh|kWh|GW|MW|kW|KRW|USD|%", re.I)
+_SCALE_TOKEN = re.compile(r"million|billion|thousand", re.I)
+_KO_SCALE = {"십억": _p(9), "백만": _p(6), "천": _p(3)}          # 실전 대장 '백만 EUR'·'십억 USD' 실측
+_CUR_TOKEN = re.compile(r"USD|EUR|KRW|JPY|CNY|GBP|\$|€|£|¥|₩", re.I)
+_UNIT_TOKEN = re.compile(r"TWh|GWh|MWh|kWh|GW|MW|kW|KRW|USD|EUR|JPY|CNY|GBP|%|건|명|개사|기|위|배|대|배럴", re.I)
 
 
 def _resolve_unit(unit: str) -> tuple[str | None, Decimal]:
@@ -161,13 +198,31 @@ def _resolve_unit(unit: str) -> tuple[str | None, Decimal]:
         return UNIT_SCALE[u.lower()]
     if u in UNIT_SCALE:
         return UNIT_SCALE[u]
+    # 'USD_million' / 'EUR million' / '백만 EUR' / '십억 USD': 통화 차원 + 배수. 통화가 없으면 'N'(일반 배수).
+    mul = None
     sm = _SCALE_TOKEN.search(u)
     if sm:
-        return "N", UNIT_SCALE[sm.group(0).lower()][1]
+        mul = {"million": _p(6), "billion": _p(9), "thousand": _p(3)}[sm.group(0).lower()]
+    else:
+        for k, v in _KO_SCALE.items():
+            if k in u:
+                mul = v; break
+    if mul is not None:
+        cm = _CUR_TOKEN.search(u)
+        dim = _CUR_DIM.get(cm.group(0).upper(), "N") if cm else "N"   # '$'.upper()=='$' 라 기호도 그대로 조회됨
+        return dim, mul
     m = _UNIT_TOKEN.search(u)
     if m and m.group(0).lower() in UNIT_SCALE:
         return UNIT_SCALE[m.group(0).lower()]
     return None, Decimal(1)
+
+
+def _dims_compatible(a: str | None, b: str | None) -> bool:
+    """None 은 미상(호출측이 WARN), 'N'(bare million/billion) 은 통화 차원과 호환 — 대장 'USD_million' ↔
+    본문 '120 million(Fxxx)' 정상 표기를 깨지 않기 위함. ponytail: 통화 종류($ vs €) 불일치는 안 잡음."""
+    if a == b:
+        return True
+    return (a == "N" and b in _CURRENCY_DIMS) or (b == "N" and a in _CURRENCY_DIMS)
 
 
 def _mul_of_prefix(pre: str) -> Decimal:
@@ -261,6 +316,28 @@ def _bind_pairs(seg: str, nums: list[re.Match], tags: list[re.Match]) -> dict[in
     return bind
 
 
+def _body_nums(seg: str) -> list[tuple[re.Match, str | None, list[Decimal] | None]]:
+    """세그먼트의 수치 매치 목록 [(match, 차원, 정규화값)]. 접두 통화(CUR_NUM)가 METRIC_NUM 보다 우선 —
+    '₩300조원'·'US$4.5 billion' 이 두 번 잡혀 [무태그] 가 중복되는 것을 막는다."""
+    out = []
+    spans = []
+    for c in CUR_NUM.finditer(seg):
+        dim = _CUR_DIM[c.group(1).upper()]                    # 'us$'→'US$', '$'→'$'
+        mul = _CUR_SCALE.get((c.group(3) or "").lower(), Decimal(1))
+        v = _vals(c.group(2))
+        out.append((c, dim, None if v is None else [x * mul for x in v]))
+        spans.append((c.start(), c.end()))
+    for m in METRIC_NUM.finditer(seg):
+        if not _plausible(seg, m):
+            continue
+        if any(s <= m.start() < e or s < m.end() <= e for s, e in spans):
+            continue
+        bd, bvals = _qty(m.group(1), m.group(2), m.group(3))
+        out.append((m, bd, bvals))
+    out.sort(key=lambda t: t[0].start())
+    return out
+
+
 def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = False,
                         where: str = "") -> tuple[list[str], list[str]]:
     """무태그 숫자 차단 + (Fxxx) 존재/confirmed + 값·단위 의미대조.
@@ -282,13 +359,15 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
 
     # 세그먼트별 수치 결박 + 값 대조.
     for seg in split_segments(body):
-        nums = [m for m in METRIC_NUM.finditer(seg) if _plausible(seg, m)]
-        if not nums:
+        for km in KO_NUMERAL.finditer(seg):                      # H2 ③ 한글 수사 WARN
+            warnings.append(f"[한글수사] 수치로 해석 못 하는 수사 표기: '{km.group(0)}' (문맥: {seg.strip()[:60]!r})")
+        items = _body_nums(seg)
+        if not items:
             continue
+        nums = [t[0] for t in items]
         tags = list(TAG.finditer(seg))
         bind = _bind_pairs(seg, nums, tags)
-        for idx, m in enumerate(nums):
-            bd, bvals = _qty(m.group(1), m.group(2), m.group(3))
+        for idx, (m, bd, bvals) in enumerate(items):
             j = bind.get(idx)
             if j is None:
                 # 직접 결박 실패(태그 없음 또는 표 셀 경계) → 같은 세그먼트 내 값일치 폴백.
@@ -299,7 +378,7 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
                         continue
                     ld, lv = _ledger_qty(f)
                     if lv is not None and bvals is not None and lv == bvals and \
-                            (ld is None or bd is None or ld == bd):
+                            (ld is None or bd is None or _dims_compatible(ld, bd)):
                         ok = True
                         break
                 if not ok:
@@ -322,7 +401,7 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
             if ld is None or bd is None:
                 warnings.append(
                     f"[단위미상] {fid}: unit={f.get('value', {}).get('unit')!r} 인식불가 — 값만 대조")
-            elif ld != bd:
+            elif not _dims_compatible(ld, bd):
                 failures.append(
                     f"[단위불일치] {loc}{fid}: 표기 '{m.group(0)}' 차원={bd} ≠ 대장 차원={ld} "
                     f"(대장 {f['value']})")
