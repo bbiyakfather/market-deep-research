@@ -12,9 +12,13 @@
                              우선하고, 건·명·개사·기·위·배·대 계수 단위는 숫자에 붙을 때만 사실주장.
                              한글 수사(삼백조원)는 [한글수사] WARN.
   3. (2 안에 포함) 본문에 등장한 모든 (Fxxx) 태그의 대장 존재 + status∈{confirmed}
-  4. check_ledger_integrity — confirmed 인데 본문 미사용 사실(유실 점검)
+  4. check_ledger_integrity — confirmed 인데 본문 미사용 사실(유실 점검).
+                             risk=high confirmed 가 본문에 쓰이면 독립그룹≥2·반박검색은
+                             [반박게이트] FAIL, 기본소스·시간증거는 WARN.
   5·6. check_evidence_chain — evidence 필수필드 누락 0 · text_quote verbatim 필수 ·
-                             본문에 쓰인 confirmed 핵심수치(raw 가 Decimal 로 파싱되는 값) source_capture 실재
+                             본문에 쓰인 confirmed 핵심수치(raw 가 Decimal 로 파싱되는 값) source_capture 실재.
+                             lead reread_sha256 이 evidence sha256/local/verbatim 과 안 맞으면
+                             [재열람미결박] WARN.
   7. check_figures         — 본문 대표 이미지 존재 + 참조 경로 실재([도판경로]) + [그림] 출처 캡션 +
                              assets 차트 F태그 결박 + 3부 축별 도판 커버리지 경고 + 미결박 캡처 표면화
   8. check_toc             — 목차 기계검사(G9). references/research-plan.md 의 승인 목차
@@ -473,21 +477,29 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
         metric = ((f.get("context") or {}).get("metric") or "").lower()
         if any(k in metric for k in _HIGH_RISK_METRICS) and f.get("risk") != "high":
             warnings.append(f"[risk태깅] {fid} metric={metric!r} 고위험 지표인데 risk={f.get('risk')!r}")
-        # [Bx] claim-graph 긍정 요건 가시화(warning 만 — failure 승격은 다음 배치).
-        # G4 는 부정 검사(반박 기록·폐기사유·강등재검증)만 넣었을 뿐 이 네 요건을 아무 데도
-        # 읽지 않아 실전 대장(confirmed 76건 전부)이 게이트를 한 번도 안 거친 게 안 보였다.
+        # [Bx] claim-graph 긍정 요건. risk=high ∧ confirmed ∧ 본문 사용이면 ①독립그룹≥2 ②반박검색은 FAIL —
+        # 시장규모·CAGR·딜규모가 1출처로 confirmed 돼 "조사마다 다른 숫자"가 되는 것을 막는 유일한 기계 게이트
+        # (H4·HIGH-G). ③기본소스 ④시간증거는 WARN 유지. 본문 미사용 high-risk 는 네 요건 모두 WARN.
+        # 기권은 status=disputed 로 남기는 길이 이미 열려 있다(실전 마찰은 "정직하게 disputed" 뿐).
+        # 실전 대장(PEM 620건·KERI 69건)은 이 필드가 전부 비어 있으나 해당 폴더는 이미 봉인·납품됐고 현재
+        # G3 재실행 자체가 스냅샷유실/해시불일치로 FAIL 상태(2026-08-21 실측) — 회귀가 아니라 신규 조사부터 적용.
         if f.get("risk") == "high" and f.get("status") == "confirmed":
-            missing = []
-            if len(f.get("independent_groups") or []) < 2:
-                missing.append("독립 관찰그룹 부족")
-            if not f.get("counter_search"):
-                missing.append("반박검색 기록 없음")
+            hard, soft = [], []
+            groups = set(g for g in (f.get("independent_groups") or []) if g)
+            if len(groups) < 2:
+                hard.append("독립 관찰그룹 부족(≥2)")
+            if not (f.get("counter_search") or {}).get("query"):
+                hard.append("반박검색 기록 없음(counter_search.query)")
             if not f.get("primary_source_ref"):
-                missing.append("기본소스 참조 없음")
+                soft.append("기본소스 참조 없음")
             if not (f.get("observed_at") or f.get("valid_at")):
-                missing.append("시간증거 없음")
-            if missing:
-                warnings.append(f"[반박게이트] {fid}: " + "·".join(missing))
+                soft.append("시간증거 없음")
+            if fid in used and hard:
+                failures.append(f"[반박게이트] {fid}: " + "·".join(hard) + " — disputed 로 내리거나 요건 충족 후 재검증")
+            elif hard:
+                warnings.append(f"[반박게이트] {fid}(본문 미사용): " + "·".join(hard))
+            if soft:
+                warnings.append(f"[반박게이트] {fid}: " + "·".join(soft))
 
     return failures, warnings
 

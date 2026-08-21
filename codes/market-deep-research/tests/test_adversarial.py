@@ -436,6 +436,11 @@ def _confirm(db, wp, fid, with_capture=True):
         ev["capture"] = cap
     db.add_evidence(ev)
     db.add_verify_event(fid, "lead", "reread", reread_sha256=_H)
+    rows = db.facts(); fr = next(r for r in rows if r["id"] == fid)
+    if fr.get("risk") == "high":      # (d) 이후 high-risk 본문 사용은 ①② 필수 — 긍정형 짝 픽스처 기본값
+        fr.setdefault("independent_groups", ["dart", "irstatement"])
+        fr.setdefault("counter_search", {"query": "정정 검색", "result": "없음", "found_stronger_refutation": False})
+        _write_jsonl_atomic(wp.facts, rows)
     db.set_status(fid, "confirmed")
 
 
@@ -1121,32 +1126,41 @@ def plan_format_contract():
 
 
 @case
-def claim_graph_fields_warned():
-    """risk=high confirmed fact 에 claim-graph 긍정 요건(독립그룹≥2·반박검색기록·기본소스·
-    시간증거)이 없으면 [반박게이트] warning — G4 는 부정 검사(반박기록·폐기사유·강등재검증)만
-    넣고 이 긍정 요건은 아무 데도 안 읽어 실전 대장이 게이트를 한 번도 안 거친 게 안 보였다.
-    failure 로는 승격 안 함(실전 대장 confirmed 전건이 미충족이라 전면 FAIL 은 다음 배치).
-    긍정형 짝: 네 필드를 다 채우면 warning 이 사라짐."""
+def claim_graph_high_risk_used_fails():
+    """H4·HIGH-G: risk=high confirmed fact 가 본문에 쓰였는데 ①독립그룹≥2 ②반박검색이 없으면 [반박게이트] FAIL.
+    ③기본소스 ④시간증거는 WARN. 본문 미사용 high-risk 는 WARN 만. 중복 라벨(['dart','dart'])은 1그룹.
+    긍정형 짝: ①② 채우면 ok(③④ WARN 잔존), 네 필드 다 채우면 WARN 도 사라짐."""
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)          # F001 risk=high
         wp = WorkPaths(wd)
-        _confirm(db, wp, "F001")
+        _confirm(db, wp, "F001")       # _confirm 이 ①② 기본값을 채우므로 여기서 비워 결핍 상태로 시작
+        rows = db.facts(); fr = rows[0]
+        fr.update({"independent_groups": [], "counter_search": None}); _write_jsonl_atomic(wp.facts, rows)
         md = "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n"
         (wp.root / "r.md").write_text(md, encoding="utf-8")
         rep = verify_facts.verify(wp.root / "r.md", wd)
-        assert rep["ok"], rep                                     # failure 로 승격되면 안 됨
-        assert any("반박게이트" in w for w in rep["warnings"]), rep
+        assert not rep["ok"] and any("[반박게이트]" in f and "독립" in f and "반박검색" in f for f in rep["failures"]), rep
 
-        rows = db.facts()
-        fr = next(r for r in rows if r["id"] == "F001")
-        fr.update({"independent_groups": ["dart", "irstatement"],
-                  "counter_search": {"query": "q", "result": "없음",
-                                     "found_stronger_refutation": False},
-                  "primary_source_ref": "E001", "observed_at": "2026-07-22",
-                  "valid_at": "2025-03"})
+        fr.update({"independent_groups": ["dart", "dart"],
+                   "counter_search": {"query": "q", "result": "없음", "found_stronger_refutation": False}})
         _write_jsonl_atomic(wp.facts, rows)
+        rep_dup = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep_dup["ok"] and any("독립" in f for f in rep_dup["failures"]), rep_dup
+
+        fr["independent_groups"] = ["dart", "irstatement"]; _write_jsonl_atomic(wp.facts, rows)
         rep2 = verify_facts.verify(wp.root / "r.md", wd)
-        assert not any("반박게이트" in w for w in rep2["warnings"]), rep2   # 긍정형 짝
+        assert rep2["ok"] and any("반박게이트" in w and "기본소스" in w for w in rep2["warnings"]), rep2
+
+        fr.update({"primary_source_ref": "E001", "observed_at": "2026-07-22", "valid_at": "2025-03"})
+        _write_jsonl_atomic(wp.facts, rows)
+        rep3 = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep3["ok"] and not any("반박게이트" in w for w in rep3["warnings"]), rep3
+
+        # 본문 미사용 high-risk: WARN 만
+        (wp.root / "u.md").write_text("본문에 F001 없음.\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        fr.update({"independent_groups": [], "counter_search": None}); _write_jsonl_atomic(wp.facts, rows)
+        ru = verify_facts.verify(wp.root / "u.md", wd)
+        assert ru["ok"] and any("본문 미사용" in w for w in ru["warnings"]), ru
 
 
 # --- G2/G8 재작성 회귀(문서정합 — 축 프리셋·종료기준·조사유형 4종·intent-diff) --------------
