@@ -1373,6 +1373,51 @@ def g5_receipt_owned_by_manifest_verify():
 
 
 @case
+def receipt2_requires_lead_reread_and_binds_digest():
+    """M1·HIGH-H: record [2] 는 confirmed 전건 lead reread 검사 후에만 기록되고, 이후 confirmed 집합이
+    바뀌면 영수증이 무효(G3 선행 실패) → 재기록해야 한다. G2 의 evidence 추가는 무효화하지 않는다(긍정형 짝)."""
+    import gates
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        (wp.audit).mkdir(parents=True, exist_ok=True)
+        (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
+        gates.record_manual(wp, "G0", "approved")
+        gates.record_script_result(wp, "G1", 0, "join")
+        rows = db.facts(); rows[0].update({"status": "confirmed", "evidence_ids": ["E001"]})   # lead 이벤트 없는 손기록
+        _write_jsonl_atomic(wp.facts, rows)
+        try:
+            gates.record_manual(wp, "[2]", "hand"); assert False, "lead 이벤트 없는 confirmed 가 [2] 를 통과"
+        except gates.GateError:
+            pass
+        rows[0].update({"status": "pending", "evidence_ids": []}); _write_jsonl_atomic(wp.facts, rows)
+        _confirm(db, wp, "F001")
+        rec = gates.record_manual(wp, "[2]", "lead reread")
+        assert rec["confirmed_count"] == 1 and rec["confirmed_digest_sha256"] and rec["facts_db_sha256"]
+        assert gates.check_gate(wp, "G3")["ok"], gates.check_gate(wp, "G3")
+        db.add_evidence({"fact_id": "F001", "type": "text_quote", "verbatim": "추가 증거",
+                         "source_url": "https://y", "sha256": _H})                      # G2 경로: 무효화 안 됨
+        assert gates.check_gate(wp, "G3")["ok"]
+        db.add_fact({"claim": "x", "risk": "normal", "status": "pending",
+                     "context": {"metric": "m", "entity": "e", "geography": "KR", "period": "2025"},
+                     "value": {"raw": "1", "unit": "건"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        _confirm(db, wp, "F002")                                                          # confirmed 집합 변경
+        chk = gates.check_gate(wp, "G3")
+        assert not chk["ok"] and any("[2]" in i and "재기록" in i for i in chk["issues"]), chk
+        gates.record_manual(wp, "[2]", "lead reread again")
+        assert gates.check_gate(wp, "G3")["ok"]
+        # 원장 없는 작업폴더에서 [2] 는 fail-closed
+        wd2 = resolve_work_dir("대장없음", base=td); wp2 = WorkPaths(wd2)
+        (wp2.audit).mkdir(parents=True, exist_ok=True); (wp2.audit / "research-plan.md").write_text("# p\n", encoding="utf-8")
+        gates.record_manual(wp2, "G0", "ok"); gates.record_script_result(wp2, "G1", 0, "join")
+        try:
+            gates.record_manual(wp2, "[2]", "hand"); assert False, "facts.jsonl 없이 [2] 기록됨"
+        except gates.GateError:
+            pass
+
+
+@case
 def figure_caption_without_source_fails():
     """도판 바로 뒤에 [그림] 캡션이 있어도 출처가 없으면 [도판출처] FAIL 이어야 한다."""
     with tempfile.TemporaryDirectory() as td:

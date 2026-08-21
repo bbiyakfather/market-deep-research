@@ -13,6 +13,7 @@ CLI:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -276,6 +277,19 @@ class FactsDB:
                 _write_jsonl_atomic(self.wp.facts, facts)
                 return fr
         raise ValidationError(f"fact 없음: {fact_id}")
+
+
+def confirmed_digest(rows: list[dict]) -> str:
+    """[2] 영수증 결박용 투영: confirmed 행의 id·value(raw/unit)·lead reread 이벤트(at, reread_sha256) 만.
+    evidence_ids·claim-graph 필드는 [2] 이후 G2·[Bx] 가 정상적으로 바꾸므로 제외(D4)."""
+    proj = []
+    for r in sorted((r for r in rows if r.get("status") == "confirmed"), key=lambda r: r.get("id", "")):
+        v = r.get("value") or {}
+        ev = sorted((e.get("at") or "", str(e.get("reread_sha256") or "").lower())
+                    for e in _lead_reread_events(r))
+        proj.append([r.get("id"), v.get("raw"), v.get("unit"), ev])
+    return hashlib.sha256(json.dumps(proj, ensure_ascii=False, sort_keys=True,
+                                     separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 # --- 재조사 diff (claim_key 기준) --------------------------------------------

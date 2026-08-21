@@ -26,6 +26,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
+from facts_db import ValidationError, _read_jsonl, confirmed_digest, load_schema, validate_fact
 from skill_paths import WorkPaths, resolve_work_dir
 
 
@@ -197,6 +198,36 @@ def _plan_digest(wp: WorkPaths, plan: Path | str | None = None) -> tuple[Path, s
         raise GateError(f"research-plan.md 읽기 실패: {path} ({exc})") from exc
 
 
+def _check_reverification(wp: WorkPaths) -> dict:
+    """[2] 영수증은 기록이 아니라 계산이다(M1·HIGH-H): facts.jsonl 의 confirmed 전건에 lead reread 이벤트
+    (+reread_sha256)가 있는지 validate_fact 로 검사하고, 결박용 다이제스트를 돌려준다."""
+    if not wp.facts.is_file():
+        raise GateError("[2] 재검증 선언인데 facts.jsonl 이 없음")
+    rows = _read_jsonl(wp.facts)
+    schema = load_schema()
+    confirmed = [r for r in rows if r.get("status") == "confirmed"]
+    for r in confirmed:
+        try:
+            validate_fact(r, schema)
+        except ValidationError as exc:
+            raise GateError(f"[2] 재검증 미완: {exc}") from exc
+    return {"facts_db_sha256": sha256_file(wp.facts),
+            "confirmed_digest_sha256": confirmed_digest(rows),
+            "confirmed_count": len(confirmed)}
+
+
+def _receipt_issues(record: dict, wp: WorkPaths) -> list[str]:
+    """refs 재해시 + [2] 결박 다이제스트 대조. successful_receipt/require_receipt/check_gate 가 공유."""
+    issues = _refs_from_record(record, wp)
+    if normalize_gate(record.get("gate", "")) == "[2]":
+        stored = record.get("confirmed_digest_sha256")
+        if not stored:
+            issues.append("[2] 영수증에 confirmed_digest 없음(구버전) — record [2] 재기록 필요")
+        elif wp.facts.is_file() and confirmed_digest(_read_jsonl(wp.facts)).lower() != str(stored).lower():
+            issues.append("[2] 영수증이 대장 confirmed 집합/값/재열람 이벤트와 불일치 — 재검증 후 record [2] 재기록")
+    return issues
+
+
 def successful_receipt(work: WorkPaths | Path | str, gate: str) -> dict | None:
     """Return the latest successful receipt for ``gate`` or ``None``.
 
@@ -209,7 +240,7 @@ def successful_receipt(work: WorkPaths | Path | str, gate: str) -> dict | None:
     record = _latest(records, canonical)
     if not _successful(record):
         return None
-    if _refs_from_record(record, wp):
+    if _receipt_issues(record, wp):
         return None
     return record
 
@@ -224,7 +255,7 @@ def require_receipt(work: WorkPaths | Path | str, gate: str) -> dict:
         raise GateError(f"선행 게이트 영수증 없음: {canonical}")
     if not _successful(record):
         raise GateError(f"게이트 영수증이 PASS가 아님: {canonical} (exit={record.get('exit')})")
-    issues = _refs_from_record(record, wp)
+    issues = _receipt_issues(record, wp)
     if issues:
         raise GateError(f"게이트 영수증 무효: {canonical}; " + "; ".join(issues))
     return record
@@ -333,6 +364,8 @@ def record_manual(work: WorkPaths | Path | str, gate: str, evidence: str,
         except ValueError:
             plan_stored = str(plan_path.resolve())
         record.update({"research_plan": plan_stored, "research_plan_sha256": plan_sha})
+    if canonical == "[2]":
+        record.update(_check_reverification(wp))
     return _append(wp, record)
 
 
@@ -468,6 +501,7 @@ def demo(base: Path | str | None = None) -> dict:
         ref.write_text("tampered\n", encoding="utf-8")
         assert not check_gate(wp, "G0")["ok"], "refs 변조 미검출"
         ref.write_text("evidence\n", encoding="utf-8")
+        wp.facts.write_text("", encoding="utf-8")
         record_script_result(wp, "G1", 0, "join PASS")
         record_manual(wp, "[2]", "lead reread")
         record_script_result(wp, "G3", 0, "verify PASS")
