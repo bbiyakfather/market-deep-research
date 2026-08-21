@@ -558,6 +558,32 @@ def appendix_forward_bypass():
 
 
 @case
+def appendix_value_mismatch_fails():
+    """H1: 부록은 무태그만 면제다 — 오태그·미확정·값불일치는 부록에서도 FAIL(본문에서 값불일치 맞은
+    수치를 부록 '환산근거'로 옮겨 G3 를 통과하던 우회 차단). 긍정형 짝: 값 일치 + 무태그 수치는 WARN."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        good = "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n<!-- FACTSHEET:APPENDIX -->\n## 부록\n"
+        for bad, tag in (("- 환산근거: 매출 999조원(F001)\n", "값불일치"),
+                         ("- 환산근거: 매출 300.9조원(F009)\n", "오태그")):
+            (wp.root / "r.md").write_text(good + bad, encoding="utf-8")
+            rep = verify_facts.verify(wp.root / "r.md", wd)
+            assert not rep["ok"] and any(tag in f and "부록" in f for f in rep["failures"]), (bad, rep)
+        db.add_fact({"claim": "시장 45조", "risk": "normal", "status": "pending",
+                     "context": {"metric": "market_size", "entity": "x", "geography": "KR", "period": "2030"},
+                     "value": {"raw": "45", "unit": "KRW_T"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        (wp.root / "r.md").write_text(good + "- 미확정 병기: 45조원(F002)\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("미확정" in f and "부록" in f for f in rep["failures"]), rep
+        (wp.root / "ok.md").write_text(good + "- 환율 1,350원/달러 기준 · 매출 300.9조원(F001)\n", encoding="utf-8")
+        rok = verify_facts.verify(wp.root / "ok.md", wd)
+        assert rok["ok"] and any("부록무태그" in w for w in rok["warnings"]), rok
+
+
+@case
 def ghost_figure_path():
     """V09-9: 이미지 문법은 있으나 참조 경로가 실재하지 않으면(유령 도판) [도판경로] 로 검출."""
     with tempfile.TemporaryDirectory() as td:

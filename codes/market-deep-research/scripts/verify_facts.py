@@ -6,6 +6,9 @@
                              결박된 수치는 대장 value(raw+unit)와 Decimal 스케일·단위차원까지
                              정규화해 대조([값불일치]/[단위불일치]). 결박 안 되면 같은 세그먼트
                              (표 행 등) 안의 값일치 폴백을 거쳐도 실패하면 [무태그].
+                             부록은 같은 함수를 lenient_untagged=True 로 한 번 더 호출:
+                             [오태그]·[미확정]·[값불일치]·[단위불일치] 는 FAIL, [무태그] 만
+                             [부록무태그] WARN.
   3. (2 안에 포함) 본문에 등장한 모든 (Fxxx) 태그의 대장 존재 + status∈{confirmed}
   4. check_ledger_integrity — confirmed 인데 본문 미사용 사실(유실 점검)
   5·6. check_evidence_chain — evidence 필수필드 누락 0 · text_quote verbatim 필수 ·
@@ -20,6 +23,7 @@
 직전 최후 출현하는 '## 부록'/'## Appendix' 헤딩을 경계로 쓴다(문서 중간의 소제목 하나로 뒤 본문
 전체가 부록 취급되는 것을 막기 위해 '최초 출현'이 아니라 '최후 출현'을 쓴다). 마커/헤딩이 전혀
 없으면 문서 전체를 본문으로 본다. 주석 마커를 쓰는 것을 권장한다(report-format.md 참조).
+부록의 수치 사실주장은 무태그만 면제하고 값·단위·오태그·미확정은 본문과 동일하게 검사한다.
 
 CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]
      python verify_facts.py demo
@@ -257,19 +261,24 @@ def _bind_pairs(seg: str, nums: list[re.Match], tags: list[re.Match]) -> dict[in
     return bind
 
 
-def check_bound_numbers(body: str, facts: dict) -> tuple[list[str], list[str]]:
-    """무태그 숫자 차단 + (Fxxx) 존재/confirmed + 값·단위 의미대조."""
+def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = False,
+                        where: str = "") -> tuple[list[str], list[str]]:
+    """무태그 숫자 차단 + (Fxxx) 존재/confirmed + 값·단위 의미대조.
+    lenient_untagged=True(부록): [무태그] 만 warning([부록무태그]) 으로 내리고 나머지는 동일 — 생성
+    전수표 때문에 둔 무태그 면제의 본래 목적만 남기고, 오태그·미확정·값불일치는 부록에서도 막는다(H1).
+    where 는 실패 메시지 접두('부록 ')."""
     failures: list[str] = []
     warnings: list[str] = []
+    loc = where or "본문 "
 
     # 본문에 등장하는 모든 (Fxxx) 태그: 대장 존재 + confirmed 상태(값 유무와 무관하게 전건).
     for tag in sorted(set(m.group(0) for m in TAG.finditer(body))):
         fid = tag.strip("()")
         f = facts.get(fid)
         if not f:
-            failures.append(f"[오태그] 본문 {fid} 대장에 없음")
+            failures.append(f"[오태그] {loc}{fid} 대장에 없음")
         elif f.get("status") != "confirmed":
-            failures.append(f"[미확정] 본문 {fid} status={f.get('status')}")
+            failures.append(f"[미확정] {loc}{fid} status={f.get('status')}")
 
     # 세그먼트별 수치 결박 + 값 대조.
     for seg in split_segments(body):
@@ -294,8 +303,11 @@ def check_bound_numbers(body: str, facts: dict) -> tuple[list[str], list[str]]:
                         ok = True
                         break
                 if not ok:
-                    failures.append(
-                        f"[무태그] 수치 사실주장에 F태그 없음: '{m.group(0)}' (문맥: {seg.strip()[:60]!r})")
+                    msg = f"수치 사실주장에 F태그 없음: '{m.group(0)}' (문맥: {seg.strip()[:60]!r})"
+                    if lenient_untagged:
+                        warnings.append(f"[부록무태그] {msg}")
+                    else:
+                        failures.append(f"[무태그] {where}{msg}")
                 continue
             fid = tags[j].group(0).strip("()")
             f = facts.get(fid)
@@ -312,12 +324,12 @@ def check_bound_numbers(body: str, facts: dict) -> tuple[list[str], list[str]]:
                     f"[단위미상] {fid}: unit={f.get('value', {}).get('unit')!r} 인식불가 — 값만 대조")
             elif ld != bd:
                 failures.append(
-                    f"[단위불일치] 본문 {fid}: 표기 '{m.group(0)}' 차원={bd} ≠ 대장 차원={ld} "
+                    f"[단위불일치] {loc}{fid}: 표기 '{m.group(0)}' 차원={bd} ≠ 대장 차원={ld} "
                     f"(대장 {f['value']})")
                 continue
             if lv != bvals:
                 failures.append(
-                    f"[값불일치] 본문 {fid}: 표기 '{m.group(0)}' ≠ 대장 '{f['value']['raw']}'")
+                    f"[값불일치] {loc}{fid}: 표기 '{m.group(0)}' ≠ 대장 '{f['value']['raw']}'")
 
     return failures, warnings
 
@@ -684,6 +696,10 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     bn_fail, bn_warn = check_bound_numbers(body, facts)
     failures += bn_fail
     warnings += bn_warn
+    # 부록(H1): 무태그만 면제, 오태그·미확정·값·단위 대조는 본문과 동일하게 적용. used 는 본문 태그만.
+    ap_fail, ap_warn = check_bound_numbers(_appendix, facts, lenient_untagged=True, where="부록 ")
+    failures += ap_fail
+    warnings += ap_warn
 
     li_fail, li_warn = check_ledger_integrity(facts, used, facts_raw, evidence_raw, wp)
     failures += li_fail
@@ -758,10 +774,16 @@ def demo() -> None:
         r = verify(wp.root / "v.md", wd)
         assert not r["ok"] and any("값불일치" in x for x in r["failures"]), r
 
-        # 부록의 태그는 본문 사용으로 미계산
+        # 부록(H1): 태그는 '본문 사용'으로 안 세지만 값 대조는 받는다 — 999조원(F001) 은 FAIL
         appx = good + "\n## 부록\n- F001 전수표 999조원(F001)\n"
         (wp.root / "a.md").write_text(appx, encoding="utf-8")
-        assert verify(wp.root / "a.md", wd)["ok"], "부록이 본문검사 오염"
+        ra = verify(wp.root / "a.md", wd)
+        assert not ra["ok"] and any("값불일치" in x and "부록" in x for x in ra["failures"]), ra
+        # 긍정형 짝: 값이 맞으면 통과하고, 부록의 무태그 수치(환율)는 WARN 으로만 표면화
+        appx_ok = good + "\n## 부록\n- F001 전수표 300.9조원(F001) · 환율 1,350원/달러 기준\n"
+        (wp.root / "a2.md").write_text(appx_ok, encoding="utf-8")
+        ra2 = verify(wp.root / "a2.md", wd)
+        assert ra2["ok"] and any("부록무태그" in w for w in ra2["warnings"]), ra2
 
         # 핵심수치인데 캡처 없음 → 증빙게이트 FAIL (risk=normal 이어도 강제)
         db.add_fact({"claim": "신규 용량 4GW",
