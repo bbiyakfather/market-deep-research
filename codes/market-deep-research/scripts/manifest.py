@@ -26,6 +26,7 @@ TRACKED = [
     ("source", "_sources/**/*"),
     ("capture", "_captures/**/*"),
     ("assets", "assets/**/*"),        # report.pdf 에 --embed-resources 로 내장되는 생성 차트
+    ("images", "_images/**/*"),       # 수확 도판 + IMAGES.md + harvest index.json — 본문 도판도 PDF 에 내장된다
     ("facts", "facts.jsonl"),
     ("evidence", "evidence.jsonl"),
     ("report_md", "report.md"),

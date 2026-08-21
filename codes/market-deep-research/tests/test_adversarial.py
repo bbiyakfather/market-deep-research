@@ -610,6 +610,27 @@ def manifest_asset_swap():
         assert not v["ok"] and "assets/chart.png" in v["changed"], v
 
 
+@case
+def manifest_image_swap():
+    """_images/ 도판은 report.pdf 에 내장되는데 TRACKED 밖이면 G3 뒤 교체를 G5 가 못 잡는다(M3 실측).
+    긍정형 짝: 변조 안 하면 ok. IMAGES.md 도 봉인 대상."""
+    assert any(pattern.startswith("_images/") for _, pattern in manifest.TRACKED)
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("도판변조", base=td)
+        wp = WorkPaths(wd)
+        (wp.root / "_images").mkdir()
+        (wp.root / "_images" / "fig.png").write_bytes(b"\x89PNG-orig")
+        manifest.build(wp)
+        assert manifest.verify(wp)["ok"]
+        (wp.root / "_images" / "fig.png").write_bytes(b"\x89PNG-swapped")
+        v = manifest.verify(wp)
+        assert not v["ok"] and "_images/fig.png" in v["changed"], v
+        manifest.build(wp)
+        (wp.root / "_images" / "IMAGES.md").write_text("| f |\n", encoding="utf-8")   # 봉인 후 인덱스 추가
+        v2 = manifest.verify(wp)
+        assert not v2["ok"] and "_images/IMAGES.md" in v2["new"], v2
+
+
 # --- G4 재작성 회귀(대장 무검증 신뢰 제거 + 증빙 경로 봉쇄) --------------------
 @case
 def unvalidated_ledger_row():
