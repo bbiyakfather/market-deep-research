@@ -20,12 +20,13 @@ openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공�
 (위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록).
 
 ## [2] 팀리드 재검증(전건) + [Bx] claim-graph
-- 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람 → `add_verify_event(by="lead")`.
-  verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
+- 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람 →
+  `add_verify_event(by="lead", action="reread", reread_sha256=<재열람 원문 SHA-256: fetch.py get 의 sha256 / 로컬 PDF 파일 해시 / WebFetch verbatim 의 sha256_text>)`
+  — 해시 없는 lead reread 는 add·validate 모두 거부. verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
   ② **1회 반박검색**(`counter_search.found_stronger_refutation=false`) ③ **기본소스**(`primary_source_ref`)
-   ④ **시간증거**(`observed_at`+`valid_at`). ①② 는 본문 사용 high-risk 에 한해 G3 FAIL, ③④ WARN.
-   불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
+  ④ **시간증거**(`observed_at`+`valid_at`). ①② 는 본문 사용 high-risk 에 한해 G3 FAIL, ③④ WARN.
+  불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
 
 ## G2 증빙 게이트
@@ -38,7 +39,9 @@ high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사). �
 `verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]`:
 본문/부록 분리(주석 `<!-- FACTSHEET:APPENDIX -->` 우선, 없으면 '## 부록' 헤딩 최후 출현) ·
 본문을 문장·표행 세그먼트로 나눠 수치↔(Fxxx) 1:1 최근접 결박(태그 하나가 줄 전체를 면제하지
-않음) · 무태그 숫자 차단 · (Fxxx) 존재+confirmed+값·**단위** 의미대조(Decimal 스케일·차원,
+않음) · 무태그 숫자 차단 · 부록은 [무태그] 만 면제(→ [부록무태그] WARN)하고 오태그·미확정·값·단위는
+본문과 동일 FAIL · 접두 통화($4.5B·US$175M·€120M·₩300조)·계수 단위(건·명·개사·기·위·배·대, 숫자에
+붙을 때만)도 사실주장 · (Fxxx) 존재+confirmed+값·**단위** 의미대조(Decimal 스케일·차원,
 불일치 시 `[단위불일치]`/`[값불일치]`) · evidence 필수필드 · text_quote verbatim ·
 high-risk 캡처 실재 · **목차 기계검사**(`--plan` 미지정 시 `audit/research-plan.md` 자동탐지,
 그마저 없으면 생략 — 계획 파일 없는 기존 조사는 이 검사만으로 FAIL 하지 않음). →
@@ -69,6 +72,9 @@ report.pdf 생성 후 **재봉인**(`manifest.py build` 재실행 — [G3] 항�
 스크립트 자기기록(CLI 손기록 차단 — verify_facts.py·render_pdf.py·manifest.py verify),
 G1·G5c 등 무소유 게이트=`gates.py record_script_result`. G2·G5c 의 실질 강제는 원장이
 아니라 내용검사다(G2=verify_facts 캡처 실재, G5c=`audit/verify-<slug>.md`).
+[2] 영수증은 record 시점에 confirmed 전건 lead reread(+reread_sha256) 를 검사해 confirmed 투영
+다이제스트(id·raw·unit·lead reread 이벤트)를 기록하며, 이후 confirmed 집합·값이 바뀌면 G3 선행검사가
+"재검증 후 record [2] 재기록" 을 요구한다(G2 의 evidence 추가는 무효화하지 않음).
 
 ## 환산 옵션(기본 OFF)
 ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시), 표시 반올림 일관, 본문 영어통화단어 0.
