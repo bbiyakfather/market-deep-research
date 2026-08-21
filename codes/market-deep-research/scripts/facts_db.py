@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 from datetime import datetime
@@ -23,6 +24,7 @@ from pathlib import Path
 from skill_paths import ASSETS, WorkPaths
 
 _SCHEMA_PATH = ASSETS / "facts-schema.json"
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.I)
 
 
 def _now() -> str:
@@ -50,6 +52,11 @@ def _check_required(obj: dict, required: list[str], where: str):
             raise ValidationError(f"{where}: 필수 필드 '{k}' 누락")
 
 
+def _lead_reread_events(fact: dict) -> list[dict]:
+    return [e for e in (fact.get("verify_events") or [])
+            if e.get("by") == "lead" and e.get("action") == "reread"]
+
+
 def validate_fact(fact: dict, schema: dict | None = None) -> dict:
     schema = schema or load_schema()
     enums = schema["enums"]
@@ -72,14 +79,18 @@ def validate_fact(fact: dict, schema: dict | None = None) -> dict:
     if b:
         _check_enum(b, "basis", enums, "fact.context.basis")
 
-    # confirmed 는 최소 1 evidence + 팀리드 verify_event 필요(무출처 confirm 금지)
+    # lead 재열람 이벤트는 재열람 산출물 해시(reread_sha256)가 있어야 한다 — by="lead" 는 누구나 쓸 수 있는
+    # 관례라(M2·MEDIUM-2) 원문 미열람 자가신고를 구조적으로 막는다. 상태와 무관하게 형식은 항상 검사.
+    for e in _lead_reread_events(fact):
+        if not _SHA256_RE.match(str(e.get("reread_sha256") or "")):
+            raise ValidationError(f"{fid}: lead reread 이벤트에 reread_sha256(64hex) 없음/형식오류")
+    # confirmed 는 최소 1 evidence + 팀리드 reread verify_event 필요(무출처 confirm 금지)
     if fact["status"] == "confirmed":
         if not fact.get("evidence_ids"):
             raise ValidationError(f"{fid}: confirmed 인데 evidence_ids 비어있음")
-        events = fact.get("verify_events") or []
-        lead_events = [e for e in events if e.get("by") == "lead"]
+        lead_events = _lead_reread_events(fact)
         if not lead_events:
-            raise ValidationError(f"{fid}: confirmed 인데 팀리드(lead) verify_event 없음")
+            raise ValidationError(f"{fid}: confirmed 인데 팀리드(lead) reread verify_event 없음")
         # G4: status 전이 무제약 차단 — 반박이 기록됐거나 폐기 사유가 남은 채로,
         # 또는 강등 이후 새 lead 재검증 없이 confirmed 로 (재)승급하는 것을 막는다.
         cs = fact.get("counter_search") or {}
@@ -233,12 +244,18 @@ class FactsDB:
         _write_jsonl_atomic(self.wp.facts, facts)
         return ev
 
-    def add_verify_event(self, fact_id: str, by: str, action: str, note: str = "") -> None:
+    def add_verify_event(self, fact_id: str, by: str, action: str, note: str = "", *,
+                         reread_sha256: str | None = None) -> None:
+        if by == "lead" and action == "reread" and not _SHA256_RE.match(str(reread_sha256 or "")):
+            raise ValidationError(f"{fact_id}: lead reread 이벤트는 reread_sha256(재열람 원문 해시 64hex) 필수 — "
+                                  "fetch.py get 의 sha256 / 로컬 PDF 해시 / WebFetch verbatim 의 sha256_text")
         facts = self.facts()
         for fr in facts:
             if fr["id"] == fact_id:
-                fr.setdefault("verify_events", []).append(
-                    {"by": by, "at": _now(), "action": action, "note": note})
+                ev = {"by": by, "at": _now(), "action": action, "note": note}
+                if reread_sha256:
+                    ev["reread_sha256"] = reread_sha256.lower()
+                fr.setdefault("verify_events", []).append(ev)
                 _write_jsonl_atomic(self.wp.facts, facts)
                 return
         raise ValidationError(f"fact 없음: {fact_id}")
@@ -333,7 +350,12 @@ def demo() -> None:
             "source_url": "https://dart.fss.or.kr/x", "sha256": _h("F001-E001"),
             "locator": {"page": 12, "row": 3, "col": 2}, "source_role": "원출처",
         })
-        db.add_verify_event("F001", by="lead", action="reread", note="DART 원문 표셀 재열람 일치")
+        try:
+            db.add_verify_event("F001", "lead", "reread"); assert False, "reread_sha256 없는 lead 이벤트가 통과됨"
+        except ValidationError:
+            pass
+        db.add_verify_event("F001", by="lead", action="reread", note="DART 원문 표셀 재열람 일치",
+                            reread_sha256=_h("F001-E001"))
         db.set_status("F001", "confirmed")
         assert db.facts()[0]["status"] == "confirmed"
 
@@ -366,7 +388,8 @@ def demo() -> None:
         # _now() 가 초 단위라 demoted_at 과 같은 초에 재검증하면 '이후'인지 판정이 흔들린다 —
         # 자동화 테스트에서 확실히 다음 초가 되게 잠깐 대기(운영 흐름에선 재조사 자체가 걸림).
         import time as _time; _time.sleep(1.1)
-        db.add_verify_event("F001", by="lead", action="reread", note="재조사 후 재열람")
+        db.add_verify_event("F001", by="lead", action="reread", note="재조사 후 재열람",
+                            reread_sha256=_h("F001-E001"))
         db.set_status("F001", "confirmed")           # 긍정형 짝: 새 검증 있으면 재승급 성공
         assert db.facts()[0]["status"] == "confirmed"
 

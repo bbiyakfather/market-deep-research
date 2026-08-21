@@ -163,7 +163,7 @@ def mistagged_value():
         wd, db = _base_db(td)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         wp = WorkPaths(wd)
         (wp.root / "r.md").write_text("매출은 999조원(F001).\n", encoding="utf-8")
@@ -216,7 +216,7 @@ def high_risk_without_capture():
         wd, db = _base_db(td)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H})   # capture 없음
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         wp = WorkPaths(wd)
         (wp.root / "r.md").write_text("매출 300.9조원(F001).\n", encoding="utf-8")
@@ -259,7 +259,7 @@ def failed_capture_claimed_as_evidence():
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H,
                          "capture": "_captures/E001.png", "source_role": "원출처"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
 
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![](_captures/E001.png)\n",
@@ -435,7 +435,7 @@ def _confirm(db, wp, fid, with_capture=True):
         (wp.root / cap).write_bytes(b"\x89PNG")
         ev["capture"] = cap
     db.add_evidence(ev)
-    db.add_verify_event(fid, "lead", "reread")
+    db.add_verify_event(fid, "lead", "reread", reread_sha256=_H)
     db.set_status(fid, "confirmed")
 
 
@@ -786,7 +786,7 @@ def fake_evidence_hash():
         wp = WorkPaths(wd)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": "not-a-real-hash"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
         (wp.root / "x.png").write_bytes(b"\x89PNG")
@@ -802,7 +802,7 @@ def fake_evidence_hash():
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H,   # 실제 파일 해시와 다름
                          "local": "_sources/snap.txt"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
         (wp.root / "x.png").write_bytes(b"\x89PNG")
@@ -819,7 +819,7 @@ def fake_evidence_hash():
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": real_hash,
                          "local": "_sources/snap.txt"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
         (wp.root / "x.png").write_bytes(b"\x89PNG")
@@ -852,7 +852,7 @@ def capture_outside_workdir():
     with tempfile.TemporaryDirectory() as td:      # 대장 직접조작(정상 API 우회) 시나리오
         wd, db = _base_db(td)
         wp = WorkPaths(wd)
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         ev_rows = [{"id": "E001", "fact_id": "F001", "type": "table_cell",
                     "source_url": "https://x", "sha256": _H, "accessed_at": "2026-01-01",
                     "capture": "../../outside.png"}]
@@ -900,7 +900,7 @@ def status_regrade_blocked():
         facts[0]["counter_search"]["found_stronger_refutation"] = False
         _write_jsonl_atomic(wp.facts, facts)
         time.sleep(1.1)     # demoted_at 과 같은 초 충돌 방지(_now() 는 초 단위)
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")            # 긍정형 짝: 새 검증 있으면 재승급 성공
         assert db.facts()[0]["status"] == "confirmed"
 
@@ -912,6 +912,55 @@ def status_regrade_blocked():
             assert False, "폐기 사유 남은 채 confirmed 검증이 통과됨"
         except ValidationError:
             pass
+
+
+@case
+def lead_event_requires_reread_sha256():
+    """M2·MEDIUM-2: by="lead" action="reread" 이벤트는 재열람 산출물 해시가 없으면 add 시점·validate 시점
+    모두 거부. 워커 이벤트·lead 의 비-reread 이벤트는 해시 없이 허용(긍정형 짝)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell", "source_url": "https://x", "sha256": _H})
+        for bad in (None, "abc", "X" * 64):
+            try:
+                db.add_verify_event("F001", "lead", "reread", reread_sha256=bad)
+                assert False, f"reread_sha256={bad!r} 가 통과됨"
+            except ValidationError:
+                pass
+        db.add_verify_event("F001", "worker-1", "reread")                        # 워커는 해시 없어도 됨
+        db.add_verify_event("F001", "lead", "demote", "정의차")                  # lead 비-reread 도 허용
+        try:
+            db.set_status("F001", "confirmed"); assert False, "lead reread 없이 confirmed 통과"
+        except ValidationError:
+            pass
+        rows = db.facts()
+        rows[0]["verify_events"].append({"by": "lead", "at": "2026-08-21T00:00:00", "action": "reread"})  # 손기록
+        rows[0]["status"] = "confirmed"
+        _write_jsonl_atomic(wp.facts, rows)
+        (wp.root / "r.md").write_text("매출 300.9조원(F001).\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("대장무결성" in f and "reread_sha256" in f for f in rep["failures"]), rep
+
+
+@case
+def reread_sha_unbound_warned():
+    """D5: reread_sha256 이 그 fact 의 evidence sha256/local/verbatim 어느 해시와도 안 맞으면 [재열람미결박] WARN
+    (FAIL 아님 — WebFetch 재열람 경로). 긍정형 짝: evidence sha 와 같으면 WARN 없음."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")                                                 # reread_sha256=_H == evidence sha
+        md = "매출 300.9조원(F001).\n\n![c](_captures/F001.png)\n"
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep["ok"] and not any("재열람미결박" in w for w in rep["warnings"]), rep
+        other = hashlib.sha256(b"elsewhere").hexdigest()
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=other)
+        rows = db.facts(); rows[0]["verify_events"] = [e for e in rows[0]["verify_events"] if e.get("reread_sha256") != _H]
+        _write_jsonl_atomic(wp.facts, rows)
+        rep2 = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep2["ok"] and any("재열람미결박" in w for w in rep2["warnings"]), rep2
 
 
 @case

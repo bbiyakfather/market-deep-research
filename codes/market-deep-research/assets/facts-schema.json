@@ -50,7 +50,7 @@
       "risk": {"enum_ref": "risk", "description": "high = claim-graph 게이트(반박검색·독립그룹) 적용 대상"},
       "status": {"enum_ref": "status"},
       "verified_by": {"type": ["string", "null"], "description": "'lead' 만 confirm 가능. verifier 단독 confirm 금지."},
-      "verify_events": {"type": "array", "description": "누적 검증 이벤트 [{by, at, action, note}]"},
+      "verify_events": {"type": "array", "description": "누적 검증 이벤트 [{by, at, action, note, reread_sha256(lead reread 필수)}]"},
       "evidence_ids": {"type": "array"},
 
       "independent_groups": {"type": "array", "description": "[v3-B] 독립 관찰그룹 라벨 목록. 재전재는 같은 그룹."},

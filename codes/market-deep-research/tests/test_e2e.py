@@ -80,7 +80,8 @@ def main():
                              "sha256": hashlib.sha256(("e2e-" + fid).encode()).hexdigest(),
                              "locator": {"page": 1}, "capture": cap, "source_role": "원출처",
                              "observer_group": "dart" if fid == "F001" else "market_report"})
-            db.add_verify_event(f["id"], "lead", "reread", "원문 표셀 재열람 일치")
+            db.add_verify_event(f["id"], "lead", "reread", "원문 표셀 재열람 일치",
+                                reread_sha256=hashlib.sha256(("e2e-" + fid).encode()).hexdigest())
             if risk == "high":                          # claim-graph 필드(데모)
                 rows = db.facts()                       # 한 번만 읽어 그 원소를 갱신(재독으로 덮이지 않게)
                 fr = [x for x in rows if x["id"] == fid][0]

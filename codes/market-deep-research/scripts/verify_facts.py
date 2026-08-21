@@ -495,10 +495,11 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.I)
 
 
-def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[str]) -> list[str]:
+def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[str]) -> tuple[list[str], list[str]]:
     """evidence 필수필드 + text_quote verbatim + sha256 형식/실해시 대조 + confirmed 핵심수치
-    source_capture 실재(신뢰경계 포함)."""
-    failures = []
+    source_capture 실재(신뢰경계 포함). lead reread_sha256 이 evidence 해시와 안 맞으면 WARN."""
+    failures: list[str] = []
+    warnings: list[str] = []
     for f in facts.values():
         if f.get("status") != "confirmed":
             continue
@@ -542,7 +543,21 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                         ok_cap = True
                 if not ok_cap:
                     failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
-    return failures
+        # D5: lead 재열람 해시가 이 fact 의 증거(sha256·local 실파일·verbatim) 어느 것과도 안 맞으면 WARN.
+        # WebFetch 재열람(바이트 없음)이 남아 있어 FAIL 로는 못 올린다 — 자가신고를 드러내는 용도.
+        if f["id"] in used:
+            known = set()
+            for eid in f.get("evidence_ids", []):
+                e = evidence.get(eid) or {}
+                if e.get("sha256"): known.add(str(e["sha256"]).lower())
+                if e.get("verbatim"): known.add(gates.sha256_text(e["verbatim"]))
+                lp = wp.root / e["local"] if e.get("local") else None
+                if lp and lp.exists(): known.add(manifest.sha256_file(lp).lower())
+            rr = {str(ev.get("reread_sha256") or "").lower()
+                  for ev in f.get("verify_events") or [] if ev.get("by") == "lead" and ev.get("action") == "reread"}
+            if rr and not (rr & known):
+                warnings.append(f"[재열람미결박] {f['id']}: lead reread_sha256 이 evidence sha256/local/verbatim 해시와 불일치")
+    return failures, warnings
 
 
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
@@ -783,7 +798,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     li_fail, li_warn = check_ledger_integrity(facts, used, facts_raw, evidence_raw, wp)
     failures += li_fail
     warnings += li_warn
-    failures += check_evidence_chain(facts, evidence, wp, used)
+    ec_fail, ec_warn = check_evidence_chain(facts, evidence, wp, used)
+    failures += ec_fail
+    warnings += ec_warn
 
     fig_fail, fig_warn = check_figures(body, evidence, wp)
     failures += fig_fail
@@ -832,7 +849,7 @@ def demo() -> None:
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart.fss.or.kr", "sha256": _h("F001-E001"),
                          "capture": "_captures/f001.jpg"})   # 핵심수치 증빙 결박
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_h("F001-E001"))
         db.set_status("F001", "confirmed")
 
         wp = WorkPaths(wd)
@@ -872,7 +889,7 @@ def demo() -> None:
                      "risk": "normal", "status": "pending"})
         db.add_evidence({"fact_id": "F002", "type": "text_quote", "verbatim": "surpass 4 GW",
                          "source_url": "https://iea.org", "sha256": _h("F002-E002")})   # capture 없음
-        db.add_verify_event("F002", "lead", "reread")
+        db.add_verify_event("F002", "lead", "reread", reread_sha256=_h("F002-E002"))
         db.set_status("F002", "confirmed")
         nocap = "신규 용량은 4GW(F002) 이다.\n\n![](_captures/f001.jpg)\n"
         (wp.root / "nc.md").write_text(nocap, encoding="utf-8")

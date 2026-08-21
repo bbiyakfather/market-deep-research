@@ -232,7 +232,8 @@ def demo() -> None:
                 "risk": "normal",
                 "status": status,
                 "evidence_ids": [f"E{fact_id[1:]}"] if status == "confirmed" else [],
-                "verify_events": ([{"by": "lead", "at": _now(), "action": "reread", "note": "demo"}]
+                "verify_events": ([{"by": "lead", "at": _now(), "action": "reread", "note": "demo",
+                                    "reread_sha256": "0" * 64}]
                                   if status == "confirmed" else []),
             }
 
