@@ -24,7 +24,8 @@ openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공�
   verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
   ② **1회 반박검색**(`counter_search.found_stronger_refutation=false`) ③ **기본소스**(`primary_source_ref`)
-  ④ **시간증거**(`observed_at`+`valid_at`). 불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
+   ④ **시간증거**(`observed_at`+`valid_at`). ①② 는 본문 사용 high-risk 에 한해 G3 FAIL, ③④ WARN.
+   불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
 
 ## G2 증빙 게이트
