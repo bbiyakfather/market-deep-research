@@ -1,0 +1,40 @@
+{
+  "name": "navion-2026",
+  "template_hint": "본보고서 양식.hwpx",
+  "page": {
+    "body_w": 48188,
+    "body_h": 70012,
+    "tbl_w": 48178,
+    "img_max_h": 58000
+  },
+  "styles": {
+    "title": [23, 46],
+    "h1": [24, 47],
+    "h2": [25, 48],
+    "h3": [26, 49],
+    "body1": [27, 50],
+    "body2": [29, 51],
+    "caption": [32, 52],
+    "th": [38, 55],
+    "td": [35, 56],
+    "tsrc": [37, 57],
+    "para_center": 53,
+    "body_bold_base": 29
+  },
+  "border_fill": {
+    "th": {"first": 10, "mid": 11, "last": 12},
+    "td": {"first": 13, "mid": 9, "last": 15},
+    "src": 16,
+    "tbl": 9
+  },
+  "table": {
+    "min_col": 3300,
+    "in_margin": 1020,
+    "col_unit": 500,
+    "label_max": 12,
+    "data_cap": 30,
+    "th_line": 1300,
+    "td_line": 1600,
+    "cell_vpad": 282
+  }
+}
