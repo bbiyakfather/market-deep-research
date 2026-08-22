@@ -1,10 +1,13 @@
-"""test_e2e.py — 미니 E2E: 증거 → 캡처 → 대장 → 보고서 → G3 → PDF → preview → 무결성.
+"""test_e2e.py — 미니 E2E: 증거 → 캡처 → 대장 → 보고서 → G3 CLI → PDF CLI → preview → G5 CLI.
 
 자체 스택만으로 파이프라인이 완주하는지, 고객PDF/audit 분리가 되는지 확인한다.
 네트워크 불필요(로컬 PDF 로 캡처 체인 검증). render 는 pandoc+chrome 사용.
+G3·[4b]·G5 는 소유 스크립트 CLI 경로(영수증·기준선·extend)를 검증한다.
 """
 import hashlib
 import json
+import os
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -14,7 +17,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import fitz                                                # noqa: E402
 from skill_paths import resolve_work_dir, WorkPaths        # noqa: E402
 from facts_db import FactsDB                               # noqa: E402
-import capture_pdf, manifest, verify_facts, render_pdf, preview_pdf  # noqa: E402
+import capture_pdf, gates, manifest, preview_pdf           # noqa: E402
+
+
+SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+_CLI_ENV = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+
+
+def _cli(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS / args[0]), *args[1:]],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        env=_CLI_ENV,
+    )
 
 
 def build_source_pdf(path: Path):
@@ -23,6 +38,14 @@ def build_source_pdf(path: Path):
     p.insert_text((72, 130), "Green H2 market 2030: 45 (KRW trillion)")
     doc.save(str(path)); doc.close()
 
+
+PLAN = """# 부 1. Executive Summary
+# 부 2. 조사 개요
+# 부 3. 테마별 본론
+## 축: 매출
+# 부 6. 검증 요약
+# 부 11. 부록
+"""
 
 REPORT = """# 글로벌 시장조사 팩트시트 (E2E)
 
@@ -100,39 +123,46 @@ def main():
         assert f001["primary_source_ref"] == "E001", f001
         assert f001["valid_at"] == "2025-03", f001
 
-        # 3) 보고서 작성
+        # 3) 보고서 작성 + 승인 목차(G0) — REPORT 헤딩과 `# 부 N. 제목` 서식 정합
         wp.report_md.write_text(REPORT, encoding="utf-8")
+        (wp.audit / "research-plan.md").write_text(PLAN, encoding="utf-8")
 
-        # 4) G3 verify_facts (실패 0)
-        rep = verify_facts.verify(wp.report_md, wd)
-        assert rep["ok"], f"G3 실패: {rep['failures']}"
+        # 4) 선행 영수증(수동·무소유) 후 verify_facts.py CLI — G3 기준선 자동 봉인
+        gates.record_manual(wp, "G0", "approved")
+        gates.record_script_result(wp, "G1", 0, "join PASS")
+        gates.record_manual(wp, "[2]", "lead reread")
+        g3 = _cli("verify_facts.py", str(wp.report_md), str(wd))
+        assert g3.returncode == 0, f"G3 CLI 실패: {g3.stderr}\n{g3.stdout}"
+        assert wp.manifest.exists(), "G3 CLI PASS 인데 manifest.json 없음"
+        g3_rec = gates.successful_receipt(wp, "G3")
+        assert g3_rec and g3_rec.get("manifest_sha256"), g3_rec
+        g3_entries = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
 
-        # 5) manifest 고정
-        manifest.build(wp)
-        assert manifest.verify(wp)["ok"]
-
-        # 6) render → PDF (고객용)
-        r = render_pdf.render(wp.report_md, wp.report_pdf, resource_dir=wp.root)
-        assert r["ok"] and wp.report_pdf.stat().st_size > 2000, r
-
-        # 6.5) 재봉인 — [5]의 build 시점엔 report.pdf 가 없어 미봉인 상태다. 재봉인 전엔 신규
-        # 파일로 잡혀 verify 가 실패해야 하고, 재봉인 후엔 항목 해시가 실제 PDF 해시와 일치해야
-        # 한다(V06 회귀 가드).
-        v_unsealed = manifest.verify(wp)
-        assert not v_unsealed["ok"] and "report.pdf" in v_unsealed["new"], v_unsealed
-        manifest.build(wp)
-        assert manifest.verify(wp)["ok"]
+        # 5) render_pdf.py CLI — extend-only 재봉인 + [4b] 자기기록
+        r4 = _cli("render_pdf.py", str(wp.report_md))
+        assert r4.returncode == 0, f"render CLI 실패: {r4.stderr}\n{r4.stdout}"
+        assert wp.report_pdf.exists() and wp.report_pdf.stat().st_size > 2000
+        r4b = gates.successful_receipt(wp, "[4b]")
+        assert r4b, "render CLI PASS 인데 [4b] 영수증 없음"
         sealed = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
+        assert "report.pdf" in sealed, sealed
         assert sealed["report.pdf"]["sha256"] == manifest.sha256_file(wp.report_pdf)
+        for rel, meta in g3_entries.items():
+            assert sealed[rel]["sha256"] == meta["sha256"], (rel, meta, sealed[rel])
 
-        # 7) preview 육안검증 이미지
+        # 6) preview 육안검증 이미지
         imgs = preview_pdf.preview(wp.report_pdf, wp.root / "_preview")
         assert imgs and all(Path(x).stat().st_size > 0 for x in imgs)
 
-        # 8) 최종 무결성(파일 불변)
+        # 7) G4 수동 기록 후 manifest.py verify CLI — G5 자기기록 PASS
+        gates.record_manual(wp, "G4", "preview OK")
+        g5 = _cli("manifest.py", "verify", str(wd))
+        assert g5.returncode == 0, f"G5 CLI 실패: {g5.stderr}\n{g5.stdout}"
+        g5_rec = gates.successful_receipt(wp, "G5")
+        assert g5_rec and g5_rec.get("exit") == 0, g5_rec
         assert manifest.verify(wp)["ok"]
 
-        # 9) 분리 확인: 고객 PDF 생성됨 + audit 저널 위치 존재
+        # 8) 분리 확인: 고객 PDF 생성됨 + audit 저널 위치 존재
         assert wp.report_pdf.exists()
         assert wp.audit.is_dir()
 

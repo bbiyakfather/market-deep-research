@@ -74,7 +74,9 @@ def render(md_path: Path | str, pdf_out: Path | str | None = None,
         html_out = Path(td) / "render.html"
         _pandoc_html(md_path, html_out, resource_dir)
         _chrome_pdf(html_out, pdf_out)
-    return {"ok": True, "pdf": str(pdf_out), "size": pdf_out.stat().st_size, "at": _now()}
+    # artifacts: 봉인([4b] extend) 대상 목록 — 양식 모듈 공통 반환 계약(hwpx 등도 같은 키로 돌려준다)
+    return {"ok": True, "pdf": str(pdf_out), "size": pdf_out.stat().st_size, "at": _now(),
+            "artifacts": [str(pdf_out)]}
 
 
 def demo() -> None:
@@ -105,20 +107,29 @@ if __name__ == "__main__":
         out = args[1] if len(args) >= 2 else None
         wp = WorkPaths(md_path.parent)
         try:
-            gates.require_receipt(wp, "G3")
+            g3 = gates.require_receipt(wp, "G3")
         except gates.GateError as exc:
             print(f"[render] G3 PASS 영수증 전제조건 미충족: {exc}", file=sys.stderr)
             sys.exit(1)
         try:
+            # [4b] 는 G3 기준선을 **확장만** 한다. 전면 재빌드(build)로 돌아가면 G3 이후의 변조가
+            # 새 기준선으로 세탁되어 G5 가 통과한다(C1 실측). G3 영수증의 manifest 해시와 대조해
+            # "그 기준선"인지 확인하고, 기존 항목 불변 검사 후 렌더 산출물만 추가한다.
             rendered = render(md_path, out)
-            sealed = manifest.build(wp)
+            sealed = manifest.extend(wp, rendered["artifacts"],
+                                     expected_sha256=g3.get("manifest_sha256"))
+            artifacts = [{"path": Path(p).resolve().relative_to(wp.root.resolve()).as_posix(),
+                          "sha256": manifest.sha256_file(p)} for p in rendered["artifacts"]]
             receipt = gates.record_script_result(
                 wp, "[4b]", 0,
                 json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"])},
                            ensure_ascii=False, sort_keys=True),
                 wp.facts,
+                extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
+                       "g3_result_summary_sha256": g3.get("result_summary_sha256"),
+                       "artifacts": artifacts},
             )
-        except (gates.GateError, OSError, RuntimeError) as exc:
+        except (gates.GateError, OSError, RuntimeError, ValueError) as exc:
             print(f"[render] 실패: {exc}", file=sys.stderr)
             sys.exit(1)
         print(json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"]),

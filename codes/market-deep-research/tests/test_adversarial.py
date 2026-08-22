@@ -6,8 +6,10 @@
 import hashlib
 import ipaddress
 import json
+import os
 import re
 import socket
+import subprocess
 import sys
 import tempfile
 import time
@@ -32,6 +34,44 @@ CASES = []
 
 # 유효한 64자리 sha256 fixture 상수 — 후속 케이스가 "h" 같은 placeholder 를 재도입하지 못하게.
 _H = hashlib.sha256(b"fixture").hexdigest()
+_CLI_ENV = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+
+
+def _run_script(*args):
+    """scripts/<name> CLI 를 utf-8 로 실행(Windows cp949 콘솔 대비)."""
+    return subprocess.run(
+        [sys.executable, str(SKILL_ROOT / "scripts" / args[0]), *args[1:]],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        env=_CLI_ENV,
+    )
+
+
+def _ledger(wp):
+    import gates
+    path = gates.ledger_path(wp)
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _chain_to_g3(td, topic="봉인"):
+    """G0·G1·[2] API 영수증 + report.md + G3 기준선(build + extra 결박). verify_facts 소유자 흉내."""
+    import gates
+    wd = resolve_work_dir(topic, base=td)
+    wp = WorkPaths(wd)
+    (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
+    wp.facts.write_text("", encoding="utf-8")
+    wp.report_md.write_text("# r\n", encoding="utf-8")
+    gates.record_manual(wp, "G0", "approved")
+    gates.record_script_result(wp, "G1", 0, "join PASS")
+    gates.record_manual(wp, "[2]", "lead reread")
+    sealed = manifest.build(wp)
+    gates.record_script_result(
+        wp, "G3", 0, "verify PASS",
+        extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
+               "manifest_entries": len(sealed["entries"])},
+    )
+    return wd, wp
 
 
 def case(fn):
@@ -1370,7 +1410,8 @@ def g5_receipt_owned_by_manifest_verify():
         gates.record_manual(wp, "[2]", "lead reread")
         gates.record_script_result(wp, "G3", 0, "verify PASS")
         manifest.build(wp)
-        gates.record_script_result(wp, "[4b]", 0, "reseal PASS")
+        gates.record_script_result(wp, "[4b]", 0, "reseal PASS",
+                                   extra={"manifest_sha256": manifest.sha256_file(wp.manifest)})
 
         r1 = run_cli(wd)
         assert r1.returncode == 1 and "G4" in r1.stderr, f"G4 없이 verify 통과: {r1.stderr!r}"
@@ -1548,6 +1589,93 @@ def figure_tag_without_image_is_not_a_figure():
         wp.report_md.write_text("본문.\n\n<figure>도표 자리</figure>\n", encoding="utf-8")
         rep = verify_facts.verify(wp.report_md, wd)
         assert not rep["ok"] and any("[도판]" in f for f in rep["failures"]), rep
+
+
+# --- C1·C2 봉인 회귀(G3 이후 변조 세탁 차단 · TRACKED 밖 산출물 추적) ----------
+@case
+def reseal_rejects_post_g3_tamper():
+    """G3 이후 facts.jsonl 을 변조한 채 render_pdf.py CLI 를 돌리면 재봉인이 거부된다.
+    세탁이 성공하면 변조가 새 기준선이 되어 G5 가 PASS 한다(C1). 긍정형 짝: 변조 없으면
+    exit 0, [4b] 에 manifest_sha256·artifacts(report.pdf) 가 있고 기존 항목 해시는 그대로."""
+    import gates
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp = _chain_to_g3(td, "렌더변조")
+        baseline = manifest.sha256_file(wp.manifest)
+        wp.facts.write_text('{"id":"F001","tampered":1}\n', encoding="utf-8")
+        r = _run_script("render_pdf.py", str(wp.report_md))
+        assert r.returncode == 1, f"변조 후 render CLI 가 통과함: {r.stderr!r} {r.stdout!r}"
+        assert not any(rec.get("gate") == "[4b]" for rec in _ledger(wp)), _ledger(wp)
+        assert manifest.sha256_file(wp.manifest) == baseline, "실패했는데 manifest.json 이 바뀜"
+
+    with tempfile.TemporaryDirectory() as td:                          # 긍정형 짝
+        wd, wp = _chain_to_g3(td, "렌더정상")
+        before = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
+        r = _run_script("render_pdf.py", str(wp.report_md))
+        assert r.returncode == 0, f"정상 체인인데 render CLI 실패: {r.stderr!r}"
+        rec = gates.successful_receipt(wp, "[4b]")
+        assert rec and rec.get("manifest_sha256"), rec
+        arts = rec.get("artifacts") or []
+        assert any((a.get("path") if isinstance(a, dict) else a) == "report.pdf" for a in arts), rec
+        after = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
+        assert "report.pdf" in after, after
+        for rel, meta in before.items():
+            assert after[rel]["sha256"] == meta["sha256"], (rel, meta, after[rel])
+
+
+@case
+def g5_rejects_rebuilt_manifest():
+    """정상 체인([4b] 까지) 뒤 manifest.build 로 기준선을 세탁하고 G4 후 verify CLI 를
+    돌리면 [4b]↔manifest 결박 불일치로 거부돼야 한다. 전제조건 단계에서 죽으므로 G5 PASS
+    영수증은 남지 않는다."""
+    import gates
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp = _chain_to_g3(td, "기준선세탁")
+        wp.report_pdf.write_bytes(b"%PDF-1.4 fake")
+        g3 = gates.successful_receipt(wp, "G3")
+        manifest.extend(wp, [wp.report_pdf], expected_sha256=g3["manifest_sha256"])
+        gates.record_script_result(
+            wp, "[4b]", 0, "reseal PASS",
+            extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
+                   "artifacts": [{"path": "report.pdf",
+                                  "sha256": manifest.sha256_file(wp.report_pdf)}]},
+        )
+        manifest.build(wp)                                            # 세탁 시도
+        gates.record_manual(wp, "G4", "preview OK")
+        r = _run_script("manifest.py", "verify", str(wd))
+        assert r.returncode == 1, f"세탁된 manifest 가 G5 를 통과함: {r.stderr!r}"
+        assert "[4b]" in r.stderr, r.stderr
+        tail = _ledger(wp)[-1]
+        assert tail["gate"] != "G5" or tail.get("exit") != 0, tail
+        assert not gates.successful_receipt(wp, "G5")
+
+
+@case
+def manifest_extend_tracks_custom_artifact():
+    """extend 로 TRACKED 글롭 밖 이름(custom.pdf)을 봉인하면 변조는 changed, 삭제는
+    missing 으로 잡힌다. 작업폴더 밖 경로는 ValueError."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("커스텀산출물", base=td)
+        wp = WorkPaths(wd)
+        wp.facts.write_text("{}\n", encoding="utf-8")
+        manifest.build(wp)
+        outside = Path(td) / "outside.pdf"
+        outside.write_bytes(b"%PDF outside")
+        try:
+            manifest.extend(wp, [outside])
+            raise AssertionError("작업폴더 밖 경로가 extend 를 통과함")
+        except ValueError:
+            pass
+
+        custom = wp.root / "custom.pdf"
+        custom.write_bytes(b"%PDF custom")
+        manifest.extend(wp, [custom], label="render")
+        assert manifest.verify(wp)["ok"]
+        custom.write_bytes(b"%PDF tampered")
+        v = manifest.verify(wp)
+        assert not v["ok"] and "custom.pdf" in v["changed"], v
+        custom.unlink()
+        v2 = manifest.verify(wp)
+        assert not v2["ok"] and "custom.pdf" in v2["missing"], v2
 
 
 def main():

@@ -373,13 +373,18 @@ def record_script_result(work: WorkPaths | Path | str, gate: str, exit_code: int
                          result_summary: str | bytes = "",
                          facts_db: Path | str | None = None, *,
                          result_summary_sha256: str | None = None,
-                         facts_db_sha256: str | None = None) -> dict:
+                         facts_db_sha256: str | None = None,
+                         extra: dict | None = None) -> dict:
     """Append a script gate result.
 
     ``result_summary`` is normally the script's deterministic summary/output;
     callers may provide its already-computed digest through
     ``result_summary_sha256``.  ``facts_db`` defaults to the work directory's
     ``facts.jsonl`` and is recorded only when that file exists.
+    ``extra`` holds binding fields an owning script wants later gates to
+    re-check (e.g. ``manifest_sha256`` so [4b] can prove it extended the very
+    baseline G3 sealed, not a rebuilt one).  Reserved record keys cannot be
+    overridden.
     """
     wp = _work_paths(work)
     canonical = normalize_gate(gate)
@@ -412,6 +417,10 @@ def record_script_result(work: WorkPaths | Path | str, gate: str, exit_code: int
         "result_summary_sha256": summary_sha,
         "facts_db_sha256": facts_sha,
     }
+    for key, value in (extra or {}).items():
+        if key in record:
+            raise GateError(f"extra 가 예약 필드를 덮어씀: {key}")
+        record[key] = value
     return _append(wp, record)
 
 

@@ -932,14 +932,21 @@ if __name__ == "__main__":
             print("[G3] 선행 영수증 미충족: " + "; ".join(checked["issues"]), file=sys.stderr)
             sys.exit(1)
         try:
+            # G3 기준선 봉인은 검증 PASS 와 한 몸이다 — 따로 `manifest.py build` 를 손으로 돌리게
+            # 두면 빠뜨리거나 나중에 다시 돌려 변조를 세탁할 수 있다(C1). 영수증에 manifest 해시를
+            # 결박해 [4b] 가 "그 기준선을 확장했는지" 증명하게 한다.
+            sealed = manifest.build(wp)
             receipt = gates.record_script_result(
                 wp, "G3", 0,
                 json.dumps(rep, ensure_ascii=False, sort_keys=True), wp.facts,
+                extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
+                       "manifest_entries": len(sealed["entries"])},
             )
-        except gates.GateError as exc:
+        except (gates.GateError, OSError) as exc:
             print(f"[G3] 영수증 기록 실패: {exc}", file=sys.stderr)
             sys.exit(1)
-        print(f"[G3] PASS 영수증 기록: {receipt['result_summary_sha256']}")
+        print(f"[G3] PASS 영수증 기록: {receipt['result_summary_sha256']} "
+              f"(manifest {len(sealed['entries'])} 항목 봉인)")
         sys.exit(0)
     else:
         print(__doc__); sys.exit(2)
