@@ -10,7 +10,9 @@
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
-openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공공 MCP). 요구사항 확정(유형·범위·**축별 충분조건**·
+openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공공 MCP). 미설치 계층은
+"건너뜀+경고"로 진행(자체 스택이 보장 코어). ※ `curl_cffi` 는 사실상 필수 — 내장 우회(모바일
+iOS 지문 등)가 전부 그 위에 얹혀 있다. 요구사항 확정(유형·범위·**축별 충분조건**·
 환산옵션 OFF·출력형식·**승인 목차**) — 통과조건: `audit/research-plan.md` 존재 + 승인 기록 +
 승인 목차(`references/research-plan.md` 서식) 포함, 확정 전 팬아웃 금지. 기관조사면
 `entity-identity.md` 선행. `audit/intent-diff.md` 개시.
@@ -45,8 +47,9 @@ high-risk 핵심수치는 캡처 필수(`verify_facts.py` 가 실재 검사). �
 불일치 시 `[단위불일치]`/`[값불일치]`) · evidence 필수필드 · text_quote verbatim ·
 high-risk 캡처 실재 · **목차 기계검사**(`--plan` 미지정 시 `audit/research-plan.md` 자동탐지,
 그마저 없으면 생략 — 계획 파일 없는 기존 조사는 이 검사만으로 FAIL 하지 않음). →
-`manifest.py build`(해시 고정 — 이 시점은 report.pdf 생성 전이라
-렌더 산출물은 [4] 이후 재봉인에서 추가됨).
+`verify_facts.py` CLI PASS 가 기준 `manifest.json` 을 자동 생성하고 G3 영수증에
+`manifest_sha256` 을 결박한다(이 시점은 report.pdf 생성 전이라 렌더 산출물은 [4] 이후
+extend 로만 추가됨).
 
 **G3 도판검사**: `_captures/` 증빙캡처는 G2 소관이라 제외하고, 본문 대표 이미지 0장을
 차단하며 각 참조 경로의 실재를 확인한다. 각 이미지 참조 뒤 2줄 이내에 `[그림]`으로 시작하고
@@ -58,19 +61,24 @@ high-risk 캡처 실재 · **목차 기계검사**(`--plan` 미지정 시 `audit
 자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
 
 ## G4 preview → G5 최종 무결성
-report.pdf 생성 후 **재봉인**(`manifest.py build` 재실행 — [G3] 항목은 보존한 채 report.pdf 등
-렌더 산출물 해시를 추가) → `preview_pdf.py` 육안검증 + **intent-diff 축별 대조**
+report.pdf 생성 후 **재봉인**(`manifest.extend` — 기존 항목 불변 확인 실패 시 거부 = G3 복귀,
+렌더 산출물 artifacts 만 추가, G3 기준선 해시 대조) → `preview_pdf.py` 육안검증 + **intent-diff 축별 대조**
 (`audit/intent-diff.md` 개시분의 축별 "참이어야 하는가" 목록을 실제 보고서 발견과 대조 —
 축마다 gap 유무 판정, 결과를 `audit/intent-diff.md` 에 추기) → PDF F태그·링크·캡처 수 재검사
-+ `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정. [4b]·G4 영수증 확인 후
-결과를 G5 영수증으로 자기기록).
++ `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정. [4b]·G4 영수증 확인 +
+[4b]↔manifest 결박 대조 후 결과를 G5 영수증으로 자기기록).
 **복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
 **[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님).
+**참고**: [G2]가 만드는 실패 캡처 `.FAILED` 산출물도 `_captures/**` 글롭에 잡힌다 — 재봉인(extend)
+이후 캡처를 재시도하면 그 결과물이 신규 파일로 잡혀 verify 가 실패로 뜬다. 의도된 동작이며
+이 경우도 재봉인(extend) 이 해법이다.
 
 ## 영수증 커버리지
 원장(`audit/gates.jsonl`) 영수증: G0·[2]·G4=수동(`gates.py record`), G3·[4b]·G5=소유
 스크립트 자기기록(CLI 손기록 차단 — verify_facts.py·render_pdf.py·manifest.py verify),
-G1·G5c 등 무소유 게이트=`gates.py record_script_result`. G2·G5c 의 실질 강제는 원장이
+G1·G5c 등 무소유 게이트=`gates.py record_script_result`. G3 CLI PASS 가 기준 manifest 를
+만들고 영수증에 해시를 결박하며, [4b] 는 그 기준선을 extend-only 로 확장하고, G5 는
+[4b]↔manifest 결박을 검사한다. G2·G5c 의 실질 강제는 원장이
 아니라 내용검사다(G2=verify_facts 캡처 실재, G5c=`audit/verify-<slug>.md`).
 [2] 영수증은 record 시점에 confirmed 전건 lead reread(+reread_sha256) 를 검사해 confirmed 투영
 다이제스트(id·raw·unit·lead reread 이벤트)를 기록하며, 이후 confirmed 집합·값이 바뀌면 G3 선행검사가
