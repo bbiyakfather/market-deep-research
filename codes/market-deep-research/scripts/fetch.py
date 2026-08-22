@@ -462,8 +462,27 @@ def _result(status: str, res: dict, trace: list, note: str = "", fetch_refs: lis
             "fetch_refs": fetch_refs or []}
 
 
-# --- 저장(원본 + 정제본 + 해시) ---------------------------------------------
-def save(result: dict, out_dir: Path | str) -> dict:
+def _html_title(html: str) -> str | None:
+    """HTML <title> 우선, 없으면 og:title. PDF/없음은 None."""
+    if not html:
+        return None
+    import html as _html
+    import re
+    m = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
+    if m:
+        t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1)))
+        t = _html.unescape(t).strip()
+        if t:
+            return t
+    og = _ogp_partial(html)
+    if og and re.search(r"og:title", html, re.I):
+        first = _html.unescape(og.split("\n", 1)[0]).strip()
+        return first or None
+    return None
+
+
+# --- 저장(원본 + 정제본 + 해시 + 메타 사이드카) -----------------------------
+def save(result: dict, out_dir: Path | str, url: str | None = None) -> dict:
     out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
     raw = result.get("raw")
     if raw is None and result.get("text"):
@@ -471,15 +490,38 @@ def save(result: dict, out_dir: Path | str) -> dict:
     if raw is None:
         return result
     sha = hashlib.sha256(raw).hexdigest()
+    sha12 = sha[:12]
     ext = "pdf" if result.get("is_pdf") else ("html" if "<" in result.get("text", "")[:200] else "txt")
-    (out / f"{sha[:12]}_raw.{ext}").write_bytes(raw)
-    clean_path = None
+    raw_name = f"{sha12}_raw.{ext}"
+    (out / raw_name).write_bytes(raw)
+    clean_name = None
     if not result.get("is_pdf"):
         clean = extract_text(result.get("text", ""))
-        clean_path = out / f"{sha[:12]}_clean.txt"
-        clean_path.write_text(clean, encoding="utf-8")
-    result.update({"sha256": sha, "local": str(out / f'{sha[:12]}_raw.{ext}'),
-                   "clean": str(clean_path) if clean_path else None, "accessed_at": _now()})
+        clean_name = f"{sha12}_clean.txt"
+        (out / clean_name).write_text(clean, encoding="utf-8")
+    accessed = _now()
+    title = None if result.get("is_pdf") else _html_title(result.get("text") or "")
+    status = result.get("status")
+    if status not in ("ok", "partial"):
+        status = "ok"
+    meta = {
+        "url": url if url is not None else result.get("url"),
+        "final_url": result.get("final_url"),
+        "http_status": result.get("http_status"),
+        "mime": result.get("mime"),
+        "is_pdf": bool(result.get("is_pdf")),
+        "sha256": sha,
+        "accessed_at": accessed,
+        "title": title,
+        "raw": raw_name,
+        "clean": clean_name,
+        "status": status,
+        "fetch_ref": result.get("fetch_ref"),
+    }
+    (out / f"{sha12}.meta.json").write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    result.update({"sha256": sha, "local": str(out / raw_name),
+                   "clean": str(out / clean_name) if clean_name else None, "accessed_at": accessed})
     return result
 
 
@@ -549,6 +591,51 @@ def demo() -> None:
     assert "제목" in _ogp_partial('<meta property="og:title" content="제목">')
     assert "요약" in _ogp_partial('<meta content="요약" name="og:description">')
     assert _ogp_partial("<html><body>없음</body></html>") == ""
+    assert _html_title("<html><head><title>  Example Title </title></head></html>") == "Example Title"
+    assert _html_title('<meta property="og:title" content="OG Title">') == "OG Title"
+    assert _html_title("<html><body>없음</body></html>") is None
+
+    # 메타 사이드카: 가짜 result 로 save → <sha12>.meta.json 필드 존재(오프라인)
+    import tempfile
+    html = ('<html><head><title>Example Title</title>'
+            '<meta property="og:title" content="OG Title"></head>'
+            '<body><p>hello sidecar</p></body></html>')
+    fake = {"status": "ok", "final_url": "https://example.com/a", "http_status": 200,
+            "mime": "text/html", "is_pdf": False, "text": html, "raw": None,
+            "fetch_ref": "ref-demo"}
+    with tempfile.TemporaryDirectory() as td:
+        saved = save(fake, td, url="https://example.com/a")
+        sha12 = saved["sha256"][:12]
+        meta_path = Path(td) / f"{sha12}.meta.json"
+        assert meta_path.is_file(), meta_path
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        for k in ("url", "final_url", "http_status", "mime", "is_pdf", "sha256",
+                  "accessed_at", "title", "raw", "clean", "status", "fetch_ref"):
+            assert k in meta, k
+        assert meta["url"] == "https://example.com/a"
+        assert meta["final_url"] == "https://example.com/a"
+        assert meta["http_status"] == 200
+        assert meta["title"] == "Example Title"
+        assert meta["raw"] == f"{sha12}_raw.html"
+        assert meta["clean"] == f"{sha12}_clean.txt"
+        assert meta["status"] == "ok"
+        assert meta["fetch_ref"] == "ref-demo"
+        assert (Path(td) / meta["raw"]).is_file()
+        assert (Path(td) / meta["clean"]).is_file()
+        # 기존 호출자 호환: url 생략해도 save 는 동작, meta.url 은 null
+        fake2 = dict(fake, text="<html><body>x</body></html>", raw=None)
+        saved2 = save(fake2, td)
+        meta2 = json.loads((Path(td) / f"{saved2['sha256'][:12]}.meta.json").read_text(encoding="utf-8"))
+        assert meta2["url"] is None
+        # PDF: title/clean 은 null
+        pdf_fake = {"status": "partial", "final_url": "https://example.com/a.pdf",
+                    "http_status": 200, "mime": "application/pdf", "is_pdf": True,
+                    "text": "", "raw": b"%PDF-1.4 demo", "fetch_ref": None}
+        saved3 = save(pdf_fake, td, url="https://example.com/a.pdf")
+        meta3 = json.loads((Path(td) / f"{saved3['sha256'][:12]}.meta.json").read_text(encoding="utf-8"))
+        assert meta3["title"] is None and meta3["clean"] is None and meta3["is_pdf"] is True
+        assert meta3["status"] == "partial"
+        assert meta3["raw"].endswith(".pdf")
 
     print(f"[{_now()}] fetch demo OK (curl_cffi={'Y' if creq else 'N'}, "
           f"trafilatura={'Y' if trafilatura else 'N'}, CA={'ascii' if _CA_BUNDLE else 'default'})")
@@ -570,7 +657,7 @@ if __name__ == "__main__":
         r = fetch(args[1])
         out = args[args.index("--out") + 1] if "--out" in args else "_sources"
         if r["status"] in ("ok", "partial"):
-            r = save(r, out)
+            r = save(r, out, url=args[1])
         print(json.dumps({k: v for k, v in r.items() if k not in ("text", "raw")},
                          ensure_ascii=False, indent=2)[:1500])
     else:

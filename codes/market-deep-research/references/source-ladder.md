@@ -7,6 +7,13 @@
 - 실패 계층은 경고 후 건너뜀(빈결과). "검색 완전성 미보장" — 내장 WebSearch 병행.
 - **검색 연산자**: `site:` `filetype:pdf` `intitle:` `"정확구문"` `-제외` `OR` `after:/before:`. 영문 우선.
 
+## 검색만 모드 (`mdr-search`)
+사실대장·재검증·게이트·캡처·PDF 없이 출처목록(`sources.md`)과 `_sources/` 원문 스냅샷만 만든다.
+cwd 는 작업폴더 — `fetch.py` 가 cwd 의 `audit/` 에 로그·스냅샷을 쓴다. 스크립트는 코어 `scripts/`
+절대경로로 호출한다.
+흐름: `search.py` → `fetch.py get <url> --out <wd>/_sources` → `source_index.py <wd> --topic "<주제>"`.
+같은 작업폴더 규칙(`skill_paths.py`)이라 이후 보고서 모드로 승격 가능하다.
+
 ## Phase0 공식/무료 API 우선 (R5)
 generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`curated-sources.json`의 phase0_apis).
 세션에 무료 공공 MCP(opendart/DART·KOSIS·KIPRIS·KakaoMap)가 붙어있으면 **오케스트레이터가 1차소스로
@@ -27,6 +34,9 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
    네이버 블로그는 `m.blog.naver.com/PostView.naver?blogId=..&logNo=..`(**logNo 가 숫자일 때만**),
    그 외는 `m.` 서브도메인 시도 후 원 URL 재시도.
    **실전 핵심 계층** — 데스크톱 지문 3종이 전부 403인 Cloudflare 사이트가 여기서 뚫린다(GVR 실측).
+   ⚠ WebFetch 가 403 이라고 "원문확인불가"로 넘기지 말 것 — `fetch.py` 로 한 번 더 확인한다.
+   실제로 WebFetch·데스크톱 지문이 전부 막힌 GVR 이 모바일 계층으로 열렸고, 스니펫으로만
+   확인해 "일치" 판정했던 건에서 오류가 나왔다(2026-07-31).
 4. **Jina Reader**(`r.jina.ai`, JS렌더·정제) → `archived_url` 구분 기록.
 5. **Googlebot UA** — 봇 화이트리스트 사이트용.
 6. **RSS** — `rss.blog.naver.com/{id}.xml` · `/feed` · `/rss` · `/rss.xml` → `archived_url` 구분.
