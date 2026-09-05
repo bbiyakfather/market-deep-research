@@ -734,8 +734,20 @@ def save(result: dict, out_dir: Path | str, url: str | None = None) -> dict:
         "status": status,
         "fetch_ref": result.get("fetch_ref"),
     }
-    (out / f"{sha12}.meta.json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    meta_path = out / f"{sha12}.meta.json"
+    if meta_path.exists():
+        previous = json.loads(meta_path.read_text(encoding="utf-8"))
+        # 읽을 수 없는 이력은 덮어쓰지 않는다. legacy 최상위 필드는 최초 조회 그대로 유지한다.
+        if not isinstance(previous, dict) or not isinstance(previous.get("urls", []), list):
+            raise ValueError(f"출처 메타 형식 오류: {meta_path}")
+        history = previous.get("urls") or [dict(previous)]
+        previous["urls"] = [*history, meta]
+        meta = previous
+    else:
+        meta = {**meta, "urls": [dict(meta)]}
+    # blob은 공유하되 URL·최종 URL·상태·접근시각·fetch_ref 조회 이력은 누적한다.
+    from facts_db import _write_bytes_atomic
+    _write_bytes_atomic(meta_path, (json.dumps(meta, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     result.update({"sha256": sha, "local": str(out / raw_name),
                    "clean": str(out / clean_name) if clean_name else None, "accessed_at": accessed})
     return result

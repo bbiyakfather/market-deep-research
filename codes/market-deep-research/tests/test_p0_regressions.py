@@ -21,7 +21,7 @@ import render_pdf
 import verify_calculations as calculations
 import verify_claims as claims
 import verify_facts
-from facts_db import (FactsDB, ValidationError, _write_jsonl_atomic, confirmed_digest,
+from facts_db import (FactsDB, ValidationError, _read_jsonl, _write_jsonl_atomic, confirmed_digest,
                       validate_evidence, validate_fact)
 from skill_paths import WorkPaths, resolve_work_dir
 import test_adversarial
@@ -54,12 +54,13 @@ def capture_review(path, state="content"):
 
 
 def review(wp, sentence=LIMITED, support="supported", kind="observed"):
+    # 손상 대장도 G3 부정 테스트의 입력으로 준비한다. 로드 fsck 검증은 별도 회귀에서 다룬다.
     row = {"sentence_id": "S001", "claim_type": kind, "fact_ids": ["F001"],
            "evidence_ids": ["E001"], "support": support,
            "unsupported_terms": [] if support == "supported" else ["배터리 없는"],
            "required_qualification": "무전원 여부 미확인", "sentence_text": sentence,
            "reviewed_text_sha256": gates.sha256_text(sentence),
-           "evidence_revision": confirmed_digest(FactsDB(wp).facts())}
+           "evidence_revision": confirmed_digest(_read_jsonl(wp.facts))}
     _write_jsonl_atomic(wp.audit / "claim-review.jsonl", [row])
     return row
 

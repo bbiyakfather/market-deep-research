@@ -19,6 +19,7 @@ import os
 import re
 import sys
 import tempfile
+import warnings
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -298,6 +299,38 @@ def _legacy_claim_key(context: dict) -> str:
 
 
 # --- JSONL 원자적 저장 -------------------------------------------------------
+def evidence_ids(fact: dict) -> list[str]:
+    value = fact.get("evidence_ids")
+    return [eid for eid in value if isinstance(eid, str)] if isinstance(value, list) else []
+
+
+def check_ledger_references(facts_raw: list[dict], evidence_raw: list[dict]) -> tuple[list[str], list[str]]:
+    """N10 양방향 참조 검사. 로드 fsck와 G3가 같은 규칙(v4 FAIL/v3 WARN)을 쓴다."""
+    failures, notices = [], []
+    facts = {f["id"]: f for f in facts_raw if isinstance(f, dict) and isinstance(f.get("id"), str)}
+    evidence = {e["id"]: e for e in evidence_raw if isinstance(e, dict) and isinstance(e.get("id"), str)}
+    for fact in facts_raw:
+        if not isinstance(fact, dict):
+            continue
+        for eid in evidence_ids(fact):
+            ev = evidence.get(eid)
+            strict = fact.get("schema_version") == 4 or (ev or {}).get("schema_version") == 4
+            issues = failures if strict else notices
+            if ev is None:
+                issues.append(f"[증거유실] {fact.get('id')} → {eid} 없음")
+            elif ev.get("fact_id") != fact.get("id"):
+                issues.append(f"[증거역참조] {fact.get('id')} → {eid}의 fact_id={ev.get('fact_id')}")
+    for ev in evidence_raw:
+        if not isinstance(ev, dict):
+            continue
+        fact = facts.get(ev.get("fact_id")) if isinstance(ev.get("fact_id"), str) else None
+        strict = ev.get("schema_version") == 4 or (fact or {}).get("schema_version") == 4
+        if fact is None or ev.get("id") not in evidence_ids(fact):
+            (failures if strict else notices).append(
+                f"[증거역참조] {ev.get('id')} → {ev.get('fact_id')} 없거나 fact.evidence_ids에서 누락")
+    return failures, notices
+
+
 def _read_jsonl(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -309,13 +342,12 @@ def _read_jsonl(path: Path) -> list[dict]:
     return out
 
 
-def _write_jsonl_atomic(path: Path, rows: list[dict]) -> None:
+def _write_bytes_atomic(path: Path, data: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            for r in rows:
-                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, path)                      # 같은 볼륨 원자적 교체
@@ -324,10 +356,24 @@ def _write_jsonl_atomic(path: Path, rows: list[dict]) -> None:
             os.remove(tmp)
 
 
+def _write_jsonl_atomic(path: Path, rows: list[dict]) -> None:
+    _write_bytes_atomic(path, "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows).encode("utf-8"))
+
+
 class FactsDB:
     def __init__(self, work: WorkPaths | Path | str):
         self.wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
         self.schema = load_schema()
+        self.integrity = self.fsck()
+        if self.integrity["failures"]:
+            raise ValidationError("[대장fsck] FAIL: " + "; ".join(self.integrity["failures"]))
+        for notice in self.integrity["warnings"]:
+            warnings.warn("[대장fsck] WARN: " + notice, UserWarning, stacklevel=2)
+
+    def fsck(self) -> dict:
+        """원문·캡처 I/O 없는 경량 참조 검사. 전체 스키마 검사는 G3에서 수행한다."""
+        failures, notices = check_ledger_references(self.facts(), self.evidence())
+        return {"ok": not failures, "failures": failures, "warnings": notices}
 
     def facts(self) -> list[dict]:
         return _read_jsonl(self.wp.facts)
@@ -380,11 +426,24 @@ class FactsDB:
         if target is None:
             raise ValidationError(f"{ev['fact_id']}: 존재하지 않는 fact_id — orphan evidence 거부")
         rows.append(ev)
-        _write_jsonl_atomic(self.wp.evidence, rows)
         target.setdefault("evidence_ids", [])
         if ev["id"] not in target["evidence_ids"]:
             target["evidence_ids"].append(ev["id"])
-        _write_jsonl_atomic(self.wp.facts, facts)
+        # 단일 writer: 두 번째 쓰기 실패 시 선기록을 바이트 그대로 복원한다.
+        # 프로세스 강제 종료/전원 장애 복구용 journal은 아니며, 재시작 fsck가 불일치를 드러낸다.
+        preimage = self.wp.evidence.read_bytes() if self.wp.evidence.exists() else None
+        _write_jsonl_atomic(self.wp.evidence, rows)
+        try:
+            _write_jsonl_atomic(self.wp.facts, facts)
+        except BaseException as exc:
+            try:
+                if preimage is None:
+                    self.wp.evidence.unlink(missing_ok=True)
+                else:
+                    _write_bytes_atomic(self.wp.evidence, preimage)
+            except OSError as rollback_error:
+                raise OSError(f"facts 저장 실패({exc}); evidence 롤백 실패 — 대장 복구 필요") from rollback_error
+            raise
         return ev
 
     def add_verify_event(self, fact_id: str, by: str, action: str, note: str = "", *,

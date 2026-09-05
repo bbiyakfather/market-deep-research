@@ -35,8 +35,8 @@ manuscript/Ⅲ_x.md ──build_hwpx.py build──▶ 모듈_Ⅲ_x_양식.hwpx 
 ```
 python <this>/scripts/build_hwpx.py build <원고.md> --template <양식.hwpx> [--profile navion-2026|<path.json>] [--out <out.hwpx>]
     기본 out: <원고 폴더>/모듈_<원고stem>_양식.hwpx. stdout 마지막 줄 JSON {"ok","out","blocks":{종류:수},"images":n,"skipped_images":[...]}
-python <this>/scripts/build_hwpx.py split <report.md> --out <dir>
-    최상위 `# <로마숫자>. 제목` 단위로 <로마숫자>_<제목>.md 분할. --out 이 report.md 폴더의 하위면 이미지 상대경로 앞에 ../ 보정.
+python <this>/scripts/build_hwpx.py split <report.md> --out <dir> [--expect-parts N]
+    `#` 또는 `## <로마숫자>. 제목` 단위 분할. 헤딩 0개 또는 기대 부 수 불일치는 exit 1(서문 제외). --out 이 report.md 폴더의 하위면 이미지 상대경로 앞에 ../ 보정.
 python <this>/scripts/export_pdf.py <in.hwpx> [<out.pdf>]
     Hwp.exe 미기동이면 `-Automation` 으로 기동 후 HWPFrame.HwpObject. RegisterModule("FilePathCheckDLL","FilePathCheckerModule"),
     Open(...,"HWPX","forceopen:true"), FileSaveAsPdf. 절대경로. 실패 시 exit 1 + 이유.
@@ -46,6 +46,11 @@ python <this>/scripts/grade_pdf.py <pdf> --md <원고.md> [--profile ...] [--out
     의심쪽만 90dpi PNG. exit 0 이라도 결함 수는 JSON 에.
 python <this>/scripts/build_hwpx.py --demo
 ```
+
+코어 인계: 승인된 `report.md`의 HWPX용 사본에서 부 헤딩을 `# Ⅰ. Executive Summary` 형식으로 수동 매핑하고 하위 축은 그 아래 유지한다(원문·F-ID·부록 마커 보존).
+Ⅰ Executive Summary · Ⅱ 조사 개요 · Ⅲ 테마별 본론 · Ⅳ 시장 수치 종합 · Ⅴ 플레이어·경쟁 구도 · Ⅵ 검증 요약 · Ⅶ 상충·모순 · Ⅷ 상태 변화·주의 · Ⅸ 한계와 반론 · Ⅹ 한눈 요약표 + 조사팀 인사이트 · Ⅺ 부록. 부 0 표지·메타는 서문으로 둔다.
+split 전 `python <this>/scripts/build_hwpx.py outline <HWPX용.md>`로 승인 목차의 순서·11부를 확인하고 해당 없음도 승인된 부 헤딩 아래 명시한다.
+`python <this>/scripts/build_hwpx.py split <HWPX용.md> --out manuscript --expect-parts 11`로 확인된 사본을 분할한다. 헤딩 변환은 사람·빌더의 원고 계약이며 자동 변환하지 않는다.
 
 ### ② 정합성 검토 (코디네이터)
 

@@ -311,6 +311,45 @@ class HwpxTests(unittest.TestCase):
         self.assertEqual(len(by_name["Ⅲ_나.md"]["titles"]), 1)
         self.assertEqual(by_name["Ⅲ_나.md"]["titles"][0]["text"], "Ⅲ. 나")
 
+    def test_split_rejects_no_parts_and_count_mismatch_before_writing(self) -> None:
+        report = self.tmp / "core.md"
+        out_dir = self.tmp / "split-failure"
+        cases = [
+            ("# Executive Summary\n본문\n## 조사 개요\n본문\n", [], "로마숫자 부 헤딩 0개"),
+            ("# Ⅰ. 요약\n본문\n", ["--expect-parts", "11"], "부 수 불일치"),
+            ("# Ⅰ. 요약\n본문\n", ["--expect-parts", "0"], "부 수 불일치"),
+            ("# Ⅰ. 요약\nA\n# Ⅰ. 요약\nB\n", ["--expect-parts", "2"], "파일명 중복"),
+        ]
+        for text, args, message in cases:
+            with self.subTest(message=message, args=args):
+                report.write_text(text, encoding="utf-8")
+                result = _run("build_hwpx.py", "split", str(report), "--out", str(out_dir), *args)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(message, result.stderr)
+                self.assertFalse(out_dir.exists(), "오류가 있는 원고는 출력 전에 거부")
+        out_dir.mkdir()
+        existing = out_dir / "00_서문.md"
+        existing.write_bytes(b"previous output")
+        report.write_text("# Executive Summary\n본문", encoding="utf-8")
+        result = _run("build_hwpx.py", "split", str(report), "--out", str(out_dir))
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(existing.read_bytes(), b"previous output")
+
+    def test_split_core_eleven_parts_excludes_preface(self) -> None:
+        report = self.tmp / "core-mapped.md"
+        roman = "ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪ"
+        report.write_text("표지 메타\n\n" + "\n".join(
+            f"## {key}. 장\n본문 {key}\n### 하위 축\n축 본문\n" for key in roman), encoding="utf-8")
+        out_dir = self.tmp / "eleven-parts"
+        result = _run("build_hwpx.py", "split", str(report), "--out", str(out_dir), "--expect-parts", "11")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(len(list(out_dir.glob("*.md"))), 12)
+        self.assertEqual((out_dir / "00_서문.md").read_text(encoding="utf-8").strip(), "표지 메타")
+        for key in roman:
+            body = (out_dir / f"{key}_장.md").read_text(encoding="utf-8")
+            self.assertTrue(body.startswith(f"# {key}. 장\n"))
+            self.assertIn("## 하위 축", body)
+
     def test_03_form_probe(self) -> None:
         r = _run(
             "form_probe.py", str(TEMPLATE),

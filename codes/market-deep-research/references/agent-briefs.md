@@ -15,6 +15,9 @@
 ```
 
 ## 반환 마커 (팀리드가 기계 파싱)
+EVIDENCE/CLAIMS/EXPAND/FIGURES/인사이트/요약은 모두 필수이며 결과가 없으면 `없음`을 적는다.
+부분 실패는 첫 줄 `BLOCKED: 사유`로 표시한다. 누락 섹션은 이때만 허용하며, 반환된 행의 오류는 여전히 invalid다.
+F/E-ID는 워커 파일 안에서만 유효한 잠정 ID다. `join_workers.py`의 파일별 재매핑 표(`central_id: null`)를 팀리드가 `add_fact`/`add_evidence` 반환 ID로 채우고 인사이트의 F-ID 참조까지 치환한다.
 ```
 ## EVIDENCE (JSONL)
 {"fact": {...}, "evidence": [{...}]}      # assets/facts-schema.json 준수. status=pending 로.
@@ -52,6 +55,9 @@
 않으며, 실제 수확·검증은 팀리드가 `harvest_images.py` 로 수행한다. 후보가 0건이어도 섹션을
 생략하지 말고 `## FIGURES` 아래 `없음`이라고 적는다 — 섹션 누락과 탐색했으나 없음은 다른
 상태이기 때문이다.
+
+EXPAND의 `AXIS`+정규화 LEAD 텍스트 지문과 같은 URL 지문은 중복 후보를 찾는 보조 신호다.
+이름만 바뀐 재제출도 URL로 비교하되 완전 동등성·이전 웨이브 대비 신규 여부는 팀리드가 판단한다.
 
 ## 철칙 (절대)
 - **원문 미확인 수치는 폐기**(추정 금지). 무출처 주장은 CLAIM 에 올리되 SOURCES 없음으로 표시 → 팀리드가 `discarded`.

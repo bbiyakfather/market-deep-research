@@ -20,9 +20,13 @@ iOS 지문 등)가 전부 그 위에 얹혀 있다. 요구사항 확정(유형·
 ## G1 join + 수집 게이트
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
 (위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록).
+등재 전 `python scripts/join_workers.py <raw1.md> <raw2.md> --out audit/join-results.json`을 실행하고 G1 영수증 refs에 그 결과 파일을 포함한다. invalid는 수정 후 재검증하고 blocked는 부분 실패로 기록한다.
+파일별 잠정 ID 재매핑 표를 보존하고 `add_fact`/`add_evidence`의 중앙 ID로 채운 뒤 인사이트 참조도 치환한다. 기존 claim_key와 같으면 기존 fact에 `add_evidence`로 명시 병합한다.
+무신규 웨이브 판정은 **ok 워커의 EXPAND 기준**이며 blocked/invalid를 무신규로 세지 않는다. 지문은 중복 후보 신호이고 신규 여부의 최종 판단은 팀리드가 한다.
 v3 기존 claim_key는 legacy로 그대로 인정하며 자동 재작성하지 않는다. v3 신규 행도 기존 산식을 유지한다.
 v4 신규 등재부터 context의 metric/entity/entity_id/geography/period/basis/scenario/definition JSON SHA-256 키를 재계산·대조한다. v3→v4 전환 시 키 재계산과 [2] 이후 재검증이 필요하다.
 evidence는 한 fact에만 속한다. G3는 모든 상태의 F→E 존재·E.fact_id 일치·E→F 존재와 역방향 목록 포함을 검사하며 신규 역참조 위반은 v4 FAIL/v3 WARN이다.
+FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노출한다. 단일 writer의 두 번째 저장 실패는 evidence pre-image로 롤백하며 프로세스 강제 종료 복구는 보장하지 않는다.
 
 ## [2] 팀리드 재검증(전건) + [Bx] claim-graph
 - 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람 →

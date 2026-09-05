@@ -6,7 +6,7 @@
 
 실행:
     python build_hwpx.py build <원고.md> --template <양식.hwpx> [--profile navion-2026] [--out out.hwpx]
-    python build_hwpx.py split <report.md> --out <dir>
+    python build_hwpx.py split <report.md> --out <dir> [--expect-parts N]
     python build_hwpx.py outline <md> [<md> ...] [--json]
     python build_hwpx.py --demo
 """
@@ -68,7 +68,7 @@ TD_LINE = 1600
 CELL_VPAD = 282
 
 # report.md 의 로마숫자 부는 `# Ⅰ.` 또는 `## Ⅰ.` 로 온다. 그룹 1 = 해시.
-CHAPTER_RE = re.compile(r"^(#{1,2})\s+([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+)\.\s*(.+)$")
+CHAPTER_RE = re.compile(r"^(#{1,2})\s+([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ]+)\.\s*(.+)$")
 # ## 부로 잘린 모듈만 제목을 한 단계 올린다 (##→#, ###→##, … #####→####).
 HEADING_PROMOTE_RE = re.compile(r"^(#{2,5})(\s+.*)$")
 
@@ -584,8 +584,8 @@ def _promote_headings(lines: list[str]) -> list[str]:
     return out
 
 
-def split_report(md_path: Path, out_dir: Path) -> list[Path]:
-    """최상위 로마숫자 제목 단위로 md 를 나눈다."""
+def split_report(md_path: Path, out_dir: Path, expect_parts: int | None = None) -> list[Path]:
+    """로마숫자 부 수를 검증한 뒤 분할한다. 서문은 기대 부 수에 포함하지 않는다."""
     md_path = Path(md_path)
     out_dir = Path(out_dir)
     text = md_path.read_text(encoding="utf-8")
@@ -607,6 +607,15 @@ def split_report(md_path: Path, out_dir: Path) -> list[Path]:
             buf.append(line)
     parts.append((key, title, buf, promote))
 
+    chapters = [part for part in parts if part[0] is not None]
+    if not chapters:
+        raise ValueError("로마숫자 부 헤딩 0개: mdr-hwpx/SKILL.md의 코어 11부 목차 → "
+                         "로마숫자 부 변환 절차를 따라 # Ⅰ. 제목 ~ # Ⅺ. 부록으로 매핑하세요.")
+    if expect_parts is not None and (expect_parts < 1 or len(chapters) != expect_parts):
+        raise ValueError(f"부 수 불일치: 기대 {expect_parts}, 실제 {len(chapters)} (서문 제외)")
+    names = [f"{part[0]}_{_safe_title(part[1])}.md" for part in chapters]
+    if len(names) != len(set(names)):
+        raise ValueError("분할 파일명 중복: 부 번호·제목을 확인하세요")
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
     for key, title, buf, promote in parts:
@@ -777,7 +786,11 @@ def _cmd_split(args: argparse.Namespace) -> int:
     if not md.exists():
         print(f"원고 없음: {md}")
         return 1
-    written = split_report(md, Path(args.out))
+    try:
+        written = split_report(md, Path(args.out), expect_parts=args.expect_parts)
+    except ValueError as exc:
+        print(f"분할 실패: {exc}", file=sys.stderr)
+        return 1
     for p in written:
         first = p.read_text(encoding="utf-8").splitlines()[:1]
         print(f"{p.name}\t{first[0] if first else ''}")
@@ -817,6 +830,7 @@ def main(argv: list[str] | None = None) -> int:
     p_split = sub.add_parser("split", help="report.md 를 로마숫자 부로 분할")
     p_split.add_argument("md")
     p_split.add_argument("--out", required=True)
+    p_split.add_argument("--expect-parts", type=int, help="기대 로마숫자 부 수(서문 제외)")
     p_split.set_defaults(func=_cmd_split)
 
     p_outl = sub.add_parser("outline", help="제목 트리·표/그림 캡션 요약")

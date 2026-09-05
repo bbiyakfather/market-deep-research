@@ -47,7 +47,8 @@ from urllib.parse import unquote, urlsplit
 
 import manifest
 import gates
-from facts_db import (FactsDB, ValidationError, check_capture_path, load_schema,
+from facts_db import (_read_jsonl, check_ledger_references, evidence_ids as _evidence_ids,
+                       ValidationError, check_capture_path, load_schema,
                        validate_evidence, validate_fact, validate_capture_review, valid_iso_time)
 from skill_paths import WorkPaths
 
@@ -469,11 +470,6 @@ def _text_present(value) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
-def _evidence_ids(fact: dict) -> list[str]:
-    value = fact.get("evidence_ids")
-    return [eid for eid in value if isinstance(eid, str)] if isinstance(value, list) else []
-
-
 def _independent_observers(fact: dict, evidence: dict) -> int:
     """원출처/보도자료만 관찰로 계산. 동일 그룹·원문 URL·해시는 같은 관찰로 병합한다."""
     observations = []
@@ -547,26 +543,9 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
         except ValidationError as ex:
             failures.append(f"[대장무결성] {eid}: {ex}")
 
-    # evidence는 정확히 한 fact에 속한다. 모든 상태·원시행의 양방향 참조를 확인한다.
-    for f in facts_raw:
-        if not isinstance(f, dict):
-            continue
-        for eid in _evidence_ids(f):
-            ev = seen_eid.get(eid)
-            strict = f.get("schema_version") == 4 or (ev or {}).get("schema_version") == 4
-            if ev is None:
-                (failures if strict else warnings).append(f"[증거유실] {f['id']} → {eid} 없음")
-            elif ev.get("fact_id") != f["id"]:
-                (failures if strict else warnings).append(
-                    f"[증거역참조] {f['id']} → {eid}의 fact_id={ev.get('fact_id')}")
-    for ev in evidence_raw:
-        if not isinstance(ev, dict):
-            continue
-        fact = seen_fid.get(ev.get("fact_id")) if isinstance(ev.get("fact_id"), str) else None
-        strict = ev.get("schema_version") == 4 or (fact or {}).get("schema_version") == 4
-        if fact is None or ev["id"] not in _evidence_ids(fact):
-            (failures if strict else warnings).append(
-                f"[증거역참조] {ev['id']} → {ev.get('fact_id')} 없거나 fact.evidence_ids에서 누락")
+    ref_failures, ref_warnings = check_ledger_references(facts_raw, evidence_raw)
+    failures += ref_failures
+    warnings += ref_warnings
 
     for fid, f in facts.items():
         if f.get("status") == "confirmed" and fid not in used:
@@ -1004,9 +983,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
         raise ValueError("[계획경로] custom plan은 check_only 진단 전용 — audit/research-plan.md 사용 필요")
     md = Path(report_md).read_text(encoding="utf-8")
     body, _appendix = split_body_appendix(md)
-    db = FactsDB(work)
-    facts_raw = db.facts()
-    evidence_raw = db.evidence()
+    # G3는 로드 예외로 중단하지 않고 아래 공통 참조 검사 결과를 FAIL/WARN 보고서에 합친다.
+    facts_raw = _read_jsonl(wp.facts)
+    evidence_raw = _read_jsonl(wp.evidence)
     facts = {f["id"]: f for f in facts_raw if isinstance(f, dict) and isinstance(f.get("id"), str)}
     evidence = {e["id"]: e for e in evidence_raw if isinstance(e, dict) and isinstance(e.get("id"), str)}
     wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
@@ -1039,8 +1018,9 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     li_fail, li_warn = check_ledger_integrity(facts, used, facts_raw, evidence_raw, wp)
     failures += li_fail
     warnings += li_warn
-    if any("[대장무결성]" in issue and "타입 오류" in issue for issue in li_fail):
-        # 잘못된 v4 타입을 수치/계산/주장 검사에 넘겨 예외로 중단하지 않는다.
+    if any(("[대장무결성]" in issue and "타입 오류" in issue)
+           or issue.startswith(("[증거유실]", "[증거역참조]")) for issue in li_fail):
+        # 잘못된 v4 타입/참조를 대장을 다시 로드하는 계산·주장 검사에 넘기지 않고 FAIL로 보고한다.
         return {"ok": False, "failures": failures, "warnings": warnings,
                 "stats": {"facts": len(facts), "evidence": len(evidence), "body_tags": len(used)}}
 

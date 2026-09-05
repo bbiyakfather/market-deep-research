@@ -105,7 +105,7 @@ def build_index(work_dir: Path | str) -> list[dict]:
     src = WorkPaths(work_dir).sources
     if not src.is_dir():
         return []
-    rows_by_sha: dict[str, dict] = {}
+    rows_by_sha: dict[str, list[dict]] = {}
     for meta_path in sorted(src.glob("*.meta.json")):
         sha12 = meta_path.name.removesuffix(".meta.json")
         try:
@@ -113,13 +113,21 @@ def build_index(work_dir: Path | str) -> list[dict]:
         except (OSError, ValueError, TypeError):
             continue
         if isinstance(meta, dict):
-            rows_by_sha[sha12] = _row_from_meta(sha12, meta, src)
+            history = meta.get("urls")
+            records = [r for r in history if isinstance(r, dict)] if isinstance(history, list) else []
+            records = records or [meta]  # urls 없는 기존 sidecar 호환
+            by_url = {}
+            for record in records:
+                row = _row_from_meta(sha12, {**meta, **record}, src)
+                by_url[row.get("url") or row.get("final_url")] = row
+            shared_urls = sorted(url for url in by_url if url)
+            rows_by_sha[sha12] = [{**row, "shared_urls": shared_urls} for row in by_url.values()]
     for raw_path in sorted(src.glob("*_raw.*")):
         sha12 = raw_path.name.split("_raw.", 1)[0]
         if not sha12 or sha12 in rows_by_sha:
             continue
-        rows_by_sha[sha12] = _row_from_files(sha12, raw_path, src)
-    rows = list(rows_by_sha.values())
+        rows_by_sha[sha12] = [_row_from_files(sha12, raw_path, src)]
+    rows = [row for group in rows_by_sha.values() for row in group]
     rows.sort(key=lambda r: (r.get("accessed_at") or "", r.get("sha12") or ""))
     for i, row in enumerate(rows, 1):
         row["n"] = i
@@ -170,17 +178,20 @@ def write_markdown(rows: list[dict], out_path: Path | str, topic: str | None = N
         f"- 생성시각: {_now()}",
         f"- 건수: {len(rows)}",
         "",
-        "| 번호 | 제목 | 발행처 | 접근일 | URL | sha256 | 로컬 | 상태 |",
-        "|---|---|---|---|---|---|---|---|",
+        "| 번호 | 제목 | 발행처 | 접근일 | URL | sha256 | 로컬 | 상태 | 동일 본문 URL 집합 |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         final = row.get("final_url") or row.get("url") or ""
         url_cell = f"[{_md_cell(final)}]({final})" if final else "—"
+        if row.get("url") and row["url"] != final:
+            url_cell = f"{_md_cell(row['url'])} → {url_cell}"
+        shared_cell = _md_cell(" · ".join(row.get("shared_urls", [])))
         accessed = (row.get("accessed_at") or "")[:10]
         lines.append(
             f"| {row['n']} | {_md_cell(row.get('title'))} | {_md_cell(row.get('publisher'))} | "
             f"{_md_cell(accessed)} | {url_cell} | `{row.get('sha12') or ''}` | "
-            f"{_md_cell(row.get('local'))} | {_md_cell(row.get('status'))} |"
+            f"{_md_cell(row.get('local'))} | {_md_cell(row.get('status'))} | {shared_cell} |"
         )
     lines.append("")
     for row in rows:
