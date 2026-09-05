@@ -1,6 +1,7 @@
 # agent-briefs — 서브에이전트 프롬프트·반환 마커·철칙
 
-조사원(explorer) 서브에이전트는 **sonnet·background**로 팬아웃한다. 워커는 **읽기전용**:
+조사원(explorer) 서브에이전트는 **sonnet·background**로 팬아웃한다. 판단이 필요 없는
+기계적 후속 웨이브(확정 리드의 fetch+스키마 구조화만)는 haiku 로 내려도 된다. 워커는 **읽기전용**:
 자기 `_research/<agent>/` 임시폴더의 raw 만 쓰고, 공식 대장(facts.jsonl 등)은 **오케스트레이터
 (팀리드)만** 기록한다. 워커는 아래 마커로 반환하고, 팀리드가 파싱해 등재·확장한다.
 
@@ -8,7 +9,8 @@
 ```
 1. TASK: <역할> + <축 이름>(`report-format.md` 축 프리셋 참조 — 여기서 새 축 이름을 짓지 않는다, 한 줄)
 2. 범위: <대상/기간/지역/축별 충분조건>
-3. 프로토콜: search.py/fetch.py 사다리 사용 + 내장 WebSearch 병행. 원문 확보 후 evidence 스키마로 구조화.
+3. 프로토콜: search.py/fetch.py 사다리 사용 + 내장 WebSearch 병행(WebSearch/WebFetch 가
+   도구 목록에 없으면 deferred — ToolSearch 로 먼저 로드). 원문 확보 후 evidence 스키마로 구조화.
 4. 반환: 아래 마커 블록(JSONL + CLAIMS + EXPAND + FIGURES + 인사이트/요약)
 ```
 
@@ -57,4 +59,6 @@
 - **귀속처 명시**: 누가 발표/집계했는지(`source_role`: 원출처/재인용/보도자료). 같은 보도자료 재전재는 독립 아님 → 같은 `observer_group`.
 - **high-risk 주장**(시장규모·성장률·딜규모·순위)은 COUNTER(반박검색) 1회를 반드시 시도.
 - 표는 page/row/col, API 는 endpoint/param/JSON 해시로 locator 결박.
-- 장기 워커는 `WORKING: <작업>-<단계>` 정기 전송, `BLOCKED: <이유>` 즉시 전송.
+- 실행 중 팀리드로의 중간 전송 채널은 없다(서브에이전트는 완료 시 최종 보고 하나만 반환).
+  막히면 질문하지 말고 `BLOCKED: <이유>` 를 최종 보고 맨 앞줄에 적고 종료한다 — 그때까지
+  수집한 마커 블록은 빈손으로 버리지 말고 그대로 반환.
