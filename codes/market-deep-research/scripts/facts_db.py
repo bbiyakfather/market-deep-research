@@ -19,7 +19,7 @@ import os
 import re
 import sys
 import tempfile
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
@@ -55,8 +55,9 @@ def _check_required(obj: dict, required: list[str], where: str):
 
 
 def _lead_reread_events(fact: dict) -> list[dict]:
-    return [e for e in (fact.get("verify_events") or [])
-            if e.get("by") == "lead" and e.get("action") == "reread"]
+    events = fact.get("verify_events")
+    return [e for e in events if isinstance(e, dict)
+            and e.get("by") == "lead" and e.get("action") == "reread"] if isinstance(events, list) else []
 
 
 def schema_version(record: dict) -> int:
@@ -72,44 +73,86 @@ def is_v4_work(facts: list[dict], evidence: list[dict] = ()) -> bool:
     return any(r.get("schema_version") == 4 for r in [*facts, *evidence])
 
 
-def _check_properties(obj: dict, spec: dict, enums: dict, where: str) -> None:
-    """v4 중첩 필드의 실제 타입·enum·해시·필수를 스키마에서 읽어 검사한다."""
-    if not isinstance(obj, dict):
-        raise ValidationError(f"{where}: 객체가 아님")
-    for key in spec.get("required", []):
-        if key not in obj or obj[key] is None:
-            raise ValidationError(f"{where}: 필수 필드 '{key}' 누락")
+def valid_iso_time(value, *, timestamp: bool = False) -> bool:
+    """시점은 YYYY / YYYY-MM / YYYY-MM-DD / ISO datetime, 이벤트는 datetime만 허용."""
+    if not isinstance(value, str) or not value.strip() or value != value.strip():
+        return False
+    try:
+        if not timestamp:
+            if re.fullmatch(r"\d{4}", value):
+                date(int(value), 1, 1)
+                return True
+            if re.fullmatch(r"\d{4}-\d{2}", value):
+                date.fromisoformat(value + "-01")
+                return True
+            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+                date.fromisoformat(value)
+                return True
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?", value):
+            return False
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return True
+    except ValueError:
+        return False
+
+
+def _check_properties(obj, spec: dict, enums: dict, where: str) -> None:
+    """객체·배열 item에 같은 스키마 검증을 재귀 적용한다. bool은 number가 아니다."""
     kinds = {"string": lambda v: isinstance(v, str), "integer": lambda v: type(v) is int,
              "number": lambda v: type(v) in (int, float), "boolean": lambda v: type(v) is bool,
              "object": lambda v: isinstance(v, dict), "array": lambda v: isinstance(v, list),
              "null": lambda v: v is None}
-    for key, val in obj.items():
-        rule = spec.get("properties", {}).get(key)
-        if rule is None:
-            if spec.get("additionalProperties") is False:
-                raise ValidationError(f"{where}: 알 수 없는 필드 '{key}'")
-            continue
-        field = f"{where}.{key}"
-        types = rule.get("type", [])
-        types = [types] if isinstance(types, str) else types
-        if types and not any(kinds[t](val) for t in types):
-            raise ValidationError(f"{field}: 타입 오류({types})")
-        if "enum_ref" in rule:
-            _check_enum(val, rule["enum_ref"], enums, field)
-        if "enum" in rule and val not in rule["enum"]:
-            raise ValidationError(f"{field}: 허용값 {rule['enum']} 아님")
-        if rule.get("minLength") and len(val) < rule["minLength"]:
-            raise ValidationError(f"{field}: 빈 문자열 불가")
-        if rule.get("pattern") and not re.fullmatch(rule["pattern"], str(val)):
-            raise ValidationError(f"{field}: 형식 오류")
-        if rule.get("format") == "decimal":
-            try:
-                if not Decimal(str(val)).is_finite():
-                    raise InvalidOperation
-            except (InvalidOperation, ValueError):
-                raise ValidationError(f"{field}: 유한 Decimal 값이 아님") from None
-        if isinstance(val, dict):
-            _check_properties(val, rule, enums, field)
+    types = spec.get("type", "object" if "properties" in spec else [])
+    types = [types] if isinstance(types, str) else types
+    if types and not any(kinds[t](obj) for t in types):
+        raise ValidationError(f"{where}: 타입 오류({types})")
+    if "enum_ref" in spec:
+        _check_enum(obj, spec["enum_ref"], enums, where)
+    if "enum" in spec and obj not in spec["enum"]:
+        raise ValidationError(f"{where}: 허용값 {spec['enum']} 아님")
+    if obj is None:
+        return
+    if isinstance(obj, str):
+        if (not obj.strip() and not spec.get("allowEmpty")) or len(obj) < spec.get("minLength", 0):
+            raise ValidationError(f"{where}: 공백/빈 문자열 불가")
+    if spec.get("pattern") and not re.fullmatch(spec["pattern"], str(obj)):
+        raise ValidationError(f"{where}: 형식 오류")
+    fmt = spec.get("format")
+    if fmt in ("iso-time", "date-time") and not valid_iso_time(obj, timestamp=fmt == "date-time"):
+        raise ValidationError(f"{where}: ISO 날짜/시각 형식 오류")
+    if fmt == "decimal" or type(obj) in (int, float):
+        try:
+            if not Decimal(str(obj)).is_finite():
+                raise InvalidOperation
+        except (InvalidOperation, ValueError):
+            raise ValidationError(f"{where}: 유한 Decimal 값이 아님") from None
+    if isinstance(obj, list):
+        if len(obj) < spec.get("minItems", 0):
+            raise ValidationError(f"{where}: 빈 배열 불가")
+        for index, item in enumerate(obj):
+            _check_properties(item, spec.get("items", {}), enums, f"{where}[{index}]")
+    if isinstance(obj, dict):
+        for key in spec.get("required", []):
+            if key not in obj or obj[key] is None:
+                raise ValidationError(f"{where}: 필수 필드 '{key}' 누락")
+        for key, val in obj.items():
+            rule = spec.get("properties", {}).get(key)
+            if rule is None:
+                if spec.get("additionalProperties") is False:
+                    raise ValidationError(f"{where}: 알 수 없는 필드 '{key}'")
+                continue
+            _check_properties(val, rule, enums, f"{where}.{key}")
+
+
+def _check_record(record: dict, spec: dict, enums: dict, where: str,
+                  warnings: list[str] | None) -> None:
+    try:
+        _check_properties(record, spec, enums, where)
+    except ValidationError as exc:
+        if schema_version(record) == 4:
+            raise
+        if warnings is not None:
+            warnings.append(f"[legacy스키마] {record.get('id')}: {exc}")
 
 
 def validate_capture_review(review: dict, schema: dict | None = None) -> None:
@@ -121,13 +164,15 @@ def validate_capture_review(review: dict, schema: dict | None = None) -> None:
         raise ValidationError("capture_review: accept는 content + 주장·문맥 확인이 필요")
 
 
-def validate_fact(fact: dict, schema: dict | None = None) -> dict:
+def validate_fact(fact: dict, schema: dict | None = None, *, warnings: list[str] | None = None) -> dict:
     schema = schema or load_schema()
     enums = schema["enums"]
     spec = schema["fact"]
+    _check_record(fact, spec, enums, "fact", warnings)
     if schema_version(fact) == 4:
-        _check_properties(fact, spec, enums, "fact")
         _check_required(fact, ["claim_type"], "fact v4")
+        if fact.get("claim_key") != make_claim_key(fact["context"]):
+            raise ValidationError("fact.claim_key: context 재계산 불일치")
         if fact.get("risk") == "high":
             from verify_calculations import is_calculation_candidate, ATOMIC_INPUTS
             if is_calculation_candidate(fact) and not any(
@@ -143,15 +188,17 @@ def validate_fact(fact: dict, schema: dict | None = None) -> dict:
     if not (isinstance(fid, str) and fid.startswith("F") and fid[1:].isdigit() and len(fid) >= 4):
         raise ValidationError(f"fact.id 형식 오류: {fid!r} (F### 이상)")
 
-    _check_required(fact["context"], spec["properties"]["context"]["required"], "fact.context")
-    _check_required(fact["value"], spec["properties"]["value"]["required"], "fact.value")
-    _check_required(fact["grade"], spec["properties"]["grade"]["required"], "fact.grade")
+    # v3 타입 경고가 다른 필드의 기존 필수 조건(특히 confirmed)을 면제하지 않도록 계속 검사한다.
+    for key in ("context", "value", "grade"):
+        if isinstance(fact[key], dict):
+            _check_required(fact[key], spec["properties"][key]["required"], f"fact.{key}")
 
-    for dim in ("authority", "independence", "directness", "recency"):
-        _check_enum(fact["grade"][dim], "grade", enums, f"fact.grade.{dim}")
+    if isinstance(fact["grade"], dict):
+        for dim in ("authority", "independence", "directness", "recency"):
+            _check_enum(fact["grade"][dim], "grade", enums, f"fact.grade.{dim}")
     _check_enum(fact["risk"], "risk", enums, "fact.risk")
     _check_enum(fact["status"], "status", enums, "fact.status")
-    b = fact["context"].get("basis")
+    b = fact["context"].get("basis") if isinstance(fact["context"], dict) else None
     if b:
         _check_enum(b, "basis", enums, "fact.context.basis")
 
@@ -169,7 +216,7 @@ def validate_fact(fact: dict, schema: dict | None = None) -> dict:
             raise ValidationError(f"{fid}: confirmed 인데 팀리드(lead) reread verify_event 없음")
         # G4: status 전이 무제약 차단 — 반박이 기록됐거나 폐기 사유가 남은 채로,
         # 또는 강등 이후 새 lead 재검증 없이 confirmed 로 (재)승급하는 것을 막는다.
-        cs = fact.get("counter_search") or {}
+        cs = fact.get("counter_search") if isinstance(fact.get("counter_search"), dict) else {}
         if cs.get("found_stronger_refutation"):
             raise ValidationError(f"{fid}: 더 강한 반박(counter_search)이 기록된 채 confirmed 불가")
         if fact.get("discard_reason"):
@@ -202,12 +249,13 @@ def check_capture_path(capture: str, work: WorkPaths | None = None) -> str | Non
     return None
 
 
-def validate_evidence(ev: dict, schema: dict | None = None, work: WorkPaths | None = None) -> dict:
+def validate_evidence(ev: dict, schema: dict | None = None, work: WorkPaths | None = None, *,
+                      warnings: list[str] | None = None) -> dict:
     schema = schema or load_schema()
     enums = schema["enums"]
     spec = schema["evidence"]
+    _check_record(ev, spec, enums, "evidence", warnings)
     if schema_version(ev) == 4:
-        _check_properties(ev, spec, enums, "evidence")
         if ev.get("capture") and "capture_review" not in ev:
             raise ValidationError(f"{ev.get('id')}: v4 capture는 capture_review 필수")
         if "capture_review" in ev:
@@ -234,6 +282,14 @@ def validate_evidence(ev: dict, schema: dict | None = None, work: WorkPaths | No
 
 # --- claim_key ---------------------------------------------------------------
 def make_claim_key(context: dict) -> str:
+    """v4 키: 식별자·정의를 포함한 무손실 JSON의 SHA-256. null과 문자열도 구분한다."""
+    fields = ("metric", "entity", "entity_id", "geography", "period", "basis", "scenario", "definition")
+    payload = json.dumps([context.get(k) for k in fields], ensure_ascii=False, separators=(",", ":"))
+    return "v4:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _legacy_claim_key(context: dict) -> str:
+    """기존 v3 생성 산식은 이행 중 그대로 유지한다."""
     def norm(v):
         return str(v).strip().replace("|", "/") if v not in (None, "") else "na"
     parts = [context.get("metric"), context.get("entity"), context.get("geography"),
@@ -290,7 +346,12 @@ class FactsDB:
     def add_fact(self, fact: dict) -> dict:
         """검증 후 원자적 등재. id 없으면 부여. 같은 claim_key 있으면 예외(merge 는 명시적으로)."""
         rows = self.facts()
-        fact.setdefault("claim_key", make_claim_key(fact.get("context", {})))
+        if not isinstance(fact.get("context", {}), dict):
+            raise ValidationError("fact.context: 타입 오류(object)")
+        key = (make_claim_key if schema_version(fact) == 4 else _legacy_claim_key)(fact.get("context", {}))
+        if schema_version(fact) == 4 and "claim_key" in fact and fact["claim_key"] != key:
+            raise ValidationError("fact.claim_key: context 재계산 불일치")
+        fact.setdefault("claim_key", key)
         fact.setdefault("id", self._next_id(rows, "F"))
         fact.setdefault("status", "pending")
         fact.setdefault("evidence_ids", [])
@@ -300,7 +361,7 @@ class FactsDB:
             raise ValidationError(f"중복 fact.id: {fact['id']}")
         if any(r.get("claim_key") == fact["claim_key"] for r in rows):
             raise ValidationError(
-                f"동일 claim_key 존재: {fact['claim_key']} → merge_evidence/set_status 사용")
+                f"동일 claim_key 존재: {fact['claim_key']} → 기존 fact에 add_evidence로 증거 추가")
         rows.append(fact)
         _write_jsonl_atomic(self.wp.facts, rows)
         return fact
@@ -361,11 +422,13 @@ class FactsDB:
 
 
 def confirmed_digest(rows: list[dict]) -> str:
-    """[2] 영수증 결박용 투영: confirmed 행의 id·value(raw/unit)·lead reread 이벤트(at, reread_sha256) 만.
+    """v3 기존 confirmed 투영을 보존하고 v4의 confirmed/disputed 주장·맥락·원자값을 결박한다.
     evidence_ids·claim-graph 필드는 [2] 이후 G2·[Bx] 가 정상적으로 바꾸므로 제외(D4)."""
     proj = []
-    for r in sorted((r for r in rows if r.get("status") == "confirmed"), key=lambda r: r.get("id", "")):
-        v = r.get("value") or {}
+    for r in sorted((r for r in rows if r.get("status") == "confirmed" or
+                     (r.get("schema_version") == 4 and r.get("status") == "disputed")),
+                    key=lambda r: r.get("id", "")):
+        v = r.get("value") if isinstance(r.get("value"), dict) else {}
         ev = sorted((e.get("at") or "", str(e.get("reread_sha256") or "").lower())
                     for e in _lead_reread_events(r))
         row = [r.get("id"), v.get("raw"), v.get("unit"), ev]
@@ -373,6 +436,8 @@ def confirmed_digest(rows: list[dict]) -> str:
             # 원자화 값·조건·문장 유형 변경도 재검토 대상. v3의 기존 투영은 그대로 보존한다.
             row.append({"schema_version": 4, "value": v, "claim": r.get("claim"),
                         "context": r.get("context"), "claim_type": r.get("claim_type")})
+            if r.get("status") == "disputed":
+                row[-1]["status"] = "disputed"  # 기존 v4 confirmed 다이제스트는 유지한다.
         proj.append(row)
     return hashlib.sha256(json.dumps(proj, ensure_ascii=False, sort_keys=True,
                                      separators=(",", ":")).encode("utf-8")).hexdigest()
@@ -381,8 +446,15 @@ def confirmed_digest(rows: list[dict]) -> str:
 # --- 재조사 diff (claim_key 기준) --------------------------------------------
 def diff_facts(old_path: Path | str, new_path: Path | str) -> dict:
     """이전/현재 facts.jsonl 을 claim_key 로 정렬해 '수치 변동/정의 변동/신규/제거' 검출."""
-    old = {f.get("claim_key", f["id"]): f for f in _read_jsonl(Path(old_path))}
-    new = {f.get("claim_key", f["id"]): f for f in _read_jsonl(Path(new_path))}
+    def index(path):
+        rows = {}
+        for fact in _read_jsonl(Path(path)):
+            key = fact.get("claim_key", fact["id"])
+            if key in rows:
+                raise ValidationError(f"{path}: 중복 claim_key {key!r} — diff 입력 대장 정리 필요")
+            rows[key] = fact
+        return rows
+    old, new = index(old_path), index(new_path)
     report = {"value_changed": [], "definition_changed": [], "added": [], "removed": []}
     for k, nf in new.items():
         if k not in old:

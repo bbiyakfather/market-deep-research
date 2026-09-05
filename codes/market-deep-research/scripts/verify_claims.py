@@ -15,7 +15,7 @@ import gates
 from facts_db import (FactsDB, ValidationError, _read_jsonl, confirmed_digest, is_v4_work,
                       load_schema, schema_version)
 from skill_paths import WorkPaths
-from verify_facts import TAG, split_body_appendix, split_segments
+from verify_facts import DISPUTED_CONTEXT, TAG, split_body_appendix, split_segments
 
 FIELDS = {"sentence_id", "claim_type", "fact_ids", "evidence_ids", "support", "unsupported_terms",
           "required_qualification", "sentence_text", "reviewed_text_sha256", "evidence_revision"}
@@ -51,8 +51,14 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
     db = FactsDB(wp)
     facts, evidence = db.facts(), db.evidence()
     strict = is_v4_work(facts, evidence)
-    body, _ = split_body_appendix(Path(report_md).read_text(encoding="utf-8"))
-    sentences = tagged_sentences(body)
+    body, appendix = split_body_appendix(Path(report_md).read_text(encoding="utf-8"))
+    fact_map = {f["id"]: f for f in facts}
+    # 명시적으로 병기한 disputed 부록도 본문과 동일한 문장·해시·revision 검토를 받는다.
+    appendix_sentences = [s for s in tagged_sentences(appendix)
+                          if DISPUTED_CONTEXT.match(s) and any(
+                              fact_map.get(m.group(0).strip("()[]"), {}).get("status") == "disputed"
+                              for m in TAG.finditer(s))]
+    sentences = tagged_sentences(body) + appendix_sentences
     revision = confirmed_digest(facts)
     path = wp.audit / "claim-review.jsonl"
     issues, reviewed, ids = [], [], set()
@@ -62,7 +68,6 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
             schema_version(row)
         except ValidationError as exc:
             version_errors.append(str(exc))
-    fact_map = {f["id"]: f for f in facts}
     evidence_map = {e["id"]: e for e in evidence}
     if not path.is_file():
         issues.append("claim-review.jsonl 없음 — 문장별 의미 검토 필요")
@@ -83,8 +88,8 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
         if sid in ids:
             issues.append(f"{sid}: sentence_id 중복")
         ids.add(sid)
-        if sentence not in body:
-            issues.append(f"{sid}: 현재 본문에 sentence_text 없음 — 문장 변경 후 재검토 필요")
+        if sentence not in body and sentence not in appendix_sentences:
+            issues.append(f"{sid}: 현재 본문/상충 부록에 sentence_text 없음 — 문장 변경 후 재검토 필요")
         elif TAG.search(sentence) and sentence not in sentences:
             issues.append(f"{sid}: 문장 일부만 검토됨 — 표행/문장 전체 검토 필요")
         else:

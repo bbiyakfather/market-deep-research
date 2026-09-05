@@ -59,6 +59,10 @@ def _standalone_rects(page, rects: list, matched: str) -> list:
 def capture_number(pdf_path: Path | str, number: str, out_png: Path | str,
                    page_hint: int | None = None, zoom: float = 2.0, pad: int = 40) -> dict:
     out_png = Path(out_png)
+    if out_png.resolve() == Path(pdf_path).resolve():
+        raise ValueError("캡처 출력 경로는 원본 PDF와 달라야 합니다")
+    # 재시도 시작 시 이전 성공본을 무효화한다. 원본 열기/렌더 예외도 옛 PNG를 남기면 안 된다.
+    out_png.unlink(missing_ok=True)
     doc = fitz.open(str(pdf_path))
     try:
         pages = [page_hint - 1] if page_hint else range(doc.page_count)
@@ -158,6 +162,8 @@ if __name__ == "__main__":
     elif len(args) >= 3:
         pg = int(args[args.index("--page") + 1]) if "--page" in args else None
         import json
-        print(json.dumps(capture_number(args[0], args[1], args[2], pg), ensure_ascii=False))
+        result = capture_number(args[0], args[1], args[2], pg)
+        print(json.dumps(result, ensure_ascii=False))
+        sys.exit(0 if result["ok"] else 1)
     else:
         print(__doc__); sys.exit(2)

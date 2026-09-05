@@ -21,8 +21,8 @@ _FORECAST = re.compile(r"(?:19|20)\d{2}.*?(?:→|->|~|–|-|부터|to).*?(?:19|2
 
 
 def is_calculation_candidate(fact: dict) -> bool:
-    value = fact.get("value") or {}
-    context = fact.get("context") or {}
+    value = fact.get("value") if isinstance(fact.get("value"), dict) else {}
+    context = fact.get("context") if isinstance(fact.get("context"), dict) else {}
     text = " ".join(str(x) for x in (fact.get("claim", ""), value.get("raw", ""),
                                     context.get("metric", ""), context.get("period", "")))
     return (any(k in value for k in ATOMIC_INPUTS)
@@ -43,7 +43,7 @@ def _decimal(value) -> Decimal:
 
 def check_calculation(fact: dict) -> dict:
     """끝값 각각 ±반 최소표시단위. 다른 CAGR 기간은 억지로 같은 끝값에 적용하지 않는다."""
-    value = fact.get("value") or {}
+    value = fact.get("value") if isinstance(fact.get("value"), dict) else {}
     result = {"fact_id": fact.get("id"), "status": "NOT_CHECKABLE",
               "raw": value.get("raw"), "missing_fields": [
                   k for k in ATOMIC_INPUTS if value.get(k) in (None, "")]}

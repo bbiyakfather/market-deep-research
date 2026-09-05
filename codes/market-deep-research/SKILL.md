@@ -84,7 +84,7 @@ description: >-
 
 ### [Bx] 반박검색 + claim-graph 게이트  【v3-B】
 - 대상 = `risk:"high"` fact(시장규모·성장률·딜규모·순위 등 오류비용 큰 주장). 근거·순서는 `audit/verification-economics.md` 에 기록.
-- 검사: ① ≥2 **독립 관찰그룹**(재전재 제외) · ② **1회 능동 반박검색**(`counter_search.query`, 더 강한 반박 없음)은 본문 사용 confirmed high-risk에서 FAIL. ③ **기본소스**(`primary_source_ref`) · ④ **시간증거**(`observed_at` 또는 `valid_at`) 누락은 WARN. 본문 미사용은 ①~④ 모두 WARN(`verification-gates.md`).
+- 검사: v4 본문 사용 confirmed high-risk는 ① 연결 evidence에서 계산한 ≥2 **독립 관찰그룹**(재전재 제외) · ② **능동 반박검색**(실질 query·result와 더 강한 반박 없음) · ③ 실재 연결된 **기본소스**(`primary_source_ref`) · ④ 유효한 ISO **시간증거**(`observed_at` 또는 `valid_at`)가 전부 필수이며 미충족 시 FAIL. v3는 기존 ①② FAIL·③④ WARN, 본문 미사용은 네 요건 부족 모두 WARN을 유지한다(`verification-gates.md`).
 - 반박검색 산출물은 `negative_search` 증거유형으로 결박.
 
 ### [G2] 증빙 게이트

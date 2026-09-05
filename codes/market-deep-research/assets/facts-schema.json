@@ -20,7 +20,7 @@
     "properties": {
       "schema_version": {"type": "integer", "enum": [3, 4]},
       "claim_type": {"type": "string", "enum_ref": "claim_type"},
-      "claim_key": {"type": "string", "description": "안정적 diff 키. 'metric|entity|geo|period|basis|scenario' 조합. 순번(F001) 아님."},
+      "claim_key": {"type": "string", "description": "v4: metric/entity/entity_id/geography/period/basis/scenario/definition JSON SHA-256. v3 기존 키는 유지."},
       "id": {"type": "string", "pattern": "^F[0-9]{3,}$"},
       "claim": {"type": "string"},
       "context": {
@@ -32,7 +32,7 @@
           "entity_id": {"type": ["string", "null"], "description": "사업자/법인번호 등 동일성 식별자"},
           "geography": {"type": "string"},
           "period": {"type": "string"},
-          "as_of": {"type": ["string", "null"], "description": "자료 기준시점(공시월 등)"},
+          "as_of": {"type": ["string", "null"], "format": "iso-time", "description": "자료 기준시점(공시월 등)"},
           "basis": {"type": ["string", "null"], "enum_ref": "basis"},
           "scenario": {"type": ["string", "null"]},
           "definition": {"type": ["string", "null"], "description": "측정 정의(예: 연결기준 매출)"}
@@ -70,24 +70,37 @@
       "risk": {"enum_ref": "risk", "description": "high = claim-graph 게이트(반박검색·독립그룹) 적용 대상"},
       "status": {"enum_ref": "status"},
       "verified_by": {"type": ["string", "null"], "description": "'lead' 만 confirm 가능. verifier 단독 confirm 금지."},
-      "verify_events": {"type": "array", "description": "누적 검증 이벤트 [{by, at, action, note, reread_sha256(lead reread 필수)}]"},
-      "evidence_ids": {"type": "array"},
+      "verify_events": {
+        "type": "array", "items": {
+          "type": "object", "required": ["by", "at", "action"],
+          "properties": {
+            "by": {"type": "string"},
+            "at": {"type": "string", "format": "date-time"},
+            "action": {"type": "string"},
+            "note": {"type": "string", "allowEmpty": true},
+            "reread_sha256": {"type": "string", "pattern": "[0-9a-fA-F]{64}"}
+          }
+        }, "description": "누적 검증 이벤트. at은 ISO datetime, 빈 note는 허용."
+      },
+      "evidence_ids": {"type": "array", "items": {"type": "string", "pattern": "E[0-9]{3,}"}},
 
-      "independent_groups": {"type": "array", "description": "[v3-B] 독립 관찰그룹 라벨 목록. 재전재는 같은 그룹."},
+      "independent_groups": {"type": "array", "items": {"type": "string"}, "description": "관찰그룹 신고 목록. v4 독립성은 실제 연결 evidence에서 계산하며 이 배열만으로 인정하지 않음."},
       "counter_search": {
         "type": ["object", "null"],
         "description": "[v3-B] 능동 반박검색 결과",
+        "required": ["query", "result", "found_stronger_refutation"],
         "properties": {
           "query": {"type": "string"},
           "result": {"type": "string"},
           "found_stronger_refutation": {"type": "boolean"}
         }
       },
-      "primary_source_ref": {"type": ["string", "null"], "description": "[v3-B] 기본소스 evidence id(공시·표준·원데이터)"},
+      "primary_source_ref": {"type": ["string", "null"], "pattern": "E[0-9]{3,}", "description": "[v3-B] 기본소스 evidence id(공시·표준·원데이터)"},
 
-      "observed_at": {"type": ["string", "null"], "description": "[v3-E] 우리가 관측한 시점"},
-      "valid_at": {"type": ["string", "null"], "description": "[v3-E] 주장이 유효한 시점"},
-      "last_seen": {"type": ["string", "null"], "description": "[v3-E] 마지막으로 소스에서 확인된 시점(상태변경 추적)"},
+      "observed_at": {"type": ["string", "null"], "format": "iso-time", "description": "[v3-E] 우리가 관측한 시점"},
+      "valid_at": {"type": ["string", "null"], "format": "iso-time", "description": "[v3-E] 주장이 유효한 시점"},
+      "last_seen": {"type": ["string", "null"], "format": "iso-time", "description": "[v3-E] 마지막으로 소스에서 확인된 시점(상태변경 추적)"},
+      "demoted_at": {"type": ["string", "null"], "format": "date-time"},
 
       "discard_reason": {"type": ["string", "null"]}
     },
@@ -107,14 +120,14 @@
       "archived_url": {"type": ["string", "null"], "description": "Jina/Wayback 등. 원 URL과 구분 기록."},
       "local": {"type": ["string", "null"], "description": "_sources/ 로컬 스냅샷 경로"},
       "sha256": {"type": "string"},
-      "accessed_at": {"type": "string"},
+      "accessed_at": {"type": "string", "format": "iso-time"},
       "http_status": {"type": ["integer", "null"]},
       "locator": {"type": ["object", "null"], "description": "{page,row,col} | {selector} 등"},
       "verbatim": {"type": ["string", "null"], "description": "text_quote 일 때 필수(원문 그대로)"},
       "source_role": {"enum_ref": "source_role", "nullable": true},
       "capture": {"type": ["string", "null"], "description": "_captures/E###.png (source_capture)"},
       "observer_group": {"type": ["string", "null"], "description": "[v3] 독립성 판정용 관찰그룹 라벨"},
-      "observed_at": {"type": ["string", "null"]},
+      "observed_at": {"type": ["string", "null"], "format": "iso-time"},
       "capture_review": {
         "type": "object",
         "additionalProperties": false,
@@ -122,7 +135,7 @@
         "properties": {
           "image_sha256": {"type": "string", "pattern": "[0-9a-fA-F]{64}"},
           "reviewed_by": {"type": "string", "minLength": 1},
-          "reviewed_at": {"type": "string", "minLength": 1},
+          "reviewed_at": {"type": "string", "format": "date-time", "minLength": 1},
           "page_state": {"type": "string", "enum_ref": "page_state"},
           "claim_visible": {"type": "boolean"},
           "context_visible": {"type": "boolean"},

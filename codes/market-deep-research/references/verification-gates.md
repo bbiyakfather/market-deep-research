@@ -20,6 +20,9 @@ iOS 지문 등)가 전부 그 위에 얹혀 있다. 요구사항 확정(유형·
 ## G1 join + 수집 게이트
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
 (위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록).
+v3 기존 claim_key는 legacy로 그대로 인정하며 자동 재작성하지 않는다. v3 신규 행도 기존 산식을 유지한다.
+v4 신규 등재부터 context의 metric/entity/entity_id/geography/period/basis/scenario/definition JSON SHA-256 키를 재계산·대조한다. v3→v4 전환 시 키 재계산과 [2] 이후 재검증이 필요하다.
+evidence는 한 fact에만 속한다. G3는 모든 상태의 F→E 존재·E.fact_id 일치·E→F 존재와 역방향 목록 포함을 검사하며 신규 역참조 위반은 v4 FAIL/v3 WARN이다.
 
 ## [2] 팀리드 재검증(전건) + [Bx] claim-graph
 - 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람 →
@@ -27,9 +30,10 @@ iOS 지문 등)가 전부 그 위에 얹혀 있다. 요구사항 확정(유형·
   — 해시 없는 lead reread 는 add·validate 모두 거부. verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
   ② **1회 반박검색**(`counter_search.found_stronger_refutation=false`) ③ **기본소스**(`primary_source_ref`)
-  ④ **시간증거**(`observed_at` 또는 `valid_at`). ①② 는 본문 사용 confirmed high-risk 에 한해 G3 FAIL, ③④ WARN.
-  ②의 기록 유무는 `counter_search.query`로 검사하고 더 강한 반박이 있으면 confirmed 자체를 거부한다.
-  본문 미사용 confirmed high-risk는 ①~④ 누락 모두 WARN이다. 이 기존 판정 강도는 v3/v4에 동일하다.
+  ④ **시간증거**(`observed_at` 또는 `valid_at`). v4 본문 사용 confirmed high-risk는 ①~④ 전부 G3 FAIL 조건이다.
+  ①은 실제 연결 evidence의 `source_role=원출처/보도자료`와 비어 있지 않은 `observer_group`에서 계산한다. 재인용은 새 관찰로 세지 않고 동일 그룹·원문 URL·원문 해시를 공유하는 기록은 한 관찰로 합친다. `independent_groups` 자기신고만으로 인정하지 않는다.
+  ②는 공백 아닌 query·result와 `found_stronger_refutation=false`, ③은 같은 fact에 실제 연결된 E-ID, ④는 유효한 ISO 시점을 요구한다. 출처 역할·그룹의 사실 적합성은 팀리드가 원출처·전재 관계를 확인해 기록한다.
+  v3는 기존 ①② FAIL·③④ WARN을 유지하며 새 구조·날짜 형식 문제는 legacy WARN으로 노출한다. 본문 미사용 confirmed high-risk는 네 요건 부족 모두 WARN이다.
   불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
 
@@ -58,6 +62,11 @@ extend 로만 추가됨).
 G3 refs에는 정규 `audit/research-plan.md` 해시(없으면 `missing`)도 결박한다.
 사용자 지정 계획은 `--check-only --plan <경로>` / `verify(..., check_only=True, plan=...)` 진단
 전용이다. 기록 경로 `verify_and_record`는 다른 계획 경로를 거부하며 진단은 영수증을 만들지 않는다.
+부록 마커는 승인 목차의 부록 헤딩 바로 앞에 둔다. 이후 본문 성격 헤딩이나 승인 목차에 없는 장이 나오면 `[부록경계]` FAIL이며 부록 하위 헤딩도 계획에 선언한다. 승인 목차 없는 legacy 문서는 부록 헤딩·Executive/결론/요약 등 본문 성격 헤딩만 검사하고 경고를 남긴다.
+상충 병기는 문장·목록 항목 시작의 `[상충] 45 USD(F001)` 또는 표 행 첫 셀의 `| [상충] | 45 USD(F001) |`로 표시한다. 그 세그먼트의 disputed 인용만 허용하며 값·단위·출처·캡처 및 v4 문장검토는 동일하게 검사한다. 표기는 다음 문장·헤딩 아래 본문으로 전파되지 않는다.
+v4 disputed의 주장·맥락·값도 근거 리비전에 포함해 변경 후 문장 재검토를 요구한다. 부록 상충 인용에도 증거 연결과 캡처 검사를 적용한다.
+v4는 스키마 중첩 타입·배열 item·공백 필드·이벤트 구조를 검사한다. 시점은 YYYY/ YYYY-MM/ YYYY-MM-DD/ ISO datetime을, 이벤트 at와 capture_review.reviewed_at은 ISO datetime을 사용한다. 누락 가능한 항목은 null/생략으로 표현하며 빈 note와 pending의 빈 evidence/events/groups 배열은 허용한다.
+수치 부호는 범위 양 끝에서도 보존한다. SI 전력·에너지의 µ/u/m/k/M/G/T 접두사는 대소문자를 구분하며 통화·개수 단위의 기존 표기는 유지한다.
 
 **v4 추가 조건**: `verify_calculations.py <work_dir>`와
 `verify_claims.py <report.md> <work_dir>`를 G3가 자동 호출한다. 의미 판정은 검토자의 책임이며
@@ -65,7 +74,7 @@ G3 refs에는 정규 `audit/research-plan.md` 해시(없으면 `missing`)도 결
 계산 결과는 `audit/calc-check.json`, 문장 검사 결과는 `audit/claim-check.json`에 남긴다.
 검토 대장 누락·문장 변경·근거 리비전 변경·미지원 사실 문장은 v4 FAIL, v3 WARN이다.
 CAGR의 confirmed 충돌은 v4 FAIL이며 자동 수정하지 않는다. disputed 충돌은 WARN으로 남아
-본문의 사실 확정 인용은 기존 `[미확정]` 검사로 차단된다. high-risk CAGR/기간 전망의 원자화 미기록은
+본문의 사실 확정 인용은 `[미확정]` 검사로 차단되며 위 `[상충]` 문맥에서만 병기할 수 있다. high-risk CAGR/기간 전망의 원자화 미기록은
 v4 FAIL/v3 WARN이다. 일부 입력이나 해당 CAGR 기간의 끝값이 없으면 `NOT_CHECKABLE`과 누락 필드를
 남기고 WARN으로 노출한다. 끝값의 연도와 CAGR 기간이 다르면 같은 끝값으로 강제 검산하지 않는다.
 끝값 문자열의 최소 표시단위 절반으로 CAGR 구간을 계산한다. `4.50` 같은 표시 정밀도를 보존하려면
