@@ -1533,9 +1533,12 @@ def axis_figure_coverage_is_warning_only():
     with tempfile.TemporaryDirectory() as td:
         wd = resolve_work_dir("도판커버리지", base=td)
         wp = WorkPaths(wd)
+        # N02: 커버리지 검사의 정상 도판도 작업폴더 내 파일이어야 한다.
+        with fitz.open() as doc:
+            doc.new_page().get_pixmap().save(str(wp.root / "market.png"))
         wp.report_md.write_text(
             "# 부 3. 테마별 본론\n"
-            "## 축: 시장\n![시장](https://example.com/market.png)\n"
+            "## 축: 시장\n![시장](market.png)\n"
             "[그림] 시장 구조 · 출처: 공식 통계\n"
             "## 축: 정책\n정책 환경 서술.\n",
             encoding="utf-8",

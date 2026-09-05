@@ -25,8 +25,9 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 
 ## fetch 사다리 (`scripts/fetch.py`)
 `python fetch.py get <URL> --out _sources`
-1. **보안경계(선제+사후)**: HTTP(S)만 · private/loopback/link-local/reserved IP 및 리다이렉트 대상
-   차단(SSRF, DNS 사전검증) · **연결 후 실접속 IP(primary_ip) 재검증**(DNS 리바인딩 TOCTOU 방지)
+1. **공통 보안경계**(`fetch.request_bytes`, 검색·이미지 수집도 공유): HTTP(S)만 · private/loopback/link-local/reserved IP 및 리다이렉트 대상
+   차단(매 홉 DNS 사전검증, 최대 5홉) · 검증한 IP로 연결 고정(curl RESOLVE / urllib 숫자 IP 연결, 원 호스트 TLS 검증 유지).
+   환경 프록시는 목적지 IP를 검증할 수 없어 사용하지 않는다. 추가 사후 IP 검사는 요청 송신 자체를 되돌리지 못한다.
    · 크기(8MB)·시간(25s)·**MIME 허용목록**(실제 게이트 — PDF 는 매직바이트`%PDF-` 로 판정, 확장자/헤더는 불신).
    원문=불신뢰(추출만, 실행 금지).
 2. **curl_cffi TLS 그리드**(chrome/safari/chrome110 전수, R6). 각 홉 SSRF 재검증. CA 번들은 ASCII 경로로.
@@ -40,6 +41,8 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 4. **Jina Reader**(`r.jina.ai`, JS렌더·정제) → `archived_url` 구분 기록.
 5. **Googlebot UA** — 봇 화이트리스트 사이트용.
 6. **RSS** — `rss.blog.naver.com/{id}.xml` · `/feed` · `/rss` · `/rss.xml` → `archived_url` 구분.
+   요청 URL/GUID 또는 확인된 제목과 유일하게 대응하는 entry 본문만 검증해 `ok`로 인정한다.
+   미일치 피드는 탐색 자료 `partial`로 보존하고 다음 계층을 계속 시도한다.
 7. **Wayback**(`archive.org/wayback/available`) → snapshot → `archived_url` 구분.
 8. **OGP 메타**(og:title·og:description) — 본문 실패 시 제목+요약만 `partial` 로(속성 순서 양방향 파싱).
 9. **소진 → `status:"fail"`**: 브라우저 MCP(JS 렌더링 — agent-browser 우선, playwright 폴백) 또는 대체출처로.
@@ -54,7 +57,7 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 사다리를 죽이지 않는다. 원 URL 과 `direct` 계층의 SSRF 는 계속 전파(리다이렉트 내부망 이탈 = 보안 사건).
 
 ## 4계층 성공검증 (R2) — HTTP200 ≠ 성공
-`fetch.validate_body`: ⓪ **HTTP 4xx/5xx 는 본문 무관 즉시 실패**(상태코드 우선) ① 성공 셀렉터 최우선
+`fetch.validate_body`: ⓪ **HTTP 비2xx는 PDF/HTML 모두 실패**(상태코드 우선) ① 성공 셀렉터 최우선
 ② 본문 길이(≥1000자면 확정 성공 — 긴 기사 속 챌린지 문구 인용은 오탐 아님) ③ 챌린지 마커(짧은
 인터스티셜만 해당) ④ 비정상 크기(<200B). 판정 `ok`(셀렉터 또는 본문≥1000자) / `partial`(얇은 본문) /
 `challenge`/`empty`(실패).

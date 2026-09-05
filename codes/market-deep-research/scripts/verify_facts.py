@@ -43,6 +43,7 @@ import sys
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import manifest
 import gates
@@ -648,7 +649,9 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
 
 
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
-_IMG_HTML = re.compile(r'<img\b[^>]*\bsrc=["\']([^"\']+)["\']', re.I | re.S)
+_IMG_HTML = re.compile(r'<img\b[^>]*\bsrc\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
+_IMG_REF = re.compile(r"!\[([^\]]*)\](?:\[([^\]]*)\])?(?!\()")
+_IMG_DEF = re.compile(r'^\s{0,3}\[([^\]]+)\]:\s*(?:<([^>]+)>|(\S+))', re.M)
 _FIGURE_TOKEN = re.compile(r"!\[[^\]]*\]\([^)]+\)|<img\b|<figure\b", re.I)
 # `출처:` 뒤에 실제 값이 오는지 — 라벨만 적고 비워두는 것을 출처로 인정하지 않는다.
 _SOURCE_VALUE = re.compile(r"출처\s*:\s*\S")
@@ -662,7 +665,14 @@ _PART_THREE = re.compile(r"^(?:부\s*)?3(?:\s*부)?(?:\s*[.．:：-])?(?:\s+|$)"
 def _figure_refs(body: str) -> list[tuple[int, int, str]]:
     """본문 도판 참조를 문서 순서대로 (시작, 끝, 경로) 형태로 돌려준다."""
     refs = [(m.start(), m.end(), m.group(1)) for m in _IMG_MD.finditer(body)]
-    refs += [(m.start(), m.end(), m.group(1)) for m in _IMG_HTML.finditer(body)]
+    refs += [(m.start(), m.end(), next(g for g in m.groups() if g is not None))
+             for m in _IMG_HTML.finditer(body)]
+    definitions = {" ".join(m.group(1).split()).casefold(): m.group(2) or m.group(3)
+                   for m in _IMG_DEF.finditer(body)}
+    for match in _IMG_REF.finditer(body):
+        key = " ".join((match.group(2) or match.group(1)).split()).casefold()
+        if key in definitions:
+            refs.append((match.start(), match.end(), definitions[key]))
     return sorted(refs)
 
 
@@ -736,10 +746,17 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], 
         failures.append("[도판] 본문 대표 이미지 0장(증빙캡처·차트·도식 누락)")
     else:
         def _exists(p: str) -> bool:
-            p = p.split("#")[0]
-            if p.startswith(("http://", "https://", "data:")):
-                return True  # 외부/데이터 URI 는 경로 실재 검사 대상 아님
-            return (wp.root / p).exists() or Path(p).exists()
+            try:
+                ref = urlsplit(p)
+                # Windows 드라이브 절대경로(C:/...)는 urlsplit 이 scheme 으로 오인한다 —
+                # 렌더러(render_pdf)와 같은 기준으로 로컬 절대경로로 취급하되 루트 내부만 인정.
+                drive_path = len(ref.scheme) == 1 and len(p) > 2 and p[1] == ":"
+                if (ref.scheme and not drive_path) or ref.netloc or p.startswith(("//", "\\\\")):
+                    return False
+                local = (wp.root / unquote(p if drive_path else ref.path)).resolve()
+                return local.is_relative_to(wp.root.resolve()) and local.is_file()
+            except (ValueError, OSError):
+                return False
         # 참조마다 개별 판정한다 — any() 로 묶으면 10장 중 1장만 실재해도 통과해
         # 깨진 그림 9장이 그대로 고객 PDF 로 나간다(실측 확인).
         for path in dict.fromkeys(p for _s, _e, p in refs):

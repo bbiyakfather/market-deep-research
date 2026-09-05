@@ -126,17 +126,40 @@ def build_index(work_dir: Path | str) -> list[dict]:
     return rows
 
 
-def _failure_count(work_dir: Path | str) -> int:
-    path = Path(work_dir) / "audit" / "fetch-failures.jsonl"
+def _fetch_counts(work_dir: Path | str) -> dict:
+    """실제 생산 로그에서 시도 실패와 URL별 마지막 호출의 확보 상태를 구분한다."""
+    path = Path(work_dir) / "audit" / "fetch-log.jsonl"
+    latest = {}
+    attempt_failures = 0
     if not path.is_file():
-        return 0
+        return {"attempt_failures": 0, "final_failures": 0}
     try:
-        return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(row, dict) or not row.get("url"):
+                continue
+            status = row.get("status")
+            if status not in ("ok", "partial", "fail"):
+                # 구 로그는 transport 성공만 기록했다. snapshot을 원문 ok로 추정하지 않는다.
+                status = "fail" if row.get("failure_reason") or not row.get("snapshot_path") else "partial"
+            if row.get("kind") != "final" and status == "fail":
+                attempt_failures += 1
+            latest[row["url"]] = status
     except OSError:
-        return 0
+        pass
+    return {"attempt_failures": attempt_failures,
+            "final_failures": sum(status == "fail" for status in latest.values())}
 
 
-def write_markdown(rows: list[dict], out_path: Path | str, topic: str | None = None) -> Path:
+def _failure_count(work_dir: Path | str) -> int:
+    return _fetch_counts(work_dir)["final_failures"]
+
+
+def write_markdown(rows: list[dict], out_path: Path | str, topic: str | None = None,
+                   work_dir: Path | str | None = None) -> Path:
     """머리말 + 표 + 발췌 블록. 링크는 최종 URL. 실패 URL 은 건수만."""
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -147,8 +170,8 @@ def write_markdown(rows: list[dict], out_path: Path | str, topic: str | None = N
         f"- 생성시각: {_now()}",
         f"- 건수: {len(rows)}",
         "",
-        "| 번호 | 제목 | 발행처 | 접근일 | URL | sha256 | 로컬 |",
-        "|---|---|---|---|---|---|---|",
+        "| 번호 | 제목 | 발행처 | 접근일 | URL | sha256 | 로컬 | 상태 |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         final = row.get("final_url") or row.get("url") or ""
@@ -157,7 +180,7 @@ def write_markdown(rows: list[dict], out_path: Path | str, topic: str | None = N
         lines.append(
             f"| {row['n']} | {_md_cell(row.get('title'))} | {_md_cell(row.get('publisher'))} | "
             f"{_md_cell(accessed)} | {url_cell} | `{row.get('sha12') or ''}` | "
-            f"{_md_cell(row.get('local'))} |"
+            f"{_md_cell(row.get('local'))} | {_md_cell(row.get('status'))} |"
         )
     lines.append("")
     for row in rows:
@@ -166,9 +189,11 @@ def write_markdown(rows: list[dict], out_path: Path | str, topic: str | None = N
         if row.get("final_url"):
             lines += [f"- URL: {row['final_url']}", ""]
         lines += [row.get("excerpt") or "(발췌 없음)", ""]
-    fail_n = _failure_count(out.parent)
-    if fail_n:
-        lines += ["## 부록: 확보 실패", "", f"실패 URL {fail_n}건 (`audit/fetch-failures.jsonl`).", ""]
+    counts = _fetch_counts(work_dir if work_dir is not None else out.parent)
+    if counts["final_failures"] or counts["attempt_failures"]:
+        lines += ["## 부록: 확보 실패", "",
+                  f"최종 실패 URL {counts['final_failures']}건 · 시도 실패 {counts['attempt_failures']}회 "
+                  "(`audit/fetch-log.jsonl`, partial은 최종 실패에서 제외).", ""]
     out.write_text("\n".join(lines), encoding="utf-8")
     return out
 
@@ -206,8 +231,8 @@ def demo() -> None:
         (src / f"{sha2}_clean.txt").write_text("폴백 발췌 본문입니다.", encoding="utf-8")
         audit = wd / "audit"
         audit.mkdir()
-        (audit / "fetch-failures.jsonl").write_text(
-            json.dumps({"url": "https://blocked.example/x"}, ensure_ascii=False) + "\n",
+        (audit / "fetch-log.jsonl").write_text(
+            json.dumps({"url": "https://blocked.example/x", "failure_reason": "http 403"}, ensure_ascii=False) + "\n",
             encoding="utf-8")
 
         rows = build_index(wd)
@@ -250,7 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.out)
     if not out.is_absolute():
         out = work / out
-    write_markdown(rows, out, topic=args.topic or None)
+    write_markdown(rows, out, topic=args.topic or None, work_dir=work)
     fail_n = _failure_count(work)
     extra = f", 실패 {fail_n}건" if fail_n else ""
     print(f"{out}  ({len(rows)}건{extra})")
