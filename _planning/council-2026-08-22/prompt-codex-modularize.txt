@@ -1,0 +1,14 @@
+역할: 적대적 리뷰어(반대 측 변호인). 목표는 설계안의 약점을 찾아내는 것이지 다듬어 주는 것이 아니다.
+
+대상: F:/Claude/skills/market-deep-research/_planning/council-2026-08-22/modularize-proposal.md (market-deep-research 스킬 모듈화 설계안). 0절 "사용자 확정 사항"은 전제이므로 뒤집지 말고, 그 전제 아래에서 설계의 오류·누락·더 싼 대안을 공격하라.
+
+반드시 실제 코드를 읽고 근거를 대라: F:/Claude/skills/market-deep-research/codes/market-deep-research/ 의 SKILL.md · scripts/*.py · references/*.md · tests/*.py. 특히 render_pdf.py / gates.py / manifest.py / verify_facts.py / make_chart.py / harvest_images.py / install.py / skill_paths.py 의 import 와 영수증(receipt) 소유권 로직을 직접 확인할 것. 코드를 수정하지 말 것(읽기 전용).
+
+출력: F:/Claude/skills/market-deep-research/_planning/council-2026-08-22/review-codex-modularize.md 에 한국어로 작성. 구성:
+1) 치명(설계를 이대로 실행하면 깨지는 것) — 각 항목에 파일:줄 근거
+2) 중대(목적 ①②③을 해치는 것)
+3) 경미/개선
+4) 설계안 6절 질문 5개에 대한 직접 답
+5) 대안 제시(있다면) 와 그 근거
+6) 한 줄 판정: 진행 / 조건부 진행(조건 명시) / 재설계
+파일 저장 후 "REVIEW DONE" 한 줄을 출력하고 종료하라.

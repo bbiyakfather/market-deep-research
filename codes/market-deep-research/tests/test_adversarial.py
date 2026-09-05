@@ -6,8 +6,10 @@
 import hashlib
 import ipaddress
 import json
+import os
 import re
 import socket
+import subprocess
 import sys
 import tempfile
 import time
@@ -32,6 +34,50 @@ CASES = []
 
 # 유효한 64자리 sha256 fixture 상수 — 후속 케이스가 "h" 같은 placeholder 를 재도입하지 못하게.
 _H = hashlib.sha256(b"fixture").hexdigest()
+_CLI_ENV = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+
+
+def _run_script(*args):
+    """scripts/<name> CLI 를 utf-8 로 실행(Windows cp949 콘솔 대비)."""
+    return subprocess.run(
+        [sys.executable, str(SKILL_ROOT / "scripts" / args[0]), *args[1:]],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        env=_CLI_ENV,
+    )
+
+
+def _ledger(wp):
+    import gates
+    path = gates.ledger_path(wp)
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _seed_script_receipt(*args, **kwargs):
+    """하위 게이트 격리용 원장 시딩. 운영용 공개 API는 소유 성공 기록을 거부한다."""
+    import gates
+    return gates._record_script_result(*args, **kwargs)
+
+
+def _chain_to_g3(td, topic="봉인"):
+    """하위 게이트 변조 검사용 합성 G3 체인. 소유 API 대신 테스트 전용 원장 시딩."""
+    import gates
+    wd = resolve_work_dir(topic, base=td)
+    wp = WorkPaths(wd)
+    (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
+    wp.facts.write_text("", encoding="utf-8")
+    wp.report_md.write_text("# r\n", encoding="utf-8")
+    gates.record_manual(wp, "G0", "approved")
+    gates.record_script_result(wp, "G1", 0, "join PASS")
+    gates.record_manual(wp, "[2]", "lead reread")
+    sealed = manifest.build(wp)
+    _seed_script_receipt(
+        wp, "G3", 0, "verify PASS",
+        extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
+               "manifest_entries": len(sealed["entries"])},
+    )
+    return wd, wp
 
 
 def case(fn):
@@ -163,7 +209,7 @@ def mistagged_value():
         wd, db = _base_db(td)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         wp = WorkPaths(wd)
         (wp.root / "r.md").write_text("매출은 999조원(F001).\n", encoding="utf-8")
@@ -216,7 +262,7 @@ def high_risk_without_capture():
         wd, db = _base_db(td)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H})   # capture 없음
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         wp = WorkPaths(wd)
         (wp.root / "r.md").write_text("매출 300.9조원(F001).\n", encoding="utf-8")
@@ -259,7 +305,7 @@ def failed_capture_claimed_as_evidence():
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H,
                          "capture": "_captures/E001.png", "source_role": "원출처"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
 
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![](_captures/E001.png)\n",
@@ -435,7 +481,12 @@ def _confirm(db, wp, fid, with_capture=True):
         (wp.root / cap).write_bytes(b"\x89PNG")
         ev["capture"] = cap
     db.add_evidence(ev)
-    db.add_verify_event(fid, "lead", "reread")
+    db.add_verify_event(fid, "lead", "reread", reread_sha256=_H)
+    rows = db.facts(); fr = next(r for r in rows if r["id"] == fid)
+    if fr.get("risk") == "high":      # (d) 이후 high-risk 본문 사용은 ①② 필수 — 긍정형 짝 픽스처 기본값
+        fr.setdefault("independent_groups", ["dart", "irstatement"])
+        fr.setdefault("counter_search", {"query": "정정 검색", "result": "없음", "found_stronger_refutation": False})
+        _write_jsonl_atomic(wp.facts, rows)
     db.set_status(fid, "confirmed")
 
 
@@ -521,8 +572,7 @@ def evidence_table_row_forgery():
 
 @case
 def numeral_and_energy_units_untagged():
-    """V13-7: 한국식 수사 삽입형(1천억)·TWh 무태그 사실주장 검출. '12건'·'3개사' 같은 구조
-    카운트(계수 단위)는 오탐하지 않아야 한다(긍정형 짝)."""
+    """V13-7: 한국식 수사 삽입형(1천억)·TWh 무태그 사실주장 검출."""
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)
         wp = WorkPaths(wd)
@@ -531,9 +581,75 @@ def numeral_and_energy_units_untagged():
             rep = verify_facts.verify(wp.root / "x.md", wd)
             assert not rep["ok"] and any("무태그" in f for f in rep["failures"]), (text, rep)
 
-        (wp.root / "cnt.md").write_text("총 12건의 프로젝트를 3개사가 진행한다.\n", encoding="utf-8")
-        rcnt = verify_facts.verify(wp.root / "cnt.md", wd)
-        assert not any("무태그" in f for f in rcnt["failures"]), rcnt
+
+@case
+def currency_prefix_untagged_and_mistagged():
+    """H2 ①: 접두 통화 표기는 무태그도 오값도 통과하던 사각지대(probe B/C 실측). 긍정형 짝: 값 일치는 통과,
+    대장 'USD_million' ↔ 본문 bare 'million' 호환도 유지."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        db.add_fact({"claim": "딜 120M", "risk": "normal", "status": "pending",
+                     "context": {"metric": "deal", "entity": "x", "geography": "US", "period": "2025"},
+                     "value": {"raw": "120", "unit": "USD_million"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        _confirm(db, wp, "F002")
+        for text in ("시장 규모는 $4.5B 에 달한다.\n", "US$4.5 billion 규모다.\n", "€120M 를 투자했다.\n",
+                     "₩300조 시장이다.\n", "USD 45 billion 이다.\n"):
+            (wp.root / "u.md").write_text(text, encoding="utf-8")
+            rep = verify_facts.verify(wp.root / "u.md", wd)
+            assert sum("무태그" in f for f in rep["failures"]) == 1, (text, rep)      # 중복 매치 없이 정확히 1건
+        (wp.root / "v.md").write_text("딜 규모는 $999M(F002) 이다.\n", encoding="utf-8")
+        rv = verify_facts.verify(wp.root / "v.md", wd)
+        assert not rv["ok"] and any("값불일치" in f for f in rv["failures"]), rv
+        (wp.root / "s.md").write_text("딜 규모는 $120B(F002) 이다.\n", encoding="utf-8")
+        rs = verify_facts.verify(wp.root / "s.md", wd)
+        assert not rs["ok"] and any("값불일치" in f for f in rs["failures"]), rs
+        for ok_text in ("딜 규모는 $120M(F002) 이다.\n\n![c](_captures/F002.png)\n",
+                        "딜 규모는 US$120 million(F002) 이다.\n\n![c](_captures/F002.png)\n",
+                        "딜 규모는 120 million(F002) 이다.\n\n![c](_captures/F002.png)\n"):
+            (wp.root / "ok.md").write_text(ok_text, encoding="utf-8")
+            rok = verify_facts.verify(wp.root / "ok.md", wd)
+            assert rok["ok"], (ok_text, rok)
+
+
+@case
+def count_units_are_claims():
+    """H2 ②: 건·명·개사·기·위·배·대·kt·Mt·㎡·ha·배럴·EUR 무태그 사실주장 검출. 긍정형 짝: 연도·각주·페이지·
+    표 행번호·F태그·연령대·'3대 과제'·'3기 신도시'·'6개월'·'4개 축'·'KT'·'has' 는 오탐하지 않는다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        claims = ("직원은 4,500명이다.", "특허 1,234건을 보유한다.", "업계 2위로 부상했다.", "매출이 3.2배 늘었다.",
+                  "120기를 설치했다.", "100만대를 판매했다.", "1,200대를 보급했다.", "3개사가 참여한다.",
+                  "연 30 kt 생산한다.", "배출량 5 Mt 이다.", "부지 3,000㎡ 규모다.", "3,000만 배럴을 수입했다.",
+                  "EUR 120 million 을 조달했다.")
+        for text in claims:
+            (wp.root / "c.md").write_text(text + "\n", encoding="utf-8")
+            rep = verify_facts.verify(wp.root / "c.md", wd)
+            assert any("무태그" in f for f in rep["failures"]), (text, rep)
+        clean = ("2024년 기준 3부 테마별 본론을 본다. 표 3 과 각주[12], p.45 참조. (F001) 태그. 2026-08-21 접근.\n"
+                 "| 3 | 건수 | 12월 건설 |\n\n"
+                 "20~30대 소비자와 50대 여성, 3대 핵심 과제, 3기 신도시, 6개월 연장, 4개 축으로 구성.\n"
+                 "2023 KT 매출 보고서(EUROPE 2024)는 2024 has grown 이라 썼다. 제25조 규정.\n")
+        (wp.root / "ok.md").write_text(clean, encoding="utf-8")
+        rok = verify_facts.verify(wp.root / "ok.md", wd)
+        assert not any("무태그" in f for f in rok["failures"]), rok
+
+
+@case
+def korean_numeral_warned():
+    """H2 ③: 한글 수사('삼백조원')는 값 파싱을 못 하므로 FAIL 대신 [한글수사] WARN 으로 표면화한다."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        (wp.root / "k.md").write_text("매출은 삼백조원 규모이며 300.9조원(F001) 이다.\n\n![c](_captures/F001.png)\n",
+                                      encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "k.md", wd)
+        assert rep["ok"] and any("한글수사" in w for w in rep["warnings"]), rep
+        (wp.root / "n.md").write_text("삼성전자와 일부 원인을 본다.\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        assert not any("한글수사" in w for w in verify_facts.verify(wp.root / "n.md", wd)["warnings"])
 
 
 @case
@@ -555,6 +671,32 @@ def appendix_forward_bypass():
         (wp.root / "g.md").write_text(good, encoding="utf-8")
         rgood = verify_facts.verify(wp.root / "g.md", wd)
         assert rgood["ok"], rgood
+
+
+@case
+def appendix_value_mismatch_fails():
+    """H1: 부록은 무태그만 면제다 — 오태그·미확정·값불일치는 부록에서도 FAIL(본문에서 값불일치 맞은
+    수치를 부록 '환산근거'로 옮겨 G3 를 통과하던 우회 차단). 긍정형 짝: 값 일치 + 무태그 수치는 WARN."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")
+        good = "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n<!-- FACTSHEET:APPENDIX -->\n## 부록\n"
+        for bad, tag in (("- 환산근거: 매출 999조원(F001)\n", "값불일치"),
+                         ("- 환산근거: 매출 300.9조원(F009)\n", "오태그")):
+            (wp.root / "r.md").write_text(good + bad, encoding="utf-8")
+            rep = verify_facts.verify(wp.root / "r.md", wd)
+            assert not rep["ok"] and any(tag in f and "부록" in f for f in rep["failures"]), (bad, rep)
+        db.add_fact({"claim": "시장 45조", "risk": "normal", "status": "pending",
+                     "context": {"metric": "market_size", "entity": "x", "geography": "KR", "period": "2030"},
+                     "value": {"raw": "45", "unit": "KRW_T"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        (wp.root / "r.md").write_text(good + "- 미확정 병기: 45조원(F002)\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("미확정" in f and "부록" in f for f in rep["failures"]), rep
+        (wp.root / "ok.md").write_text(good + "- 환율 1,350원/달러 기준 · 매출 300.9조원(F001)\n", encoding="utf-8")
+        rok = verify_facts.verify(wp.root / "ok.md", wd)
+        assert rok["ok"] and any("부록무태그" in w for w in rok["warnings"]), rok
 
 
 @case
@@ -608,6 +750,27 @@ def manifest_asset_swap():
         (wp.gen_assets / "chart.png").write_bytes(b"\x89PNG-tampered")      # 차트 변조
         v = manifest.verify(wp)
         assert not v["ok"] and "assets/chart.png" in v["changed"], v
+
+
+@case
+def manifest_image_swap():
+    """_images/ 도판은 report.pdf 에 내장되는데 TRACKED 밖이면 G3 뒤 교체를 G5 가 못 잡는다(M3 실측).
+    긍정형 짝: 변조 안 하면 ok. IMAGES.md 도 봉인 대상."""
+    assert any(pattern.startswith("_images/") for _, pattern in manifest.TRACKED)
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("도판변조", base=td)
+        wp = WorkPaths(wd)
+        (wp.root / "_images").mkdir()
+        (wp.root / "_images" / "fig.png").write_bytes(b"\x89PNG-orig")
+        manifest.build(wp)
+        assert manifest.verify(wp)["ok"]
+        (wp.root / "_images" / "fig.png").write_bytes(b"\x89PNG-swapped")
+        v = manifest.verify(wp)
+        assert not v["ok"] and "_images/fig.png" in v["changed"], v
+        manifest.build(wp)
+        (wp.root / "_images" / "IMAGES.md").write_text("| f |\n", encoding="utf-8")   # 봉인 후 인덱스 추가
+        v2 = manifest.verify(wp)
+        assert not v2["ok"] and "_images/IMAGES.md" in v2["new"], v2
 
 
 # --- G4 재작성 회귀(대장 무검증 신뢰 제거 + 증빙 경로 봉쇄) --------------------
@@ -674,7 +837,7 @@ def fake_evidence_hash():
         wp = WorkPaths(wd)
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": "not-a-real-hash"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
         (wp.root / "x.png").write_bytes(b"\x89PNG")
@@ -690,7 +853,7 @@ def fake_evidence_hash():
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": _H,   # 실제 파일 해시와 다름
                          "local": "_sources/snap.txt"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
         (wp.root / "x.png").write_bytes(b"\x89PNG")
@@ -707,7 +870,7 @@ def fake_evidence_hash():
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart", "sha256": real_hash,
                          "local": "_sources/snap.txt"})
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")
         (wp.root / "r.md").write_text("매출은 300.9조원(F001).\n\n![c](x.png)\n", encoding="utf-8")
         (wp.root / "x.png").write_bytes(b"\x89PNG")
@@ -740,7 +903,7 @@ def capture_outside_workdir():
     with tempfile.TemporaryDirectory() as td:      # 대장 직접조작(정상 API 우회) 시나리오
         wd, db = _base_db(td)
         wp = WorkPaths(wd)
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         ev_rows = [{"id": "E001", "fact_id": "F001", "type": "table_cell",
                     "source_url": "https://x", "sha256": _H, "accessed_at": "2026-01-01",
                     "capture": "../../outside.png"}]
@@ -788,7 +951,7 @@ def status_regrade_blocked():
         facts[0]["counter_search"]["found_stronger_refutation"] = False
         _write_jsonl_atomic(wp.facts, facts)
         time.sleep(1.1)     # demoted_at 과 같은 초 충돌 방지(_now() 는 초 단위)
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_H)
         db.set_status("F001", "confirmed")            # 긍정형 짝: 새 검증 있으면 재승급 성공
         assert db.facts()[0]["status"] == "confirmed"
 
@@ -800,6 +963,55 @@ def status_regrade_blocked():
             assert False, "폐기 사유 남은 채 confirmed 검증이 통과됨"
         except ValidationError:
             pass
+
+
+@case
+def lead_event_requires_reread_sha256():
+    """M2·MEDIUM-2: by="lead" action="reread" 이벤트는 재열람 산출물 해시가 없으면 add 시점·validate 시점
+    모두 거부. 워커 이벤트·lead 의 비-reread 이벤트는 해시 없이 허용(긍정형 짝)."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        db.add_evidence({"fact_id": "F001", "type": "table_cell", "source_url": "https://x", "sha256": _H})
+        for bad in (None, "abc", "X" * 64):
+            try:
+                db.add_verify_event("F001", "lead", "reread", reread_sha256=bad)
+                assert False, f"reread_sha256={bad!r} 가 통과됨"
+            except ValidationError:
+                pass
+        db.add_verify_event("F001", "worker-1", "reread")                        # 워커는 해시 없어도 됨
+        db.add_verify_event("F001", "lead", "demote", "정의차")                  # lead 비-reread 도 허용
+        try:
+            db.set_status("F001", "confirmed"); assert False, "lead reread 없이 confirmed 통과"
+        except ValidationError:
+            pass
+        rows = db.facts()
+        rows[0]["verify_events"].append({"by": "lead", "at": "2026-08-21T00:00:00", "action": "reread"})  # 손기록
+        rows[0]["status"] = "confirmed"
+        _write_jsonl_atomic(wp.facts, rows)
+        (wp.root / "r.md").write_text("매출 300.9조원(F001).\n", encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep["ok"] and any("대장무결성" in f and "reread_sha256" in f for f in rep["failures"]), rep
+
+
+@case
+def reread_sha_unbound_warned():
+    """D5: reread_sha256 이 그 fact 의 evidence sha256/local/verbatim 어느 해시와도 안 맞으면 [재열람미결박] WARN
+    (FAIL 아님 — WebFetch 재열람 경로). 긍정형 짝: evidence sha 와 같으면 WARN 없음."""
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        _confirm(db, wp, "F001")                                                 # reread_sha256=_H == evidence sha
+        md = "매출 300.9조원(F001).\n\n![c](_captures/F001.png)\n"
+        (wp.root / "r.md").write_text(md, encoding="utf-8")
+        rep = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep["ok"] and not any("재열람미결박" in w for w in rep["warnings"]), rep
+        other = hashlib.sha256(b"elsewhere").hexdigest()
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=other)
+        rows = db.facts(); rows[0]["verify_events"] = [e for e in rows[0]["verify_events"] if e.get("reread_sha256") != _H]
+        _write_jsonl_atomic(wp.facts, rows)
+        rep2 = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep2["ok"] and any("재열람미결박" in w for w in rep2["warnings"]), rep2
 
 
 @case
@@ -960,32 +1172,41 @@ def plan_format_contract():
 
 
 @case
-def claim_graph_fields_warned():
-    """risk=high confirmed fact 에 claim-graph 긍정 요건(독립그룹≥2·반박검색기록·기본소스·
-    시간증거)이 없으면 [반박게이트] warning — G4 는 부정 검사(반박기록·폐기사유·강등재검증)만
-    넣고 이 긍정 요건은 아무 데도 안 읽어 실전 대장이 게이트를 한 번도 안 거친 게 안 보였다.
-    failure 로는 승격 안 함(실전 대장 confirmed 전건이 미충족이라 전면 FAIL 은 다음 배치).
-    긍정형 짝: 네 필드를 다 채우면 warning 이 사라짐."""
+def claim_graph_high_risk_used_fails():
+    """H4·HIGH-G: risk=high confirmed fact 가 본문에 쓰였는데 ①독립그룹≥2 ②반박검색이 없으면 [반박게이트] FAIL.
+    ③기본소스 ④시간증거는 WARN. 본문 미사용 high-risk 는 WARN 만. 중복 라벨(['dart','dart'])은 1그룹.
+    긍정형 짝: ①② 채우면 ok(③④ WARN 잔존), 네 필드 다 채우면 WARN 도 사라짐."""
     with tempfile.TemporaryDirectory() as td:
         wd, db = _base_db(td)          # F001 risk=high
         wp = WorkPaths(wd)
-        _confirm(db, wp, "F001")
+        _confirm(db, wp, "F001")       # _confirm 이 ①② 기본값을 채우므로 여기서 비워 결핍 상태로 시작
+        rows = db.facts(); fr = rows[0]
+        fr.update({"independent_groups": [], "counter_search": None}); _write_jsonl_atomic(wp.facts, rows)
         md = "매출은 300.9조원(F001).\n\n![c](_captures/F001.png)\n"
         (wp.root / "r.md").write_text(md, encoding="utf-8")
         rep = verify_facts.verify(wp.root / "r.md", wd)
-        assert rep["ok"], rep                                     # failure 로 승격되면 안 됨
-        assert any("반박게이트" in w for w in rep["warnings"]), rep
+        assert not rep["ok"] and any("[반박게이트]" in f and "독립" in f and "반박검색" in f for f in rep["failures"]), rep
 
-        rows = db.facts()
-        fr = next(r for r in rows if r["id"] == "F001")
-        fr.update({"independent_groups": ["dart", "irstatement"],
-                  "counter_search": {"query": "q", "result": "없음",
-                                     "found_stronger_refutation": False},
-                  "primary_source_ref": "E001", "observed_at": "2026-07-22",
-                  "valid_at": "2025-03"})
+        fr.update({"independent_groups": ["dart", "dart"],
+                   "counter_search": {"query": "q", "result": "없음", "found_stronger_refutation": False}})
         _write_jsonl_atomic(wp.facts, rows)
+        rep_dup = verify_facts.verify(wp.root / "r.md", wd)
+        assert not rep_dup["ok"] and any("독립" in f for f in rep_dup["failures"]), rep_dup
+
+        fr["independent_groups"] = ["dart", "irstatement"]; _write_jsonl_atomic(wp.facts, rows)
         rep2 = verify_facts.verify(wp.root / "r.md", wd)
-        assert not any("반박게이트" in w for w in rep2["warnings"]), rep2   # 긍정형 짝
+        assert rep2["ok"] and any("반박게이트" in w and "기본소스" in w for w in rep2["warnings"]), rep2
+
+        fr.update({"primary_source_ref": "E001", "observed_at": "2026-07-22", "valid_at": "2025-03"})
+        _write_jsonl_atomic(wp.facts, rows)
+        rep3 = verify_facts.verify(wp.root / "r.md", wd)
+        assert rep3["ok"] and not any("반박게이트" in w for w in rep3["warnings"]), rep3
+
+        # 본문 미사용 high-risk: WARN 만
+        (wp.root / "u.md").write_text("본문에 F001 없음.\n\n![c](_captures/F001.png)\n", encoding="utf-8")
+        fr.update({"independent_groups": [], "counter_search": None}); _write_jsonl_atomic(wp.facts, rows)
+        ru = verify_facts.verify(wp.root / "u.md", wd)
+        assert ru["ok"] and any("본문 미사용" in w for w in ru["warnings"]), ru
 
 
 # --- G2/G8 재작성 회귀(문서정합 — 축 프리셋·종료기준·조사유형 4종·intent-diff) --------------
@@ -1189,13 +1410,17 @@ def g5_receipt_owned_by_manifest_verify():
         wp = WorkPaths(wd)
         (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
         wp.facts.write_text("", encoding="utf-8")
-        (wp.root / "report.md").write_text("# r\n", encoding="utf-8")
+        import fitz
+        with fitz.open() as doc:
+            page = doc.new_page()
+            page.insert_text((30, 40), "Synthetic evidence")
+            page.get_pixmap().save(wp.captures / "proof.png")
+        wp.report_md.write_text("# r\n\n![](_captures/proof.png)\n", encoding="utf-8")
         gates.record_manual(wp, "G0", "approved")
         gates.record_script_result(wp, "G1", 0, "join PASS")
         gates.record_manual(wp, "[2]", "lead reread")
-        gates.record_script_result(wp, "G3", 0, "verify PASS")
-        manifest.build(wp)
-        gates.record_script_result(wp, "[4b]", 0, "reseal PASS")
+        assert verify_facts.verify_and_record(wp)["verification"]["ok"]
+        render_pdf.render_and_record(wp)
 
         r1 = run_cli(wd)
         assert r1.returncode == 1 and "G4" in r1.stderr, f"G4 없이 verify 통과: {r1.stderr!r}"
@@ -1209,6 +1434,51 @@ def g5_receipt_owned_by_manifest_verify():
         r3 = run_cli(wd)
         tail = json.loads(gates.ledger_path(wp).read_text(encoding="utf-8").splitlines()[-1])
         assert r3.returncode == 1 and tail["gate"] == "G5" and tail["exit"] == 1, (r3.returncode, tail)
+
+
+@case
+def receipt2_requires_lead_reread_and_binds_digest():
+    """M1·HIGH-H: record [2] 는 confirmed 전건 lead reread 검사 후에만 기록되고, 이후 confirmed 집합이
+    바뀌면 영수증이 무효(G3 선행 실패) → 재기록해야 한다. G2 의 evidence 추가는 무효화하지 않는다(긍정형 짝)."""
+    import gates
+    with tempfile.TemporaryDirectory() as td:
+        wd, db = _base_db(td)
+        wp = WorkPaths(wd)
+        (wp.audit).mkdir(parents=True, exist_ok=True)
+        (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
+        gates.record_manual(wp, "G0", "approved")
+        gates.record_script_result(wp, "G1", 0, "join")
+        rows = db.facts(); rows[0].update({"status": "confirmed", "evidence_ids": ["E001"]})   # lead 이벤트 없는 손기록
+        _write_jsonl_atomic(wp.facts, rows)
+        try:
+            gates.record_manual(wp, "[2]", "hand"); assert False, "lead 이벤트 없는 confirmed 가 [2] 를 통과"
+        except gates.GateError:
+            pass
+        rows[0].update({"status": "pending", "evidence_ids": []}); _write_jsonl_atomic(wp.facts, rows)
+        _confirm(db, wp, "F001")
+        rec = gates.record_manual(wp, "[2]", "lead reread")
+        assert rec["confirmed_count"] == 1 and rec["confirmed_digest_sha256"] and rec["facts_db_sha256"]
+        assert gates.check_gate(wp, "G3")["ok"], gates.check_gate(wp, "G3")
+        db.add_evidence({"fact_id": "F001", "type": "text_quote", "verbatim": "추가 증거",
+                         "source_url": "https://y", "sha256": _H})                      # G2 경로: 무효화 안 됨
+        assert gates.check_gate(wp, "G3")["ok"]
+        db.add_fact({"claim": "x", "risk": "normal", "status": "pending",
+                     "context": {"metric": "m", "entity": "e", "geography": "KR", "period": "2025"},
+                     "value": {"raw": "1", "unit": "건"},
+                     "grade": {"authority": "A", "independence": "A", "directness": "A", "recency": "A"}})
+        _confirm(db, wp, "F002")                                                          # confirmed 집합 변경
+        chk = gates.check_gate(wp, "G3")
+        assert not chk["ok"] and any("[2]" in i and "재기록" in i for i in chk["issues"]), chk
+        gates.record_manual(wp, "[2]", "lead reread again")
+        assert gates.check_gate(wp, "G3")["ok"]
+        # 원장 없는 작업폴더에서 [2] 는 fail-closed
+        wd2 = resolve_work_dir("대장없음", base=td); wp2 = WorkPaths(wd2)
+        (wp2.audit).mkdir(parents=True, exist_ok=True); (wp2.audit / "research-plan.md").write_text("# p\n", encoding="utf-8")
+        gates.record_manual(wp2, "G0", "ok"); gates.record_script_result(wp2, "G1", 0, "join")
+        try:
+            gates.record_manual(wp2, "[2]", "hand"); assert False, "facts.jsonl 없이 [2] 기록됨"
+        except gates.GateError:
+            pass
 
 
 @case
@@ -1263,9 +1533,12 @@ def axis_figure_coverage_is_warning_only():
     with tempfile.TemporaryDirectory() as td:
         wd = resolve_work_dir("도판커버리지", base=td)
         wp = WorkPaths(wd)
+        # N02: 커버리지 검사의 정상 도판도 작업폴더 내 파일이어야 한다.
+        with fitz.open() as doc:
+            doc.new_page().get_pixmap().save(str(wp.root / "market.png"))
         wp.report_md.write_text(
             "# 부 3. 테마별 본론\n"
-            "## 축: 시장\n![시장](https://example.com/market.png)\n"
+            "## 축: 시장\n![시장](market.png)\n"
             "[그림] 시장 구조 · 출처: 공식 통계\n"
             "## 축: 정책\n정책 환경 서술.\n",
             encoding="utf-8",
@@ -1328,6 +1601,93 @@ def figure_tag_without_image_is_not_a_figure():
         wp.report_md.write_text("본문.\n\n<figure>도표 자리</figure>\n", encoding="utf-8")
         rep = verify_facts.verify(wp.report_md, wd)
         assert not rep["ok"] and any("[도판]" in f for f in rep["failures"]), rep
+
+
+# --- C1·C2 봉인 회귀(G3 이후 변조 세탁 차단 · TRACKED 밖 산출물 추적) ----------
+@case
+def reseal_rejects_post_g3_tamper():
+    """G3 이후 facts.jsonl 을 변조한 채 render_pdf.py CLI 를 돌리면 재봉인이 거부된다.
+    세탁이 성공하면 변조가 새 기준선이 되어 G5 가 PASS 한다(C1). 긍정형 짝: 변조 없으면
+    exit 0, [4b] 에 manifest_sha256·artifacts(report.pdf) 가 있고 기존 항목 해시는 그대로."""
+    import gates
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp = _chain_to_g3(td, "렌더변조")
+        baseline = manifest.sha256_file(wp.manifest)
+        wp.facts.write_text('{"id":"F001","tampered":1}\n', encoding="utf-8")
+        r = _run_script("render_pdf.py", str(wp.report_md))
+        assert r.returncode == 1, f"변조 후 render CLI 가 통과함: {r.stderr!r} {r.stdout!r}"
+        assert not any(rec.get("gate") == "[4b]" for rec in _ledger(wp)), _ledger(wp)
+        assert manifest.sha256_file(wp.manifest) == baseline, "실패했는데 manifest.json 이 바뀜"
+
+    with tempfile.TemporaryDirectory() as td:                          # 긍정형 짝
+        wd, wp = _chain_to_g3(td, "렌더정상")
+        before = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
+        r = _run_script("render_pdf.py", str(wp.report_md))
+        assert r.returncode == 0, f"정상 체인인데 render CLI 실패: {r.stderr!r}"
+        rec = gates.successful_receipt(wp, "[4b]")
+        assert rec and rec.get("manifest_sha256"), rec
+        arts = rec.get("artifacts") or []
+        assert any((a.get("path") if isinstance(a, dict) else a) == "report.pdf" for a in arts), rec
+        after = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
+        assert "report.pdf" in after, after
+        for rel, meta in before.items():
+            assert after[rel]["sha256"] == meta["sha256"], (rel, meta, after[rel])
+
+
+@case
+def g5_rejects_rebuilt_manifest():
+    """정상 체인([4b] 까지) 뒤 manifest.build 로 기준선을 세탁하고 G4 후 verify CLI 를
+    돌리면 [4b]↔manifest 결박 불일치로 거부돼야 한다. 전제조건 단계에서 죽으므로 G5 PASS
+    영수증은 남지 않는다."""
+    import gates
+    with tempfile.TemporaryDirectory() as td:
+        wd, wp = _chain_to_g3(td, "기준선세탁")
+        wp.report_pdf.write_bytes(b"%PDF-1.4 fake")
+        g3 = gates.successful_receipt(wp, "G3")
+        manifest.extend(wp, [wp.report_pdf], expected_sha256=g3["manifest_sha256"])
+        _seed_script_receipt(
+            wp, "[4b]", 0, "reseal PASS",
+            extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
+                   "artifacts": [{"path": "report.pdf",
+                                  "sha256": manifest.sha256_file(wp.report_pdf)}]},
+        )
+        manifest.build(wp)                                            # 세탁 시도
+        gates.record_manual(wp, "G4", "preview OK")
+        r = _run_script("manifest.py", "verify", str(wd))
+        assert r.returncode == 1, f"세탁된 manifest 가 G5 를 통과함: {r.stderr!r}"
+        assert "[4b]" in r.stderr, r.stderr
+        tail = _ledger(wp)[-1]
+        assert tail["gate"] != "G5" or tail.get("exit") != 0, tail
+        assert not gates.successful_receipt(wp, "G5")
+
+
+@case
+def manifest_extend_tracks_custom_artifact():
+    """extend 로 TRACKED 글롭 밖 이름(custom.pdf)을 봉인하면 변조는 changed, 삭제는
+    missing 으로 잡힌다. 작업폴더 밖 경로는 ValueError."""
+    with tempfile.TemporaryDirectory() as td:
+        wd = resolve_work_dir("커스텀산출물", base=td)
+        wp = WorkPaths(wd)
+        wp.facts.write_text("{}\n", encoding="utf-8")
+        manifest.build(wp)
+        outside = Path(td) / "outside.pdf"
+        outside.write_bytes(b"%PDF outside")
+        try:
+            manifest.extend(wp, [outside])
+            raise AssertionError("작업폴더 밖 경로가 extend 를 통과함")
+        except ValueError:
+            pass
+
+        custom = wp.root / "custom.pdf"
+        custom.write_bytes(b"%PDF custom")
+        manifest.extend(wp, [custom], label="render")
+        assert manifest.verify(wp)["ok"]
+        custom.write_bytes(b"%PDF tampered")
+        v = manifest.verify(wp)
+        assert not v["ok"] and "custom.pdf" in v["changed"], v
+        custom.unlink()
+        v2 = manifest.verify(wp)
+        assert not v2["ok"] and "custom.pdf" in v2["missing"], v2
 
 
 def main():

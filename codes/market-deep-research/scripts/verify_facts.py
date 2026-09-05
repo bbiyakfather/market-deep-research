@@ -6,10 +6,19 @@
                              결박된 수치는 대장 value(raw+unit)와 Decimal 스케일·단위차원까지
                              정규화해 대조([값불일치]/[단위불일치]). 결박 안 되면 같은 세그먼트
                              (표 행 등) 안의 값일치 폴백을 거쳐도 실패하면 [무태그].
-  3. (2 안에 포함) 본문에 등장한 모든 (Fxxx) 태그의 대장 존재 + status∈{confirmed}
-  4. check_ledger_integrity — confirmed 인데 본문 미사용 사실(유실 점검)
+                             부록은 같은 함수를 lenient_untagged=True 로 한 번 더 호출:
+                             [오태그]·[미확정]·[값불일치]·[단위불일치] 는 FAIL, [무태그] 만
+                             [부록무태그] WARN. 접두 통화($4.5B 등)는 CUR_NUM 이 METRIC_NUM 보다
+                             우선하고, 건·명·개사·기·위·배·대 계수 단위는 숫자에 붙을 때만 사실주장.
+                             한글 수사(삼백조원)는 [한글수사] WARN.
+  3. (2 안에 포함) F태그 대장 존재 + confirmed 상태. [상충] 세그먼트의 disputed 병기 허용.
+  4. check_ledger_integrity — confirmed 인데 본문 미사용 사실(유실 점검).
+                             risk=high confirmed 가 본문에 쓰이면 독립그룹≥2·반박검색은
+                             [반박게이트] FAIL. v4는 기본소스·시간증거도 FAIL(v3 WARN).
   5·6. check_evidence_chain — evidence 필수필드 누락 0 · text_quote verbatim 필수 ·
-                             본문에 쓰인 confirmed 핵심수치(raw 가 Decimal 로 파싱되는 값) source_capture 실재
+                             본문에 쓰인 confirmed 핵심수치(raw 가 Decimal 로 파싱되는 값) source_capture 실재.
+                             lead reread_sha256 이 evidence sha256/local/verbatim 과 안 맞으면
+                             [재열람미결박] WARN.
   7. check_figures         — 본문 대표 이미지 존재 + 참조 경로 실재([도판경로]) + [그림] 출처 캡션 +
                              assets 차트 F태그 결박 + 3부 축별 도판 커버리지 경고 + 미결박 캡처 표면화
   8. check_toc             — 목차 기계검사(G9). references/research-plan.md 의 승인 목차
@@ -20,8 +29,9 @@
 직전 최후 출현하는 '## 부록'/'## Appendix' 헤딩을 경계로 쓴다(문서 중간의 소제목 하나로 뒤 본문
 전체가 부록 취급되는 것을 막기 위해 '최초 출현'이 아니라 '최후 출현'을 쓴다). 마커/헤딩이 전혀
 없으면 문서 전체를 본문으로 본다. 주석 마커를 쓰는 것을 권장한다(report-format.md 참조).
+부록의 수치 사실주장은 무태그만 면제하고 값·단위·오태그·미확정은 본문과 동일하게 검사한다.
 
-CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]
+CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--check-only --plan <research-plan.md>]
      python verify_facts.py demo
 """
 from __future__ import annotations
@@ -33,11 +43,13 @@ import sys
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import manifest
 import gates
-from facts_db import (FactsDB, ValidationError, check_capture_path, load_schema,
-                       validate_evidence, validate_fact)
+from facts_db import (_read_jsonl, check_ledger_references, evidence_ids as _evidence_ids,
+                       ValidationError, check_capture_path, load_schema,
+                       validate_evidence, validate_fact, validate_capture_review, valid_iso_time)
 from skill_paths import WorkPaths
 
 # --- 부록 경계 ---------------------------------------------------------------
@@ -46,31 +58,59 @@ APPX_HEAD = re.compile(r"^#{1,6}\s*(?:부록|Appendix)\b.*$", re.M)
 
 # --- 수치·태그 인식 -----------------------------------------------------------
 # 값(범위/오차 포함): "45", "45.5", "45~50", "45-50", "45–50", "45±2". 콤마 허용.
-_NUM_CORE = r"\d[\d,]*(?:\.\d+)?"
-NUM = rf"{_NUM_CORE}(?:\s*(?:[~∼\-–]\s*{_NUM_CORE}|±\s*{_NUM_CORE}))?"
+_NUM_CORE = r"(?:\d[\d,]*(?:\.\d+)?|\.\d+)(?:[eE][+\-−]?\d+)?"
+_SIGNED_NUM = rf"[+\-−]?{_NUM_CORE}"
+NUM = rf"{_SIGNED_NUM}(?:\s*[~∼\-–±]\s*{_SIGNED_NUM})?"
+_VALUE = re.compile(rf"({_SIGNED_NUM})(?:\s*([~∼\-–±])\s*({_SIGNED_NUM}))?")
 # 한국식 수사 프리픽스(천백만억조) — 단위 앞에 0개 이상 연속(예: "1천억원"의 '천억').
 PRE = r"[천백만억조]*"
 # 사실주장으로 취급하는 단위(통화·비율·전력·에너지·질량). 연도 단독/섹션번호는 제외.
 # 순서 주의: 겹치는 접두 문자열은 긴 것을 먼저(TWh 를 GW 보다 먼저 등) 둬야 오매칭이 없다.
-UNIT = (r"TWh|GWh|MWh|kWh|조원|억원|만원|억달러|백만달러|Nm³/h|Nm3/h|GW|MW|kW|㎿|톤|t/y|USD|KRW"
-        r"|billion|million|퍼센트|원|달러|조|억|%")
+_SI_UNIT = r"(?-i:(?:[µμumkMGT]?Wh|[µμumkMGT]?W))(?![A-Za-z])"
+UNIT = (_SI_UNIT + r"|조원|억원|만원|억달러|백만달러|Nm³/h|Nm3/h|㎿|톤|t/y|USD|KRW"
+        # 통화코드(후행 영문 금지: 'EUROPE' 의 EUR 오탐 차단), 질량·면적(kt 는 소문자만 — 'KT'(통신사) 오탐 차단;
+        # ha 는 'has/have' 오탐 차단). (?-i:…) 는 re.I 아래서 이 토큰만 대소문자 구분.
+        r"|EUR(?![A-Za-z])|JPY(?![A-Za-z])|CNY(?![A-Za-z])|GBP(?![A-Za-z])"
+        r"|(?-i:kt|Mt)(?![A-Za-z])|ha(?![A-Za-z])|㎡|배럴"
+        r"|billion|million|퍼센트|원|달러|조|억|%"
+        # 계수 단위(한국 실사 관행: 특허 1,234건·직원 4,500명·업계 2위·3.2배·120기·100만대·3개사).
+        # bare '개' 는 넣지 않는다 — '4개 축'·'6개월' 같은 보고서 구조어 오탐(실측). 전부 _TIGHT 로 숫자에 붙을 때만.
+        r"|건|명|개사|기|위|배|대")
 # 주의: 한국어는 교착어라 단위 뒤에 조사가 붙는다("45조원으로") → 후행 \b 금지(매칭 실패).
 # 선행 (?<!제) 는 '제25조'(법조문 조항) 를 '25조'(25兆원) 로 오독하는 것을 막는다 — '조' 는
 # 兆(trillion)·條(조항) 동음이의어라 실전 픽스처에서 실측된 오탐(법령 인용 표). (?<!\d) 는 숫자
 # 런의 중간에서 시작하는 부분매치를 막는다 — 이게 없으면 (?<!제) 에 막힌 '25' 대신 엔진이
 # '5' 만 떼어 재시도해 '제25조' 가 '5조' 로 여전히 오매칭됐다(실측).
-METRIC_NUM = re.compile(rf"(?<!제)(?<!\d)({NUM})\s*({PRE})\s*({UNIT})", re.I)
-TAG = re.compile(r"\(F\d{3,}\)")
+METRIC_NUM = re.compile(rf"(?<!제)(?<![\d+−-])({NUM})\s*({PRE})\s*({UNIT})", re.I)
+# 접두 통화(H2): '$4.5B'·'US$175M'·'€120M'·'₩300조'·'USD 45 billion'. 배수어가 없으면 1 배.
+# (?<![\w$€£¥₩]) 는 'US$' 를 '$' 로 다시 잡는 중복과 'S$' 부분매치를 막는다. [BMK] 뒤 영문 금지('Mt' 혼동).
+CUR_NUM = re.compile(
+    rf"(?<![\w$€£¥₩+−-])(?P<sign>[+−-])?(?P<currency>US\$|\$|€|£|¥|₩|USD|EUR|GBP|JPY|CNY|KRW)\s*"
+    rf"(?P<number>{NUM})\s*(?P<scale>bn|billion|mn|million|[BMK](?![A-Za-z])|조|억|만)?", re.I)
+# 한글 수사(H2 ③): '삼백조원'·'오천억원'·'이십 퍼센트' — 값 파싱은 안 하고 WARN 으로만 표면화.
+KO_NUMERAL = re.compile(r"(?<![가-힣])[일이삼사오육칠팔구십백천]+[만억조]?\s*(?:원|달러|퍼센트|%|톤|건|명|기|대|배)")
+TAG = re.compile(r"(?:\(F\d{3,}\)|\[F\d{3,}\])")
+DISPUTED_CONTEXT = re.compile(r"^\s*(?:[-*+|]\s*)?\[상충\](?=\s|\||$)")
 # '원/조/억(원)' 은 조(兆)/조(條) 처럼 다른 한글 단어의 첫 음절과 겹치는 동음이의 단위라, 숫자와
 # 공백 없이 바짝 붙을 때만 화폐 표기로 인정한다("45조원"은 화폐, "2025 원문"의 '원'은 남의 단어).
-# 실전 픽스처에서 "2025 원문: ..."(원문=source text) 오매칭이 실측됐다.
-_TIGHT_KRW_UNITS = {"원", "조", "억", "조원", "억원", "만원"}
+# 실전 픽스처에서 "2025 원문: ..."(원문=source text) 오매칭이 실측됐다. 계수 단위도 동일.
+_TIGHT_KRW_UNITS = {"원", "조", "억", "조원", "억원", "만원", "건", "명", "개사", "기", "위", "배", "대"}
+# 약한 계수 단위: 수사 접두(만/천/억)·콤마·값≥100 중 하나가 없으면 사실주장으로 안 본다 —
+# '3대 핵심 과제'(수사)·'20~30대 소비자'(연령대)·'3기 신도시'(고유명) 오탐 실측.
+_WEAK_COUNT_UNITS = {"대", "기"}
+_CUR_DIM = {"$": "USD", "US$": "USD", "USD": "USD", "€": "EUR", "EUR": "EUR", "£": "GBP", "GBP": "GBP",
+            "¥": "JPY", "JPY": "JPY", "₩": "KRW", "KRW": "KRW", "CNY": "CNY"}   # ponytail: ¥=JPY 고정(CNY 혼용은 천장)
+_CURRENCY_DIMS = set(_CUR_DIM.values())
 
 
 def _plausible(seg: str, m: re.Match) -> bool:
     unit = m.group(3)
     if unit in _TIGHT_KRW_UNITS and re.search(r"\s", seg[m.end(1):m.start(3)]):
         return False
+    if unit in _WEAK_COUNT_UNITS and not m.group(2) and "," not in m.group(1):
+        v = _vals(m.group(1))
+        if v is not None and v[0] < 100:
+            return False
     return True
 
 
@@ -92,11 +132,14 @@ def split_body_appendix(md: str) -> tuple[str, str]:
 # (실전 픽스처에서 인용문 안 줄임표가 숫자·태그를 갈라놓는 것을 실측 확인).
 _SENT_SPLIT = re.compile(r"(?<!\.\.)(?<=[.!?。])\s+")
 # 본문 URL(마크다운 링크 대상·raw URL) — 링크 슬러그에 박힌 '100mw' 류 우연한 단위-숫자
-# 문자열이 사실주장으로 오매칭되는 것을 막기 위해 세그먼트 판정 전에 무력화한다.
-_URL = re.compile(r"https?://\S+")
+# 문자열이 사실주장으로 오매칭되는 것을 막는다. 링크 닫힘·뒤 F태그는 보존한다.
+# 상태·태그·상충 문맥 판정에는 이 제거를 적용하지 않은 원문을 사용한다.
+# URL 내부의 균형 잡힌 괄호(위키백과류 경로)는 URL 의 일부로 삼키되, F태그 모양의
+# 괄호(`(F001)`)는 삼키지 않는다 — 뒤에 붙은 결박 태그가 URL 에 흡수되면 안 되기 때문(R1·R4).
+_URL = re.compile(r"https?://(?:\((?!F\d{3,}[\)\],])[^\s<>()\[\]]*\)|[^\s<>()\[\]])+")
 
 
-def split_segments(body: str):
+def split_segments(body: str, *, preserve_text: bool = False):
     """본문을 검사 단위로 분해: 표 행(| 로 시작하는 줄)은 행 전체를 한 세그먼트로 낸다
     (report-format.md 가 강제하는 근거표 구조는 태그와 수치가 다른 셀에 있고, _bind_pairs 가
     '|' 를 건너뛰는 직접 결박은 차단하고 행 단위 값일치 폴백만 허용한다). 그 외 줄들은 빈 줄이나
@@ -108,18 +151,32 @@ def split_segments(body: str):
     def _flush():
         if not buf:
             return []
-        text = _URL.sub("", " ".join(buf))
+        text = "\n".join(buf) if preserve_text else _URL.sub("", " ".join(buf))
         buf.clear()
+        if preserve_text:
+            # 문장 검토 해시는 원문 공백·URL을 보존한다. 마침표 뒤 태그는 앞 문장에 결박한다.
+            ends = [m for m in _SENT_SPLIT.finditer(text) if not TAG.match(text, m.end())]
+            start, pieces = 0, []
+            for match in ends:
+                pieces.append(text[start:match.start()])
+                start = match.end()
+            return [s.strip() for s in [*pieces, text[start:]] if s.strip()]
         return [s for s in _SENT_SPLIT.split(text) if s.strip()]
 
     for ln in body.splitlines():
         if ln.lstrip().startswith("|"):
             yield from _flush()
-            yield _URL.sub("", ln)
+            yield ln if preserve_text else _URL.sub("", ln)
         elif not ln.strip():
             yield from _flush()
+        elif re.match(r"^\s*(?:#{1,6}\s|[-*+]\s|\d+\.\s)", ln):
+            yield from _flush()
+            if ln.lstrip().startswith("#"):
+                yield ln
+            else:
+                buf.append(ln)
         else:
-            buf.append(ln.strip())
+            buf.append(ln if preserve_text else ln.strip())
     yield from _flush()
 
 
@@ -128,42 +185,79 @@ def _p(n: int) -> Decimal:
     return Decimal(10) ** n
 
 
+_CUR_SCALE = {"bn": _p(9), "billion": _p(9), "b": _p(9), "mn": _p(6), "million": _p(6), "m": _p(6),
+              "k": _p(3), "조": _p(12), "억": _p(8), "만": _p(4)}
+
+
 UNIT_SCALE: dict[str, tuple[str, Decimal]] = {
     "조원": ("KRW", _p(12)), "억원": ("KRW", _p(8)), "만원": ("KRW", _p(4)), "원": ("KRW", Decimal(1)),
     "krw_t": ("KRW", _p(12)), "krw": ("KRW", Decimal(1)), "조": ("KRW", _p(12)), "억": ("KRW", _p(8)),
     "억달러": ("USD", _p(8)), "백만달러": ("USD", _p(6)), "달러": ("USD", Decimal(1)), "usd": ("USD", Decimal(1)),
-    "twh": ("WH", _p(12)), "gwh": ("WH", _p(9)), "mwh": ("WH", _p(6)), "kwh": ("WH", _p(3)),
-    "gw": ("W", _p(9)), "mw": ("W", _p(6)), "kw": ("W", _p(3)), "㎿": ("W", _p(6)),
+    "㎿": ("W", _p(6)),
     "톤": ("TON", Decimal(1)), "t/y": ("TON", Decimal(1)), "t": ("TON", Decimal(1)),
     "nm3/h": ("NM3H", Decimal(1)), "nm³/h": ("NM3H", Decimal(1)),
     "%": ("PCT", Decimal(1)), "퍼센트": ("PCT", Decimal(1)), "percent": ("PCT", Decimal(1)),
     "billion": ("N", _p(9)), "million": ("N", _p(6)),
+    "eur": ("EUR", Decimal(1)), "jpy": ("JPY", Decimal(1)), "cny": ("CNY", Decimal(1)), "gbp": ("GBP", Decimal(1)),
+    "㎡": ("M2", Decimal(1)), "ha": ("M2", _p(4)),
+    "배럴": ("BBL", Decimal(1)), "bbl": ("BBL", Decimal(1)),
+    "건": ("건", Decimal(1)), "명": ("명", Decimal(1)), "개사": ("개사", Decimal(1)), "개": ("개사", Decimal(1)),
+    "기": ("기", Decimal(1)), "위": ("RANK", Decimal(1)), "배": ("X", Decimal(1)), "대": ("대", Decimal(1)),
 }
+SI_UNIT_SCALE = {prefix + suffix: (dimension, _p(power))
+                 for prefix, power in (("µ", -6), ("μ", -6), ("u", -6), ("m", -3),
+                                       ("", 0), ("k", 3), ("M", 6), ("G", 9), ("T", 12))
+                 for suffix, dimension in (("W", "W"), ("Wh", "WH"))}
+SI_UNIT_SCALE.update({"kt": ("TON", _p(3)), "Mt": ("TON", _p(6))})
 PRE_MUL = {"천": _p(3), "백": _p(2), "만": _p(4), "억": _p(8), "조": _p(12)}
 # 대장 value.unit 은 자유서식이라 "MW (PEM portion, per 2021 plan)" 같은 부연설명이 붙거나
 # "EUR million"/"USD_million" 처럼 통화기호+배수 단어가 조합되기도 한다. 완전일치가 실패하면
 # (1) million/billion 배수어를 먼저 찾아 배수를 곱하고 — 통화 기호(EUR/AUD 등)는 본문 쪽에서도
 #     접두 통화기호를 못 읽어 어차피 차원을 못 맞추므로 배수만 취하고 차원은 "N"(일반 배수)으로
 #     통일해 본문의 bare "million" 표기와 차원을 맞춘다 —, (2) 그래도 없으면 물리/통화 토큰만 찾는다.
-_SCALE_TOKEN = re.compile(r"million|billion", re.I)
-_UNIT_TOKEN = re.compile(r"TWh|GWh|MWh|kWh|GW|MW|kW|KRW|USD|%", re.I)
+_SCALE_TOKEN = re.compile(r"million|billion|thousand", re.I)
+_KO_SCALE = {"십억": _p(9), "백만": _p(6), "천": _p(3)}          # 실전 대장 '백만 EUR'·'십억 USD' 실측
+_CUR_TOKEN = re.compile(r"USD|EUR|KRW|JPY|CNY|GBP|\$|€|£|¥|₩", re.I)
+_UNIT_TOKEN = re.compile(r"(?<![A-Za-zµμ])(?:" + _SI_UNIT +
+                         r"|(?-i:kt|Mt)(?![A-Za-z])|KRW|USD|EUR|JPY|CNY|GBP|%|건|명|개사|기|위|배럴|배|대)", re.I)
 
 
 def _resolve_unit(unit: str) -> tuple[str | None, Decimal]:
-    u = (unit or "").strip()
+    u = unit.strip() if isinstance(unit, str) else ""
     if not u:
         return None, Decimal(1)
+    if u in SI_UNIT_SCALE:
+        return SI_UNIT_SCALE[u]
     if u.lower() in UNIT_SCALE:
         return UNIT_SCALE[u.lower()]
     if u in UNIT_SCALE:
         return UNIT_SCALE[u]
+    # 'USD_million' / 'EUR million' / '백만 EUR' / '십억 USD': 통화 차원 + 배수. 통화가 없으면 'N'(일반 배수).
+    mul = None
     sm = _SCALE_TOKEN.search(u)
     if sm:
-        return "N", UNIT_SCALE[sm.group(0).lower()][1]
+        mul = {"million": _p(6), "billion": _p(9), "thousand": _p(3)}[sm.group(0).lower()]
+    else:
+        for k, v in _KO_SCALE.items():
+            if k in u:
+                mul = v; break
+    if mul is not None:
+        cm = _CUR_TOKEN.search(u)
+        dim = _CUR_DIM.get(cm.group(0).upper(), "N") if cm else "N"   # '$'.upper()=='$' 라 기호도 그대로 조회됨
+        return dim, mul
     m = _UNIT_TOKEN.search(u)
-    if m and m.group(0).lower() in UNIT_SCALE:
-        return UNIT_SCALE[m.group(0).lower()]
+    if m:
+        token = m.group(0)
+        return SI_UNIT_SCALE.get(token, UNIT_SCALE.get(token.lower(), (None, Decimal(1))))
     return None, Decimal(1)
+
+
+def _dims_compatible(a: str | None, b: str | None) -> bool:
+    """None 은 미상(호출측이 WARN), 'N'(bare million/billion) 은 통화 차원과 호환 — 대장 'USD_million' ↔
+    본문 '120 million(Fxxx)' 정상 표기를 깨지 않기 위함. ponytail: 통화 종류($ vs €) 불일치는 안 잡음."""
+    if a == b:
+        return True
+    return (a == "N" and b in _CURRENCY_DIMS) or (b == "N" and a in _CURRENCY_DIMS)
 
 
 def _mul_of_prefix(pre: str) -> Decimal:
@@ -180,18 +274,26 @@ def _vals(txt: str) -> list[Decimal] | None:
     방향이므로 여기서 더 손대지 않는다.
     ponytail: '1억 2천만원' 류 삽입형 복합수사 완전 파싱은 안 함 — 필요해지면 숫자+수사
     토큰을 좌→우로 누적합산하는 파서로 승격."""
-    txt = (txt or "").strip()
+    txt = txt.strip() if isinstance(txt, str) else ""
     if not txt:
         return None
-    is_pm = bool(re.search(r"±", txt))
-    parts = [p for p in re.split(r"\s*(?:~|∼|-|–|±)\s*", txt) if p != ""]
+    # 기존 대장의 Decimal scalar(.5, 4.5E+9 등)는 보존하고 범위만 별도 문법으로 읽는다.
     try:
-        v = [Decimal(p.replace(",", "")) for p in parts]
+        scalar = Decimal(txt.replace(",", "").replace("−", "-"))
+        return [scalar] if scalar.is_finite() else None
+    except InvalidOperation:
+        pass
+    match = _VALUE.fullmatch(txt)
+    if not match:
+        return None
+    parts = [match.group(1)] + ([match.group(3)] if match.group(3) else [])
+    try:
+        v = [Decimal(p.replace(",", "").replace("−", "-")) for p in parts]
     except InvalidOperation:
         return None
     if not v:
         return None
-    if is_pm and len(v) == 2:
+    if match.group(2) == "±":
         v = [v[0] - v[1], v[0] + v[1]]
     return v
 
@@ -207,7 +309,7 @@ def _qty(numtxt: str, pre: str, unit: str) -> tuple[str | None, list[Decimal] | 
 
 def _ledger_qty(fact: dict) -> tuple[str | None, list[Decimal] | None]:
     """대장 fact.value(raw+unit) → (단위차원, 정규화 Decimal 리스트)."""
-    val = fact.get("value") or {}
+    val = fact.get("value") if isinstance(fact.get("value"), dict) else {}
     v = _vals(val.get("raw") or "")
     dim, mul = _resolve_unit(val.get("unit") or "")
     return dim, (None if v is None else [x * mul for x in v])
@@ -257,74 +359,133 @@ def _bind_pairs(seg: str, nums: list[re.Match], tags: list[re.Match]) -> dict[in
     return bind
 
 
-def check_bound_numbers(body: str, facts: dict) -> tuple[list[str], list[str]]:
-    """무태그 숫자 차단 + (Fxxx) 존재/confirmed + 값·단위 의미대조."""
+def _body_nums(seg: str) -> list[tuple[re.Match, str | None, list[Decimal] | None]]:
+    """세그먼트의 수치 매치 목록 [(match, 차원, 정규화값)]. 접두 통화(CUR_NUM)가 METRIC_NUM 보다 우선 —
+    '₩300조원'·'US$4.5 billion' 이 두 번 잡혀 [무태그] 가 중복되는 것을 막는다."""
+    out = []
+    spans = []
+    for c in CUR_NUM.finditer(seg):
+        dim = _CUR_DIM[c.group("currency").upper()]          # 'us$'→'US$', '$'→'$'
+        mul = _CUR_SCALE.get((c.group("scale") or "").lower(), Decimal(1))
+        v = _vals((c.group("sign") or "") + c.group("number"))
+        out.append((c, dim, None if v is None else [x * mul for x in v]))
+        spans.append((c.start(), c.end()))
+    for m in METRIC_NUM.finditer(seg):
+        if not _plausible(seg, m):
+            continue
+        if any(s <= m.start() < e or s < m.end() <= e for s, e in spans):
+            continue
+        bd, bvals = _qty(m.group(1), m.group(2), m.group(3))
+        out.append((m, bd, bvals))
+    out.sort(key=lambda t: t[0].start())
+    return out
+
+
+def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = False,
+                        where: str = "") -> tuple[list[str], list[str]]:
+    """무태그 숫자 차단 + (Fxxx) 존재/confirmed + 값·단위 의미대조.
+    lenient_untagged=True(부록): [무태그] 만 warning([부록무태그]) 으로 내리고 나머지는 동일 — 생성
+    전수표 때문에 둔 무태그 면제의 본래 목적만 남기고, 오태그·미확정·값불일치는 부록에서도 막는다(H1).
+    where 는 실패 메시지 접두('부록 ')."""
     failures: list[str] = []
     warnings: list[str] = []
-
-    # 본문에 등장하는 모든 (Fxxx) 태그: 대장 존재 + confirmed 상태(값 유무와 무관하게 전건).
-    for tag in sorted(set(m.group(0) for m in TAG.finditer(body))):
-        fid = tag.strip("()")
-        f = facts.get(fid)
-        if not f:
-            failures.append(f"[오태그] 본문 {fid} 대장에 없음")
-        elif f.get("status") != "confirmed":
-            failures.append(f"[미확정] 본문 {fid} status={f.get('status')}")
+    loc = where or "본문 "
 
     # 세그먼트별 수치 결박 + 값 대조.
-    for seg in split_segments(body):
-        nums = [m for m in METRIC_NUM.finditer(seg) if _plausible(seg, m)]
-        if not nums:
+    for original_seg in split_segments(body, preserve_text=True):
+        # 문장/표 행 시작의 명시 표기만 허용하며 앞 헤딩·이전 문장으로 전파하지 않는다.
+        disputed_context = bool(DISPUTED_CONTEXT.match(original_seg))
+        for tag in sorted(set(m.group(0) for m in TAG.finditer(original_seg))):
+            fid = tag.strip("()[]")
+            fact = facts.get(fid)
+            if not fact:
+                failures.append(f"[오태그] {loc}{fid} 대장에 없음")
+            elif fact.get("status") != "confirmed" and not (
+                    fact.get("status") == "disputed" and disputed_context):
+                failures.append(f"[미확정] {loc}{fid} status={fact.get('status')}")
+        seg = _URL.sub("", original_seg)
+        for km in KO_NUMERAL.finditer(seg):                      # H2 ③ 한글 수사 WARN
+            warnings.append(f"[한글수사] 수치로 해석 못 하는 수사 표기: '{km.group(0)}' (문맥: {seg.strip()[:60]!r})")
+        items = _body_nums(seg)
+        if not items:
             continue
+        nums = [t[0] for t in items]
         tags = list(TAG.finditer(seg))
         bind = _bind_pairs(seg, nums, tags)
-        for idx, m in enumerate(nums):
-            bd, bvals = _qty(m.group(1), m.group(2), m.group(3))
+        for idx, (m, bd, bvals) in enumerate(items):
             j = bind.get(idx)
             if j is None:
                 # 직접 결박 실패(태그 없음 또는 표 셀 경계) → 같은 세그먼트 내 값일치 폴백.
                 ok = False
                 for t in tags:
-                    f = facts.get(t.group(0).strip("()"))
+                    f = facts.get(t.group(0).strip("()[]"))
                     if not f:
                         continue
                     ld, lv = _ledger_qty(f)
                     if lv is not None and bvals is not None and lv == bvals and \
-                            (ld is None or bd is None or ld == bd):
+                            (ld is None or bd is None or _dims_compatible(ld, bd)):
                         ok = True
                         break
                 if not ok:
-                    failures.append(
-                        f"[무태그] 수치 사실주장에 F태그 없음: '{m.group(0)}' (문맥: {seg.strip()[:60]!r})")
+                    msg = f"수치 사실주장에 F태그 없음: '{m.group(0)}' (문맥: {seg.strip()[:60]!r})"
+                    if lenient_untagged:
+                        warnings.append(f"[부록무태그] {msg}")
+                    else:
+                        failures.append(f"[무태그] {where}{msg}")
                 continue
-            fid = tags[j].group(0).strip("()")
+            fid = tags[j].group(0).strip("()[]")
             f = facts.get(fid)
             if not f:
                 continue  # 오태그는 위 전역 검사에서 이미 실패 처리됨(중복 방지)
             ld, lv = _ledger_qty(f)
             if lv is None:
+                raw = f["value"].get("raw") if isinstance(f.get("value"), dict) else f.get("value")
                 warnings.append(
-                    f"[값미대조] {fid}: 대장 value.raw={f.get('value', {}).get('raw')!r} "
+                    f"[값미대조] {fid}: 대장 value.raw={raw!r} "
                     f"파싱불가(수식/자유서식) — 본문 '{m.group(0)}' 비교 생략")
                 continue
             if ld is None or bd is None:
                 warnings.append(
                     f"[단위미상] {fid}: unit={f.get('value', {}).get('unit')!r} 인식불가 — 값만 대조")
-            elif ld != bd:
+            elif not _dims_compatible(ld, bd):
                 failures.append(
-                    f"[단위불일치] 본문 {fid}: 표기 '{m.group(0)}' 차원={bd} ≠ 대장 차원={ld} "
+                    f"[단위불일치] {loc}{fid}: 표기 '{m.group(0)}' 차원={bd} ≠ 대장 차원={ld} "
                     f"(대장 {f['value']})")
                 continue
             if lv != bvals:
                 failures.append(
-                    f"[값불일치] 본문 {fid}: 표기 '{m.group(0)}' ≠ 대장 '{f['value']['raw']}'")
+                    f"[값불일치] {loc}{fid}: 표기 '{m.group(0)}' ≠ 대장 '{f['value']['raw']}'")
 
     return failures, warnings
 
 
 # G4: risk 태깅 누락 경고 — 지표가 이 5개 범주(시장규모·성장률·딜규모·순위·점유율)에 해당하는데
 # risk=high 가 아니면 경고만(강제 아님, 다음 배치). 별도 설정 파일 없이 코드 리터럴로 유지.
-_HIGH_RISK_METRICS = ("market_size", "growth_rate", "deal_size", "rank", "share")
+_HIGH_RISK_METRICS = ("market_size", "market size", "growth_rate", "growth rate", "cagr",
+                      "deal_size", "deal size", "rank", "share", "시장규모", "시장 규모",
+                      "성장률", "딜규모", "딜 규모", "순위", "점유율")
+
+
+def _text_present(value) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _independent_observers(fact: dict, evidence: dict) -> int:
+    """원출처/보도자료만 관찰로 계산. 동일 그룹·원문 URL·해시는 같은 관찰로 병합한다."""
+    observations = []
+    for eid in _evidence_ids(fact):
+        ev = evidence.get(eid, {})
+        if ev.get("fact_id") != fact["id"] or ev.get("source_role") not in ("원출처", "보도자료"):
+            continue  # 재인용은 별도 그룹을 신고해도 새 관찰이 아니다.
+        if not all(_text_present(ev.get(k)) for k in ("observer_group", "source_url", "sha256")):
+            continue
+        tokens = {("group", ev["observer_group"].strip()),
+                  ("url", ev["source_url"].strip().split("#", 1)[0]),
+                  ("sha", ev["sha256"].lower())}
+        merged = [group for group in observations if group & tokens]
+        observations = [group for group in observations if not group & tokens]
+        observations.append(tokens.union(*merged))
+    return len(observations)
 
 
 def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
@@ -342,61 +503,88 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
     seen_fid: dict[str, dict] = {}
     seen_claim_key: dict[str, str] = {}
     for f in facts_raw:
+        if not isinstance(f, dict):
+            failures.append("[대장무결성] fact: 타입 오류(object)")
+            continue
         fid = f.get("id")
         if f.get("kind") == "evidence":       # 실전 픽스처에서 실측: evidence 행이 facts.jsonl 에 섞여 있음
             failures.append(f"[대장오염] {fid}: evidence 행이 facts.jsonl 에 있음(파이프라인 오류)")
             continue
-        if fid in seen_fid:
+        if isinstance(fid, str) and fid in seen_fid:
             failures.append(f"[중복ID] fact.id {fid} 가 facts.jsonl 에 중복 행 — 대장 직접조작 의심")
-        else:
+        elif isinstance(fid, str):
             seen_fid[fid] = f
         ck = f.get("claim_key")
-        if ck:
+        if isinstance(ck, str) and ck:
             if ck in seen_claim_key and seen_claim_key[ck] != fid:
                 failures.append(f"[중복claim_key] {ck!r} → {seen_claim_key[ck]}·{fid} 중복")
             else:
                 seen_claim_key[ck] = fid
         try:
-            validate_fact(f, schema)
+            validate_fact(f, schema, warnings=warnings)
         except ValidationError as e:
             failures.append(f"[대장무결성] {fid}: {e}")
 
     seen_eid: dict[str, dict] = {}
     for e in evidence_raw:
+        if not isinstance(e, dict):
+            failures.append("[대장무결성] evidence: 타입 오류(object)")
+            continue
         eid = e.get("id")
         if e.get("kind") == "fact":
             failures.append(f"[대장오염] {eid}: fact 행이 evidence.jsonl 에 있음(파이프라인 오류)")
             continue
-        if eid in seen_eid:
+        if isinstance(eid, str) and eid in seen_eid:
             failures.append(f"[중복ID] evidence.id {eid} 가 evidence.jsonl 에 중복 행")
-        else:
+        elif isinstance(eid, str):
             seen_eid[eid] = e
         try:
-            validate_evidence(e, schema, wp)
+            validate_evidence(e, schema, wp, warnings=warnings)
         except ValidationError as ex:
             failures.append(f"[대장무결성] {eid}: {ex}")
+
+    ref_failures, ref_warnings = check_ledger_references(facts_raw, evidence_raw)
+    failures += ref_failures
+    warnings += ref_warnings
 
     for fid, f in facts.items():
         if f.get("status") == "confirmed" and fid not in used:
             warnings.append(f"[미사용] confirmed {fid} 본문에서 안 쓰임")
-        metric = ((f.get("context") or {}).get("metric") or "").lower()
+        context = f.get("context") if isinstance(f.get("context"), dict) else {}
+        metric = str(context.get("metric") or "").lower()
         if any(k in metric for k in _HIGH_RISK_METRICS) and f.get("risk") != "high":
             warnings.append(f"[risk태깅] {fid} metric={metric!r} 고위험 지표인데 risk={f.get('risk')!r}")
-        # [Bx] claim-graph 긍정 요건 가시화(warning 만 — failure 승격은 다음 배치).
-        # G4 는 부정 검사(반박 기록·폐기사유·강등재검증)만 넣었을 뿐 이 네 요건을 아무 데도
-        # 읽지 않아 실전 대장(confirmed 76건 전부)이 게이트를 한 번도 안 거친 게 안 보였다.
+        # v4는 실재 증거 기반 독립성과 네 요건을 강제한다. v3의 기존 ①② FAIL·③④ WARN은 유지.
+        # 본문 미사용 high-risk는 요건 부족을 WARN으로 남기고, 상충 병기는 별도 문맥으로 허용한다.
         if f.get("risk") == "high" and f.get("status") == "confirmed":
-            missing = []
-            if len(f.get("independent_groups") or []) < 2:
-                missing.append("독립 관찰그룹 부족")
-            if not f.get("counter_search"):
-                missing.append("반박검색 기록 없음")
-            if not f.get("primary_source_ref"):
-                missing.append("기본소스 참조 없음")
-            if not (f.get("observed_at") or f.get("valid_at")):
-                missing.append("시간증거 없음")
-            if missing:
-                warnings.append(f"[반박게이트] {fid}: " + "·".join(missing))
+            hard, soft = [], []
+            strict = f.get("schema_version") == 4
+            declared = f.get("independent_groups")
+            groups = {g.strip() for g in declared if _text_present(g)} if isinstance(declared, list) else set()
+            count = _independent_observers(f, seen_eid) if strict else len(groups)
+            if count < 2:
+                hard.append("독립 관찰그룹 부족(≥2)")
+            counter = f.get("counter_search") if isinstance(f.get("counter_search"), dict) else {}
+            if not _text_present(counter.get("query")):
+                hard.append("반박검색 기록 없음(counter_search.query)")
+            if not _text_present(counter.get("result")) or counter.get("found_stronger_refutation") is not False:
+                soft.append("반박검색 결과/반박 없음 명시 기록 부족")
+            primary = seen_eid.get(f.get("primary_source_ref")) if isinstance(f.get("primary_source_ref"), str) else None
+            if not primary or primary.get("fact_id") != fid or primary.get("id") not in _evidence_ids(f):
+                soft.append("기본소스 참조 없음/실재 연결 불일치")
+            if not any(valid_iso_time(f.get(k)) for k in ("observed_at", "valid_at")):
+                soft.append("시간증거 없음/ISO 날짜 형식 오류")
+            elif any(f.get(k) is not None and not valid_iso_time(f[k]) for k in ("observed_at", "valid_at")):
+                soft.append("시간증거 ISO 날짜 형식 오류")
+            if strict:
+                hard += soft
+                soft = []
+            if fid in used and hard:
+                failures.append(f"[반박게이트] {fid}: " + "·".join(hard) + " — disputed 로 내리거나 요건 충족 후 재검증")
+            elif hard:
+                warnings.append(f"[반박게이트] {fid}(본문 미사용): " + "·".join(hard))
+            if soft:
+                warnings.append(f"[반박게이트] {fid}: " + "·".join(soft))
 
     return failures, warnings
 
@@ -404,14 +592,62 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.I)
 
 
-def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[str]) -> list[str]:
+def inspect_capture(evidence: dict, wp: WorkPaths) -> dict:
+    """캡처 바이트에 결박된 육안 검토를 판정한다. 차단 화면은 증빙 부족이며 사실 반증이 아니다."""
+    import fitz
+    from collections import Counter
+    issues, warnings = [], []
+    capture = evidence.get("capture")
+    if not capture:
+        return {"valid": False, "issues": ["source_capture 없음"], "warnings": []}
+    violation = check_capture_path(capture, wp)
+    path = wp.root / capture
+    if violation or not path.is_file():
+        return {"valid": False, "issues": [violation or f"캡처 파일 없음: {capture}"], "warnings": []}
+    try:
+        pix = fitz.Pixmap(str(path))
+        if pix.width < 64 or pix.height < 32:
+            warnings.append(f"최소 크기 의심: {pix.width}x{pix.height} (권장 ≥64x32)")
+        if pix.colorspace and pix.colorspace.n != 3:
+            pix = fitz.Pixmap(fitz.csRGB, pix)
+        while max(pix.width, pix.height) > 256:
+            pix.shrink(1)
+        samples, stride = pix.samples, pix.n
+        counts = Counter(samples[i:i + stride] for i in range(0, len(samples), stride))
+        dominant = Decimal(max(counts.values(), default=0)) / Decimal(max(1, pix.width * pix.height))
+        # ponytail: 축소된 정확 단색 비율은 백지 후보만 찾는다. 텍스트가 적은 정상 화면도 걸리며
+        # 그라데이션 백지/차단 문구는 놓친다. OCR·의미 판정/자동 accept의 대체물이 아니다.
+        if dominant >= Decimal("0.98"):
+            warnings.append(f"백지 의심: 단색 비율 {dominant:.3f} — 육안 검토 필요")
+    except Exception as exc:
+        issues.append(f"이미지 디코딩 실패: {exc}")
+    review = evidence.get("capture_review")
+    if review is None:
+        issues.append("capture_review 없음 — 내용 검토 필요")
+    else:
+        try:
+            validate_capture_review(review)
+        except ValidationError as exc:
+            issues.append(str(exc))
+        else:
+            if review["image_sha256"].lower() != manifest.sha256_file(path).lower():
+                issues.append("image_sha256 불일치 — 캡처 교체 후 재검토 필요")
+            if review["page_state"] != "content" or review["verdict"] != "accept":
+                issues.append(f"page_state={review['page_state']}, verdict={review['verdict']} — 증빙 불인정")
+    return {"valid": not issues, "issues": issues, "warnings": warnings}
+
+
+def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[str]) -> tuple[list[str], list[str]]:
     """evidence 필수필드 + text_quote verbatim + sha256 형식/실해시 대조 + confirmed 핵심수치
-    source_capture 실재(신뢰경계 포함)."""
-    failures = []
+    source_capture 실재(신뢰경계 포함). lead reread_sha256 이 evidence 해시와 안 맞으면 WARN."""
+    failures: list[str] = []
+    warnings: list[str] = []
     for f in facts.values():
-        if f.get("status") != "confirmed":
+        if f.get("status") not in ("confirmed", "disputed"):
             continue
-        for eid in f.get("evidence_ids", []):
+        if f.get("status") == "disputed" and f["id"] in used and not _evidence_ids(f):
+            failures.append(f"[증거유실] 상충 인용 {f['id']} evidence_ids 없음")
+        for eid in _evidence_ids(f):
             e = evidence.get(eid)
             if not e:
                 failures.append(f"[증거유실] {f['id']} → {eid} 없음"); continue
@@ -434,9 +670,9 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                         failures.append(f"[해시불일치] {eid} local 파일 실해시가 sha256 필드와 다름")
         # G2 증빙: 본문에 쓰인 confirmed '핵심수치'(raw 가 Decimal 로 파싱되는 값)는 source_capture 필수.
         # risk=high 태깅 여부와 무관하게 강제 — [Bx] 반박게이트 미실행 시 캡처 0 통과되던 구멍 차단.
-        is_core_num = _vals((f.get("value") or {}).get("raw", "")) is not None
+        is_core_num = _ledger_qty(f)[1] is not None
         if f["id"] in used and (is_core_num or f.get("risk") == "high"):
-            caps = [(evidence.get(e) or {}).get("capture") for e in f.get("evidence_ids", [])]
+            caps = [(evidence.get(e) or {}).get("capture") for e in _evidence_ids(f)]
             caps = [c for c in caps if c]
             if not caps:
                 failures.append(f"[증빙] 핵심수치 {f['id']} source_capture 없음")
@@ -451,11 +687,45 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                         ok_cap = True
                 if not ok_cap:
                     failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
-    return failures
+        # v3는 기존 파일 실재 조건을 유지하되 내용 검토 누락을 WARN으로 노출한다.
+        # v4는 모든 연결 캡처를 검토하고, 부적격 캡처를 유효 건수에 포함하지 않는다.
+        captures = [evidence[eid] for eid in _evidence_ids(f)
+                    if eid in evidence and evidence[eid].get("capture")]
+        valid_count = 0
+        for e in captures:
+            review = inspect_capture(e, wp)
+            valid_count += int(review["valid"])
+            strict = f.get("schema_version") == 4 or e.get("schema_version") == 4
+            for issue in review["issues"]:
+                (failures if strict else warnings).append(f"[캡처검토] {f['id']}/{e['id']}: {issue}")
+            warnings.extend(f"[캡처보조] {e['id']}: {issue}" for issue in review["warnings"])
+        if captures and not valid_count:
+            strict = f.get("schema_version") == 4 or any(e.get("schema_version") == 4 for e in captures)
+            (failures if strict else warnings).append(
+                f"[증빙부족] {f['id']}: 유효 source_capture 0건 — 사실의 거짓 판정 아님")
+        # D5: lead 재열람 해시가 이 fact 의 증거(sha256·local 실파일·verbatim) 어느 것과도 안 맞으면 WARN.
+        # WebFetch 재열람(바이트 없음)이 남아 있어 FAIL 로는 못 올린다 — 자가신고를 드러내는 용도.
+        if f["id"] in used:
+            known = set()
+            for eid in _evidence_ids(f):
+                e = evidence.get(eid) or {}
+                if e.get("sha256"): known.add(str(e["sha256"]).lower())
+                if e.get("verbatim"): known.add(gates.sha256_text(e["verbatim"]))
+                lp = wp.root / e["local"] if e.get("local") else None
+                if lp and lp.exists(): known.add(manifest.sha256_file(lp).lower())
+            events = f.get("verify_events")
+            rr = {str(ev.get("reread_sha256") or "").lower()
+                  for ev in (events if isinstance(events, list) else [])
+                  if isinstance(ev, dict) and ev.get("by") == "lead" and ev.get("action") == "reread"}
+            if rr and not (rr & known):
+                warnings.append(f"[재열람미결박] {f['id']}: lead reread_sha256 이 evidence sha256/local/verbatim 해시와 불일치")
+    return failures, warnings
 
 
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
-_IMG_HTML = re.compile(r'<img\b[^>]*\bsrc=["\']([^"\']+)["\']', re.I | re.S)
+_IMG_HTML = re.compile(r'<img\b[^>]*\bsrc\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
+_IMG_REF = re.compile(r"!\[([^\]]*)\](?:\[([^\]]*)\])?(?!\()")
+_IMG_DEF = re.compile(r'^\s{0,3}\[([^\]]+)\]:\s*(?:<([^>]+)>|(\S+))', re.M)
 _FIGURE_TOKEN = re.compile(r"!\[[^\]]*\]\([^)]+\)|<img\b|<figure\b", re.I)
 # `출처:` 뒤에 실제 값이 오는지 — 라벨만 적고 비워두는 것을 출처로 인정하지 않는다.
 _SOURCE_VALUE = re.compile(r"출처\s*:\s*\S")
@@ -469,7 +739,14 @@ _PART_THREE = re.compile(r"^(?:부\s*)?3(?:\s*부)?(?:\s*[.．:：-])?(?:\s+|$)"
 def _figure_refs(body: str) -> list[tuple[int, int, str]]:
     """본문 도판 참조를 문서 순서대로 (시작, 끝, 경로) 형태로 돌려준다."""
     refs = [(m.start(), m.end(), m.group(1)) for m in _IMG_MD.finditer(body)]
-    refs += [(m.start(), m.end(), m.group(1)) for m in _IMG_HTML.finditer(body)]
+    refs += [(m.start(), m.end(), next(g for g in m.groups() if g is not None))
+             for m in _IMG_HTML.finditer(body)]
+    definitions = {" ".join(m.group(1).split()).casefold(): m.group(2) or m.group(3)
+                   for m in _IMG_DEF.finditer(body)}
+    for match in _IMG_REF.finditer(body):
+        key = " ".join((match.group(2) or match.group(1)).split()).casefold()
+        if key in definitions:
+            refs.append((match.start(), match.end(), definitions[key]))
     return sorted(refs)
 
 
@@ -543,10 +820,17 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], 
         failures.append("[도판] 본문 대표 이미지 0장(증빙캡처·차트·도식 누락)")
     else:
         def _exists(p: str) -> bool:
-            p = p.split("#")[0]
-            if p.startswith(("http://", "https://", "data:")):
-                return True  # 외부/데이터 URI 는 경로 실재 검사 대상 아님
-            return (wp.root / p).exists() or Path(p).exists()
+            try:
+                ref = urlsplit(p)
+                # Windows 드라이브 절대경로(C:/...)는 urlsplit 이 scheme 으로 오인한다 —
+                # 렌더러(render_pdf)와 같은 기준으로 로컬 절대경로로 취급하되 루트 내부만 인정.
+                drive_path = len(ref.scheme) == 1 and len(p) > 2 and p[1] == ":"
+                if (ref.scheme and not drive_path) or ref.netloc or p.startswith(("//", "\\\\")):
+                    return False
+                local = (wp.root / unquote(p if drive_path else ref.path)).resolve()
+                return local.is_relative_to(wp.root.resolve()) and local.is_file()
+            except (ValueError, OSError):
+                return False
         # 참조마다 개별 판정한다 — any() 로 묶으면 10장 중 1장만 실재해도 통과해
         # 깨진 그림 9장이 그대로 고객 PDF 로 나간다(실측 확인).
         for path in dict.fromkeys(p for _s, _e, p in refs):
@@ -595,6 +879,45 @@ def parse_plan_toc(text: str) -> tuple[list[tuple[int, str]], list[str]]:
             axes = [a.strip() for a in _PLAN_AXIS.findall(text[m.end():end])]
             break
     return parts, axes
+
+
+def _heading_title(title: str) -> str:
+    title = title.replace(_COND_MARK, "").strip().rstrip("#").strip()
+    return re.sub(r"^(?:부\s+\d+\s*[.．:]|\d+\s*부\s*[.．:]?|\d+\s*[.．:])\s*", "", title).casefold()
+
+
+def check_appendix_boundary(md: str, wp: WorkPaths, plan: Path | str | None = None) -> tuple[list[str], list[str]]:
+    """부록 완화는 승인된 부록 헤딩부터만 허용한다. 부록 뒤 본문/미승인 장은 차단."""
+    body, appendix = split_body_appendix(md)
+    if not appendix:
+        return [], []
+    failures, warnings = [], []
+    marker = APPX_COMMENT.search(appendix)
+    tail = appendix[marker.end():] if marker else appendix
+    headings = list(_MD_HEADING.finditer(tail))
+    is_appendix = lambda title: bool(re.match(r"^(?:부록|appendix)\b", _heading_title(title)))
+    if not headings or tail[:headings[0].start()].strip() or not is_appendix(headings[0].group(2)):
+        failures.append("[부록경계] 부록 마커는 부록 헤딩 바로 앞에 있어야 함")
+    path = Path(plan) if plan else wp.audit / "research-plan.md"
+    plan_text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    parts, axes = parse_plan_toc(plan_text)
+    plan_heads = list(_MD_HEADING.finditer(plan_text))
+    approved_start = next((i for i, h in enumerate(plan_heads) if is_appendix(h.group(2))), None)
+    approved = {_heading_title(h.group(2)) for h in plan_heads[approved_start:]} if approved_start is not None else set()
+    body_titles = {_heading_title(title) for _, title in parts if not is_appendix(title)}
+    body_titles.update(_heading_title(axis) for axis in axes)
+    if parts and (not approved or not headings or _heading_title(headings[0].group(2)) not in approved):
+        failures.append("[부록경계] 승인 목차의 부록 헤딩과 마커 위치 불일치")
+    for heading in headings:
+        title = _heading_title(heading.group(2))
+        if title in body_titles or (not is_appendix(title) and re.search(
+                r"executive|conclusion|recommendation|summary|결론|요약|인사이트|권고", title)):
+            failures.append(f"[부록경계] 부록 뒤 본문 성격 헤딩: {heading.group(2)}")
+        elif parts and title not in approved:
+            failures.append(f"[부록경계] 승인 목차에 없는 부록 장: {heading.group(2)}")
+    if not parts:
+        warnings.append("[부록경계미검증] 승인 목차 없음 — 부록 헤딩/본문 성격 헤딩만 검사")
+    return failures, warnings
 
 
 def check_toc(md: str, wp: WorkPaths, plan: Path | str | None = None) -> tuple[list[str], list[str]]:
@@ -653,19 +976,27 @@ def check_toc(md: str, wp: WorkPaths, plan: Path | str | None = None) -> tuple[l
 
 
 def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool = False,
-          plan: Path | str | None = None) -> dict:
+          plan: Path | str | None = None, *, check_only: bool = False) -> dict:
+    """공통 내용 검사. check_only=True이면 계산·주장 감사 산출물도 쓰지 않는다."""
+    wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
+    if plan is not None and not check_only and Path(plan).resolve() != (wp.audit / "research-plan.md").resolve():
+        raise ValueError("[계획경로] custom plan은 check_only 진단 전용 — audit/research-plan.md 사용 필요")
     md = Path(report_md).read_text(encoding="utf-8")
     body, _appendix = split_body_appendix(md)
-    db = FactsDB(work)
-    facts_raw = db.facts()
-    evidence_raw = db.evidence()
-    facts = {f["id"]: f for f in facts_raw}
-    evidence = {e["id"]: e for e in evidence_raw}
+    # G3는 로드 예외로 중단하지 않고 아래 공통 참조 검사 결과를 FAIL/WARN 보고서에 합친다.
+    facts_raw = _read_jsonl(wp.facts)
+    evidence_raw = _read_jsonl(wp.evidence)
+    facts = {f["id"]: f for f in facts_raw if isinstance(f, dict) and isinstance(f.get("id"), str)}
+    evidence = {e["id"]: e for e in evidence_raw if isinstance(e, dict) and isinstance(e.get("id"), str)}
     wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
-    used = {m.group(0).strip("()") for m in TAG.finditer(body)}
+    used = {m.group(0).strip("()[]") for m in TAG.finditer(body)}
 
     failures: list[str] = []
     warnings: list[str] = []
+
+    # 정규 원고가 있는 작업폴더는 함수 호출도 동일 원고를 검사한다. 원고 없는 v3 단독 검사는 유지.
+    if wp.report_md.is_file() and Path(report_md).resolve() != wp.report_md.resolve():
+        failures.append("[원고경로] 검증 원고 경로 불일치 — 작업폴더의 report.md를 검사해야 합니다")
 
     # 부록 경계 마커는 최대 1개 — split_body_appendix 는 첫 마커 기준이라, 본문 앞쪽의
     # 중복(실수·위조) 마커 하나가 그 뒤 본문 전체를 결박 검사에서 조용히 면제시킨다.
@@ -681,14 +1012,32 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     if not body.strip():
         failures.append("[본문공백] 부록 경계 이전 본문이 비어 있음 — 본문 결박 검사가 통째로 침묵")
 
-    bn_fail, bn_warn = check_bound_numbers(body, facts)
-    failures += bn_fail
-    warnings += bn_warn
-
+    boundary_fail, boundary_warn = check_appendix_boundary(md, wp, plan)
+    failures += boundary_fail
+    warnings += boundary_warn
     li_fail, li_warn = check_ledger_integrity(facts, used, facts_raw, evidence_raw, wp)
     failures += li_fail
     warnings += li_warn
-    failures += check_evidence_chain(facts, evidence, wp, used)
+    if any(("[대장무결성]" in issue and "타입 오류" in issue)
+           or issue.startswith(("[증거유실]", "[증거역참조]")) for issue in li_fail):
+        # 잘못된 v4 타입/참조를 대장을 다시 로드하는 계산·주장 검사에 넘기지 않고 FAIL로 보고한다.
+        return {"ok": False, "failures": failures, "warnings": warnings,
+                "stats": {"facts": len(facts), "evidence": len(evidence), "body_tags": len(used)}}
+
+    bn_fail, bn_warn = check_bound_numbers(body, facts)
+    failures += bn_fail
+    warnings += bn_warn
+    # 부록(H1): 무태그만 면제, 오태그·미확정·값·단위 대조는 본문과 동일하게 적용. used 는 본문 태그만.
+    ap_fail, ap_warn = check_bound_numbers(_appendix, facts, lenient_untagged=True, where="부록 ")
+    failures += ap_fail
+    warnings += ap_warn
+
+    # 부록의 상충 인용도 출처·캡처를 생략할 수 없다. confirmed의 '본문 사용' 집계는 그대로다.
+    disputed_appendix = {m.group(0).strip("()[]") for m in TAG.finditer(_appendix)
+                         if facts.get(m.group(0).strip("()[]"), {}).get("status") == "disputed"}
+    ec_fail, ec_warn = check_evidence_chain(facts, evidence, wp, used | disputed_appendix)
+    failures += ec_fail
+    warnings += ec_warn
 
     fig_fail, fig_warn = check_figures(body, evidence, wp)
     failures += fig_fail
@@ -697,6 +1046,14 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     toc_fail, toc_warn = check_toc(md, wp, plan)
     failures += toc_fail
     warnings += toc_warn
+
+    # 지연 import로 공통 TAG/세그먼트 재사용의 순환 초기화를 피한다.
+    from verify_calculations import verify as verify_calculations
+    from verify_claims import verify as verify_claims
+    for checked in (verify_calculations(wp, check_only=check_only),
+                    verify_claims(report_md, wp, check_only=check_only)):
+        failures += checked["failures"]
+        warnings += checked["warnings"]
 
     if conversion:
         for f in facts.values():
@@ -707,6 +1064,31 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     return {"ok": len(failures) == 0, "failures": failures, "warnings": warnings,
             "stats": {"facts": len(facts), "evidence": len(evidence),
                       "body_tags": len(used)}}
+
+
+def verify_and_record(work: WorkPaths | Path | str, *, conversion: bool = False,
+                      plan: Path | str | None = None) -> dict:
+    """정규 원고 검증→PASS 기준선 봉인→G3 기록을 한 번의 실행으로 묶는다."""
+    wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
+    try:
+        if plan is not None and Path(plan).resolve() != (wp.audit / "research-plan.md").resolve():
+            raise ValueError("[계획경로] custom plan은 check_only 진단 전용 — audit/research-plan.md 사용 필요")
+        rep = verify(wp.report_md, wp, conversion=conversion)
+        summary = json.dumps(rep, ensure_ascii=False, sort_keys=True)
+        if not rep["ok"]:
+            receipt = gates.record_script_result(wp, "G3", 1, summary)
+            return {"verification": rep, "receipt": receipt}
+        checked = gates.check_prerequisites(wp, "G3")
+        if not checked["ok"]:
+            raise gates.GateError("G3 선행 영수증 미충족: " + "; ".join(checked["issues"]))
+        sealed = manifest.build(wp, for_g3=True)
+        receipt = gates._record_script_result(wp, "G3", 0, summary, extra={
+            "manifest_sha256": gates.sha256_file(wp.manifest),
+            "manifest_entries": len(sealed["entries"])})
+    except (gates.GateError, OSError, ValueError) as exc:
+        gates.record_script_result(wp, "G3", 1, str(exc))
+        raise
+    return {"verification": rep, "manifest_entries": len(sealed["entries"]), "receipt": receipt}
 
 
 def _print(rep: dict) -> None:
@@ -737,7 +1119,7 @@ def demo() -> None:
         db.add_evidence({"fact_id": "F001", "type": "table_cell",
                          "source_url": "https://dart.fss.or.kr", "sha256": _h("F001-E001"),
                          "capture": "_captures/f001.jpg"})   # 핵심수치 증빙 결박
-        db.add_verify_event("F001", "lead", "reread")
+        db.add_verify_event("F001", "lead", "reread", reread_sha256=_h("F001-E001"))
         db.set_status("F001", "confirmed")
 
         wp = WorkPaths(wd)
@@ -758,10 +1140,16 @@ def demo() -> None:
         r = verify(wp.root / "v.md", wd)
         assert not r["ok"] and any("값불일치" in x for x in r["failures"]), r
 
-        # 부록의 태그는 본문 사용으로 미계산
+        # 부록(H1): 태그는 '본문 사용'으로 안 세지만 값 대조는 받는다 — 999조원(F001) 은 FAIL
         appx = good + "\n## 부록\n- F001 전수표 999조원(F001)\n"
         (wp.root / "a.md").write_text(appx, encoding="utf-8")
-        assert verify(wp.root / "a.md", wd)["ok"], "부록이 본문검사 오염"
+        ra = verify(wp.root / "a.md", wd)
+        assert not ra["ok"] and any("값불일치" in x and "부록" in x for x in ra["failures"]), ra
+        # 긍정형 짝: 값이 맞으면 통과하고, 부록의 무태그 수치(환율)는 WARN 으로만 표면화
+        appx_ok = good + "\n## 부록\n- F001 전수표 300.9조원(F001) · 환율 1,350원/달러 기준\n"
+        (wp.root / "a2.md").write_text(appx_ok, encoding="utf-8")
+        ra2 = verify(wp.root / "a2.md", wd)
+        assert ra2["ok"] and any("부록무태그" in w for w in ra2["warnings"]), ra2
 
         # 핵심수치인데 캡처 없음 → 증빙게이트 FAIL (risk=normal 이어도 강제)
         db.add_fact({"claim": "신규 용량 4GW",
@@ -771,7 +1159,7 @@ def demo() -> None:
                      "risk": "normal", "status": "pending"})
         db.add_evidence({"fact_id": "F002", "type": "text_quote", "verbatim": "surpass 4 GW",
                          "source_url": "https://iea.org", "sha256": _h("F002-E002")})   # capture 없음
-        db.add_verify_event("F002", "lead", "reread")
+        db.add_verify_event("F002", "lead", "reread", reread_sha256=_h("F002-E002"))
         db.set_status("F002", "confirmed")
         nocap = "신규 용량은 4GW(F002) 이다.\n\n![](_captures/f001.jpg)\n"
         (wp.root / "nc.md").write_text(nocap, encoding="utf-8")
@@ -791,25 +1179,28 @@ if __name__ == "__main__":
     if not args or args[0] == "demo":
         demo()
     elif len(args) >= 2:
-        plan = args[args.index("--plan") + 1] if "--plan" in args[:-1] else None
-        rep = verify(args[0], args[1], conversion="--conversion" in args, plan=plan)
-        _print(rep)
-        if not rep["ok"]:
-            sys.exit(1)
         wp = WorkPaths(args[1])
-        checked = gates.check_gate(wp, "G3")
-        if not checked["ok"]:
-            print("[G3] 선행 영수증 미충족: " + "; ".join(checked["issues"]), file=sys.stderr)
+        if Path(args[0]).resolve() != wp.report_md.resolve():
+            print(f"[G3] 검증 원고 경로 불일치: 작업폴더의 report.md만 검증·봉인할 수 있습니다: {wp.report_md}",
+                  file=sys.stderr)
             sys.exit(1)
+        plan = args[args.index("--plan") + 1] if "--plan" in args[:-1] else None
         try:
-            receipt = gates.record_script_result(
-                wp, "G3", 0,
-                json.dumps(rep, ensure_ascii=False, sort_keys=True), wp.facts,
-            )
-        except gates.GateError as exc:
+            if "--check-only" in args:
+                report = verify(wp.report_md, wp, conversion="--conversion" in args,
+                                plan=plan, check_only=True)
+                _print(report)
+                sys.exit(0 if report["ok"] else 1)
+            result = verify_and_record(wp, conversion="--conversion" in args, plan=plan)
+        except (gates.GateError, OSError, ValueError) as exc:
             print(f"[G3] 영수증 기록 실패: {exc}", file=sys.stderr)
             sys.exit(1)
-        print(f"[G3] PASS 영수증 기록: {receipt['result_summary_sha256']}")
+        _print(result["verification"])
+        if not result["verification"]["ok"]:
+            sys.exit(1)
+        receipt = result["receipt"]
+        print(f"[G3] PASS 영수증 기록: {receipt['result_summary_sha256']} "
+              f"(manifest {result['manifest_entries']} 항목 봉인)")
         sys.exit(0)
     else:
         print(__doc__); sys.exit(2)

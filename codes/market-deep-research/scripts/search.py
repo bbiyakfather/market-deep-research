@@ -23,14 +23,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from skill_paths import ASSETS
 
-try:
-    from curl_cffi import requests as creq
-    from fetch import _CA_BUNDLE, check_url_safe, check_response_ip
-except Exception:
-    creq = None
-    _CA_BUNDLE = None
-    def check_url_safe(u): return urlparse(u).hostname
-    def check_response_ip(r): pass   # ponytail: urllib 폴백엔 primary_ip 가 없음 — TOCTOU 방어는 curl_cffi 전제
+from fetch import creq, request_bytes, response_text
 
 _CURATED = json.loads((ASSETS / "curated-sources.json").read_text(encoding="utf-8"))
 _SEARX = json.loads((ASSETS / "searx-instances.json").read_text(encoding="utf-8"))
@@ -41,15 +34,9 @@ def _now() -> str:
 
 
 def _get(url: str, timeout: int = 12) -> tuple[int, str]:
-    check_url_safe(url)
-    if creq is None:
-        from urllib.request import Request, urlopen
-        with urlopen(Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=timeout) as r:
-            return r.status, r.read().decode("utf-8", errors="replace")
-    kw = {"verify": _CA_BUNDLE} if _CA_BUNDLE else {}
-    r = creq.get(url, impersonate="chrome", timeout=timeout, **kw)
-    check_response_ip(r)                                # V26 — 실접속 IP 사후 재검증(TOCTOU)
-    return r.status_code, r.text
+    response = request_bytes(url, timeout=timeout, client=creq,
+                             headers={"User-Agent": "Mozilla/5.0"})
+    return response["status"], response_text(response)
 
 
 # --- 백엔드들 ----------------------------------------------------------------

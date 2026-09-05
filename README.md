@@ -37,10 +37,10 @@ lessons.md                    ← 실전에서 얻은 교훈 누적
 [Bx]  반박·claim-graph ─ high-risk: 독립 관찰그룹 2+ · 반박검색 · 기본소스 · 시간증거
 [G2]  증빙 게이트 ─ confirmed 전건 source_capture(핵심수치 필수)
 [3]   보고서 작성 ─ 고객 report.md(11부 표준목차) + 내부 audit 번들
-[G3]  verify_facts + manifest ─ 실패 0 · 무태그 수치 차단 · 도판검사 · SHA-256 봉인
+[G3]  verify_facts + manifest ─ 실패 0 · 무태그 수치 차단 · 도판검사 · CLI PASS 가 기준 manifest 자동 봉인
 [G5c] 실행코드 검증 ─ 계산·상충 주장을 스크립트로 실증(CONFIRMED/REFUTED)
 [4]   render_pdf ─ pandoc → Headless Chrome, 오프라인 PDF
-[4b]  재봉인    ─ manifest 재빌드(렌더 산출물 해시 추가)
+[4b]  재봉인    ─ extend-only(기존 항목 불변 확인, 렌더 산출물만 추가, G3 기준선 해시 대조)
 [G4]  preview   ─ 팀리드 육안 검증 + intent-diff 축별 대조
 [G5]  최종 무결성 ─ PDF F태그·링크·캡처 수 재검사 + manifest verify
 ```
@@ -55,7 +55,7 @@ lessons.md                    ← 실전에서 얻은 교훈 누적
 | **소유 스크립트 자기기록** | G3 · [4b] · G5 | `verify_facts.py` · `render_pdf.py` · `manifest.py verify` — **CLI 손기록 차단** |
 | 무소유 | G1 · G5c 등 | `gates.py record_script_result` |
 
-G3·[4b]·G5는 손으로 기록할 수 없습니다. 소유 스크립트를 **실제로 돌린 영수증**과 안 돌리고 적은 영수증을 구별할 수 없다면, 그 영수증은 영수증이 아니기 때문입니다. 실패도 기록됩니다 — PASS만 남기면 실패 이력이 원장에서 사라집니다.
+G3·[4b]·G5는 손으로 기록할 수 없습니다. 소유 스크립트를 **실제로 돌린 영수증**과 안 돌리고 적은 영수증을 구별할 수 없다면, 그 영수증은 영수증이 아니기 때문입니다. 실패도 기록됩니다 — PASS만 남기면 실패 이력이 원장에서 사라집니다. G3 CLI PASS 가 기준 manifest 를 만들고 영수증에 해시를 결박하며, [4b] 는 그 기준선을 확장만 합니다(전면 재빌드 금지). G5 는 [4b] 영수증의 `manifest_sha256` 과 현재 `manifest.json` 을 대조합니다.
 
 G2·G5c는 원장이 아니라 **내용검사**로 강제됩니다(G2=캡처 실재 검사, G5c=`audit/verify-<slug>.md` 산출물).
 
@@ -172,12 +172,20 @@ research_<주제>_<YYYYMMDD>/
 
 ## 설치·실행
 
+세 스킬(`market-deep-research`, `mdr-search`, `mdr-hwpx`)이 한 번에 설치됩니다. `--target`은 스킬 폴더가 아니라 **스킬 부모 디렉터리**(기본 `~/.claude/skills`)이며, 실제 경로는 `<target>/<스킬이름>/` 입니다. allowlist 밖 `~/.claude/skills/*` 는 사용자 스킬이므로 건드리지 않습니다.
+
+| 목적 | 스킬 |
+|---|---|
+| ① 검색만 | `mdr-search` |
+| ② 증빙형 보고서 초안(MD/PDF) | `market-deep-research` |
+| ③ 양식화: 원고 md → 양식 hwpx | `mdr-hwpx` |
+
 ```bash
 # 의존성 점검 (HARD: python>=3.10, PyMuPDF, pandoc, chrome / SOFT: curl_cffi, trafilatura …)
 python codes/market-deep-research/scripts/preflight.py
 
-# ~/.claude/skills/market-deep-research/ 로 설치 (SHA-256 해시 검증 복사)
-# ⚠ mirror-sync 방식: 인자 없이 즉시 실행되며, 대상 폴더의 초과 파일을 삭제합니다
+# ~/.claude/skills/{market-deep-research,mdr-search,mdr-hwpx}/ 로 설치 (SHA-256 해시 검증 복사)
+# ⚠ 각 allowlist 스킬 폴더 안만 mirror-sync(초과 파일 삭제). 인자 없이 즉시 실행됩니다
 python codes/market-deep-research/scripts/install.py
 
 # 설치본이 개발본과 같은지 쓰지 않고 대조 (불일치 시 exit 1)
