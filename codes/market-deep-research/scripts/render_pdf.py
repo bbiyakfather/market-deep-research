@@ -76,7 +76,40 @@ def render(md_path: Path | str, pdf_out: Path | str | None = None,
         _chrome_pdf(html_out, pdf_out)
     # artifacts: 봉인([4b] extend) 대상 목록 — 양식 모듈 공통 반환 계약(hwpx 등도 같은 키로 돌려준다)
     return {"ok": True, "pdf": str(pdf_out), "size": pdf_out.stat().st_size, "at": _now(),
-            "artifacts": [str(pdf_out)]}
+            "artifacts": [str(pdf_out)], "publication_state": "초안"}
+
+
+def render_and_record(work: WorkPaths | Path | str,
+                      pdf_out: Path | str | None = None) -> dict:
+    """G3 정규 원고를 실제 렌더하고 그 반환 산출물만 확장·[4b] 기록한다."""
+    wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
+    # 선행 G3 거부는 렌더 실행 전이므로 기존처럼 [4b] 실행 이력을 만들지 않는다.
+    g3 = gates.require_receipt(wp, "G3")
+    baseline = g3.get("manifest_sha256")
+    if not baseline:
+        raise gates.GateError("G3 기준선 manifest_sha256 없음 — verify_facts.py 재실행")
+    try:
+        if gates.sha256_file(wp.manifest) != baseline:
+            raise gates.GateError("manifest.json 이 G3 영수증의 기준선과 다름 — G3 복귀")
+        rendered = render(wp.report_md, pdf_out)
+        if not rendered["ok"] or not rendered.get("artifacts"):
+            raise gates.GateError("렌더 성공 산출물 없음")
+        sealed = manifest.extend(wp, rendered["artifacts"], expected_sha256=baseline)
+        diff = manifest._diff(wp, sealed["entries"])
+        if diff["changed"] or diff["missing"] or diff["new"]:
+            raise gates.GateError(f"[4b] 봉인 파일 불일치: {diff}")
+        result = {"render": rendered, "manifest_entries": len(sealed["entries"])}
+        receipt = gates._record_script_result(
+            wp, "[4b]", 0, json.dumps(result, ensure_ascii=False, sort_keys=True), extra={
+                "manifest_sha256": gates.sha256_file(wp.manifest),
+                "g3_receipt_id": gates._receipt_id(g3),
+                "g3_result_summary_sha256": g3.get("result_summary_sha256"),
+                "artifacts": [{"path": rel, "sha256": gates.sha256_file(wp.root / rel)}
+                              for rel in sealed["extended"][-1]["added"]]})
+    except (gates.GateError, OSError, RuntimeError, ValueError) as exc:
+        gates.record_script_result(wp, "[4b]", 1, str(exc))
+        raise
+    return {**result, "receipt": receipt}
 
 
 def demo() -> None:
@@ -106,33 +139,15 @@ if __name__ == "__main__":
         md_path = Path(args[0])
         out = args[1] if len(args) >= 2 else None
         wp = WorkPaths(md_path.parent)
-        try:
-            g3 = gates.require_receipt(wp, "G3")
-        except gates.GateError as exc:
-            print(f"[render] G3 PASS 영수증 전제조건 미충족: {exc}", file=sys.stderr)
+        if md_path.resolve() != wp.report_md.resolve():
+            print(f"[render] 렌더 원고 경로 불일치: G3가 봉인한 report.md만 렌더할 수 있습니다: {wp.report_md}",
+                  file=sys.stderr)
             sys.exit(1)
         try:
-            # [4b] 는 G3 기준선을 **확장만** 한다. 전면 재빌드(build)로 돌아가면 G3 이후의 변조가
-            # 새 기준선으로 세탁되어 G5 가 통과한다(C1 실측). G3 영수증의 manifest 해시와 대조해
-            # "그 기준선"인지 확인하고, 기존 항목 불변 검사 후 렌더 산출물만 추가한다.
-            rendered = render(md_path, out)
-            sealed = manifest.extend(wp, rendered["artifacts"],
-                                     expected_sha256=g3.get("manifest_sha256"))
-            artifacts = [{"path": Path(p).resolve().relative_to(wp.root.resolve()).as_posix(),
-                          "sha256": manifest.sha256_file(p)} for p in rendered["artifacts"]]
-            receipt = gates.record_script_result(
-                wp, "[4b]", 0,
-                json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"])},
-                           ensure_ascii=False, sort_keys=True),
-                wp.facts,
-                extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
-                       "g3_result_summary_sha256": g3.get("result_summary_sha256"),
-                       "artifacts": artifacts},
-            )
+            result = render_and_record(wp, out)
         except (gates.GateError, OSError, RuntimeError, ValueError) as exc:
             print(f"[render] 실패: {exc}", file=sys.stderr)
             sys.exit(1)
-        print(json.dumps({"render": rendered, "manifest_entries": len(sealed["entries"]),
-                          "receipt": receipt}, ensure_ascii=False))
+        print(json.dumps(result, ensure_ascii=False))
     else:
         print(__doc__); sys.exit(2)

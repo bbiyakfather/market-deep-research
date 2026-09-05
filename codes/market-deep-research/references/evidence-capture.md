@@ -53,6 +53,34 @@
 **본문에 쓰인 confirmed 핵심수치(수치값 보유) 전건**의 `evidence.capture` 실재를 검사(risk 태깅 무관·강제).
 또 **본문 대표 이미지 0장**이면 FAIL, DB에 생성됐으나 본문 미결박 캡처는 WARN 으로 표면화한다.
 
+## v4 capture_review: 파일 존재 ≠ 내용 검증
+원문 캡처를 육안으로 열어 주장이 보이는지, 출처·대상·기간·조건의 문맥이 보이는지 확인한 뒤
+evidence에 다음 기록을 추가한다. `image_sha256`는 원문 텍스트의 evidence.sha256과 별개로
+**현재 이미지 파일 바이트**의 SHA-256이다.
+```json
+{
+  "capture_review": {
+    "image_sha256": "<이미지 SHA-256 64자리>",
+    "reviewed_by": "lead",
+    "reviewed_at": "2026-01-01T12:00:00+09:00",
+    "page_state": "content",
+    "claim_visible": true,
+    "context_visible": true,
+    "verdict": "accept"
+  }
+}
+```
+`page_state`는 `content|blocked|login|blank|unknown`, `verdict`는 `accept|reject`다.
+accept는 content이며 두 visible 값이 모두 true여야 한다. blocked/login/blank/unknown은 reject로
+기록하고 유효 증빙 0건으로 계산한다. 이는 증빙 부족이며 fact가 거짓이라는 판정이 아니다.
+해시 불일치는 캡처 교체 후 미재검토이므로 v4 FAIL이다. 기존 검토의 해시만 새 값으로 덮어써서
+통과시키지 말고 새 이미지 내용을 다시 확인한다. 대체 출처를 확보하거나 주장의 확정 상태를 낮춘다.
+
+fitz 디코딩 실패는 부적격이며, 최소 크기(64×32) 미달·단색 비율 98% 이상은 육안 확인 후보 WARN이다.
+단색 비율은 최대변 256px로 축소 후 계산하는 휴리스틱이라 정상 여백도 잡히고 일부 백지를 놓친다.
+OCR·차단 문구 자동 판정은 하지 않는다. 자동 경고가 없다는 이유로 accept를 생성하지 않는다.
+v3 자료는 기존 실재 검사로 통과 가능하지만 신규 검토 누락·부적격은 WARN으로 남는다.
+
 ## 스크롤 실패 페이지 캡처 — 검증된 우회
 IEA 스크롤리텔링·비네트 광고·무한스크롤 등 **휠 스크롤·PageDown·좌표 scroll_to 가 목표 문단에
 도달하지 못하는** 페이지(2026-07 PEM 조사에서 미캡처 4건 발생 → 전량 해소).

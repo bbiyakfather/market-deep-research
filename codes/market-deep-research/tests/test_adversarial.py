@@ -54,8 +54,14 @@ def _ledger(wp):
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def _seed_script_receipt(*args, **kwargs):
+    """하위 게이트 격리용 원장 시딩. 운영용 공개 API는 소유 성공 기록을 거부한다."""
+    import gates
+    return gates._record_script_result(*args, **kwargs)
+
+
 def _chain_to_g3(td, topic="봉인"):
-    """G0·G1·[2] API 영수증 + report.md + G3 기준선(build + extra 결박). verify_facts 소유자 흉내."""
+    """하위 게이트 변조 검사용 합성 G3 체인. 소유 API 대신 테스트 전용 원장 시딩."""
     import gates
     wd = resolve_work_dir(topic, base=td)
     wp = WorkPaths(wd)
@@ -66,7 +72,7 @@ def _chain_to_g3(td, topic="봉인"):
     gates.record_script_result(wp, "G1", 0, "join PASS")
     gates.record_manual(wp, "[2]", "lead reread")
     sealed = manifest.build(wp)
-    gates.record_script_result(
+    _seed_script_receipt(
         wp, "G3", 0, "verify PASS",
         extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
                "manifest_entries": len(sealed["entries"])},
@@ -1404,14 +1410,17 @@ def g5_receipt_owned_by_manifest_verify():
         wp = WorkPaths(wd)
         (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
         wp.facts.write_text("", encoding="utf-8")
-        (wp.root / "report.md").write_text("# r\n", encoding="utf-8")
+        import fitz
+        with fitz.open() as doc:
+            page = doc.new_page()
+            page.insert_text((30, 40), "Synthetic evidence")
+            page.get_pixmap().save(wp.captures / "proof.png")
+        wp.report_md.write_text("# r\n\n![](_captures/proof.png)\n", encoding="utf-8")
         gates.record_manual(wp, "G0", "approved")
         gates.record_script_result(wp, "G1", 0, "join PASS")
         gates.record_manual(wp, "[2]", "lead reread")
-        gates.record_script_result(wp, "G3", 0, "verify PASS")
-        manifest.build(wp)
-        gates.record_script_result(wp, "[4b]", 0, "reseal PASS",
-                                   extra={"manifest_sha256": manifest.sha256_file(wp.manifest)})
+        assert verify_facts.verify_and_record(wp)["verification"]["ok"]
+        render_pdf.render_and_record(wp)
 
         r1 = run_cli(wd)
         assert r1.returncode == 1 and "G4" in r1.stderr, f"G4 없이 verify 통과: {r1.stderr!r}"
@@ -1633,7 +1642,7 @@ def g5_rejects_rebuilt_manifest():
         wp.report_pdf.write_bytes(b"%PDF-1.4 fake")
         g3 = gates.successful_receipt(wp, "G3")
         manifest.extend(wp, [wp.report_pdf], expected_sha256=g3["manifest_sha256"])
-        gates.record_script_result(
+        _seed_script_receipt(
             wp, "[4b]", 0, "reseal PASS",
             extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
                    "artifacts": [{"path": "report.pdf",

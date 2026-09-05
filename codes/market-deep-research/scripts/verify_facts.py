@@ -31,7 +31,7 @@
 없으면 문서 전체를 본문으로 본다. 주석 마커를 쓰는 것을 권장한다(report-format.md 참조).
 부록의 수치 사실주장은 무태그만 면제하고 값·단위·오태그·미확정은 본문과 동일하게 검사한다.
 
-CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--plan <research-plan.md>]
+CLI: python verify_facts.py <report.md> <work_dir> [--conversion] [--check-only --plan <research-plan.md>]
      python verify_facts.py demo
 """
 from __future__ import annotations
@@ -47,7 +47,7 @@ from pathlib import Path
 import manifest
 import gates
 from facts_db import (FactsDB, ValidationError, check_capture_path, load_schema,
-                       validate_evidence, validate_fact)
+                       validate_evidence, validate_fact, validate_capture_review)
 from skill_paths import WorkPaths
 
 # --- 부록 경계 ---------------------------------------------------------------
@@ -84,7 +84,7 @@ CUR_NUM = re.compile(
     rf"(bn|billion|mn|million|[BMK](?![A-Za-z])|조|억|만)?", re.I)
 # 한글 수사(H2 ③): '삼백조원'·'오천억원'·'이십 퍼센트' — 값 파싱은 안 하고 WARN 으로만 표면화.
 KO_NUMERAL = re.compile(r"(?<![가-힣])[일이삼사오육칠팔구십백천]+[만억조]?\s*(?:원|달러|퍼센트|%|톤|건|명|기|대|배)")
-TAG = re.compile(r"\(F\d{3,}\)")
+TAG = re.compile(r"(?:\(F\d{3,}\)|\[F\d{3,}\])")
 # '원/조/억(원)' 은 조(兆)/조(條) 처럼 다른 한글 단어의 첫 음절과 겹치는 동음이의 단위라, 숫자와
 # 공백 없이 바짝 붙을 때만 화폐 표기로 인정한다("45조원"은 화폐, "2025 원문"의 '원'은 남의 단어).
 # 실전 픽스처에서 "2025 원문: ..."(원문=source text) 오매칭이 실측됐다. 계수 단위도 동일.
@@ -130,7 +130,7 @@ _SENT_SPLIT = re.compile(r"(?<!\.\.)(?<=[.!?。])\s+")
 _URL = re.compile(r"https?://\S+")
 
 
-def split_segments(body: str):
+def split_segments(body: str, *, preserve_text: bool = False):
     """본문을 검사 단위로 분해: 표 행(| 로 시작하는 줄)은 행 전체를 한 세그먼트로 낸다
     (report-format.md 가 강제하는 근거표 구조는 태그와 수치가 다른 셀에 있고, _bind_pairs 가
     '|' 를 건너뛰는 직접 결박은 차단하고 행 단위 값일치 폴백만 허용한다). 그 외 줄들은 빈 줄이나
@@ -142,18 +142,32 @@ def split_segments(body: str):
     def _flush():
         if not buf:
             return []
-        text = _URL.sub("", " ".join(buf))
+        text = "\n".join(buf) if preserve_text else _URL.sub("", " ".join(buf))
         buf.clear()
+        if preserve_text:
+            # 문장 검토 해시는 원문 공백·URL을 보존한다. 마침표 뒤 태그는 앞 문장에 결박한다.
+            ends = [m for m in _SENT_SPLIT.finditer(text) if not TAG.match(text, m.end())]
+            start, pieces = 0, []
+            for match in ends:
+                pieces.append(text[start:match.start()])
+                start = match.end()
+            return [s.strip() for s in [*pieces, text[start:]] if s.strip()]
         return [s for s in _SENT_SPLIT.split(text) if s.strip()]
 
     for ln in body.splitlines():
         if ln.lstrip().startswith("|"):
             yield from _flush()
-            yield _URL.sub("", ln)
+            yield ln if preserve_text else _URL.sub("", ln)
         elif not ln.strip():
             yield from _flush()
+        elif preserve_text and re.match(r"^\s*(?:#{1,6}\s|[-*+]\s|\d+\.\s)", ln):
+            yield from _flush()
+            if ln.lstrip().startswith("#"):
+                yield ln
+            else:
+                buf.append(ln)
         else:
-            buf.append(ln.strip())
+            buf.append(ln if preserve_text else ln.strip())
     yield from _flush()
 
 
@@ -354,7 +368,7 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
 
     # 본문에 등장하는 모든 (Fxxx) 태그: 대장 존재 + confirmed 상태(값 유무와 무관하게 전건).
     for tag in sorted(set(m.group(0) for m in TAG.finditer(body))):
-        fid = tag.strip("()")
+        fid = tag.strip("()[]")
         f = facts.get(fid)
         if not f:
             failures.append(f"[오태그] {loc}{fid} 대장에 없음")
@@ -377,7 +391,7 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
                 # 직접 결박 실패(태그 없음 또는 표 셀 경계) → 같은 세그먼트 내 값일치 폴백.
                 ok = False
                 for t in tags:
-                    f = facts.get(t.group(0).strip("()"))
+                    f = facts.get(t.group(0).strip("()[]"))
                     if not f:
                         continue
                     ld, lv = _ledger_qty(f)
@@ -392,7 +406,7 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
                     else:
                         failures.append(f"[무태그] {where}{msg}")
                 continue
-            fid = tags[j].group(0).strip("()")
+            fid = tags[j].group(0).strip("()[]")
             f = facts.get(fid)
             if not f:
                 continue  # 오태그는 위 전역 검사에서 이미 실패 처리됨(중복 방지)
@@ -507,6 +521,51 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.I)
 
 
+def inspect_capture(evidence: dict, wp: WorkPaths) -> dict:
+    """캡처 바이트에 결박된 육안 검토를 판정한다. 차단 화면은 증빙 부족이며 사실 반증이 아니다."""
+    import fitz
+    from collections import Counter
+    issues, warnings = [], []
+    capture = evidence.get("capture")
+    if not capture:
+        return {"valid": False, "issues": ["source_capture 없음"], "warnings": []}
+    violation = check_capture_path(capture, wp)
+    path = wp.root / capture
+    if violation or not path.is_file():
+        return {"valid": False, "issues": [violation or f"캡처 파일 없음: {capture}"], "warnings": []}
+    try:
+        pix = fitz.Pixmap(str(path))
+        if pix.width < 64 or pix.height < 32:
+            warnings.append(f"최소 크기 의심: {pix.width}x{pix.height} (권장 ≥64x32)")
+        if pix.colorspace and pix.colorspace.n != 3:
+            pix = fitz.Pixmap(fitz.csRGB, pix)
+        while max(pix.width, pix.height) > 256:
+            pix.shrink(1)
+        samples, stride = pix.samples, pix.n
+        counts = Counter(samples[i:i + stride] for i in range(0, len(samples), stride))
+        dominant = Decimal(max(counts.values(), default=0)) / Decimal(max(1, pix.width * pix.height))
+        # ponytail: 축소된 정확 단색 비율은 백지 후보만 찾는다. 텍스트가 적은 정상 화면도 걸리며
+        # 그라데이션 백지/차단 문구는 놓친다. OCR·의미 판정/자동 accept의 대체물이 아니다.
+        if dominant >= Decimal("0.98"):
+            warnings.append(f"백지 의심: 단색 비율 {dominant:.3f} — 육안 검토 필요")
+    except Exception as exc:
+        issues.append(f"이미지 디코딩 실패: {exc}")
+    review = evidence.get("capture_review")
+    if review is None:
+        issues.append("capture_review 없음 — 내용 검토 필요")
+    else:
+        try:
+            validate_capture_review(review)
+        except ValidationError as exc:
+            issues.append(str(exc))
+        else:
+            if review["image_sha256"].lower() != manifest.sha256_file(path).lower():
+                issues.append("image_sha256 불일치 — 캡처 교체 후 재검토 필요")
+            if review["page_state"] != "content" or review["verdict"] != "accept":
+                issues.append(f"page_state={review['page_state']}, verdict={review['verdict']} — 증빙 불인정")
+    return {"valid": not issues, "issues": issues, "warnings": warnings}
+
+
 def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[str]) -> tuple[list[str], list[str]]:
     """evidence 필수필드 + text_quote verbatim + sha256 형식/실해시 대조 + confirmed 핵심수치
     source_capture 실재(신뢰경계 포함). lead reread_sha256 이 evidence 해시와 안 맞으면 WARN."""
@@ -555,6 +614,22 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
                         ok_cap = True
                 if not ok_cap:
                     failures.append(f"[증빙유실] {f['id']} 캡처 파일 없음: {caps[0]}")
+        # v3는 기존 파일 실재 조건을 유지하되 내용 검토 누락을 WARN으로 노출한다.
+        # v4는 모든 연결 캡처를 검토하고, 부적격 캡처를 유효 건수에 포함하지 않는다.
+        captures = [evidence[eid] for eid in f.get("evidence_ids", [])
+                    if eid in evidence and evidence[eid].get("capture")]
+        valid_count = 0
+        for e in captures:
+            review = inspect_capture(e, wp)
+            valid_count += int(review["valid"])
+            strict = f.get("schema_version") == 4 or e.get("schema_version") == 4
+            for issue in review["issues"]:
+                (failures if strict else warnings).append(f"[캡처검토] {f['id']}/{e['id']}: {issue}")
+            warnings.extend(f"[캡처보조] {e['id']}: {issue}" for issue in review["warnings"])
+        if captures and not valid_count:
+            strict = f.get("schema_version") == 4 or any(e.get("schema_version") == 4 for e in captures)
+            (failures if strict else warnings).append(
+                f"[증빙부족] {f['id']}: 유효 source_capture 0건 — 사실의 거짓 판정 아님")
         # D5: lead 재열람 해시가 이 fact 의 증거(sha256·local 실파일·verbatim) 어느 것과도 안 맞으면 WARN.
         # WebFetch 재열람(바이트 없음)이 남아 있어 FAIL 로는 못 올린다 — 자가신고를 드러내는 용도.
         if f["id"] in used:
@@ -771,7 +846,11 @@ def check_toc(md: str, wp: WorkPaths, plan: Path | str | None = None) -> tuple[l
 
 
 def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool = False,
-          plan: Path | str | None = None) -> dict:
+          plan: Path | str | None = None, *, check_only: bool = False) -> dict:
+    """공통 내용 검사. check_only=True이면 계산·주장 감사 산출물도 쓰지 않는다."""
+    wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
+    if plan is not None and not check_only and Path(plan).resolve() != (wp.audit / "research-plan.md").resolve():
+        raise ValueError("[계획경로] custom plan은 check_only 진단 전용 — audit/research-plan.md 사용 필요")
     md = Path(report_md).read_text(encoding="utf-8")
     body, _appendix = split_body_appendix(md)
     db = FactsDB(work)
@@ -780,10 +859,14 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     facts = {f["id"]: f for f in facts_raw}
     evidence = {e["id"]: e for e in evidence_raw}
     wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
-    used = {m.group(0).strip("()") for m in TAG.finditer(body)}
+    used = {m.group(0).strip("()[]") for m in TAG.finditer(body)}
 
     failures: list[str] = []
     warnings: list[str] = []
+
+    # 정규 원고가 있는 작업폴더는 함수 호출도 동일 원고를 검사한다. 원고 없는 v3 단독 검사는 유지.
+    if wp.report_md.is_file() and Path(report_md).resolve() != wp.report_md.resolve():
+        failures.append("[원고경로] 검증 원고 경로 불일치 — 작업폴더의 report.md를 검사해야 합니다")
 
     # 부록 경계 마커는 최대 1개 — split_body_appendix 는 첫 마커 기준이라, 본문 앞쪽의
     # 중복(실수·위조) 마커 하나가 그 뒤 본문 전체를 결박 검사에서 조용히 면제시킨다.
@@ -822,6 +905,14 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures += toc_fail
     warnings += toc_warn
 
+    # 지연 import로 공통 TAG/세그먼트 재사용의 순환 초기화를 피한다.
+    from verify_calculations import verify as verify_calculations
+    from verify_claims import verify as verify_claims
+    for checked in (verify_calculations(wp, check_only=check_only),
+                    verify_claims(report_md, wp, check_only=check_only)):
+        failures += checked["failures"]
+        warnings += checked["warnings"]
+
     if conversion:
         for f in facts.values():
             v = f.get("value", {})
@@ -831,6 +922,31 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     return {"ok": len(failures) == 0, "failures": failures, "warnings": warnings,
             "stats": {"facts": len(facts), "evidence": len(evidence),
                       "body_tags": len(used)}}
+
+
+def verify_and_record(work: WorkPaths | Path | str, *, conversion: bool = False,
+                      plan: Path | str | None = None) -> dict:
+    """정규 원고 검증→PASS 기준선 봉인→G3 기록을 한 번의 실행으로 묶는다."""
+    wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
+    try:
+        if plan is not None and Path(plan).resolve() != (wp.audit / "research-plan.md").resolve():
+            raise ValueError("[계획경로] custom plan은 check_only 진단 전용 — audit/research-plan.md 사용 필요")
+        rep = verify(wp.report_md, wp, conversion=conversion)
+        summary = json.dumps(rep, ensure_ascii=False, sort_keys=True)
+        if not rep["ok"]:
+            receipt = gates.record_script_result(wp, "G3", 1, summary)
+            return {"verification": rep, "receipt": receipt}
+        checked = gates.check_prerequisites(wp, "G3")
+        if not checked["ok"]:
+            raise gates.GateError("G3 선행 영수증 미충족: " + "; ".join(checked["issues"]))
+        sealed = manifest.build(wp, for_g3=True)
+        receipt = gates._record_script_result(wp, "G3", 0, summary, extra={
+            "manifest_sha256": gates.sha256_file(wp.manifest),
+            "manifest_entries": len(sealed["entries"])})
+    except (gates.GateError, OSError, ValueError) as exc:
+        gates.record_script_result(wp, "G3", 1, str(exc))
+        raise
+    return {"verification": rep, "manifest_entries": len(sealed["entries"]), "receipt": receipt}
 
 
 def _print(rep: dict) -> None:
@@ -921,32 +1037,28 @@ if __name__ == "__main__":
     if not args or args[0] == "demo":
         demo()
     elif len(args) >= 2:
-        plan = args[args.index("--plan") + 1] if "--plan" in args[:-1] else None
-        rep = verify(args[0], args[1], conversion="--conversion" in args, plan=plan)
-        _print(rep)
-        if not rep["ok"]:
-            sys.exit(1)
         wp = WorkPaths(args[1])
-        checked = gates.check_gate(wp, "G3")
-        if not checked["ok"]:
-            print("[G3] 선행 영수증 미충족: " + "; ".join(checked["issues"]), file=sys.stderr)
+        if Path(args[0]).resolve() != wp.report_md.resolve():
+            print(f"[G3] 검증 원고 경로 불일치: 작업폴더의 report.md만 검증·봉인할 수 있습니다: {wp.report_md}",
+                  file=sys.stderr)
             sys.exit(1)
+        plan = args[args.index("--plan") + 1] if "--plan" in args[:-1] else None
         try:
-            # G3 기준선 봉인은 검증 PASS 와 한 몸이다 — 따로 `manifest.py build` 를 손으로 돌리게
-            # 두면 빠뜨리거나 나중에 다시 돌려 변조를 세탁할 수 있다(C1). 영수증에 manifest 해시를
-            # 결박해 [4b] 가 "그 기준선을 확장했는지" 증명하게 한다.
-            sealed = manifest.build(wp)
-            receipt = gates.record_script_result(
-                wp, "G3", 0,
-                json.dumps(rep, ensure_ascii=False, sort_keys=True), wp.facts,
-                extra={"manifest_sha256": manifest.sha256_file(wp.manifest),
-                       "manifest_entries": len(sealed["entries"])},
-            )
-        except (gates.GateError, OSError) as exc:
+            if "--check-only" in args:
+                report = verify(wp.report_md, wp, conversion="--conversion" in args,
+                                plan=plan, check_only=True)
+                _print(report)
+                sys.exit(0 if report["ok"] else 1)
+            result = verify_and_record(wp, conversion="--conversion" in args, plan=plan)
+        except (gates.GateError, OSError, ValueError) as exc:
             print(f"[G3] 영수증 기록 실패: {exc}", file=sys.stderr)
             sys.exit(1)
+        _print(result["verification"])
+        if not result["verification"]["ok"]:
+            sys.exit(1)
+        receipt = result["receipt"]
         print(f"[G3] PASS 영수증 기록: {receipt['result_summary_sha256']} "
-              f"(manifest {len(sealed['entries'])} 항목 봉인)")
+              f"(manifest {result['manifest_entries']} 항목 봉인)")
         sys.exit(0)
     else:
         print(__doc__); sys.exit(2)

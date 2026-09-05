@@ -20,6 +20,7 @@ import re
 import sys
 import tempfile
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from skill_paths import ASSETS, WorkPaths
@@ -58,10 +59,84 @@ def _lead_reread_events(fact: dict) -> list[dict]:
             if e.get("by") == "lead" and e.get("action") == "reread"]
 
 
+def schema_version(record: dict) -> int:
+    """버전 생략은 v3. 알 수 없는 버전을 검증된 v3/v4로 취급하지 않는다."""
+    version = record.get("schema_version", 3)
+    if type(version) is not int or version not in (3, 4):
+        raise ValidationError(f"schema_version: 지원하지 않는 버전 {version!r}")
+    return version
+
+
+def is_v4_work(facts: list[dict], evidence: list[dict] = ()) -> bool:
+    """혼합 이행 폴더는 문장 검토를 v4로 강제하고 행별 기존 검사는 해당 버전을 따른다."""
+    return any(r.get("schema_version") == 4 for r in [*facts, *evidence])
+
+
+def _check_properties(obj: dict, spec: dict, enums: dict, where: str) -> None:
+    """v4 중첩 필드의 실제 타입·enum·해시·필수를 스키마에서 읽어 검사한다."""
+    if not isinstance(obj, dict):
+        raise ValidationError(f"{where}: 객체가 아님")
+    for key in spec.get("required", []):
+        if key not in obj or obj[key] is None:
+            raise ValidationError(f"{where}: 필수 필드 '{key}' 누락")
+    kinds = {"string": lambda v: isinstance(v, str), "integer": lambda v: type(v) is int,
+             "number": lambda v: type(v) in (int, float), "boolean": lambda v: type(v) is bool,
+             "object": lambda v: isinstance(v, dict), "array": lambda v: isinstance(v, list),
+             "null": lambda v: v is None}
+    for key, val in obj.items():
+        rule = spec.get("properties", {}).get(key)
+        if rule is None:
+            if spec.get("additionalProperties") is False:
+                raise ValidationError(f"{where}: 알 수 없는 필드 '{key}'")
+            continue
+        field = f"{where}.{key}"
+        types = rule.get("type", [])
+        types = [types] if isinstance(types, str) else types
+        if types and not any(kinds[t](val) for t in types):
+            raise ValidationError(f"{field}: 타입 오류({types})")
+        if "enum_ref" in rule:
+            _check_enum(val, rule["enum_ref"], enums, field)
+        if "enum" in rule and val not in rule["enum"]:
+            raise ValidationError(f"{field}: 허용값 {rule['enum']} 아님")
+        if rule.get("minLength") and len(val) < rule["minLength"]:
+            raise ValidationError(f"{field}: 빈 문자열 불가")
+        if rule.get("pattern") and not re.fullmatch(rule["pattern"], str(val)):
+            raise ValidationError(f"{field}: 형식 오류")
+        if rule.get("format") == "decimal":
+            try:
+                if not Decimal(str(val)).is_finite():
+                    raise InvalidOperation
+            except (InvalidOperation, ValueError):
+                raise ValidationError(f"{field}: 유한 Decimal 값이 아님") from None
+        if isinstance(val, dict):
+            _check_properties(val, rule, enums, field)
+
+
+def validate_capture_review(review: dict, schema: dict | None = None) -> None:
+    schema = schema or load_schema()
+    spec = schema["evidence"]["properties"]["capture_review"]
+    _check_properties(review, spec, schema["enums"], "capture_review")
+    if review["verdict"] == "accept" and (review["page_state"] != "content"
+            or not review["claim_visible"] or not review["context_visible"]):
+        raise ValidationError("capture_review: accept는 content + 주장·문맥 확인이 필요")
+
+
 def validate_fact(fact: dict, schema: dict | None = None) -> dict:
     schema = schema or load_schema()
     enums = schema["enums"]
     spec = schema["fact"]
+    if schema_version(fact) == 4:
+        _check_properties(fact, spec, enums, "fact")
+        _check_required(fact, ["claim_type"], "fact v4")
+        if fact.get("risk") == "high":
+            from verify_calculations import is_calculation_candidate, ATOMIC_INPUTS
+            if is_calculation_candidate(fact) and not any(
+                    k in (fact.get("value") or {}) for k in ATOMIC_INPUTS):
+                raise ValidationError(f"{fact.get('id')}: 고위험 시장 전망 원자화 미기록")
+        if fact.get("status") == "confirmed":
+            from verify_calculations import check_calculation, is_calculation_candidate
+            if is_calculation_candidate(fact) and check_calculation(fact)["status"] == "CONFLICT":
+                raise ValidationError(f"{fact.get('id')}: CAGR 계산 충돌이 남은 채 confirmed 불가")
     _check_required(fact, spec["required"], "fact")
 
     fid = fact["id"]
@@ -131,6 +206,12 @@ def validate_evidence(ev: dict, schema: dict | None = None, work: WorkPaths | No
     schema = schema or load_schema()
     enums = schema["enums"]
     spec = schema["evidence"]
+    if schema_version(ev) == 4:
+        _check_properties(ev, spec, enums, "evidence")
+        if ev.get("capture") and "capture_review" not in ev:
+            raise ValidationError(f"{ev.get('id')}: v4 capture는 capture_review 필수")
+        if "capture_review" in ev:
+            validate_capture_review(ev["capture_review"], schema)
     _check_required(ev, spec["required"], "evidence")
 
     eid = ev["id"]
@@ -287,7 +368,12 @@ def confirmed_digest(rows: list[dict]) -> str:
         v = r.get("value") or {}
         ev = sorted((e.get("at") or "", str(e.get("reread_sha256") or "").lower())
                     for e in _lead_reread_events(r))
-        proj.append([r.get("id"), v.get("raw"), v.get("unit"), ev])
+        row = [r.get("id"), v.get("raw"), v.get("unit"), ev]
+        if r.get("schema_version") == 4:
+            # 원자화 값·조건·문장 유형 변경도 재검토 대상. v3의 기존 투영은 그대로 보존한다.
+            row.append({"schema_version": 4, "value": v, "claim": r.get("claim"),
+                        "context": r.get("context"), "claim_type": r.get("claim_type")})
+        proj.append(row)
     return hashlib.sha256(json.dumps(proj, ensure_ascii=False, sort_keys=True,
                                      separators=(",", ":")).encode("utf-8")).hexdigest()
 

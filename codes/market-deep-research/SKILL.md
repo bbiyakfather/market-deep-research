@@ -19,7 +19,9 @@ description: >-
 ## 3대 원칙 (절대 규칙)
 1. **원문 미확인 수치는 폐기**(추정 금지). 무출처 주장은 대장 등재 불가 = 본문 사용 불가.
 2. **팀리드(메인 세션) 전건 재검증**: 보고서에 들어갈 모든 fact 는 팀리드가 원문을 직접 재열람(WebFetch/fetch.py)해 verbatim/locator 대조 후 `verify_event(by=lead)` 기록. 검증 서브에이전트는 보조의견만 — verifier 단독 confirm 금지.
-3. **고객용 / 내부 audit 분리**: 폐기목록·실패URL·미확인 의혹·반박 상세는 고객 PDF 미노출.
+3. **고객용 / 내부 audit 분리**: 실패 URL·운영 로그·비핵심 반박 상세는 내부 audit. 의사결정에 영향을 주는 미확인 조건·반론은 고객 문서에도 표시.
+원문 일치 ≠ 주장 성립: 주체·속성·범위·기간·조건을 넘는 표현은 `references/claim-review.md`에 따라 축소·재검토한다.
+캡처 존재 ≠ 내용 검증: 이미지 해시에 결박한 `capture_review`가 필요하며 차단·로그인·백지 화면은 증빙 불인정이다.
 
 ## 목적별 모드
 ① 자료/출처/원문만 → 이 스킬이 아니라 `mdr-search`(같은 작업폴더 규칙, 나중에 ② 승격 가능).
@@ -82,7 +84,7 @@ description: >-
 
 ### [Bx] 반박검색 + claim-graph 게이트  【v3-B】
 - 대상 = `risk:"high"` fact(시장규모·성장률·딜규모·순위 등 오류비용 큰 주장). 근거·순서는 `audit/verification-economics.md` 에 기록.
-- 통과 조건(전부): ① ≥2 **독립 관찰그룹**(재전재 제외) 수렴 · ② **1회 능동 반박검색**(`counter_search`, 더 강한 반박 없음) · ③ **기본소스**(공시·표준·원데이터, `primary_source_ref`) · ④ **시간증거**(`observed_at`/`valid_at`). 불통과 → `disputed`/`Unresolved` 로 남김(기권이 정답).
+- 검사: ① ≥2 **독립 관찰그룹**(재전재 제외) · ② **1회 능동 반박검색**(`counter_search.query`, 더 강한 반박 없음)은 본문 사용 confirmed high-risk에서 FAIL. ③ **기본소스**(`primary_source_ref`) · ④ **시간증거**(`observed_at` 또는 `valid_at`) 누락은 WARN. 본문 미사용은 ①~④ 모두 WARN(`verification-gates.md`).
 - 반박검색 산출물은 `negative_search` 증거유형으로 결박.
 
 ### [G2] 증빙 게이트
@@ -94,6 +96,8 @@ description: >-
 - **도판**: 워커 `## FIGURES` 부터 수확, 순서·결박은 `image-research.md`. 0~3 소진 뒤에만 자작 차트.
 
 ### [G3] verify_facts + manifest (실패 0)
+- `python scripts/verify_calculations.py <work_dir>`: G3 전 CAGR 구간 검산 → `audit/calc-check.json`(원문 보존, 충돌은 미해결로 남김).
+- `python scripts/verify_claims.py <report.md> <work_dir>`: 문장·근거 리비전과 검토 대장 검사 → `audit/claim-check.json`(두 검사 모두 G3 내 자동 호출, 신규 위반은 v3 WARN/v4 FAIL).
 - `scripts/verify_facts.py` CLI PASS 가 기준 `manifest.json` 을 자동 생성하고 G3 영수증에 `manifest_sha256` 을 결박한다. 검사항목 상세는 `verification-gates.md` G3 절.
 - **영수증**: CLI PASS는 G1·[2] 영수증을 확인한 뒤 G3 자기기록을 남기며, 누락 시 fail-closed한다.
 

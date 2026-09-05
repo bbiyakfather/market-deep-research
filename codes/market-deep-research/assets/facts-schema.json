@@ -1,22 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "market-deep-research facts + evidence schema (v3)",
-  "description": "facts_db.py 의 검증 기준. 외부 jsonschema 라이브러리 없이 required/enum/const 를 직접 읽어 경량 검증한다.",
+  "title": "market-deep-research facts + evidence schema (v4, v3 legacy 호환)",
+  "schema_version": 4,
+  "description": "레코드 schema_version 생략은 v3. v4는 중첩 타입·필수·enum·패턴·Decimal·조건부 필수를 facts_db.py가 검사한다.",
   "enums": {
     "grade": ["A", "B", "C", "D"],
     "status": ["confirmed", "pending", "disputed", "superseded", "discarded"],
     "risk": ["high", "normal"],
     "evidence_type": ["text_quote", "table_cell", "chart", "api_response", "negative_search", "calculation"],
     "source_role": ["원출처", "재인용", "보도자료"],
-    "basis": ["actual", "estimate", "forecast", "nominal", "real", "annual", "quarterly", "ttm"]
+    "basis": ["actual", "estimate", "forecast", "nominal", "real", "annual", "quarterly", "ttm"],
+    "claim_type": ["observed", "derived", "hypothesis", "recommendation"],
+    "support": ["supported", "partial", "unsupported", "contradicted", "unresolved"],
+    "page_state": ["content", "blocked", "login", "blank", "unknown"],
+    "capture_verdict": ["accept", "reject"]
   },
   "fact": {
     "required": ["claim_key", "id", "claim", "context", "value", "grade", "risk", "status"],
     "properties": {
+      "schema_version": {"type": "integer", "enum": [3, 4]},
+      "claim_type": {"type": "string", "enum_ref": "claim_type"},
       "claim_key": {"type": "string", "description": "안정적 diff 키. 'metric|entity|geo|period|basis|scenario' 조합. 순번(F001) 아님."},
       "id": {"type": "string", "pattern": "^F[0-9]{3,}$"},
       "claim": {"type": "string"},
       "context": {
+        "type": "object",
         "required": ["metric", "entity", "geography", "period"],
         "properties": {
           "metric": {"type": "string"},
@@ -31,14 +39,26 @@
         }
       },
       "value": {
+        "type": "object",
+        "additionalProperties": false,
         "required": ["raw", "unit"],
         "properties": {
           "raw": {"type": "string"},
           "unit": {"type": "string"},
-          "decimal": {"type": ["string", "null"], "description": "Decimal 문자열(검산·비교용)"}
+          "decimal": {"type": ["string", "null"], "description": "Decimal 문자열(검산·비교용)"},
+          "base_value": {"type": ["string", "number"], "format": "decimal"},
+          "base_year": {"type": "integer"},
+          "forecast_value": {"type": ["string", "number"], "format": "decimal"},
+          "forecast_year": {"type": "integer"},
+          "reported_cagr": {"type": ["string", "number"], "format": "decimal"},
+          "cagr_start_year": {"type": "integer"},
+          "cagr_end_year": {"type": "integer"},
+          "scale": {"type": "string", "minLength": 1},
+          "currency": {"type": "string", "minLength": 1}
         }
       },
       "grade": {
+        "type": "object",
         "required": ["authority", "independence", "directness", "recency"],
         "properties": {
           "authority": {"enum_ref": "grade"},
@@ -70,11 +90,16 @@
       "last_seen": {"type": ["string", "null"], "description": "[v3-E] 마지막으로 소스에서 확인된 시점(상태변경 추적)"},
 
       "discard_reason": {"type": ["string", "null"]}
+    },
+    "conditional": {
+      "v4_requires_claim_type": "schema_version == 4 → claim_type 필수",
+      "v4_high_risk_forecast_requires_atoms": "v4 high-risk CAGR/기간 전망 → value 원자화 입력 필드 필요"
     }
   },
   "evidence": {
     "required": ["id", "fact_id", "type", "source_url", "sha256", "accessed_at"],
     "properties": {
+      "schema_version": {"type": "integer", "enum": [3, 4]},
       "id": {"type": "string", "pattern": "^E[0-9]{3,}$"},
       "fact_id": {"type": "string", "pattern": "^F[0-9]{3,}$"},
       "type": {"enum_ref": "evidence_type"},
@@ -89,10 +114,25 @@
       "source_role": {"enum_ref": "source_role", "nullable": true},
       "capture": {"type": ["string", "null"], "description": "_captures/E###.png (source_capture)"},
       "observer_group": {"type": ["string", "null"], "description": "[v3] 독립성 판정용 관찰그룹 라벨"},
-      "observed_at": {"type": ["string", "null"]}
+      "observed_at": {"type": ["string", "null"]},
+      "capture_review": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["image_sha256", "reviewed_by", "reviewed_at", "page_state", "claim_visible", "context_visible", "verdict"],
+        "properties": {
+          "image_sha256": {"type": "string", "pattern": "[0-9a-fA-F]{64}"},
+          "reviewed_by": {"type": "string", "minLength": 1},
+          "reviewed_at": {"type": "string", "minLength": 1},
+          "page_state": {"type": "string", "enum_ref": "page_state"},
+          "claim_visible": {"type": "boolean"},
+          "context_visible": {"type": "boolean"},
+          "verdict": {"type": "string", "enum_ref": "capture_verdict"}
+        }
+      }
     },
     "conditional": {
-      "text_quote_requires_verbatim": "type == 'text_quote' → verbatim 필수"
+      "text_quote_requires_verbatim": "type == 'text_quote' → verbatim 필수",
+      "v4_capture_requires_review": "schema_version == 4 and capture → capture_review 필수; accept는 content + claim_visible + context_visible"
     }
   }
 }
