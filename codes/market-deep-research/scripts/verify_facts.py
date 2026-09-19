@@ -83,17 +83,32 @@ UNIT = (_SI_UNIT + r"|조원|억원|만원|억달러|백만달러|Nm³/h|Nm3/h|�
 # 兆(trillion)·條(조항) 동음이의어라 실전 픽스처에서 실측된 오탐(법령 인용 표). (?<!\d) 는 숫자
 # 런의 중간에서 시작하는 부분매치를 막는다 — 이게 없으면 (?<!제) 에 막힌 '25' 대신 엔진이
 # '5' 만 떼어 재시도해 '제25조' 가 '5조' 로 여전히 오매칭됐다(실측).
-METRIC_NUM = re.compile(rf"(?<!제)(?<![\d+−-])({NUM})\s*({PRE})\s*({UNIT})", re.I)
+# 영숫자 식별자 내부와 소수·천단위 중간에서는 수치 토큰을 다시 시작하지 않는다.
+METRIC_NUM = re.compile(rf"(?<!제)(?<![A-Za-z0-9.,+−-])({NUM})\s*({PRE})\s*({UNIT})", re.I)
 # 접두 통화(H2): '$4.5B'·'US$175M'·'€120M'·'₩300조'·'USD 45 billion'. 배수어가 없으면 1 배.
 # 지역 달러(C$/A$/HK$/NT$/S$)는 $(USD)와 다른 통화 — 미인식이면 USD 검증이 거짓 성공한다.
 # 배수 접미사 뒤 영숫자는 접미사가 아님(B2B·M2M·T1). T=10^12.
 CUR_NUM = re.compile(
     rf"(?<![\w$€£¥₩+−-])(?P<sign>[+−-])?(?P<currency>US\$|HK\$|NT\$|C\$|A\$|S\$|\$|€|£|¥|₩|USD|EUR|GBP|JPY|CNY|KRW)\s*"
     rf"(?P<number>{NUM})\s*(?:(?P<scale>billion|million|bn|mn|[KMBT]|조|억|만)(?![A-Za-z0-9]))?", re.I)
-# 인식 실패한 수치 표기(999 mw). 연도(2024년)·p.45 는 뒤 영문 단위가 없어 제외.
+# 영문 토큰 전체를 읽어 B2B 같은 식별자의 일부를 단위로 오인하지 않는다.
 _LOOSE_CLAIM = re.compile(
-    rf"(?<![\d+−-])(?:(?:US\$|HK\$|NT\$|C\$|A\$|S\$|\$|€|£|¥|₩)\s*{_SIGNED_NUM}"
-    rf"|{_SIGNED_NUM}\s*[A-Za-zµμ]+)")
+    rf"(?<![A-Za-z0-9.,+−-]){_SIGNED_NUM}\s*(?P<unit>[A-Za-zµμ][A-Za-z0-9µμ]*)")
+# 한국어 후보는 공백 한 칸까지 허용하고 조사까지 읽어 단위명과 일반 단어를 구분한다.
+_LOOSE_KO_CLAIM = re.compile(
+    rf"(?<![A-Za-z0-9.,+−-]){_SIGNED_NUM} ?(?P<unit>[가-힣]+)")
+_KO_UNIT_NAMES = {
+    "와트", "킬로와트", "메가와트", "기가와트", "테라와트", "밀리와트", "마이크로와트",
+    "와트시", "킬로와트시", "메가와트시", "기가와트시", "테라와트시", "밀리와트시", "마이크로와트시",
+    "달러", "유로", "엔", "위안", "원", "퍼센트", "프로", "톤", "킬로그램", "그램",
+    "미터", "킬로미터", "헤르츠", "킬로헤르츠", "메가헤르츠", "기가헤르츠", "테라헤르츠",
+    "밀리헤르츠", "마이크로헤르츠", "볼트", "암페어", "리터", "배럴",
+}
+# 단위 뒤 조사는 허용하되 '원문'처럼 단위명으로 시작하는 일반 단어는 제외한다.
+_KO_UNIT_END = re.compile(r"^(?:은|는|이|가|을|를|의|에|로|와|과|도|만|당|급|$)")
+# 연도·순번·문서 구조·약한 계수 등 기존 비수량 문맥은 미인식 경고에서도 제외한다.
+_NON_QUANTITY_KO = re.compile(
+    r"^(?:년|월|일|분기|차|세대|위|부|장|절|권|회|쪽|페이지|개월|개$|대|기)")
 # 한글 수사(H2 ③): '삼백조원'·'오천억원'·'이십 퍼센트' — 값 파싱은 안 하고 WARN 으로만 표면화.
 KO_NUMERAL = re.compile(r"(?<![가-힣])[일이삼사오육칠팔구십백천]+[만억조]?\s*(?:원|달러|퍼센트|%|톤|건|명|기|대|배)")
 TAG = re.compile(r"(?:\(F\d{3,}\)|\[F\d{3,}\])")
@@ -247,14 +262,15 @@ def _p(n: int) -> Decimal:
 
 
 _CUR_SCALE = {"bn": _p(9), "billion": _p(9), "b": _p(9), "mn": _p(6), "million": _p(6), "m": _p(6),
-              "k": _p(3), "t": _p(12), "조": _p(12), "억": _p(8), "만": _p(4)}
+              "k": _p(3), "t": _p(12), "thousand": _p(3), "trillion": _p(12),
+              "조": _p(12), "억": _p(8), "만": _p(4)}
 # 대장 단위 USD_B / EUR_MN 등. 미해석 접미사는 통화 하나로 축소하지 않는다.
 _UNSUPPORTED = "UNSUPPORTED"
-_CUR_UNIT_MULT = {**{k: v for k, v in _CUR_SCALE.items() if k in ("k", "m", "b", "t", "mn", "bn")},
-                  "thousand": _p(3), "million": _p(6), "billion": _p(9)}
+# 기존 공백 구분도 정규화하되 전체 일치로 배수 뒤의 잔여 문자를 차단한다.
 _CUR_UNIT_ALIAS = re.compile(
-    r"^([A-Za-z]{3})[_ ](K|M|B|T|MN|BN|thousand|million|billion)$", re.I)
-_CUR_TAIL = re.compile(r"^([A-Za-z]{3})[_ \-]+(.+)$")
+    r"([A-Za-z]{3})(?:_(" + "|".join(_CUR_SCALE) + r"))?", re.I)
+# 통화코드로 시작하는 단위는 배수 부분검색보다 먼저 전체 문법을 검사한다.
+_CUR_HEAD = re.compile(r"^(?:[A-Za-z]{3}(?=$|[_ \-])|USD|EUR|KRW|JPY|CNY|GBP|CAD|AUD|HKD|TWD|SGD)", re.I)
 
 
 UNIT_SCALE: dict[str, tuple[str, Decimal]] = {
@@ -306,9 +322,11 @@ def _resolve_unit(unit: str) -> tuple[str | None, Decimal]:
         return UNIT_SCALE[u.lower()]
     if u in UNIT_SCALE:
         return UNIT_SCALE[u]
-    alias = _CUR_UNIT_ALIAS.match(u)
-    if alias:
-        return alias.group(1).upper(), _CUR_UNIT_MULT[alias.group(2).lower()]
+    if _CUR_HEAD.match(u):
+        alias = _CUR_UNIT_ALIAS.fullmatch(u.replace(" ", "_"))
+        if alias:
+            return alias.group(1).upper(), _CUR_SCALE.get((alias.group(2) or "").lower(), Decimal(1))
+        return _UNSUPPORTED, Decimal(1)
     # 'USD_million' / 'EUR million' / '백만 EUR' / '십억 USD': 통화 차원 + 배수. 통화가 없으면 'N'(일반 배수).
     mul = None
     sm = _SCALE_TOKEN.search(u)
@@ -322,13 +340,6 @@ def _resolve_unit(unit: str) -> tuple[str | None, Decimal]:
         cm = _CUR_TOKEN.search(u)
         dim = _CUR_DIM.get(cm.group(0).upper(), "N") if cm else "N"   # '$'.upper()=='$' 라 기호도 그대로 조회됨
         return dim, mul
-    tail = _CUR_TAIL.match(u)
-    if tail and re.search(r"[A-Za-z0-9]", tail.group(2)):
-        rest = tail.group(2).strip().lower()
-        if rest in _CUR_UNIT_MULT:
-            return tail.group(1).upper(), _CUR_UNIT_MULT[rest]
-        # 통화코드 뒤 미해석 접미사 — USD 하나로 축소하면 값대조가 거짓 성공한다
-        return _UNSUPPORTED, Decimal(1)
     m = _UNIT_TOKEN.search(u)
     if m:
         token = m.group(0)
@@ -465,15 +476,28 @@ def _body_nums(seg: str) -> list[tuple[re.Match, str | None, list[Decimal] | Non
     return out
 
 
-def _unrecognized_num_tokens(seg: str, items: list) -> list[re.Match]:
-    """인식된 수치 span 과 겹치지 않는 미지원 숫자 토큰(999 mw, 인식 전 C$999)."""
+def _unrecognized_num_tokens(seg: str, items: list) -> tuple[list[re.Match], list[re.Match]]:
+    """인식 수치와 겹치지 않는 단위 후보(실패)와 모호한 한국어 후보(경고)."""
     spans = [(m.start(), m.end()) for m, _, _ in items]
-    leftover = []
+    leftover, uncertain = [], []
+    known_units = {unit.casefold() for unit in (*SI_UNIT_SCALE, *UNIT_SCALE, *_CURRENCY_DIMS)}
     for m in _LOOSE_CLAIM.finditer(seg):
         if any(not (m.end() <= s or m.start() >= e) for s, e in spans):
             continue
-        leftover.append(m)
-    return leftover
+        if m.group("unit").casefold() in known_units:
+            leftover.append(m)
+    for m in _LOOSE_KO_CLAIM.finditer(seg):
+        if any(not (m.end() <= s or m.start() >= e) for s, e in spans):
+            continue
+        unit = m.group("unit")
+        if any(unit.startswith(name) and _KO_UNIT_END.match(unit[len(name):]) and
+               (name != "원" or seg[m.start("unit") - 1] in "0123456789억조만천")
+               for name in _KO_UNIT_NAMES):
+            leftover.append(m)
+        elif not _NON_QUANTITY_KO.match(unit) and not (
+                m.start() > 0 and seg[m.start() - 1] == "제" and unit.startswith(("조", "항", "호", "장", "절", "권", "회"))):
+            uncertain.append(m)
+    return leftover, uncertain
 
 
 def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = False,
@@ -505,12 +529,13 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
         tags = list(TAG.finditer(seg))
         nums = [t[0] for t in items]
         bind = _bind_pairs(seg, nums, tags) if nums else {}
+        bound = set(bind.values())
         for idx, (m, bd, bvals) in enumerate(items):
             j = bind.get(idx)
             if j is None:
                 # 직접 결박 실패(태그 없음 또는 표 셀 경계) → 같은 세그먼트 내 값일치 폴백.
                 ok = False
-                for t in tags:
+                for tag_idx, t in enumerate(tags):
                     f = facts.get(t.group(0).strip("()[]"))
                     if not f:
                         continue
@@ -518,6 +543,7 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
                     if lv is not None and bvals is not None and lv == bvals and \
                             (ld is None or bd is None or _dims_compatible(ld, bd)):
                         ok = True
+                        bound.add(tag_idx)
                         break
                 if not ok:
                     msg = f"수치 사실주장에 F태그 없음: '{m.group(0)}' (문맥: {seg.strip()[:60]!r})"
@@ -553,9 +579,8 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
             if lv != bvals:
                 failures.append(
                     f"[값불일치] {loc}{fid}: 표기 '{m.group(0)}' ≠ 대장 '{f['value']['raw']}'")
-        leftover = _unrecognized_num_tokens(seg, items)
-        if leftover:
-            bound = set(bind.values())
+        leftover, uncertain = _unrecognized_num_tokens(seg, items)
+        if leftover or uncertain:
             for j, t in enumerate(tags):
                 if j in bound:
                     continue
@@ -566,9 +591,11 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
                 _, lv = _ledger_qty(f)
                 if lv is None:
                     continue
-                token = min(leftover, key=lambda mm: abs(mm.start() - t.start())).group(0)
-                failures.append(
-                    f"[수치미인식] {loc}{fid}: 숫자 토큰 '{token}' 을 단위로 해석하지 못함 "
+                token = min(leftover or uncertain, key=lambda mm: abs(mm.start() - t.start())).group(0)
+                diagnostics = failures if leftover else warnings
+                code = "수치미인식" if leftover else "수치미인식?"
+                diagnostics.append(
+                    f"[{code}] {loc}{fid}: 숫자 토큰 '{token}' 을 단위로 해석하지 못함 "
                     f"(문맥: {seg.strip()[:60]!r})")
 
     return failures, warnings
