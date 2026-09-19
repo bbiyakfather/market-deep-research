@@ -12,3 +12,6 @@ __pycache__/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# codegraph 로컬 색인 (커밋하지 않음)
+.codegraph/
