@@ -29,10 +29,10 @@ from pathlib import Path
 
 import fitz  # PyMuPDF
 
-from fetch import check_url_safe, creq, TIMEOUT, _CA_BUNDLE
+from fetch import (check_url_safe, creq, request_bytes, response_text,
+                   DownloadLimitError, MAX_IMG_BYTES)
 from skill_paths import ASSETS
 
-MAX_IMG_BYTES = 15 * 1024 * 1024
 MIN_IMG_BYTES = 8 * 1024                       # 아이콘·트래킹픽셀 컷
 # 매직바이트 → 확장자 (svg 등 텍스트 포맷은 검증면이 넓어져 제외 — 래스터만)
 MAGIC = {b"\xff\xd8\xff": ".jpg", b"\x89PNG": ".png", b"GIF8": ".gif", b"RIFF": ".webp"}
@@ -356,9 +356,10 @@ def page_images(url: str) -> dict:
 # --- ③ 이미지 검색 (무료: openverse·commons·searx) -----------------------------
 
 def _json_get(url: str, timeout: int = 12) -> dict | list:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8", "replace"))
+    response = request_bytes(url, timeout=timeout, headers={"User-Agent": UA}, client=creq)
+    if not 200 <= response["status"] < 300:
+        raise urllib.error.HTTPError(url, response["status"], "검색 요청 실패", None, None)
+    return json.loads(response_text(response))
 
 
 def _openverse(query: str, n: int) -> list[dict]:
@@ -554,23 +555,14 @@ def search_images(query: str, n: int = 8,
 
 def download(url: str, out_dir: Path | str = "_images/web", name: str | None = None) -> dict:
     """SSRF 경계 + 매직바이트·크기 검증 통과분만 저장. 실패는 ok:false 로 정직 반환."""
-    check_url_safe(url)
-    if creq is not None:
-        r = creq.get(url, impersonate="chrome", timeout=TIMEOUT, verify=_CA_BUNDLE or True,
-                     headers={"User-Agent": UA})
-        status, body = r.status_code, r.content
-    else:                                        # curl_cffi 미설치 degrade
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
-        try:
-            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-                status, body = resp.status, resp.read(MAX_IMG_BYTES + 1)
-        except urllib.error.HTTPError as exc:
-            # 403/429를 포함한 원 상태를 기록하고 같은 URL을 재시도하지 않는다.
-            return {"ok": False, "url": url, "note": f"HTTP {exc.code}"}
-    if status != 200:                            # 429/403 에러페이지를 이미지 실패로 오보하지 않기
+    try:
+        response = request_bytes(url, headers={"User-Agent": UA},
+                                 max_bytes=MAX_IMG_BYTES, client=creq)
+    except DownloadLimitError:
+        return {"ok": False, "url": url, "note": "크기 초과"}
+    status, body = response["status"], response["raw"]
+    if not 200 <= status < 300:
         return {"ok": False, "url": url, "note": f"HTTP {status}"}
-    if len(body) > MAX_IMG_BYTES:
-        return {"ok": False, "url": url, "note": f"크기 초과 {len(body)}B"}
     if len(body) < MIN_IMG_BYTES:
         return {"ok": False, "url": url, "note": f"너무 작음 {len(body)}B(아이콘 의심)"}
     ext = next((e for m, e in MAGIC.items() if body[:12].startswith(m) or m in body[:12]), None)

@@ -17,22 +17,31 @@ CLI:
 from __future__ import annotations
 
 import hashlib
+import http.client
 import ipaddress
 import json
 import os
 import shutil
 import socket
 import sys
+import time
+import urllib.error
+import urllib.request
 import uuid
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote, urljoin, urlparse
 
 MAX_BYTES = 8 * 1024 * 1024
+MAX_IMG_BYTES = 15 * 1024 * 1024
+MAX_REDIRECTS = 5
+CHUNK_BYTES = 65536
 TIMEOUT = 25
 IMPERSONATE_GRID = ["chrome", "safari", "chrome110"]
 ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml", "text/xml",
-                "application/xhtml", "application/pdf", "application/rss")
+                "application/xhtml", "application/pdf", "application/rss",
+                "application/rss+xml", "application/atom+xml")
 CHALLENGE_MARKERS = ("just a moment", "access denied", "cf-challenge", "datadome",
                      "sec-if-cpt-container", "enable javascript and cookies",
                      "verifying you are human", "captcha-delivery")
@@ -132,12 +141,15 @@ def _audit_fetch_attempt(url: str, tier: str, result: dict | None = None,
             snapshot.write_bytes(body_bytes)
             snapshot_path = str(snapshot).replace("\\", "/")
         row = {
+            "kind": "attempt",
             "id": receipt_id,
             "url": url,
             "ts": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
             "tier": tier,
+            "status": result.get("acquisition_status", "fail"),
             "http_status": result.get("status"),
-            "failure_reason": failure_reason or (None if result.get("ok") else result.get("reason")),
+            "failure_reason": failure_reason or (result.get("reason")
+                               if result.get("acquisition_status") == "fail" or not result.get("ok") else None),
             "body_sha256": hashlib.sha256(body_bytes).hexdigest() if body_bytes else None,
             "snapshot_path": snapshot_path,
         }
@@ -160,8 +172,10 @@ def _ip_is_unsafe(ip: str) -> bool:
             or a.is_multicast or a.is_unspecified)
 
 
-def check_url_safe(url: str) -> str:
-    """스킴·호스트·해석IP 검증. 안전하면 host 반환, 아니면 SsrfBlocked."""
+def _resolve_safe(url: str) -> tuple[str, list[str]]:
+    """검사한 주소를 연결에도 사용하여 DNS 재해석 사이의 경계 이탈을 막는다."""
+    if "\\" in url or any(ord(char) <= 32 or ord(char) == 127 for char in url):
+        raise SsrfBlocked("URL 제어문자·공백·역슬래시 금지")
     p = urlparse(url)
     if p.scheme not in ("http", "https"):
         raise SsrfBlocked(f"허용 안 되는 스킴: {p.scheme!r}")
@@ -169,23 +183,42 @@ def check_url_safe(url: str) -> str:
     if not host:
         raise SsrfBlocked("호스트 없음")
     try:
+        host = host.encode("idna").decode("ascii")
+    except UnicodeError as exc:
+        raise SsrfBlocked("잘못된 국제화 호스트") from exc
+    if p.username is not None or p.password is not None:
+        raise SsrfBlocked("URL 사용자 정보 금지")
+    try:
+        p.port
+    except ValueError as exc:
+        raise SsrfBlocked(f"잘못된 포트: {exc}") from exc
+    try:
         infos = socket.getaddrinfo(host, None)
     except socket.gaierror as e:
         raise SsrfBlocked(f"DNS 해석 실패: {host} ({e})")
+    addresses = []
     for info in infos:
         ip = info[4][0]
         if _ip_is_unsafe(ip):
             raise SsrfBlocked(f"차단 IP({ip}) → {host}")
-    return host
+        if ip not in addresses:
+            addresses.append(ip)
+    if not addresses:
+        raise SsrfBlocked(f"DNS 주소 없음: {host}")
+    return host, addresses
+
+
+def check_url_safe(url: str) -> str:
+    """공통 스킴·호스트·주소 가드. 안전하면 host 반환."""
+    return _resolve_safe(url)[0]
 
 
 def check_response_ip(r) -> None:
-    """실접속 IP 사후 재검증(V26 — TOCTOU 방지). check_url_safe 가 검증한 DNS 해석과 실제
-    connect() 대상이 다를 수 있다(DNS 리바인딩). curl_cffi 응답의 primary_ip 를 재검사한다.
-    프록시(HTTP_PROXY/HTTPS_PROXY) 사용 시 primary_ip 는 프록시 주소이므로 검사를 건너뛴다."""
-    if os.environ.get("HTTP_PROXY") or os.environ.get("HTTPS_PROXY") \
-            or os.environ.get("http_proxy") or os.environ.get("https_proxy"):
-        return
+    """고정 연결의 추가 사후 검사. 이 검사 자체는 이미 송신한 요청을 되돌리지 못한다.
+
+    프록시 환경변수와 무관하게 검사한다. 공통 transport는 목적지 고정을 보장하려고
+    환경 프록시를 사용하지 않는다(프록시 내부의 DNS/연결은 이 프로세스가 검증 불가).
+    """
     ip = getattr(r, "primary_ip", None)
     if ip and _ip_is_unsafe(ip):
         raise SsrfBlocked(f"실접속 차단 IP({ip})")
@@ -194,7 +227,7 @@ def check_response_ip(r) -> None:
 # --- 4계층 성공검증 (R2) -----------------------------------------------------
 def validate_body(text: str, status: int, success_selectors: list[str] | None = None) -> dict:
     """{verdict: ok|partial|challenge|empty, reason}. HTTP200 ≠ 성공."""
-    if status and status >= 400:                       # ⓪ 상태코드 우선(V17) — 4xx/5xx 본문은 안 믿음
+    if not isinstance(status, int) or not 200 <= status < 300:
         return {"verdict": "empty", "reason": f"http {status}"}
     low = (text or "").lower()
     n = len(text or "")
@@ -223,54 +256,148 @@ def extract_text(html: str) -> str:
     return re.sub(r"<[^>]+>", " ", html or "")
 
 
-# --- 단일 fetch (수동 리다이렉트 검증 + 크기캡) -----------------------------
-def _fetch_once(url: str, impersonate: str, max_redirects: int = 5,
-                headers: dict | None = None) -> dict:
-    if creq is None:
-        return {"ok": False, "reason": "curl_cffi 미설치", "status": None, "text": "", "final_url": url}
+# --- 공통 transport: 수동 리다이렉트·고정 IP·스트리밍 크기캡 -----------------
+class DownloadLimitError(ValueError):
+    pass
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _urllib_open(url: str, host: str, addresses: list[str], headers: dict, timeout: float):
+    def connection_factory(cls):
+        def factory(*args, **kwargs):
+            conn = cls(*args, **kwargs)
+
+            def connect(address, timeout=timeout, source_address=None):
+                # numeric IP만 connect에 전달한다. TLS의 SNI/인증서 검증은 원 host 유지.
+                last_error = None
+                for ip in addresses:
+                    try:
+                        sock = socket.create_connection((ip, address[1]), timeout, source_address)
+                        if _ip_is_unsafe(sock.getpeername()[0]):
+                            sock.close()
+                            raise SsrfBlocked("실접속 차단 IP")
+                        return sock
+                    except OSError as exc:
+                        last_error = exc
+                raise last_error or OSError(f"연결 실패: {host}")
+
+            conn._create_connection = connect
+            return conn
+        return factory
+
+    class HTTPHandler(urllib.request.HTTPHandler):
+        def http_open(self, req):
+            return self.do_open(connection_factory(http.client.HTTPConnection), req)
+
+    class HTTPSHandler(urllib.request.HTTPSHandler):
+        def https_open(self, req):
+            return self.do_open(connection_factory(http.client.HTTPSConnection), req,
+                                context=self._context)
+
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect(),
+                                        HTTPHandler(), HTTPSHandler())
+    try:
+        return opener.open(urllib.request.Request(url, headers=headers), timeout=timeout)
+    except urllib.error.HTTPError as exc:
+        return exc  # HTTPError도 스트림. redirect/오류 상태 처리는 공통 루프에서 한다.
+
+
+_DEFAULT_CLIENT = object()
+
+
+def request_bytes(url: str, *, impersonate: str = "chrome", headers: dict | None = None,
+                  timeout: int = TIMEOUT, max_bytes: int = MAX_BYTES,
+                  max_redirects: int = MAX_REDIRECTS, client=_DEFAULT_CLIENT) -> dict:
+    """fetch·검색·이미지 수집이 공유하는 유일한 HTTP 경계."""
+    client = creq if client is _DEFAULT_CLIENT else client
     cur = url
-    for _ in range(max_redirects + 1):
-        check_url_safe(cur)                             # 각 홉 SSRF 사전검증(DNS 기준)
-        _kw = {"verify": _CA_BUNDLE} if _CA_BUNDLE else {}
-        if headers:
-            _kw["headers"] = headers                    # UA 위장(모바일·봇) — TLS 지문과 별개 축
-        r = creq.get(cur, impersonate=impersonate, timeout=TIMEOUT,
-                     allow_redirects=False, stream=True, **_kw)
-        check_response_ip(r)                            # 실접속 IP 사후 재검증(V26 — TOCTOU)
-        if r.status_code in (301, 302, 303, 307, 308):
-            loc = r.headers.get("location") or r.headers.get("Location")
-            r.close()
-            if not loc:
-                return {"ok": False, "reason": "redirect without Location", "status": r.status_code,
-                        "text": "", "final_url": cur}
-            cur = urljoin(cur, loc)                     # V19 — 수제 조립 대신 표준 결합(프로토콜상대·상대경로·포트 보존)
-            continue
-        ctype = r.headers.get("content-type") or ""
-        mime = ctype.split(";")[0].strip().lower()
-        charset = next((p.split("=", 1)[1].strip().strip('"') for p in ctype.split(";")[1:]
-                        if p.strip().lower().startswith("charset=")), None)
-        buf = b""
-        for chunk in r.iter_content(chunk_size=65536):
-            buf += chunk
-            if len(buf) > MAX_BYTES:
-                r.close()
-                return {"ok": False, "reason": "oversize", "status": r.status_code,
-                        "text": "", "final_url": cur, "mime": mime}
-        r.close()
-        is_pdf = buf[:5] == b"%PDF-"                    # V18a — 매직바이트만 신뢰(확장자/헤더는 위조 가능)
-        if not is_pdf and mime and mime not in ALLOWED_MIME:   # V18b — PDF 판정 뒤에 게이트(옥텟스트림 PDF 보존)
-            return {"ok": False, "reason": f"mime:{mime}", "status": r.status_code,
-                    "text": "", "final_url": cur, "mime": mime}
-        if is_pdf:
-            text = ""
+    deadline = time.monotonic() + timeout
+    for hop in range(min(max_redirects, MAX_REDIRECTS) + 1):
+        host, addresses = _resolve_safe(cur)
+        p = urlparse(cur)
+        authority = f"[{host}]" if ":" in host else host
+        if p.port is not None:
+            authority += f":{p.port}"
+        cur = p._replace(netloc=authority, fragment="").geturl()
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("다운로드 시간 초과")
+        if client is not None:
+            from curl_cffi.const import CurlOpt
+            port = p.port or (443 if p.scheme == "https" else 80)
+            pinned = ",".join(f"[{ip}]" if ":" in ip else ip for ip in addresses)
+            r = client.get(cur, impersonate=impersonate, timeout=remaining,
+                           allow_redirects=False, stream=True, headers=headers or {},
+                           verify=_CA_BUNDLE or True,
+                           curl_options={CurlOpt.RESOLVE: [f"{host}:{port}:{pinned}"],
+                                         CurlOpt.PROXY: ""})
         else:
-            try:
-                text = buf.decode(charset or "utf-8")   # 선언된 charset 우선(EUC-KR 등 무시 방지)
-            except (LookupError, UnicodeDecodeError):
-                text = buf.decode("utf-8", errors="replace")
-        return {"ok": True, "status": r.status_code, "text": text, "raw": buf,
-                "final_url": cur, "mime": mime, "is_pdf": is_pdf}
-    return {"ok": False, "reason": "too many redirects", "status": None, "text": "", "final_url": cur}
+            r = _urllib_open(cur, host, addresses, headers or {}, remaining)
+        try:
+            check_response_ip(r)
+            status = r.status_code if client is not None else r.code
+            response_headers = {k.lower(): v for k, v in r.headers.items()}
+            if status in (301, 302, 303, 307, 308):
+                loc = response_headers.get("location")
+                if not loc:
+                    raise ValueError("redirect without Location")
+                if hop == min(max_redirects, MAX_REDIRECTS):
+                    raise ValueError("too many redirects")
+                cur = urljoin(cur, loc)
+                continue
+            length = response_headers.get("content-length", "")
+            if length.isdigit() and int(length) > max_bytes:
+                raise DownloadLimitError("oversize")
+            chunks = r.iter_content(chunk_size=CHUNK_BYTES) if client is not None else iter(
+                lambda: r.read(CHUNK_BYTES), b"")
+            buf = bytearray()
+            for chunk in chunks:
+                if time.monotonic() > deadline:
+                    raise TimeoutError("다운로드 시간 초과")
+                if len(buf) + len(chunk) > max_bytes:
+                    raise DownloadLimitError("oversize")
+                buf.extend(chunk)
+            return {"status": status, "headers": response_headers, "raw": bytes(buf),
+                    "final_url": cur}
+        finally:
+            r.close()
+    raise ValueError("too many redirects")
+
+
+def response_text(response: dict) -> str:
+    ctype = response.get("headers", {}).get("content-type", "")
+    charset = next((p.split("=", 1)[1].strip().strip('"') for p in ctype.split(";")[1:]
+                    if p.strip().lower().startswith("charset=")), "utf-8")
+    try:
+        return response["raw"].decode(charset)
+    except (LookupError, UnicodeDecodeError):
+        return response["raw"].decode("utf-8", errors="replace")
+
+
+def _fetch_once(url: str, impersonate: str, max_redirects: int = MAX_REDIRECTS,
+                headers: dict | None = None) -> dict:
+    try:
+        response = request_bytes(url, impersonate=impersonate, headers=headers,
+                                 max_redirects=max_redirects)
+    except SsrfBlocked:
+        raise
+    except (DownloadLimitError, ValueError, OSError) as exc:
+        return {"ok": False, "reason": str(exc), "status": None, "text": "", "final_url": url}
+    buf, status = response["raw"], response["status"]
+    mime = response["headers"].get("content-type", "").split(";", 1)[0].strip().lower()
+    text = response_text(response)
+    base = {"status": status, "text": text, "final_url": response["final_url"], "mime": mime}
+    # PDF 판정 전에 상태를 거부한다. 진단 본문은 유지하되 확보 성공으로 쓰지 않는다.
+    if not 200 <= status < 300:
+        return {**base, "ok": False, "reason": f"http {status}", "is_pdf": False}
+    is_pdf = buf[:5] == b"%PDF-"
+    if not is_pdf and mime and mime not in ALLOWED_MIME:
+        return {**base, "ok": False, "reason": f"mime:{mime}"}
+    return {**base, "ok": True, "text": "" if is_pdf else text, "raw": buf, "is_pdf": is_pdf}
 
 
 # --- 폴백 계층 ---------------------------------------------------------------
@@ -327,6 +454,57 @@ def _rss_urls(url: str) -> list[str]:
         out.append(base + "/feed")
     out += [base + "/rss", base + "/feed", base + "/rss.xml"]
     return list(dict.fromkeys(out))
+
+
+def _rss_entry(res: dict, requested_url: str, expected_title: str | None = None) -> dict:
+    """RSS/Atom에서 대응하는 단일 항목만 추출한다. 무관 피드는 탐색 자료로 보존."""
+    import re
+    from html import unescape
+
+    def normalized_url(value):
+        p = urlparse(unescape(value).strip())
+        return p._replace(scheme=p.scheme.lower(), netloc=p.netloc.lower(), fragment="").geturl()
+
+    def title_key(value):
+        return re.sub(r"\s+", " ", unescape(value or "")).strip().casefold()
+
+    partial = {**res, "acquisition_status": "partial", "rss_match": False, "_note": "rss",
+               "reason": "요청 기사와 일치하는 RSS entry 없음"}
+    try:
+        root = ET.fromstring(res.get("text", ""))
+    except ET.ParseError:
+        return {**res, "ok": False, "reason": "RSS XML 파싱 실패"}
+    if root.tag.rsplit("}", 1)[-1] not in ("rss", "feed", "RDF"):
+        return {**res, "ok": False, "reason": "RSS/Atom 피드 아님"}
+    matches, title_matches = [], []
+    for entry in root.iter():
+        if entry.tag.rsplit("}", 1)[-1] not in ("item", "entry"):
+            continue
+        fields: dict[str, list[str]] = {}
+        for child in entry:
+            tag = child.tag.rsplit("}", 1)[-1]
+            value = "".join(child.itertext()).strip()
+            if tag == "link":
+                if child.get("rel", "alternate") != "alternate":
+                    continue
+                value = child.get("href") or value
+            fields.setdefault(tag, []).append(value)
+        identifiers = fields.get("link", []) + fields.get("guid", []) + fields.get("id", [])
+        if any(normalized_url(urljoin(res.get("final_url") or requested_url, value)) ==
+               normalized_url(requested_url) for value in identifiers):
+            matches.append((entry, fields))
+        elif expected_title and title_key(" ".join(fields.get("title", []))) == title_key(expected_title):
+            title_matches.append((entry, fields))
+    matches = matches or title_matches
+    if len(matches) != 1:  # 중복 제목/모호한 항목은 원문이라고 단정하지 않는다.
+        return partial
+    entry, fields = matches[0]
+    body = next((fields[key][0] for key in ("encoded", "content", "description", "summary")
+                 if fields.get(key) and fields[key][0]), "")
+    # Atom XHTML은 itertext로 텍스트를 추출한다. RSS CDATA HTML은 그대로 본문 검증에 넘긴다.
+    text = "\n".join([" ".join(fields.get("title", [])), body]).strip()
+    # raw는 수신한 피드 바이트 그대로 보존한다. 검증·clean 대상만 대응 entry로 좁힌다.
+    return {**res, "text": text, "rss_match": True, "_note": "rss"}
 
 
 def _ogp_partial(html: str) -> str:
@@ -403,7 +581,8 @@ def _tier_order(url: str) -> list[str]:
     return ["direct"] + head + [t for t in DEFAULT_ORDER if t not in head and t != "direct"]
 
 
-def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
+def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
+                  expected_title: str | None = None) -> dict:
     """자체 사다리 전체(도메인 라우팅 + 내장 우회). 반환 status ∈ {ok, partial, fail}.
 
     구 버전의 `delegate`(insane-search 스킬 위임)는 사다리에 흡수돼 사라졌다.
@@ -417,15 +596,33 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
     for tier in _tier_order(url):
         try:
             for label, res in _candidates(tier, url):
+                res = dict(res or {})
+                status = res.get("status")
+                if res.get("ok") and (not isinstance(status, int) or not 200 <= status < 300):
+                    res.update(ok=False, reason=f"http {status}")
+                if res.get("ok") and tier == "rss":
+                    res = _rss_entry(res, url, expected_title)
+                if not res.get("ok"):
+                    v = {"verdict": "fail", "reason": res.get("reason")}
+                elif res.get("rss_match") is False:
+                    v = {"verdict": "partial", "reason": res["reason"]}
+                elif res.get("is_pdf"):
+                    v = {"verdict": "ok", "reason": "pdf"}
+                else:
+                    v = validate_body(res.get("text", ""), status, success_selectors)
+                res["acquisition_status"] = v["verdict"] if v["verdict"] in ("ok", "partial") else "fail"
+                if res["acquisition_status"] == "fail":
+                    res["reason"] = v["reason"]
+                if tier == "direct" and res.get("ok") and v["verdict"] == "partial" and not expected_title:
+                    expected_title = _html_title(res.get("text", ""))
                 ref = _audit_fetch_attempt(url, label, res)
                 fetch_refs.append(ref)
                 if not res or not res.get("ok"):
                     trace.append({"tier": label, "fail": (res or {}).get("reason"), "fetch_ref": ref})
                     continue
                 res["_fetch_ref"] = ref
-                if res.get("is_pdf"):
+                if res.get("is_pdf") and v["verdict"] == "ok":
                     return _result("ok", res, trace, note="pdf", fetch_refs=fetch_refs)
-                v = validate_body(res["text"], res.get("status", 0), success_selectors)
                 trace.append({"tier": label, "verdict": v["verdict"], "reason": v["reason"],
                               "fetch_ref": ref})
                 if v["verdict"] == "ok":
@@ -454,16 +651,54 @@ def fetch(url: str, success_selectors: list[str] | None = None) -> dict:
             "hint": "자체 사다리 전 계층 소진 — 브라우저 MCP(agent-browser 우선, JS 렌더링) 또는 대체출처를 찾을 것"}
 
 
+def fetch(url: str, success_selectors: list[str] | None = None,
+          expected_title: str | None = None) -> dict:
+    """한 호출의 최종 확보 상태를 시도 로그와 구분해 기록한다."""
+    result = {"status": "fail"}
+    try:
+        result = _fetch_ladder(url, success_selectors, expected_title)
+        return result
+    finally:
+        try:
+            audit = Path("audit")
+            audit.mkdir(parents=True, exist_ok=True)
+            row = {"kind": "final", "url": url, "ts": _now(), "status": result["status"],
+                   "fetch_ref": result.get("fetch_ref"), "final_url": result.get("final_url")}
+            with (audit / "fetch-log.jsonl").open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(row, ensure_ascii=False) + "\n")
+        except OSError:
+            pass
+
+
 def _result(status: str, res: dict, trace: list, note: str = "", fetch_refs: list[str] | None = None) -> dict:
     return {"status": status, "final_url": res.get("final_url"), "http_status": res.get("status"),
             "archived_url": res.get("archived_url"), "mime": res.get("mime"),
             "text": res.get("text", ""), "raw": res.get("raw"), "is_pdf": res.get("is_pdf", False),
-            "trace": trace, "note": note, "fetch_ref": res.get("_fetch_ref"),
+            "trace": trace, "note": note or res.get("_note", ""), "fetch_ref": res.get("_fetch_ref"),
             "fetch_refs": fetch_refs or []}
 
 
-# --- 저장(원본 + 정제본 + 해시) ---------------------------------------------
-def save(result: dict, out_dir: Path | str) -> dict:
+def _html_title(html: str) -> str | None:
+    """HTML <title> 우선, 없으면 og:title. PDF/없음은 None."""
+    if not html:
+        return None
+    import html as _html
+    import re
+    m = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
+    if m:
+        t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1)))
+        t = _html.unescape(t).strip()
+        if t:
+            return t
+    og = _ogp_partial(html)
+    if og and re.search(r"og:title", html, re.I):
+        first = _html.unescape(og.split("\n", 1)[0]).strip()
+        return first or None
+    return None
+
+
+# --- 저장(원본 + 정제본 + 해시 + 메타 사이드카) -----------------------------
+def save(result: dict, out_dir: Path | str, url: str | None = None) -> dict:
     out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
     raw = result.get("raw")
     if raw is None and result.get("text"):
@@ -471,15 +706,50 @@ def save(result: dict, out_dir: Path | str) -> dict:
     if raw is None:
         return result
     sha = hashlib.sha256(raw).hexdigest()
+    sha12 = sha[:12]
     ext = "pdf" if result.get("is_pdf") else ("html" if "<" in result.get("text", "")[:200] else "txt")
-    (out / f"{sha[:12]}_raw.{ext}").write_bytes(raw)
-    clean_path = None
+    raw_name = f"{sha12}_raw.{ext}"
+    (out / raw_name).write_bytes(raw)
+    clean_name = None
     if not result.get("is_pdf"):
         clean = extract_text(result.get("text", ""))
-        clean_path = out / f"{sha[:12]}_clean.txt"
-        clean_path.write_text(clean, encoding="utf-8")
-    result.update({"sha256": sha, "local": str(out / f'{sha[:12]}_raw.{ext}'),
-                   "clean": str(clean_path) if clean_path else None, "accessed_at": _now()})
+        clean_name = f"{sha12}_clean.txt"
+        (out / clean_name).write_text(clean, encoding="utf-8")
+    accessed = _now()
+    title = None if result.get("is_pdf") else _html_title(result.get("text") or "")
+    status = result.get("status")
+    if status not in ("ok", "partial"):
+        status = "ok"
+    meta = {
+        "url": url if url is not None else result.get("url"),
+        "final_url": result.get("final_url"),
+        "http_status": result.get("http_status"),
+        "mime": result.get("mime"),
+        "is_pdf": bool(result.get("is_pdf")),
+        "sha256": sha,
+        "accessed_at": accessed,
+        "title": title,
+        "raw": raw_name,
+        "clean": clean_name,
+        "status": status,
+        "fetch_ref": result.get("fetch_ref"),
+    }
+    meta_path = out / f"{sha12}.meta.json"
+    if meta_path.exists():
+        previous = json.loads(meta_path.read_text(encoding="utf-8"))
+        # 읽을 수 없는 이력은 덮어쓰지 않는다. legacy 최상위 필드는 최초 조회 그대로 유지한다.
+        if not isinstance(previous, dict) or not isinstance(previous.get("urls", []), list):
+            raise ValueError(f"출처 메타 형식 오류: {meta_path}")
+        history = previous.get("urls") or [dict(previous)]
+        previous["urls"] = [*history, meta]
+        meta = previous
+    else:
+        meta = {**meta, "urls": [dict(meta)]}
+    # blob은 공유하되 URL·최종 URL·상태·접근시각·fetch_ref 조회 이력은 누적한다.
+    from facts_db import _write_bytes_atomic
+    _write_bytes_atomic(meta_path, (json.dumps(meta, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    result.update({"sha256": sha, "local": str(out / raw_name),
+                   "clean": str(out / clean_name) if clean_name else None, "accessed_at": accessed})
     return result
 
 
@@ -492,11 +762,8 @@ def demo() -> None:
             check_url_safe(bad); assert False, f"차단 실패: {bad}"
         except SsrfBlocked:
             pass
-    # 공인 도메인은 통과(DNS 필요 — 실패 시 환경 문제로 스킵)
-    try:
-        assert check_url_safe("https://example.com/") == "example.com"
-    except SsrfBlocked as e:
-        print(f"  (경고) 공인 도메인 해석 스킵: {e}")
+    # 숫자 공인 IP는 DNS/외부 통신 없이 긍정형 경계를 검사한다.
+    assert check_url_safe("https://93.184.216.34/") == "93.184.216.34"
 
     # 4계층 검증
     assert validate_body("Just a moment... cf-challenge", 200)["verdict"] == "challenge"
@@ -549,9 +816,86 @@ def demo() -> None:
     assert "제목" in _ogp_partial('<meta property="og:title" content="제목">')
     assert "요약" in _ogp_partial('<meta content="요약" name="og:description">')
     assert _ogp_partial("<html><body>없음</body></html>") == ""
+    assert _html_title("<html><head><title>  Example Title </title></head></html>") == "Example Title"
+    assert _html_title('<meta property="og:title" content="OG Title">') == "OG Title"
+    assert _html_title("<html><body>없음</body></html>") is None
+
+    # 메타 사이드카: 가짜 result 로 save → <sha12>.meta.json 필드 존재(오프라인)
+    import tempfile
+    html = ('<html><head><title>Example Title</title>'
+            '<meta property="og:title" content="OG Title"></head>'
+            '<body><p>hello sidecar</p></body></html>')
+    fake = {"status": "ok", "final_url": "https://example.com/a", "http_status": 200,
+            "mime": "text/html", "is_pdf": False, "text": html, "raw": None,
+            "fetch_ref": "ref-demo"}
+    with tempfile.TemporaryDirectory() as td:
+        saved = save(fake, td, url="https://example.com/a")
+        sha12 = saved["sha256"][:12]
+        meta_path = Path(td) / f"{sha12}.meta.json"
+        assert meta_path.is_file(), meta_path
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        for k in ("url", "final_url", "http_status", "mime", "is_pdf", "sha256",
+                  "accessed_at", "title", "raw", "clean", "status", "fetch_ref"):
+            assert k in meta, k
+        assert meta["url"] == "https://example.com/a"
+        assert meta["final_url"] == "https://example.com/a"
+        assert meta["http_status"] == 200
+        assert meta["title"] == "Example Title"
+        assert meta["raw"] == f"{sha12}_raw.html"
+        assert meta["clean"] == f"{sha12}_clean.txt"
+        assert meta["status"] == "ok"
+        assert meta["fetch_ref"] == "ref-demo"
+        assert (Path(td) / meta["raw"]).is_file()
+        assert (Path(td) / meta["clean"]).is_file()
+        # 기존 호출자 호환: url 생략해도 save 는 동작, meta.url 은 null
+        fake2 = dict(fake, text="<html><body>x</body></html>", raw=None)
+        saved2 = save(fake2, td)
+        meta2 = json.loads((Path(td) / f"{saved2['sha256'][:12]}.meta.json").read_text(encoding="utf-8"))
+        assert meta2["url"] is None
+        # PDF: title/clean 은 null
+        pdf_fake = {"status": "partial", "final_url": "https://example.com/a.pdf",
+                    "http_status": 200, "mime": "application/pdf", "is_pdf": True,
+                    "text": "", "raw": b"%PDF-1.4 demo", "fetch_ref": None}
+        saved3 = save(pdf_fake, td, url="https://example.com/a.pdf")
+        meta3 = json.loads((Path(td) / f"{saved3['sha256'][:12]}.meta.json").read_text(encoding="utf-8"))
+        assert meta3["title"] is None and meta3["clean"] is None and meta3["is_pdf"] is True
+        assert meta3["status"] == "partial"
+        assert meta3["raw"].endswith(".pdf")
 
     print(f"[{_now()}] fetch demo OK (curl_cffi={'Y' if creq else 'N'}, "
           f"trafilatura={'Y' if trafilatura else 'N'}, CA={'ascii' if _CA_BUNDLE else 'default'})")
+
+
+def _print_cli_result(result: dict) -> None:
+    """stdout JSON을 자르지 않는다. 긴 trace는 감사 파일로 이동한다."""
+    summary = {k: v for k, v in result.items() if k not in ("text", "raw")}
+    summary.setdefault("sha256", None)
+    summary.setdefault("local", None)
+    trace = summary.get("trace", [])
+    if len(json.dumps(trace, ensure_ascii=False)) > 1000:
+        audit = Path("audit")
+        audit.mkdir(parents=True, exist_ok=True)
+        path = audit / f"fetch-trace-{uuid.uuid4().hex}.json"
+        path.write_text(json.dumps(trace, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        summary.pop("trace", None)
+        summary.update(trace_path=path.as_posix(), trace_count=len(trace))
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+
+
+def main(args: list[str] | None = None) -> None:
+    args = sys.argv[1:] if args is None else args
+    if not args or args[0] == "demo":
+        demo()
+    elif args[0] in ("smoke", "get") and len(args) >= 2:
+        r = fetch(args[1])
+        if args[0] == "get":
+            out = args[args.index("--out") + 1] if "--out" in args else "_sources"
+            if r["status"] in ("ok", "partial"):
+                r = save(r, out, url=args[1])
+        _print_cli_result(r)
+    else:
+        print(__doc__)
+        sys.exit(2)
 
 
 if __name__ == "__main__":
@@ -559,19 +903,4 @@ if __name__ == "__main__":
         _reconf = getattr(_stream, "reconfigure", None)
         if _reconf:
             _reconf(encoding="utf-8", errors="replace")
-    args = sys.argv[1:]
-    if not args or args[0] == "demo":
-        demo()
-    elif args[0] == "smoke" and len(args) >= 2:
-        r = fetch(args[1])
-        print(json.dumps({k: v for k, v in r.items() if k not in ("text", "raw")},
-                         ensure_ascii=False, indent=2)[:1500])
-    elif args[0] == "get" and len(args) >= 2:
-        r = fetch(args[1])
-        out = args[args.index("--out") + 1] if "--out" in args else "_sources"
-        if r["status"] in ("ok", "partial"):
-            r = save(r, out)
-        print(json.dumps({k: v for k, v in r.items() if k not in ("text", "raw")},
-                         ensure_ascii=False, indent=2)[:1500])
-    else:
-        print(__doc__); sys.exit(2)
+    main()

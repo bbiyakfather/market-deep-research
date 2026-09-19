@@ -6,3 +6,12 @@ __pycache__/
 *.tmp
 *.bak*
 .fablize/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+
+# codegraph 로컬 색인 (커밋하지 않음)
+.codegraph/
