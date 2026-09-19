@@ -191,3 +191,32 @@ def test_b3_06_unknown_korean_quantity_is_warning_only():
 ])
 def test_b3_06_unrecognized_check_requires_unbound_numeric_fact(body, raw):
     assert check(body, raw, "mW") == ([], [])
+
+
+def test_rr3_01_comma_after_unit_without_space_is_mismatch():
+    failures, warnings = check("출력은 45mW,999mW(F001)이다.", "45", "mW")
+    assert any("[값불일치]" in item for item in failures)
+    assert warnings == []
+
+
+def test_rr3_01_comma_after_unit_with_space_is_mismatch():
+    failures, warnings = check("출력은 45mW, 999mW(F001)이다.", "45", "mW")
+    assert any("[값불일치]" in item for item in failures)
+    assert warnings == []
+
+
+def test_rr3_01_single_matching_value_still_passes():
+    assert check("출력은 45mW(F001)이다.", "45", "mW") == ([], [])
+
+
+def test_rr3_01_thousands_separator_is_one_number():
+    assert check("45,999mW(F001)", "45999", "mW") == ([], [])
+
+
+def test_rr3_01_identifier_and_b2b_positive_controls_hold():
+    assert check("X45 USD 시장 전망이다(F001).", "45", "USD") == ([], [])
+    assert check("| 매출 | $45 B2B | (F001) |", "45", "USD") == ([], [])
+
+
+def test_rr3_01_decimal_notation_still_matches():
+    assert check("1.5 GW(F001)", "1.5", "GW") == ([], [])
