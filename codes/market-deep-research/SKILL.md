@@ -84,7 +84,7 @@ description: >-
 
 ### [Bx] 반박검색 + claim-graph 게이트  【v3-B】
 - 대상 = `risk:"high"` fact(시장규모·성장률·딜규모·순위 등 오류비용 큰 주장). 근거·순서는 `audit/verification-economics.md` 에 기록.
-- 검사: v4 본문 사용 confirmed high-risk는 ① 연결 evidence에서 계산한 ≥2 **독립 관찰그룹**(재전재 제외) · ② **능동 반박검색**(실질 query·result와 더 강한 반박 없음) · ③ 실재 연결된 **기본소스**(`primary_source_ref`) · ④ 유효한 ISO **시간증거**(`observed_at` 또는 `valid_at`)가 전부 필수이며 미충족 시 FAIL. v3는 기존 ①② FAIL·③④ WARN, 본문 미사용은 네 요건 부족 모두 WARN을 유지한다(`verification-gates.md`).
+- 검사: v4 본문 또는 부록에서 태그로 인용한 confirmed high-risk는 ① 연결 evidence에서 계산한 ≥2 **독립 관찰그룹**(재전재 제외) · ② **능동 반박검색**(실질 query·result와 더 강한 반박 없음) · ③ 실재 연결된 **기본소스**(`primary_source_ref`) · ④ 유효한 ISO **시간증거**(`observed_at` 또는 `valid_at`)가 전부 필수이며 미충족 시 FAIL. v3는 기존 ①② FAIL·③④ WARN, 어디에도 인용되지 않은 사실은 네 요건 부족 모두 WARN을 유지한다(`verification-gates.md`).
 - 반박검색 산출물은 `negative_search` 증거유형으로 결박.
 
 ### [G2] 증빙 게이트
@@ -97,7 +97,7 @@ description: >-
 
 ### [G3] verify_facts + manifest (실패 0)
 - `python scripts/verify_calculations.py <work_dir>`: G3 전 CAGR 구간 검산 → `audit/calc-check.json`(원문 보존, 충돌은 미해결로 남김).
-- `python scripts/verify_claims.py <report.md> <work_dir>`: 문장·근거 리비전과 검토 대장 검사 → `audit/claim-check.json`(두 검사 모두 G3 내 자동 호출, 신규 위반은 v3 WARN/v4 FAIL).
+- `python scripts/verify_claims.py <report.md> <work_dir>`: 문장·근거 리비전과 검토 대장 검사 → `audit/claim-check.json`(두 검사 모두 G3 내 자동 호출, 신규 위반은 v3 WARN/v4 FAIL). 검토 행은 읽은 E-ID의 내용 해시(`evidence_content_sha256`)에 결박되므로, 기존 근거의 인용·출처·캡처를 바꾸면 그 문장을 다시 검토한다(`claim-review.md`).
 - `scripts/verify_facts.py` CLI PASS 가 기준 `manifest.json` 을 자동 생성하고 G3 영수증에 `manifest_sha256` 을 결박한다. 검사항목 상세는 `verification-gates.md` G3 절.
 - **영수증**: CLI PASS는 G1·[2] 영수증을 확인한 뒤 G3 자기기록을 남기며, 누락 시 fail-closed한다.
 
@@ -109,7 +109,7 @@ description: >-
 - **[4b] 재봉인**: `manifest.extend` 만 허용(기존 항목 불변 확인 실패 시 거부 = G3 복귀, 렌더 산출물 artifacts 만 추가, G3 기준선 해시 대조). [G3]의 build 시점엔 report.pdf 가 아직 없어 매니페스트에 없으므로, 렌더 직후 기존 항목을 덮어쓰지 않고 report.pdf 등 렌더 산출물만 추가한다. 재봉인을 건너뛰면 report.pdf 는 변조·삭제해도 [G5] 가 잡지 못한다.
 - **영수증**: `render_pdf.py` CLI는 렌더 성공 직후 manifest extend와 [4b] 자기기록을 자동 수행한다. `manifest.py verify`는 [4b]·G4 영수증 없이는 실패하며, [4b] 영수증의 `manifest_sha256` 과 현재 `manifest.json` 해시를 대조(G5 가 [4b]↔manifest 결박을 검사)한 뒤 대조 결과를 **G5 영수증으로 자기기록**한다(실패도 기록 — 실패 이력이 원장에서 사라지지 않게).
 - `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 + **intent-diff 축별 대조**(개시분과 실제 발견 대조, 절차·복귀 규칙은 `references/verification-gates.md` G4 절 참조).
-- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`(재봉인 기준 — 이 시점부턴 신규 파일도 실패로 판정). 복귀 규칙은 `references/verification-gates.md` 참조(파일 변경/intent-diff gap 각각 다른 복귀처).
+- 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`(재봉인 기준 — 이 시점부턴 신규 파일도 실패로 판정). 새 조사는 v4(`schema_version: 4`)로 출고한다 — 순수 v3 폴더는 `--allow-legacy-v3`를 명시해야만 통과하며 영수증에 `legacy_v3`로 남는다(호환 검사 통과 ≠ v4 증빙 검증 완료). 복귀 규칙은 `references/verification-gates.md` 참조(파일 변경/intent-diff gap 각각 다른 복귀처).
 - **영수증**: preview 전 `python scripts/gates.py check G4 <work_dir>`로 G0 계획 해시 드리프트를 검사하고, 확인 후 `record G4`로 기록한다.
 - **영수증 커버리지**: 원장 영수증은 G0·G1·[2]·G3·[4b]·G4·G5 — 소유 스크립트 게이트(G3·[4b]·G5)는 CLI 손기록이 차단되고 소유 스크립트만 기록한다. G2·G5c 는 원장 대신 내용검사로 강제된다(G2=verify_facts 의 캡처 실재 검사, G5c=`audit/verify-<slug>.md` 산출물).
 
