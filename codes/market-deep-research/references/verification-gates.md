@@ -71,6 +71,9 @@ G3 refs에는 정규 `audit/research-plan.md` 해시(없으면 `missing`)도 결
 v4 disputed의 주장·맥락·값도 근거 리비전에 포함해 변경 후 문장 재검토를 요구한다. 부록 상충 인용에도 증거 연결과 캡처 검사를 적용한다.
 v4는 스키마 중첩 타입·배열 item·공백 필드·이벤트 구조를 검사한다. 시점은 YYYY/ YYYY-MM/ YYYY-MM-DD/ ISO datetime을, 이벤트 at와 capture_review.reviewed_at은 ISO datetime을 사용한다. 누락 가능한 항목은 null/생략으로 표현하며 빈 note와 pending의 빈 evidence/events/groups 배열은 허용한다.
 수치 부호는 범위 양 끝에서도 보존한다. SI 전력·에너지의 µ/u/m/k/M/G/T 접두사는 대소문자를 구분하며 통화·개수 단위의 기존 표기는 유지한다.
+대장 단위 `<통화코드>_<K|M|B|T|MN|BN>` 는 해당 10^3/6/9/12 배수로 정규화한다. 통화코드 뒤 미해석 접미사는 통화 하나로 축소하지 않고 `[단위미지원]` FAIL(환율 환산 없음).
+태그가 붙은 세그먼트에서 대장 값이 수치인데 인식된 수치가 그 태그에 결박되지 않았고 숫자 토큰이 있으면 `[수치미인식]` FAIL — 해석 실패는 검증 성공이 아니다. `mw` 는 미지원(SI 접두 대소문자 변환 없음). `C$/A$/HK$/NT$/S$` 는 `$`(USD)와 다른 통화(`[단위불일치]`).
+통화 배수 접미사 바로 뒤 영숫자는 접미사로 소비하지 않는다(`B2B`·`M2M`·`T1`). `split_segments` 는 `()`·`[]`·마크다운 링크 `[..](..)` 내부 문장부호에서 자르지 않으며, 괄호가 닫히지 않은 줄은 기존 분할로 폴백한다.
 
 **v4 추가 조건**: `verify_calculations.py <work_dir>`와
 `verify_claims.py <report.md> <work_dir>`를 G3가 자동 호출한다. 의미 판정은 검토자의 책임이며

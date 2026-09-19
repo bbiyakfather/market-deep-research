@@ -83,10 +83,15 @@ UNIT = (_SI_UNIT + r"|조원|억원|만원|억달러|백만달러|Nm³/h|Nm3/h|�
 # '5' 만 떼어 재시도해 '제25조' 가 '5조' 로 여전히 오매칭됐다(실측).
 METRIC_NUM = re.compile(rf"(?<!제)(?<![\d+−-])({NUM})\s*({PRE})\s*({UNIT})", re.I)
 # 접두 통화(H2): '$4.5B'·'US$175M'·'€120M'·'₩300조'·'USD 45 billion'. 배수어가 없으면 1 배.
-# (?<![\w$€£¥₩]) 는 'US$' 를 '$' 로 다시 잡는 중복과 'S$' 부분매치를 막는다. [BMK] 뒤 영문 금지('Mt' 혼동).
+# 지역 달러(C$/A$/HK$/NT$/S$)는 $(USD)와 다른 통화 — 미인식이면 USD 검증이 거짓 성공한다.
+# 배수 접미사 뒤 영숫자는 접미사가 아님(B2B·M2M·T1). T=10^12.
 CUR_NUM = re.compile(
-    rf"(?<![\w$€£¥₩+−-])(?P<sign>[+−-])?(?P<currency>US\$|\$|€|£|¥|₩|USD|EUR|GBP|JPY|CNY|KRW)\s*"
-    rf"(?P<number>{NUM})\s*(?P<scale>bn|billion|mn|million|[BMK](?![A-Za-z])|조|억|만)?", re.I)
+    rf"(?<![\w$€£¥₩+−-])(?P<sign>[+−-])?(?P<currency>US\$|HK\$|NT\$|C\$|A\$|S\$|\$|€|£|¥|₩|USD|EUR|GBP|JPY|CNY|KRW)\s*"
+    rf"(?P<number>{NUM})\s*(?:(?P<scale>billion|million|bn|mn|[KMBT]|조|억|만)(?![A-Za-z0-9]))?", re.I)
+# 인식 실패한 수치 표기(999 mw). 연도(2024년)·p.45 는 뒤 영문 단위가 없어 제외.
+_LOOSE_CLAIM = re.compile(
+    rf"(?<![\d+−-])(?:(?:US\$|HK\$|NT\$|C\$|A\$|S\$|\$|€|£|¥|₩)\s*{_SIGNED_NUM}"
+    rf"|{_SIGNED_NUM}\s*[A-Za-zµμ]+)")
 # 한글 수사(H2 ③): '삼백조원'·'오천억원'·'이십 퍼센트' — 값 파싱은 안 하고 WARN 으로만 표면화.
 KO_NUMERAL = re.compile(r"(?<![가-힣])[일이삼사오육칠팔구십백천]+[만억조]?\s*(?:원|달러|퍼센트|%|톤|건|명|기|대|배)")
 TAG = re.compile(r"(?:\(F\d{3,}\)|\[F\d{3,}\])")
@@ -99,7 +104,8 @@ _TIGHT_KRW_UNITS = {"원", "조", "억", "조원", "억원", "만원", "건", "�
 # '3대 핵심 과제'(수사)·'20~30대 소비자'(연령대)·'3기 신도시'(고유명) 오탐 실측.
 _WEAK_COUNT_UNITS = {"대", "기"}
 _CUR_DIM = {"$": "USD", "US$": "USD", "USD": "USD", "€": "EUR", "EUR": "EUR", "£": "GBP", "GBP": "GBP",
-            "¥": "JPY", "JPY": "JPY", "₩": "KRW", "KRW": "KRW", "CNY": "CNY"}   # ponytail: ¥=JPY 고정(CNY 혼용은 천장)
+            "¥": "JPY", "JPY": "JPY", "₩": "KRW", "KRW": "KRW", "CNY": "CNY",
+            "C$": "CAD", "A$": "AUD", "HK$": "HKD", "NT$": "TWD", "S$": "SGD"}   # ponytail: ¥=JPY 고정(CNY 혼용은 천장)
 _CURRENCY_DIMS = set(_CUR_DIM.values())
 
 
@@ -139,6 +145,63 @@ _SENT_SPLIT = re.compile(r"(?<!\.\.)(?<=[.!?。])\s+")
 _URL = re.compile(r"https?://(?:\((?!F\d{3,}[\)\],])[^\s<>()\[\]]*\)|[^\s<>()\[\]])+")
 
 
+def _balanced_protect_spans(text: str) -> list[tuple[int, int]] | None:
+    """닫힌 ()·[]·마크다운 링크 [..](..) 내부 span. 미닫힘이면 None — 기존 분할로 폴백."""
+    n, i = len(text), 0
+    stack: list[tuple[str, int]] = []
+    spans: list[tuple[int, int]] = []
+    while i < n:
+        c = text[i]
+        if c == "[":
+            stack.append(("[", i))
+        elif c == "]":
+            if not (stack and stack[-1][0] == "["):
+                return None
+            start = stack.pop()[1]
+            if i + 1 < n and text[i + 1] == "(":
+                depth, j = 1, i + 2
+                while j < n and depth:
+                    if text[j] == "(":
+                        depth += 1
+                    elif text[j] == ")":
+                        depth -= 1
+                    j += 1
+                if depth:
+                    return None
+                spans.append((start, j))
+                i = j
+                continue
+            spans.append((start, i + 1))
+        elif c == "(":
+            stack.append(("(", i))
+        elif c == ")":
+            if not (stack and stack[-1][0] == "("):
+                return None
+            start = stack.pop()[1]
+            spans.append((start, i + 1))
+        i += 1
+    if stack:
+        return None
+    return spans
+
+
+def _sentence_split_matches(text: str) -> list[re.Match]:
+    """문장부호 분할점. 균형 잡힌 괄호·링크 내부의 점은 자르지 않는다."""
+    matches = list(_SENT_SPLIT.finditer(text))
+    spans = _balanced_protect_spans(text)
+    if spans is None:
+        return matches
+    return [m for m in matches if not any(a <= m.start() < b for a, b in spans)]
+
+
+def _split_on_matches(text: str, matches: list[re.Match]) -> list[str]:
+    start, pieces = 0, []
+    for match in matches:
+        pieces.append(text[start:match.start()])
+        start = match.end()
+    return [s.strip() for s in [*pieces, text[start:]] if s.strip()]
+
+
 def split_segments(body: str, *, preserve_text: bool = False):
     """본문을 검사 단위로 분해: 표 행(| 로 시작하는 줄)은 행 전체를 한 세그먼트로 낸다
     (report-format.md 가 강제하는 근거표 구조는 태그와 수치가 다른 셀에 있고, _bind_pairs 가
@@ -153,15 +216,11 @@ def split_segments(body: str, *, preserve_text: bool = False):
             return []
         text = "\n".join(buf) if preserve_text else _URL.sub("", " ".join(buf))
         buf.clear()
+        ends = _sentence_split_matches(text)
         if preserve_text:
             # 문장 검토 해시는 원문 공백·URL을 보존한다. 마침표 뒤 태그는 앞 문장에 결박한다.
-            ends = [m for m in _SENT_SPLIT.finditer(text) if not TAG.match(text, m.end())]
-            start, pieces = 0, []
-            for match in ends:
-                pieces.append(text[start:match.start()])
-                start = match.end()
-            return [s.strip() for s in [*pieces, text[start:]] if s.strip()]
-        return [s for s in _SENT_SPLIT.split(text) if s.strip()]
+            ends = [m for m in ends if not TAG.match(text, m.end())]
+        return _split_on_matches(text, ends)
 
     for ln in body.splitlines():
         if ln.lstrip().startswith("|"):
@@ -186,7 +245,14 @@ def _p(n: int) -> Decimal:
 
 
 _CUR_SCALE = {"bn": _p(9), "billion": _p(9), "b": _p(9), "mn": _p(6), "million": _p(6), "m": _p(6),
-              "k": _p(3), "조": _p(12), "억": _p(8), "만": _p(4)}
+              "k": _p(3), "t": _p(12), "조": _p(12), "억": _p(8), "만": _p(4)}
+# 대장 단위 USD_B / EUR_MN 등. 미해석 접미사는 통화 하나로 축소하지 않는다.
+_UNSUPPORTED = "UNSUPPORTED"
+_CUR_UNIT_MULT = {**{k: v for k, v in _CUR_SCALE.items() if k in ("k", "m", "b", "t", "mn", "bn")},
+                  "thousand": _p(3), "million": _p(6), "billion": _p(9)}
+_CUR_UNIT_ALIAS = re.compile(
+    r"^([A-Za-z]{3})[_ ](K|M|B|T|MN|BN|thousand|million|billion)$", re.I)
+_CUR_TAIL = re.compile(r"^([A-Za-z]{3})[_ \-]+(.+)$")
 
 
 UNIT_SCALE: dict[str, tuple[str, Decimal]] = {
@@ -222,16 +288,25 @@ _UNIT_TOKEN = re.compile(r"(?<![A-Za-zµμ])(?:" + _SI_UNIT +
                          r"|(?-i:kt|Mt)(?![A-Za-z])|KRW|USD|EUR|JPY|CNY|GBP|%|건|명|개사|기|위|배럴|배|대)", re.I)
 
 
+def _strip_unit_notes(unit: str) -> str:
+    # 괄호 부연은 단위 토큰이 아님('MW (PEM portion, per 2021 plan)')
+    return re.sub(r"\s*\([^)]*\)", "", unit).strip()
+
+
 def _resolve_unit(unit: str) -> tuple[str | None, Decimal]:
     u = unit.strip() if isinstance(unit, str) else ""
     if not u:
         return None, Decimal(1)
+    u = _strip_unit_notes(u) or u
     if u in SI_UNIT_SCALE:
         return SI_UNIT_SCALE[u]
     if u.lower() in UNIT_SCALE:
         return UNIT_SCALE[u.lower()]
     if u in UNIT_SCALE:
         return UNIT_SCALE[u]
+    alias = _CUR_UNIT_ALIAS.match(u)
+    if alias:
+        return alias.group(1).upper(), _CUR_UNIT_MULT[alias.group(2).lower()]
     # 'USD_million' / 'EUR million' / '백만 EUR' / '십억 USD': 통화 차원 + 배수. 통화가 없으면 'N'(일반 배수).
     mul = None
     sm = _SCALE_TOKEN.search(u)
@@ -245,6 +320,13 @@ def _resolve_unit(unit: str) -> tuple[str | None, Decimal]:
         cm = _CUR_TOKEN.search(u)
         dim = _CUR_DIM.get(cm.group(0).upper(), "N") if cm else "N"   # '$'.upper()=='$' 라 기호도 그대로 조회됨
         return dim, mul
+    tail = _CUR_TAIL.match(u)
+    if tail and re.search(r"[A-Za-z0-9]", tail.group(2)):
+        rest = tail.group(2).strip().lower()
+        if rest in _CUR_UNIT_MULT:
+            return tail.group(1).upper(), _CUR_UNIT_MULT[rest]
+        # 통화코드 뒤 미해석 접미사 — USD 하나로 축소하면 값대조가 거짓 성공한다
+        return _UNSUPPORTED, Decimal(1)
     m = _UNIT_TOKEN.search(u)
     if m:
         token = m.group(0)
@@ -381,6 +463,17 @@ def _body_nums(seg: str) -> list[tuple[re.Match, str | None, list[Decimal] | Non
     return out
 
 
+def _unrecognized_num_tokens(seg: str, items: list) -> list[re.Match]:
+    """인식된 수치 span 과 겹치지 않는 미지원 숫자 토큰(999 mw, 인식 전 C$999)."""
+    spans = [(m.start(), m.end()) for m, _, _ in items]
+    leftover = []
+    for m in _LOOSE_CLAIM.finditer(seg):
+        if any(not (m.end() <= s or m.start() >= e) for s, e in spans):
+            continue
+        leftover.append(m)
+    return leftover
+
+
 def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = False,
                         where: str = "") -> tuple[list[str], list[str]]:
     """무태그 숫자 차단 + (Fxxx) 존재/confirmed + 값·단위 의미대조.
@@ -407,11 +500,9 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
         for km in KO_NUMERAL.finditer(seg):                      # H2 ③ 한글 수사 WARN
             warnings.append(f"[한글수사] 수치로 해석 못 하는 수사 표기: '{km.group(0)}' (문맥: {seg.strip()[:60]!r})")
         items = _body_nums(seg)
-        if not items:
-            continue
-        nums = [t[0] for t in items]
         tags = list(TAG.finditer(seg))
-        bind = _bind_pairs(seg, nums, tags)
+        nums = [t[0] for t in items]
+        bind = _bind_pairs(seg, nums, tags) if nums else {}
         for idx, (m, bd, bvals) in enumerate(items):
             j = bind.get(idx)
             if j is None:
@@ -444,6 +535,11 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
                     f"[값미대조] {fid}: 대장 value.raw={raw!r} "
                     f"파싱불가(수식/자유서식) — 본문 '{m.group(0)}' 비교 생략")
                 continue
+            if ld == _UNSUPPORTED or bd == _UNSUPPORTED:
+                failures.append(
+                    f"[단위미지원] {loc}{fid}: unit={f.get('value', {}).get('unit')!r} "
+                    f"통화 배수 접미사를 해석할 수 없음 — 본문 '{m.group(0)}'")
+                continue
             if ld is None or bd is None:
                 warnings.append(
                     f"[단위미상] {fid}: unit={f.get('value', {}).get('unit')!r} 인식불가 — 값만 대조")
@@ -455,6 +551,23 @@ def check_bound_numbers(body: str, facts: dict, *, lenient_untagged: bool = Fals
             if lv != bvals:
                 failures.append(
                     f"[값불일치] {loc}{fid}: 표기 '{m.group(0)}' ≠ 대장 '{f['value']['raw']}'")
+        leftover = _unrecognized_num_tokens(seg, items)
+        if leftover:
+            bound = set(bind.values())
+            for j, t in enumerate(tags):
+                if j in bound:
+                    continue
+                fid = t.group(0).strip("()[]")
+                f = facts.get(fid)
+                if not f:
+                    continue
+                _, lv = _ledger_qty(f)
+                if lv is None:
+                    continue
+                token = min(leftover, key=lambda mm: abs(mm.start() - t.start())).group(0)
+                failures.append(
+                    f"[수치미인식] {loc}{fid}: 숫자 토큰 '{token}' 을 단위로 해석하지 못함 "
+                    f"(문맥: {seg.strip()[:60]!r})")
 
     return failures, warnings
 
