@@ -1001,8 +1001,29 @@ def _axis_figure_warnings(body: str) -> list[str]:
     return warnings
 
 
-def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], list[str]]:
-    """대표 이미지 존재·경로·출처·차트 F태그 결박과 축별 커버리지를 검사한다."""
+def _audit_image_ref(path: str, resolved: Path | None, root: Path) -> bool:
+    """작업폴더 기준 상대경로가 audit/ 아래로 해석되면 True.
+
+    문자열 접두만 보면 `assets/../audit/x.png` 를 놓치고, 절대경로는 `_scoped_ref` 가
+    잡지 못하므로 정규화 접두와 resolve 상대경로를 같이 본다.
+    """
+    if _scoped_ref(path, "audit"):
+        return True
+    if resolved is None:
+        return False
+    try:
+        rel = resolved.relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return False
+    return rel == "audit" or rel.startswith("audit/")
+
+
+def check_figures(body: str, evidence: dict, wp: WorkPaths,
+                  report_text: str | None = None) -> tuple[list[str], list[str]]:
+    """대표 이미지 존재·경로·출처·차트 F태그 결박과 축별 커버리지를 검사한다.
+
+    실재·경계는 원고 전체(본문+부록)의 로컬 참조가 대상이다. 캡션·F태그·0장 판정은 본문만.
+    """
     failures: list[str] = []
     warnings: list[str] = []
     refs = _figure_refs(body)
@@ -1011,15 +1032,22 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], 
     # 결박검사 대상에서는 빠져 출처·F태그 검사를 통째로 건너뛴다(실측 확인).
     if not refs:
         failures.append("[도판] 본문 대표 이미지 0장(증빙캡처·차트·도식 누락)")
-    else:
-        # 참조마다 개별 판정한다 — any() 로 묶으면 10장 중 1장만 실재해도 통과해
-        # 깨진 그림 9장이 그대로 고객 PDF 로 나간다(실측 확인).
-        for path in dict.fromkeys(p for _s, _e, p in refs):
-            kind, _resolved = _image_ref_local_path(path, wp.root)
-            if kind == "outside":
-                failures.append(f"[도판경계] 작업폴더 밖 이미지 참조: {path}")
-            if kind != "ok":
-                failures.append(f"[도판경로] 참조 이미지 경로 실재 없음: {path}")
+    # 본문 원격·외부 참조는 기존처럼 경로 실패로 남기고, 부록 로컬 참조도 실재·경계를 본다.
+    paths = list(dict.fromkeys(p for _s, _e, p in refs))
+    for path in report_image_refs(body if report_text is None else report_text):
+        if path not in paths:
+            paths.append(path)
+    # 참조마다 개별 판정한다 — any() 로 묶으면 10장 중 1장만 실재해도 통과해
+    # 깨진 그림 9장이 그대로 고객 PDF 로 나간다(실측 확인).
+    for path in paths:
+        kind, resolved = _image_ref_local_path(path, wp.root)
+        if _audit_image_ref(path, resolved, wp.root):
+            failures.append(
+                f"[도판경계] audit/ 아래 이미지는 봉인되지 않는다 — assets/ 또는 _images/ 로 옮길 것: {path}")
+        elif kind == "outside":
+            failures.append(f"[도판경계] 작업폴더 밖 이미지 참조: {path}")
+        if kind != "ok":
+            failures.append(f"[도판경로] 참조 이미지 경로 실재 없음: {path}")
 
     for _start, end, path in refs:
         # 증빙캡처는 G2/check_evidence_chain 의 신뢰경계·실재 검사가 정본이므로 이중 판정하지 않는다.
@@ -1221,7 +1249,7 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures += ec_fail
     warnings += ec_warn
 
-    fig_fail, fig_warn = check_figures(body, evidence, wp)
+    fig_fail, fig_warn = check_figures(body, evidence, wp, report_text=md)
     failures += fig_fail
     warnings += fig_warn
 

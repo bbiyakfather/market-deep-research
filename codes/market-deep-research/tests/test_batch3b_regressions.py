@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import manifest
 import verify_facts
 from skill_paths import WorkPaths, resolve_work_dir
+from test_p0_regressions import start_chain, work  # noqa: F401 — pytest fixture
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 64
 
@@ -92,3 +93,52 @@ def test_report_without_images_has_no_report_image_entries(tmp_path):
     sealed = manifest.build(wp, for_g3=True)
     assert manifest.verify(wp)["ok"]
     assert not any(meta["label"] == "report_image" for meta in sealed["entries"].values())
+
+
+def test_audit_image_ref_fails_actual_g3(work):
+    png = work.audit / "chart.png"
+    png.write_bytes(PNG)
+    body = work.report_md.read_text(encoding="utf-8")
+    work.report_md.write_text(
+        body + "\n\n![내부차트](audit/chart.png)\n\n[그림] 출처: 예시 (F001)\n", encoding="utf-8")
+    recorded = verify_facts.verify_and_record(work)
+    failures = recorded["verification"]["failures"]
+    assert not recorded["verification"]["ok"]
+    assert any("[도판경계]" in item and "audit/" in item and "봉인되지 않는다" in item
+               for item in failures), failures
+
+
+def test_appendix_only_image_enters_g3_baseline_and_tamper_detected(work):
+    png = work.root / "chart.png"
+    png.write_bytes(PNG)
+    body = work.report_md.read_text(encoding="utf-8")
+    work.report_md.write_text(
+        body + "\n\n<!-- FACTSHEET:APPENDIX -->\n## 부록\n\n![부록차트](chart.png)\n",
+        encoding="utf-8")
+    start_chain(work)
+    recorded = verify_facts.verify_and_record(work)
+    assert recorded["verification"]["ok"], recorded["verification"]
+    sealed = manifest._load(work)
+    assert sealed["entries"]["chart.png"]["label"] == "report_image"
+    png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"1" * 64)
+    result = manifest.verify(work)
+    assert not result["ok"] and "chart.png" in result["changed"]
+
+
+def test_extend_then_replace_report_image_rejected(work):
+    png = work.root / "chart.png"
+    png.write_bytes(PNG)
+    body = work.report_md.read_text(encoding="utf-8")
+    work.report_md.write_text(
+        body + "\n\n![차트](chart.png)\n\n[그림] 출처: 예시\n", encoding="utf-8")
+    start_chain(work)
+    recorded = verify_facts.verify_and_record(work)
+    assert recorded["verification"]["ok"], recorded["verification"]
+    artifact = work.root / "report.pdf"
+    artifact.write_bytes(b"%PDF-1.4 dummy")
+    manifest.extend(work, [artifact], expected_sha256=recorded["receipt"]["manifest_sha256"])
+    png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"1" * 64)
+    result = manifest.verify(work)
+    assert not result["ok"] and "chart.png" in result["changed"]
+    with pytest.raises(ValueError, match="기존 봉인 항목 변조"):
+        manifest.extend(work, [artifact])

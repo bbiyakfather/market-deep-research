@@ -51,6 +51,8 @@ v4에서는 위 필드가 모두 필수이며 `unsupported_terms`는 빈 배열,
 검토한 E-ID의 내용 해시 불일치·누락은 v4 FAIL/v3 WARN이며, 검토 범위 밖 새 E-ID 추가는 기존 검토를 무효화하지 않는다.
 문장 변경, 근거 변경, 문장 일부만 검토, 전건 기록 누락은 재검토 대상이다.
 
-결과는 `audit/claim-check.json`, CLI는 v4 실패 시 exit 1이다. schema_version 생략은 v3이며
-신규 검토 문제는 WARN으로 남긴다. WARN은 의미 검증 완료가 아니다. v4 이행은
-`verification-gates.md`의 리비전/이행 절차를 따른다.
+결과는 `audit/claim-check.json`, CLI는 v4 실패 시 exit 1이다. FAIL/WARN은 작업폴더의 v4
+여부(`facts`/`evidence`에 schema_version=4 행이 있는지)가 결정하며, 검토 행의
+`schema_version` 생략이 면제가 아니다. `required_qualification`은 요약이 아니라 본문에
+실제로 쓴 조건 문구의 인용이며 조사·어미까지 본문과 같아야 한다. WARN은 의미 검증 완료가
+아니다. v4 이행은 `verification-gates.md`의 리비전/이행 절차를 따른다.

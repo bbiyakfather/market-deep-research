@@ -483,19 +483,22 @@ class FactsDB:
         raise ValidationError(f"fact 없음: {fact_id}")
 
 
+_DIGEST_EXCLUDE = ("accessed_at", "note")
+
+
 def evidence_content_digest(evidence_rows: list[dict], evidence_ids: list[str]) -> str:
-    """검토한 증거 내용만 결박한다. 검토 범위 밖의 새 증거 추가는 허용한다."""
+    """검토한 증거 내용만 결박한다. 검토 범위 밖의 새 증거 추가는 허용한다.
+
+    투영은 행 전체에서 운영 필드(`accessed_at`·`note`)만 제외한다. locator·역할·관찰
+    그룹·시점·capture_review·schema_version·확장 키 변경은 기존 검토를 무효화한다.
+    """
     indexed = {row["id"]: row for row in evidence_rows}
-    fields = ("id", "fact_id", "type", "source_url", "sha256", "verbatim", "local", "capture")
     projected = []
     for eid in sorted(set(evidence_ids)):
         if eid not in indexed:
             raise ValidationError(f"[근거변경] evidence_id 없음: {eid}")
         row = indexed[eid]
-        item = {key: row.get(key) for key in fields}
-        if "capture_review" in row:
-            item["capture_review"] = row["capture_review"]
-        projected.append(item)
+        projected.append({key: value for key, value in row.items() if key not in _DIGEST_EXCLUDE})
     return hashlib.sha256(json.dumps(projected, sort_keys=True, ensure_ascii=False,
                                      separators=(",", ":")).encode("utf-8")).hexdigest()
 

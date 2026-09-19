@@ -54,13 +54,45 @@ def test_r01_new_evidence_does_not_invalidate_review(work):
 def test_r01_digest_is_canonical_and_missing_id_rejected(work):
     rows = _read_jsonl(work.evidence)
     rows.append({**rows[0], "id": "E002", "verbatim": "추가 원문"})
-    fields = ("id", "fact_id", "type", "source_url", "sha256", "verbatim", "local", "capture")
-    projected = [{**{key: row.get(key) for key in fields}, "capture_review": row["capture_review"]}
-                 for row in rows]
+    projected = [{key: value for key, value in row.items() if key not in ("accessed_at", "note")}
+                 for row in sorted(rows, key=lambda item: item["id"])]
     expected = gates.sha256_text(json.dumps(projected, sort_keys=True, ensure_ascii=False, separators=(",", ":")))
     assert evidence_content_digest(list(reversed(rows)), ["E002", "E001"]) == expected
     with pytest.raises(ValidationError, match="E999"):
         evidence_content_digest(rows, ["E999"])
+
+
+@pytest.mark.parametrize("field,value", [
+    ("locator", {"page": 12, "row": 20, "col": 9}),
+    ("source_role", "재인용"),
+    ("observer_group", "다른그룹"),
+    ("observed_at", "2026-06-01"),
+])
+def test_r01_context_field_change_invalidates_review(work, field, value):
+    assert verify_facts.verify(work.report_md, work)["ok"]
+    revision = confirmed_digest(_read_jsonl(work.facts))
+    evidence = _read_jsonl(work.evidence)
+    evidence[0][field] = value
+    _write_jsonl_atomic(work.evidence, evidence)
+    result = claims.verify(work.report_md, work)
+    assert not result["ok"]
+    assert any("[근거변경]" in item for item in result["failures"])
+    assert confirmed_digest(_read_jsonl(work.facts)) == revision
+    assert not verify_facts.verify(work.report_md, work)["ok"]
+
+
+@pytest.mark.parametrize("field,value", [
+    ("accessed_at", "2099-01-01T00:00:00"),
+    ("note", "운영 메모"),
+])
+def test_r01_operational_field_change_keeps_review(work, field, value):
+    assert verify_facts.verify(work.report_md, work)["ok"]
+    evidence = _read_jsonl(work.evidence)
+    evidence[0][field] = value
+    _write_jsonl_atomic(work.evidence, evidence)
+    result = claims.verify(work.report_md, work)
+    assert result["ok"], result
+    assert verify_facts.verify(work.report_md, work)["ok"]
 
 
 @pytest.mark.parametrize("version", [3, 4])

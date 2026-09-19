@@ -37,7 +37,7 @@ FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노�
   ④ **시간증거**(`observed_at` 또는 `valid_at`). v4 본문 사용 confirmed high-risk는 ①~④ 전부 G3 FAIL 조건이다.
   ①은 실제 연결 evidence의 `source_role=원출처/보도자료`와 비어 있지 않은 `observer_group`에서 계산한다. 재인용은 새 관찰로 세지 않고 동일 그룹·원문 URL·원문 해시를 공유하는 기록은 한 관찰로 합친다. `independent_groups` 자기신고만으로 인정하지 않는다.
   ②는 공백 아닌 query·result와 `found_stronger_refutation=false`, ③은 같은 fact에 실제 연결된 E-ID, ④는 유효한 ISO 시점을 요구한다. 출처 역할·그룹의 사실 적합성은 팀리드가 원출처·전재 관계를 확인해 기록한다.
-  v3는 기존 ①② FAIL·③④ WARN을 유지하며 새 구조·날짜 형식 문제는 legacy WARN으로 노출한다. 본문 미사용 confirmed high-risk는 네 요건 부족 모두 WARN이다.
+  v3는 기존 ①② FAIL·③④ WARN을 유지하며 새 구조·날짜 형식 문제는 legacy WARN으로 노출한다. 본문·부록 어디에도 태그로 인용되지 않은 confirmed high-risk는 네 요건 부족 모두 WARN이다.
   불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
 
@@ -82,6 +82,7 @@ v4는 스키마 중첩 타입·배열 item·공백 필드·이벤트 구조를 �
 문장/근거 해시·검토 전건성·support를 기계적으로 강제한다(`claim-review.md`).
 계산 결과는 `audit/calc-check.json`, 문장 검사 결과는 `audit/claim-check.json`에 남긴다.
 검토 대장 누락·문장 변경·근거 리비전 변경·미지원 사실 문장은 v4 FAIL, v3 WARN이다.
+`evidence_content_sha256`은 검토 E-ID 행에서 운영 필드 2개(`accessed_at`·`note`)만 제외한 전 필드를 결박한다.
 CAGR의 confirmed 충돌은 v4 FAIL이며 자동 수정하지 않는다. disputed 충돌은 WARN으로 남아
 본문의 사실 확정 인용은 `[미확정]` 검사로 차단되며 위 `[상충]` 문맥에서만 병기할 수 있다. high-risk CAGR/기간 전망의 원자화 미기록은
 v4 FAIL/v3 WARN이다. 일부 입력이나 해당 CAGR 기간의 끝값이 없으면 `NOT_CHECKABLE`과 누락 필드를
@@ -90,15 +91,18 @@ v4 FAIL/v3 WARN이다. 일부 입력이나 해당 CAGR 기간의 끝값이 없�
 원자 수치도 문자열로 기록한다. `scale`/`currency`는 양 끝값의 공통 단위이며 자동 환산은 하지 않는다.
 v4의 `value`와 `capture_review`에 알 수 없는 필드가 있으면 오탈자로 검사를 건너뛰지 않도록 거부한다.
 
-**G3 도판검사**: `_captures/` 증빙캡처는 G2 소관이라 제외하고, 본문 대표 이미지 0장을
-차단하며 각 참조 경로의 실재를 확인한다. 각 이미지 참조 뒤 2줄 이내에 `[그림]`으로 시작하고
-`출처:`를 포함한 캡션이 없으면 `[도판출처]`로 FAIL하며, `assets/` 이하 자작 차트의 캡션에
-`(Fxxx)`가 최소 1개 없으면 `[도판무결박]`로 FAIL한다. 출처와 사실 대장을 기계적으로
-역추적하고 증빙캡처를 이중 판정하지 않기 위한 검사다.
-원고가 참조하는 작업폴더 안 로컬 이미지는 위치와 무관하게 G3 기준선 manifest 에 들어간다.
-`assets/`·`_images/`·`_captures/` 글롭에 이미 잡힌 경로는 기존 라벨을 유지하고, 그 밖은
-`report_image` 다. 작업폴더 밖(`..`·절대경로·드라이브 경로) 참조는 `[도판경계]` FAIL.
-원격 URL 은 렌더 단계 차단을 유지한다. G3 이후 그 파일 내용을 바꾸면 재해시가 실패한다.
+**G3 도판검사**: `_captures/` 증빙캡처는 G2 소관이라 캡션·F태그 검사에서 제외하고, 본문 대표
+이미지 0장을 차단하며 본문·부록 전체의 로컬 이미지 참조 경로 실재를 확인한다. 각 본문 이미지
+참조 뒤 2줄 이내에 `[그림]`으로 시작하고 `출처:`를 포함한 캡션이 없으면 `[도판출처]`로 FAIL하며,
+`assets/` 이하 자작 차트의 캡션에 `(Fxxx)`가 최소 1개 없으면 `[도판무결박]`로 FAIL한다.
+캡션 규칙은 본문에만 적용한다. 출처와 사실 대장을 기계적으로 역추적하고 증빙캡처를 이중
+판정하지 않기 위한 검사다.
+허용된 이미지는 작업폴더 안이면서 `audit/` 밖인 로컬 파일이며, 전부 G3 기준선 manifest 에
+`report_image`(또는 기존 글롭 라벨)로 봉인된다. `assets/`·`_images/`·`_captures/` 글롭에
+이미 잡힌 경로는 기존 라벨을 유지하고, 그 밖은 `report_image` 다. `audit/` 아래 이미지 참조는
+봉인되지 않으므로 `[도판경계]` FAIL(`assets/` 또는 `_images/` 로 옮길 것). 작업폴더 밖
+(`..`·절대경로·드라이브 경로) 참조도 `[도판경계]` FAIL. 원격 URL 은 렌더 단계 차단을
+유지한다. G3 이후 그 파일 내용을 바꾸면 재해시가 실패한다.
 
 ## G5c 실행코드 검증(계산·상충)
 자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
@@ -171,15 +175,17 @@ manifest의 동일 revision_id 및 [4b] 해시 결박, 정규 원고 검사 전�
 ## v3 → v4 이행
 기존 파일은 보존하고 이행 사본에서 fact/evidence마다 `schema_version: 4`를 명시한다.
 fact의 `claim_type`, 시장 전망의 원자화 value, 캡처별 해시 결박 검토, 모든 본문 태그 문장의
-`audit/claim-review.jsonl`을 준비한다. 혼합 폴더는 문장 검토를 v4로 강제하고 계산·캡처의
-본문·부록이 인용한 fact와 연결 evidence도 모두 v4여야 한다. 미인용 legacy 행의 기존 경고 정책은 유지한다.
+`audit/claim-review.jsonl`을 준비한다. 혼합 폴더는 문장 검토를 v4로 강제하고, 본문·부록이 인용한 fact와 그 연결 evidence도
+계산·캡처 검사에서 모두 v4여야 한다. 미인용 legacy 행의 기존 경고 정책은 유지한다.
 대장에 schema_version이 전혀 없는 순수 v3의 구형 영수증·manifest는 revision_id 누락만 WARN으로
 처리하고 기존 refs·계획·confirmed·manifest 해시 결박은 유지한다. 신규 영수증은 revision_id 필수이며
 v4 이행 시 [2]부터 재발급한다. v3의 독립 G1 join 기록 API는 호환되며 후속 [2]는 G0·G1 둘 다 요구한다.
 알 수 없는 schema_version과 schema_ver 계열 오타 키는 거부한다.
 순수 v3의 G3·check-only 진단은 유지하되 최종 출고에는 `manifest.py verify <work_dir> --allow-legacy-v3`가 필요하다.
 호환 출고는 G5에 `legacy_v3: true`를 기록하고 status에 `legacy(v3) 출고`를 표시하며 v4 검증 완료를 의미하지 않는다.
-부록의 명시적 confirmed 인용도 high-risk 요건·캡처 검사를 받는다. v4 문장·목록 검토는 필수이고 부록 표 행과 무태그 숫자 면제는 유지한다.
+부록의 명시적 confirmed 인용도 high-risk 요건·캡처 검사를 받는다(본문·부록 어디에도
+태그로 인용되지 않은 confirmed high-risk만 WARN). v4 문장·목록 검토는 필수이고 부록 표 행과
+무태그 숫자 면제는 유지한다.
 
 ## 환산 옵션(기본 OFF)
 ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시), 표시 반올림 일관, 본문 영어통화단어 0.
