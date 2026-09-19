@@ -170,11 +170,14 @@ manifest의 동일 revision_id 및 [4b] 해시 결박, 정규 원고 검사 전�
 기존 파일은 보존하고 이행 사본에서 fact/evidence마다 `schema_version: 4`를 명시한다.
 fact의 `claim_type`, 시장 전망의 원자화 value, 캡처별 해시 결박 검토, 모든 본문 태그 문장의
 `audit/claim-review.jsonl`을 준비한다. 혼합 폴더는 문장 검토를 v4로 강제하고 계산·캡처의
-행별 판정은 해당 fact/evidence 버전을 따른다. v3 신규 검사 경고는 검증 완료를 의미하지 않는다.
+본문·부록이 인용한 fact와 연결 evidence도 모두 v4여야 한다. 미인용 legacy 행의 기존 경고 정책은 유지한다.
 대장에 schema_version이 전혀 없는 순수 v3의 구형 영수증·manifest는 revision_id 누락만 WARN으로
 처리하고 기존 refs·계획·confirmed·manifest 해시 결박은 유지한다. 신규 영수증은 revision_id 필수이며
 v4 이행 시 [2]부터 재발급한다. v3의 독립 G1 join 기록 API는 호환되며 후속 [2]는 G0·G1 둘 다 요구한다.
-알 수 없는 schema_version은 거부한다.
+알 수 없는 schema_version과 schema_ver 계열 오타 키는 거부한다.
+순수 v3의 G3·check-only 진단은 유지하되 최종 출고에는 `manifest.py verify <work_dir> --allow-legacy-v3`가 필요하다.
+호환 출고는 G5에 `legacy_v3: true`를 기록하고 status에 `legacy(v3) 출고`를 표시하며 v4 검증 완료를 의미하지 않는다.
+부록의 명시적 confirmed 인용도 high-risk 요건·캡처 검사를 받는다. v4 문장·목록 검토는 필수이고 부록 표 행과 무태그 숫자 면제는 유지한다.
 
 ## 환산 옵션(기본 OFF)
 ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시), 표시 반올림 일관, 본문 영어통화단어 0.

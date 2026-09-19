@@ -1402,7 +1402,7 @@ def g5_receipt_owned_by_manifest_verify():
     cli = [sys.executable, str(SKILL_ROOT / "scripts" / "manifest.py"), "verify"]
 
     def run_cli(wd):
-        return subprocess.run(cli + [str(wd)], capture_output=True, text=True,
+        return subprocess.run(cli + [str(wd), "--allow-legacy-v3"], capture_output=True, text=True,
                               encoding="utf-8", errors="replace")
 
     with tempfile.TemporaryDirectory() as td:

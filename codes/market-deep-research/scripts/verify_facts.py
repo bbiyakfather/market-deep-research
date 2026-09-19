@@ -50,7 +50,7 @@ from urllib.parse import unquote, urlsplit
 import manifest
 import gates
 from facts_db import (_read_jsonl, check_ledger_references, evidence_ids as _evidence_ids,
-                       ValidationError, check_capture_path, load_schema,
+                       ValidationError, check_capture_path, load_schema, is_v4_work,
                        validate_evidence, validate_fact, validate_capture_review, valid_iso_time)
 from skill_paths import WorkPaths
 
@@ -662,9 +662,19 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
     failures += ref_failures
     warnings += ref_warnings
 
+    if is_v4_work(facts_raw, evidence_raw):
+        for fid in used:
+            fact = facts.get(fid)
+            if fact is None:
+                continue
+            linked = [fact, *(seen_eid[eid] for eid in _evidence_ids(fact) if eid in seen_eid)]
+            for row in linked:
+                if row.get("schema_version", 3) == 3:
+                    failures.append(f"[버전혼합] 인용된 {fid}의 {row.get('id')}는 v3 — v4 이행 필요")
+
     for fid, f in facts.items():
         if f.get("status") == "confirmed" and fid not in used:
-            warnings.append(f"[미사용] confirmed {fid} 본문에서 안 쓰임")
+            warnings.append(f"[미사용] confirmed {fid} 본문·부록에서 안 쓰임")
         context = f.get("context") if isinstance(f.get("context"), dict) else {}
         metric = str(context.get("metric") or "").lower()
         if any(k in metric for k in _HIGH_RISK_METRICS) and f.get("risk") != "high":
@@ -697,7 +707,7 @@ def check_ledger_integrity(facts: dict, used: set[str], facts_raw: list[dict],
             if fid in used and hard:
                 failures.append(f"[반박게이트] {fid}: " + "·".join(hard) + " — disputed 로 내리거나 요건 충족 후 재검증")
             elif hard:
-                warnings.append(f"[반박게이트] {fid}(본문 미사용): " + "·".join(hard))
+                warnings.append(f"[반박게이트] {fid}(본문 미사용·부록 미사용): " + "·".join(hard))
             if soft:
                 warnings.append(f"[반박게이트] {fid}: " + "·".join(soft))
 
@@ -1136,7 +1146,8 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     facts = {f["id"]: f for f in facts_raw if isinstance(f, dict) and isinstance(f.get("id"), str)}
     evidence = {e["id"]: e for e in evidence_raw if isinstance(e, dict) and isinstance(e.get("id"), str)}
     wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
-    used = {m.group(0).strip("()[]") for m in TAG.finditer(body)}
+    body_used = {m.group(0).strip("()[]") for m in TAG.finditer(body)}
+    used = body_used | {m.group(0).strip("()[]") for m in TAG.finditer(_appendix)}
 
     failures: list[str] = []
     warnings: list[str] = []
@@ -1169,20 +1180,17 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
            or issue.startswith(("[증거유실]", "[증거역참조]")) for issue in li_fail):
         # 잘못된 v4 타입/참조를 대장을 다시 로드하는 계산·주장 검사에 넘기지 않고 FAIL로 보고한다.
         return {"ok": False, "failures": failures, "warnings": warnings,
-                "stats": {"facts": len(facts), "evidence": len(evidence), "body_tags": len(used)}}
+                "stats": {"facts": len(facts), "evidence": len(evidence), "body_tags": len(body_used)}}
 
     bn_fail, bn_warn = check_bound_numbers(body, facts)
     failures += bn_fail
     warnings += bn_warn
-    # 부록(H1): 무태그만 면제, 오태그·미확정·값·단위 대조는 본문과 동일하게 적용. used 는 본문 태그만.
+    # 부록(H1): 무태그만 면제하며 명시적 인용은 본문과 동일하게 검사한다.
     ap_fail, ap_warn = check_bound_numbers(_appendix, facts, lenient_untagged=True, where="부록 ")
     failures += ap_fail
     warnings += ap_warn
 
-    # 부록의 상충 인용도 출처·캡처를 생략할 수 없다. confirmed의 '본문 사용' 집계는 그대로다.
-    disputed_appendix = {m.group(0).strip("()[]") for m in TAG.finditer(_appendix)
-                         if facts.get(m.group(0).strip("()[]"), {}).get("status") == "disputed"}
-    ec_fail, ec_warn = check_evidence_chain(facts, evidence, wp, used | disputed_appendix)
+    ec_fail, ec_warn = check_evidence_chain(facts, evidence, wp, used)
     failures += ec_fail
     warnings += ec_warn
 
@@ -1210,7 +1218,7 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
 
     return {"ok": len(failures) == 0, "failures": failures, "warnings": warnings,
             "stats": {"facts": len(facts), "evidence": len(evidence),
-                      "body_tags": len(used)}}
+                      "body_tags": len(body_used)}}
 
 
 def verify_and_record(work: WorkPaths | Path | str, *, conversion: bool = False,

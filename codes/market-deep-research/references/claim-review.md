@@ -25,14 +25,15 @@
   "required_qualification": "에너지원 적용 여부는 미확인",
   "sentence_text": "센서 인증과 노선 적용은 확인되며, 에너지원 적용 여부는 미확인이다(F001).",
   "reviewed_text_sha256": "<sentence_text UTF-8 바이트의 SHA-256>",
-  "evidence_revision": "<facts_db.confirmed_digest(FactsDB(work).facts())>"
+  "evidence_revision": "<facts_db.confirmed_digest(FactsDB(work).facts())>",
+  "evidence_content_sha256": "<facts_db.evidence_content_digest(FactsDB(work).evidence(), evidence_ids)>"
 }
 ```
-필드는 모두 필수이며 `unsupported_terms`와 `required_qualification`은 빈 배열/문자열을 허용한다.
+v4에서는 위 필드가 모두 필수이며 `unsupported_terms`는 빈 배열, `required_qualification`은 아래 조건 외에 빈 문자열을 허용한다. 선택적 `schema_version`은 3/4만 허용하며 오타 키는 거부한다.
 `sentence_text`는 현재 본문의 문장 또는 표 행 전체를 공백·줄바꿈까지 그대로 복사한다.
 태그는 기존 `(F001)` 및 `[F001]` 형식을 공통 TAG 정규식으로 검사한다.
-같은 문장이 반복되면 위치별로 고유 sentence_id를 가진 검토 행을 남긴다. 부록은 문장 검토의
-전건성 검사 대상에서 제외되며 기존 숫자·태그 검사는 계속 적용한다. 태그 없는 주장도 수동 검토
+같은 문장이 반복되면 위치별로 고유 sentence_id를 가진 검토 행을 남긴다. 부록의 대장 투영
+표 행은 제외하되 기존 상충 병기 검토는 유지하고, v4 부록 문장·목록의 명시적 인용도 검토한다. 태그 없는 주장도 수동 검토
 대상이지만 자동 전건성은 태그가 붙은 문장에 한정된다. `tagged_sentences()`로 검사 단위를 확인할 수 있다.
 
 ## 판정 기준과 차단
@@ -44,9 +45,10 @@
 | contradicted | 근거와 충돌 | 차단 | 가정/반론의 표현인지 검토한 경우 허용 |
 | unresolved | 필요한 판단이 아직 미해결 | 차단 | 미확인 조건을 명시한 경우 허용 |
 
-가정/권고의 조건 명시 여부 자체는 검토자가 판단한다. supported인데 unsupported_terms가 남아
+가정/권고의 partial·contradicted·unresolved는 비어 있지 않은 조건 문구가 공백 정규화 후 본문 문장에 포함되어야 한다. supported인데 unsupported_terms가 남아
 있으면 모순된 검토이므로 차단한다. 지원 불충분 문장을 가정 유형으로 이름만 바꿔 통과시키지 않는다.
 판정 외에도 필드·enum·F/E 연결·본문 실재·문장 해시·현재 근거 리비전을 검사한다.
+검토한 E-ID의 내용 해시 불일치·누락은 v4 FAIL/v3 WARN이며, 검토 범위 밖 새 E-ID 추가는 기존 검토를 무효화하지 않는다.
 문장 변경, 근거 변경, 문장 일부만 검토, 전건 기록 누락은 재검토 대상이다.
 
 결과는 `audit/claim-check.json`, CLI는 v4 실패 시 exit 1이다. schema_version 생략은 v3이며

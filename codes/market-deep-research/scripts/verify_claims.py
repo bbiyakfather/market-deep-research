@@ -13,7 +13,7 @@ from pathlib import Path
 
 import gates
 from facts_db import (FactsDB, ValidationError, _read_jsonl, confirmed_digest, is_v4_work,
-                      load_schema, schema_version)
+                      evidence_content_digest, load_schema, schema_version)
 from skill_paths import WorkPaths
 from verify_facts import DISPUTED_CONTEXT, TAG, split_body_appendix, split_segments
 
@@ -27,7 +27,10 @@ def tagged_sentences(body: str) -> list[str]:
 
 
 def validate_review(row: dict) -> None:
-    if not isinstance(row, dict) or set(row) != FIELDS:
+    if isinstance(row, dict):
+        schema_version(row)
+    if (not isinstance(row, dict) or not FIELDS.issubset(row)
+            or set(row) - FIELDS - {"schema_version", "evidence_content_sha256"}):
         raise ValidationError(f"claim-review 필드 누락/미지원: {sorted(FIELDS - set(row)) if isinstance(row, dict) else '객체 아님'}")
     for name in FIELDS - {"fact_ids", "evidence_ids", "unsupported_terms"}:
         if not isinstance(row[name], str):
@@ -53,11 +56,11 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
     strict = is_v4_work(facts, evidence)
     body, appendix = split_body_appendix(Path(report_md).read_text(encoding="utf-8"))
     fact_map = {f["id"]: f for f in facts}
-    # 명시적으로 병기한 disputed 부록도 본문과 동일한 문장·해시·revision 검토를 받는다.
+    # v4 부록 문장·목록은 전건 검토한다. 대장 표 행은 제외하되 기존 상충 병기 검토는 유지한다.
     appendix_sentences = [s for s in tagged_sentences(appendix)
-                          if DISPUTED_CONTEXT.match(s) and any(
+                          if (strict and not s.lstrip().startswith("|")) or (DISPUTED_CONTEXT.match(s) and any(
                               fact_map.get(m.group(0).strip("()[]"), {}).get("status") == "disputed"
-                              for m in TAG.finditer(s))]
+                              for m in TAG.finditer(s)))]
     sentences = tagged_sentences(body) + appendix_sentences
     revision = confirmed_digest(facts)
     path = wp.audit / "claim-review.jsonl"
@@ -79,6 +82,12 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
             rows = []
             issues.append(f"claim-review 읽기 실패: {exc}")
     for index, row in enumerate(rows, 1):
+        if isinstance(row, dict):
+            try:
+                schema_version(row)
+            except ValidationError as exc:
+                version_errors.append(f"행 {index}: {exc}")
+                continue
         try:
             validate_review(row)
         except ValidationError as exc:
@@ -89,7 +98,7 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
             issues.append(f"{sid}: sentence_id 중복")
         ids.add(sid)
         if sentence not in body and sentence not in appendix_sentences:
-            issues.append(f"{sid}: 현재 본문/상충 부록에 sentence_text 없음 — 문장 변경 후 재검토 필요")
+            issues.append(f"{sid}: 현재 본문/검토 대상 부록에 sentence_text 없음 — 문장 변경 후 재검토 필요")
         elif TAG.search(sentence) and sentence not in sentences:
             issues.append(f"{sid}: 문장 일부만 검토됨 — 표행/문장 전체 검토 필요")
         else:
@@ -98,6 +107,16 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
             issues.append(f"{sid}: reviewed_text_sha256 불일치 — 문장 재검토 필요")
         if row["evidence_revision"] != revision:
             issues.append(f"{sid}: evidence_revision 불일치 — 근거 변경 후 재검토 필요")
+        binding = row.get("evidence_content_sha256")
+        if not binding:
+            issues.append(f"[근거결박누락] {sid}: evidence_content_sha256 필요")
+        else:
+            try:
+                current = evidence_content_digest(evidence, row["evidence_ids"])
+                if binding != current:
+                    issues.append(f"[근거변경] {sid}: evidence_content_sha256 불일치 — 근거 재검토 필요")
+            except ValidationError as exc:
+                issues.append(f"{sid}: {exc}")
         tagged = {m.group(0).strip("()[]") for m in TAG.finditer(sentence)}
         if not tagged.issubset(set(row["fact_ids"])):
             issues.append(f"{sid}: 본문 태그의 fact_ids 누락")
@@ -116,6 +135,12 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, *, check_only: b
             issues.append(f"{sid}: {kind}/{support} — 미지원 주장 축소·한계 명기 후 재검토 필요")
         if support == "supported" and row["unsupported_terms"]:
             issues.append(f"{sid}: supported인데 unsupported_terms가 남음")
+        if kind in ("hypothesis", "recommendation") and support in ("partial", "contradicted", "unresolved"):
+            qualification = " ".join(row["required_qualification"].split())
+            if not qualification:
+                issues.append(f"[조건미명시] {sid}: 가정·권고의 한계 조건 필요")
+            elif qualification not in " ".join(sentence.split()):
+                issues.append(f"[조건본문누락] {sid}: required_qualification이 sentence_text에 없음")
     review_counts = Counter(reviewed)
     for sentence, count in Counter(sentences).items():
         if review_counts[sentence] < count:
@@ -146,7 +171,8 @@ def demo() -> None:
         row = {"sentence_id": "S001", "claim_type": "observed", "fact_ids": ["F001"],
                "evidence_ids": ["E001"], "support": "supported", "unsupported_terms": [],
                "required_qualification": "", "sentence_text": sentence,
-               "reviewed_text_sha256": gates.sha256_text(sentence), "evidence_revision": confirmed_digest(facts)}
+               "reviewed_text_sha256": gates.sha256_text(sentence), "evidence_revision": confirmed_digest(facts),
+               "evidence_content_sha256": evidence_content_digest(_read_jsonl(wp.evidence), ["E001"])}
         _write_jsonl_atomic(wp.audit / "claim-review.jsonl", [row])
         assert verify(wp.report_md, wp)["ok"]
         row["support"] = "partial"

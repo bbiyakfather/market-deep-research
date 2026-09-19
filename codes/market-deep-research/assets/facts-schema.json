@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "market-deep-research facts + evidence schema (v4, v3 legacy 호환)",
   "schema_version": 4,
-  "description": "레코드 schema_version 생략은 v3. v4는 중첩 타입·필수·enum·패턴·Decimal·조건부 필수를 facts_db.py가 검사한다.",
+  "description": "레코드 schema_version 생략은 v3이며 schema_ver 계열 오타 키는 거부한다. v4 폴더의 본문·부록 인용 fact/evidence는 v4 필수이고 순수 v3 최종 출고는 명시적 호환 모드가 필요하다.",
   "enums": {
     "grade": ["A", "B", "C", "D"],
     "status": ["confirmed", "pending", "disputed", "superseded", "discarded"],

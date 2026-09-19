@@ -156,7 +156,7 @@ def main():
 
         # 7) G4 수동 기록 후 manifest.py verify CLI — G5 자기기록 PASS
         gates.record_manual(wp, "G4", "preview OK")
-        g5 = _cli("manifest.py", "verify", str(wd))
+        g5 = _cli("manifest.py", "verify", str(wd), "--allow-legacy-v3")
         assert g5.returncode == 0, f"G5 CLI 실패: {g5.stderr}\n{g5.stdout}"
         g5_rec = gates.successful_receipt(wp, "G5")
         assert g5_rec and g5_rec.get("exit") == 0, g5_rec

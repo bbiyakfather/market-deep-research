@@ -22,7 +22,7 @@ import verify_calculations as calculations
 import verify_claims as claims
 import verify_facts
 from facts_db import (FactsDB, ValidationError, _read_jsonl, _write_jsonl_atomic, confirmed_digest,
-                      validate_evidence, validate_fact)
+                      evidence_content_digest, validate_evidence, validate_fact)
 from skill_paths import WorkPaths, resolve_work_dir
 import test_adversarial
 import test_e2e
@@ -58,9 +58,10 @@ def review(wp, sentence=LIMITED, support="supported", kind="observed"):
     row = {"sentence_id": "S001", "claim_type": kind, "fact_ids": ["F001"],
            "evidence_ids": ["E001"], "support": support,
            "unsupported_terms": [] if support == "supported" else ["배터리 없는"],
-           "required_qualification": "무전원 여부 미확인", "sentence_text": sentence,
+           "required_qualification": "무전원 적용 여부는 미확인", "sentence_text": sentence,
            "reviewed_text_sha256": gates.sha256_text(sentence),
-           "evidence_revision": confirmed_digest(_read_jsonl(wp.facts))}
+           "evidence_revision": confirmed_digest(_read_jsonl(wp.facts)),
+           "evidence_content_sha256": evidence_content_digest(_read_jsonl(wp.evidence), ["E001"])}
     _write_jsonl_atomic(wp.audit / "claim-review.jsonl", [row])
     return row
 
@@ -466,7 +467,7 @@ def test_old_v3_receipts_finalize_with_revision_warnings(work):
     with pytest.warns(UserWarning, match="v3 구형 revision_id"):
         for row in rows:
             assert gates.require_receipt(work, row["gate"])["exit"] == 0
-        assert manifest.finalize_report(work)["ok"]
+        assert manifest.finalize_report(work, allow_legacy_v3=True)["ok"]
         current = gates.require_receipt(work, "G5")
     assert current["revision_id"] == confirmed_digest(FactsDB(work).facts())
     assert gates.ledger_path(work).read_bytes().startswith(history)
@@ -507,7 +508,7 @@ def test_legacy_exception_preserves_existing_bindings(work, mutation):
 def test_new_v3_receipt_cannot_lose_revision_id(work):
     legacy_chain(work)
     with pytest.warns(UserWarning):
-        assert manifest.finalize_report(work)["ok"]
+        assert manifest.finalize_report(work, allow_legacy_v3=True)["ok"]
     rows = gates._read_records(work)
     rows[-1].pop("revision_id")
     _write_jsonl_atomic(gates.ledger_path(work), rows)

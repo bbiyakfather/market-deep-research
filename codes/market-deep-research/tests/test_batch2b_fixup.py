@@ -8,7 +8,7 @@ from test_p0_regressions import work, review, LIMITED
 from test_batch2b_regressions import fact_record
 import verify_claims as claims
 import verify_facts as verifier
-from facts_db import FactsDB, _write_jsonl_atomic, make_claim_key
+from facts_db import FactsDB, _write_jsonl_atomic, make_claim_key, evidence_content_digest
 
 
 @pytest.mark.parametrize("spacing", ["", " "])
@@ -71,6 +71,7 @@ def test_r2_appendix_review_required_and_bound(work, sentence):
     assert not checked["ok"] and any("검토 누락" in item for item in checked["failures"]), checked
     appendix_row = review(work, sentence)
     appendix_row.update(sentence_id="S002", fact_ids=["F002"], evidence_ids=["E002"])
+    appendix_row["evidence_content_sha256"] = evidence_content_digest(FactsDB(work).evidence(), ["E002"])
     rows = [body_row, appendix_row]
     _write_jsonl_atomic(work.audit / "claim-review.jsonl", rows)
     assert verifier.verify(work.report_md, work, check_only=True)["ok"]
@@ -100,6 +101,7 @@ def test_r2_appendix_partial_sentence_rejected(work):
     body_row = appendix_setup(work, sentence)
     appendix_row = review(work, "45 USD(F002).")
     appendix_row.update(sentence_id="S002", fact_ids=["F002"], evidence_ids=["E002"])
+    appendix_row["evidence_content_sha256"] = evidence_content_digest(FactsDB(work).evidence(), ["E002"])
     _write_jsonl_atomic(work.audit / "claim-review.jsonl", [body_row, appendix_row])
     assert not claims.verify(work.report_md, work, check_only=True)["ok"]
 

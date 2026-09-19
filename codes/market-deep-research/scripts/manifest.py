@@ -11,7 +11,7 @@
 
 CLI:
   python manifest.py build  <work_dir>   # 현재 상태 해시 기록 → manifest.json (G3 외 수동 호출은 비권장)
-  python manifest.py verify <work_dir>   # [4b]·G4 영수증 확인 + [4b]↔manifest 결박 대조 후 저장본 대조,
+  python manifest.py verify <work_dir> [--allow-legacy-v3]  # v3 출고는 명시적 호환 모드 필요
                                          # 결과를 G5 로 자기기록(변경 시 exit 1)
 """
 from __future__ import annotations
@@ -351,8 +351,10 @@ def _final_snapshot(wp: WorkPaths) -> dict[str, str]:
             for rel in sorted(paths)}
 
 
-def finalize_report(work: WorkPaths | Path | str) -> dict:
+def finalize_report(work: WorkPaths | Path | str, *, allow_legacy_v3: bool = False) -> dict:
     """출고 판정은 현재 입력의 실검증으로 계산하고 성공·실패 모두 G5에 보존한다."""
+    from facts_db import _read_jsonl, is_v4_work, schema_version
+
     wp = work if isinstance(work, WorkPaths) else WorkPaths(work)
     refs = _final_refs(wp)
     snapshot = {}
@@ -362,6 +364,18 @@ def finalize_report(work: WorkPaths | Path | str) -> dict:
     except (OSError, ValueError, KeyError, TypeError) as exc:
         snapshot_error = f"검증 입력 스냅샷 실패: {exc}"
     result = _check_final_report(wp)
+    try:
+        facts, evidence = _read_jsonl(wp.facts), _read_jsonl(wp.evidence)
+        for row in [*facts, *evidence]:
+            schema_version(row)
+        if not is_v4_work(facts, evidence):
+            if allow_legacy_v3:
+                result["legacy_v3"] = True
+            else:
+                result.update(ok=False, reason="; ".join(filter(None, [result["reason"],
+                    "[legacy출고] v3 호환 검사는 v4 증빙 검증 완료가 아니다. 이행하거나 --allow-legacy-v3 로 명시"])))
+    except (OSError, ValueError, TypeError) as exc:
+        result.update(ok=False, reason="; ".join(filter(None, [result["reason"], str(exc)])))
     try:
         if snapshot != _final_snapshot(wp):
             snapshot_error = "검증 중 입력 변경 — 스냅샷 해시 집합 불일치"
@@ -373,7 +387,8 @@ def finalize_report(work: WorkPaths | Path | str) -> dict:
         try:
             receipt = gates._record_script_result(
                 wp, "G5", 0, json.dumps(result, ensure_ascii=False, sort_keys=True), extra={
-                    "manifest_sha256": snapshot["manifest.json"], "refs": refs},
+                    "manifest_sha256": snapshot["manifest.json"], "refs": refs,
+                    **({"legacy_v3": True} if result.get("legacy_v3") else {})},
                 _final_verification=dict(result), _snapshot_hashes=snapshot)
         except (gates.GateError, OSError, ValueError) as exc:
             result.update(ok=False, reason=str(exc))
@@ -395,6 +410,8 @@ def publication_state(work: WorkPaths | Path | str, receipt: dict | None = None)
         return {"publication_state": "초안", "basis": basis,
                 "checked_at": None, "bindings_match": None, "issues": []}
     result = receipt.get("final_verification") or {}
+    if result.get("legacy_v3"):
+        basis += "; legacy(v3) 출고 — v3 호환 검사"
     issues = gates._receipt_issues(receipt, wp)
     verified = (receipt.get("exit") == 0 and result.get("ok") is True
                 and result.get("facts", {}).get("ok") is True
@@ -496,10 +513,10 @@ if __name__ == "__main__":
         demo()
     elif args[0] == "build" and len(args) == 2:
         m = build(args[1]); print(f"기록: {len(m['entries'])} 항목 → manifest.json")
-    elif args[0] == "verify" and len(args) == 2:
+    elif args[0] == "verify" and (len(args) == 2 or (len(args) == 3 and args[2] == "--allow-legacy-v3")):
         wp = WorkPaths(args[1])
         try:
-            v = finalize_report(wp)
+            v = finalize_report(wp, allow_legacy_v3="--allow-legacy-v3" in args[2:])
         except (gates.GateError, OSError, ValueError) as exc:
             print(f"[G5] 기록 실패: {exc}", file=sys.stderr)
             sys.exit(1)

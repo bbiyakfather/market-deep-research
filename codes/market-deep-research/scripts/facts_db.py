@@ -63,6 +63,9 @@ def _lead_reread_events(fact: dict) -> list[dict]:
 
 def schema_version(record: dict) -> int:
     """버전 생략은 v3. 알 수 없는 버전을 검증된 v3/v4로 취급하지 않는다."""
+    for key in record:
+        if key != "schema_version" and re.match(r"(?i)^schema[\W_]*ver", key):
+            raise ValidationError(f"schema_version 오타 의심: {key}")
     version = record.get("schema_version", 3)
     if type(version) is not int or version not in (3, 4):
         raise ValidationError(f"schema_version: 지원하지 않는 버전 {version!r}")
@@ -478,6 +481,23 @@ class FactsDB:
                 _write_jsonl_atomic(self.wp.facts, facts)
                 return fr
         raise ValidationError(f"fact 없음: {fact_id}")
+
+
+def evidence_content_digest(evidence_rows: list[dict], evidence_ids: list[str]) -> str:
+    """검토한 증거 내용만 결박한다. 검토 범위 밖의 새 증거 추가는 허용한다."""
+    indexed = {row["id"]: row for row in evidence_rows}
+    fields = ("id", "fact_id", "type", "source_url", "sha256", "verbatim", "local", "capture")
+    projected = []
+    for eid in sorted(set(evidence_ids)):
+        if eid not in indexed:
+            raise ValidationError(f"[근거변경] evidence_id 없음: {eid}")
+        row = indexed[eid]
+        item = {key: row.get(key) for key in fields}
+        if "capture_review" in row:
+            item["capture_review"] = row["capture_review"]
+        projected.append(item)
+    return hashlib.sha256(json.dumps(projected, sort_keys=True, ensure_ascii=False,
+                                     separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 def confirmed_digest(rows: list[dict]) -> str:
