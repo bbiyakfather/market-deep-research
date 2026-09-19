@@ -19,8 +19,10 @@
                              본문에 쓰인 confirmed 핵심수치(raw 가 Decimal 로 파싱되는 값) source_capture 실재.
                              lead reread_sha256 이 evidence sha256/local/verbatim 과 안 맞으면
                              [재열람미결박] WARN.
-  7. check_figures         — 본문 대표 이미지 존재 + 참조 경로 실재([도판경로]) + [그림] 출처 캡션 +
-                             assets 차트 F태그 결박 + 3부 축별 도판 커버리지 경고 + 미결박 캡처 표면화
+  7. check_figures         — 본문 대표 이미지 존재 + 참조 경로 실재([도판경로]) + 작업폴더 밖 참조
+                             ([도판경계]) + [그림] 출처 캡션 + assets 차트 F태그 결박 + 3부 축별
+                             도판 커버리지 경고 + 미결박 캡처 표면화. 로컬 이미지 파서는
+                             report_image_refs 하나뿐(manifest G3 봉인이 재사용).
   8. check_toc             — 목차 기계검사(G9). references/research-plan.md 의 승인 목차
                              ('# 부 N. 제목'/'## 축: 이름')를 파싱해 본문 헤딩·빈 챕터·축
                              커버리지를 대조. 계획 파일이 없으면 검사 생략(warning 만).
@@ -863,6 +865,47 @@ def _figure_refs(body: str) -> list[tuple[int, int, str]]:
     return sorted(refs)
 
 
+def _is_remote_image_ref(path: str) -> bool:
+    """원격·data·UNC 이미지 참조인지. 드라이브 문자(C:)는 로컬 절대경로로 본다."""
+    ref = urlsplit(path)
+    drive_path = len(ref.scheme) == 1 and len(path) > 2 and path[1] == ":"
+    return bool((ref.scheme and not drive_path) or ref.netloc or path.startswith(("//", "\\\\")))
+
+
+def report_image_refs(report_text: str) -> list[str]:
+    """원고에 적힌 로컬 이미지 경로를 중복 없이 문서 순서로 돌려준다."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for _start, _end, path in _figure_refs(report_text):
+        if path in seen or _is_remote_image_ref(path):
+            continue
+        seen.add(path)
+        out.append(path)
+    return out
+
+
+def _image_ref_local_path(path: str, root: Path) -> tuple[str, Path | None]:
+    """로컬 이미지 참조를 (kind, resolved)로 분류한다.
+
+    kind: ``remote`` | ``outside`` | ``missing`` | ``ok``.
+    ``ok`` 일 때만 resolved 가 작업폴더 안 실재 파일이다.
+    """
+    try:
+        ref = urlsplit(path)
+        drive_path = len(ref.scheme) == 1 and len(path) > 2 and path[1] == ":"
+        if _is_remote_image_ref(path):
+            return "remote", None
+        local = (root / unquote(path if drive_path else ref.path)).resolve()
+        root_res = root.resolve()
+        if not local.is_relative_to(root_res):
+            return "outside", None
+        if local.is_file():
+            return "ok", local
+        return "missing", None
+    except (ValueError, OSError):
+        return "missing", None
+
+
 def _scoped_ref(path: str, dirname: str) -> bool:
     """작업폴더 기준 ``dirname/`` 이하의 상대 참조인지 판정한다.
 
@@ -932,22 +975,13 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths) -> tuple[list[str], 
     if not refs:
         failures.append("[도판] 본문 대표 이미지 0장(증빙캡처·차트·도식 누락)")
     else:
-        def _exists(p: str) -> bool:
-            try:
-                ref = urlsplit(p)
-                # Windows 드라이브 절대경로(C:/...)는 urlsplit 이 scheme 으로 오인한다 —
-                # 렌더러(render_pdf)와 같은 기준으로 로컬 절대경로로 취급하되 루트 내부만 인정.
-                drive_path = len(ref.scheme) == 1 and len(p) > 2 and p[1] == ":"
-                if (ref.scheme and not drive_path) or ref.netloc or p.startswith(("//", "\\\\")):
-                    return False
-                local = (wp.root / unquote(p if drive_path else ref.path)).resolve()
-                return local.is_relative_to(wp.root.resolve()) and local.is_file()
-            except (ValueError, OSError):
-                return False
         # 참조마다 개별 판정한다 — any() 로 묶으면 10장 중 1장만 실재해도 통과해
         # 깨진 그림 9장이 그대로 고객 PDF 로 나간다(실측 확인).
         for path in dict.fromkeys(p for _s, _e, p in refs):
-            if not _exists(path):
+            kind, _resolved = _image_ref_local_path(path, wp.root)
+            if kind == "outside":
+                failures.append(f"[도판경계] 작업폴더 밖 이미지 참조: {path}")
+            if kind != "ok":
                 failures.append(f"[도판경로] 참조 이미지 경로 실재 없음: {path}")
 
     for _start, end, path in refs:

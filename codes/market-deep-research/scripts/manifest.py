@@ -59,6 +59,28 @@ def _tracked_paths(root: Path) -> dict[str, tuple[str, Path]]:
         for p in sorted(root.glob(pattern)):
             if p.is_file():
                 paths[p.relative_to(root).as_posix()] = (label, p)
+    report = root / "report.md"
+    if not report.is_file():
+        return paths
+    # 지연 import: verify_facts 가 이 모듈을 최상위에서 가져오므로 순환을 피한다.
+    from verify_facts import _image_ref_local_path, report_image_refs
+    try:
+        text = report.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return paths
+    root_res = root.resolve()
+    for raw in report_image_refs(text):
+        kind, local = _image_ref_local_path(raw, root)
+        if kind != "ok" or local is None:
+            continue
+        try:
+            rel = local.relative_to(root_res).as_posix()
+        except ValueError:
+            continue
+        if rel == "audit" or rel.startswith("audit/"):
+            continue
+        if rel not in paths:
+            paths[rel] = ("report_image", local)
     return paths
 
 
