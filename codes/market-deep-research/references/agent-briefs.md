@@ -7,11 +7,13 @@
 
 ## 스폰 메시지 계약
 ```
+0. 독자·목표: <핵심 메시지 한 문장> / 관점 <주어> / 금지 서술 <목록> (`audit/intent-diff.md` 의 '현행 메시지:' 줄, 없으면 research-plan §0)
 1. TASK: <역할> + <축 이름>(`report-format.md` 축 프리셋 참조 — 여기서 새 축 이름을 짓지 않는다, 한 줄)
 2. 범위: <대상/기간/지역/축별 충분조건>
 3. 프로토콜: search.py/fetch.py 사다리 사용 + 내장 WebSearch 병행(WebSearch/WebFetch 가
    도구 목록에 없으면 deferred — ToolSearch 로 먼저 로드). 원문 확보 후 evidence 스키마로 구조화.
-4. 반환: 아래 마커 블록(JSONL + CLAIMS + EXPAND + FIGURES + 인사이트/요약)
+   모든 스크립트는 `cd <WD>` 후 절대경로로 실행 — 스킬 폴더에는 아무것도 쓰지 않는다.
+4. 반환: 아래 마커 블록(JSONL + CLAIMS + EXPAND + FIGURES + 인사이트/요약). 질문하지 말고 가정을 적고 진행.
 ```
 
 ## 반환 마커 (팀리드가 기계 파싱)
@@ -59,12 +61,20 @@ F/E-ID는 워커 파일 안에서만 유효한 잠정 ID다. `join_workers.py`�
 EXPAND의 `AXIS`+정규화 LEAD 텍스트 지문과 같은 URL 지문은 중복 후보를 찾는 보조 신호다.
 이름만 바뀐 재제출도 URL로 비교하되 완전 동등성·이전 웨이브 대비 신규 여부는 팀리드가 판단한다.
 
+## 작성자(writer) 브리프 고정 문구 — [3] 원고 작성자 스폰 시
+- `0. 독자·목표` 줄은 조사원과 같다. 추가 1줄: "수치 데이터는 그림이 기본. 표를 만들기 전에 `visual-first.md` 결정표로
+  형식을 정하고, 표로 남기면 사유를 `audit/visual-decisions.json` 에 적는다."
+
 ## 철칙 (절대)
 - **원문 미확인 수치는 폐기**(추정 금지). 무출처 주장은 CLAIM 에 올리되 SOURCES 없음으로 표시 → 팀리드가 `discarded`.
 - **딜 규모 ≠ 실수취액**. 총액·순액·분할지급 구분해 `definition` 에 명시.
 - **귀속처 명시**: 누가 발표/집계했는지(`source_role`: 원출처/재인용/보도자료). 같은 보도자료 재전재는 독립 아님 → 같은 `observer_group`.
 - **high-risk 주장**(시장규모·성장률·딜규모·순위)은 COUNTER(반박검색) 1회를 반드시 시도.
+- **경쟁 조사 워커**: 스폰 메시지 `2. 범위` 에 제품명·모델·규제·인증코드(해당 시)·기준일을 넣고, 미확인 항목은 조회 범위를 EXPAND/negative_search 로 반환한다. 서식·근거원은 `references/competitive-positioning.md`(팀리드가 TASK 에 요점 인용).
 - 표는 page/row/col, API 는 endpoint/param/JSON 해시로 locator 결박.
+- **임시 ID 는 W접두**(`W3-F012`), 대장 F/E-ID 는 리드만 부여 — 워커가 대장 ID 처럼 쓴 43건 오등재 사례.
+- **verbatim 은 원문 리터럴**(재구성·요약 금지 — "Royal Assent" ≠ "This bill received royal assent"), sha256 은 raw 파일 기준. 논문은 원문 첫 쪽의 제1저자·실제 학술지(교신저자·추정 학술지 금지).
+- **수치에는 지표 성격(설치/제조/출하/누적)·시점·가격 성격(거래가/호가)을 함께** 기록. 등락률은 같은 출처·같은 시점만. 2차 집계 DB(IEA·시장조사기관) 값은 1차 자료 교차 전까지 `pending`.
 - 실행 중 팀리드로의 중간 전송 채널은 없다(서브에이전트는 완료 시 최종 보고 하나만 반환).
   막히면 질문하지 말고 `BLOCKED: <이유>` 를 최종 보고 맨 앞줄에 적고 종료한다 — 그때까지
   수집한 마커 블록은 빈손으로 버리지 말고 그대로 반환.

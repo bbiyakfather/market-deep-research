@@ -33,14 +33,14 @@ description: >-
 - `report.pdf`(고객용, 11부 표준목차 → `references/report-format.md`)
 - `audit/`(내부: facts 전수·폐기·실패소스·검증이력·세션 저널·raw agent output·manifest)
 
-작업폴더는 `scripts/skill_paths.py` 가 `research_<주제>_<YYYYMMDD>/` 아래에 생성한다. 모든 스크립트는 `skill_paths` 를 import 하므로 실행 위치와 무관하게 경로가 해석된다.
+작업폴더(WD)는 `scripts/skill_paths.py` 가 `research_<주제>_<YYYYMMDD>/` 아래에 생성한다. 대장·manifest 경로는 `skill_paths` 가 해석하지만 `fetch.py` 는 **현재 폴더** `audit/` 에 로그·스냅샷을 쓰므로 모든 스크립트는 WD 에서 절대경로로 실행한다(스킬 폴더에서 돌리면 조사 원문이 claude-sync 로 푸시된다).
 
 ---
 
 ## 오케스트레이션 — 게이트 파이프라인 G0~G5
 
 각 게이트 상세는 `references/verification-gates.md`. 서브에이전트 프롬프트·반환 마커는 `references/agent-briefs.md`.
-조사원 = sonnet(병렬·저비용, background). 재검증·종합 = 메인 세션.
+조사원·손일 = sonnet·effort medium(병렬, background; 외부 워커 금지). 재검증·종합 = 메인 세션. 산출물 리뷰는 전역 규칙.
 
 ```
 [G0] preflight ─ 도구/의존성 점검 + 요구사항 확정 + intent-diff 개시
@@ -60,15 +60,17 @@ description: >-
 ```
 
 ### [G0] preflight + 요구사항 확정
+- **독자·목표 설계(최선행)**: `references/reader-goal.md` §0(설득 대상·독자의 결정·**핵심 메시지 가설** 등)을 사용자와 먼저 확정 → `audit/research-plan.md` 맨 앞 `## §0`(승인 후 동결, 교체 메시지는 intent-diff).
 - **의존성 점검**: `python scripts/preflight.py` 실행, 상세는 `verification-gates.md` G0 절.
-- **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사/기술사업화 실사)·범위·**축별 충분조건**·환산옵션(기본 OFF)·출력형식·**승인 목차**(`references/research-plan.md` 서식). 확정 결과는 `audit/research-plan.md` 에 기록(승인 전 팬아웃 금지 — 병렬 조사원 스폰은 확정 후에만).
+- **요구사항 확정**(사용자 승인): 조사유형(기술동향/산업동향/기관·기업 실사/기술사업화 실사)·범위·**축별 충분조건**·환산옵션(기본 OFF)·납품 형식·**승인 목차** 등 `references/research-plan.md` 확정 필드 전부. 확정 결과는 `audit/research-plan.md` 에 기록(승인 전 팬아웃 금지 — 병렬 조사원 스폰은 확정 후에만).
 - **기관·기업 조사면** `references/entity-identity.md` 동일성 게이트를 먼저 통과(법인명·사업자/법인번호·주소·이전상호·해외ID)해 조사 대상을 확정.
-- **intent-diff 개시**: `audit/intent-diff.md` 에 "요청 의도가 참이라면 무엇이 참이어야 하는가"를 축별로 기록(G4 에서 발견과 대조해 gap 종결). 【v3-D】
-- **영수증**: 승인 후 `python scripts/gates.py record G0 <work_dir> --evidence "..." --refs ...`를 기록하고 `check G0`로 refs를 재검사한다.
+- **경쟁·포지셔닝이 핵심이면** `references/competitive-positioning.md` 를 로드해 승인 목차에 대안 지도·비교표·열세 시나리오를 넣는다(새 축 없이 해당 축 챕터 안 하위 템플릿).
+- **intent-diff 개시**: `audit/intent-diff.md` 에 핵심 메시지 가설을 축별 "참이라면 관측될 것 / Fails if"로 분해해 기록(G4 에서 발견과 대조해 gap 종결; 메시지 교체 시 맨 위 `현행 메시지:` 줄). 【v3-D】
+- **영수증**: 승인 후 `python scripts/gates.py record G0 <work_dir> --evidence "..." --refs ...`를 기록하고 `check G0`로 refs를 재검사한다. `--refs` 는 research-plan 등 고정 산출물만 — intent-diff·expansion-log 같은 수시 변경 문서를 결박하면 영수증이 무효화된다.
 
 ### [1] 병렬 조사 → [E] 확장·수렴  【v3-A】
 - 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/사업현황/재무실적 전건 조사) · **기술동향**=축분할(기술요소·플레이어·시장·정책 + 교차검증1) · **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS 기존 스킬 조합) + 해외 · **기술사업화 실사**=축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도).
-- 워커는 에이전트별 `_research/<agent>/` 임시폴더에만 쓴다(파일충돌 방지). **읽기전용**(공식 대장 미기록) — 반환은 마커로. 【v3-F】
+- 워커는 에이전트별 `_research/<agent>/` 임시폴더에만 쓴다(파일충돌 방지). **읽기전용**(공식 대장 미기록) — 반환은 마커로. 【v3-F】 스폰 메시지 첫 줄은 `0. 독자·목표`(intent-diff 현행 메시지·관점·금지 서술), 스크립트는 WD 에서 절대경로로 실행(`agent-briefs.md`).
 - 반환 마커(`agent-briefs.md`): evidence 스키마 JSONL + `## CLAIMS`(CLAIM/RISK/SOURCES/COUNTER/PRIMARY) + `## EXPAND`(LEAD/WHY/ANGLE, DEAD END) + `## FIGURES`(원문 도판 위치·캡션) + `## 인사이트`(사실/추론 구분, 근거 F-ID) + `## 요약`.
 - **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에 축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0 에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건, 후자는 워커에게 전달되는 조사 깊이 기준): **축별 잔여 리드 각 0**(한 축이라도 잔여 리드가 남으면 미수렴), 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md` 확정값이 있으면 그 값 우선) 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅.
 
@@ -80,6 +82,7 @@ description: >-
 ### [2] 팀리드 재검증 (★전건)
 - 보고서 진입 후보 **모든 fact** 를 팀리드가 원문 재열람. WebFetch 403 이면 `fetch.py` 로 한 번 더(사다리 상세: `source-ladder.md`). verbatim/locator 대조 → `db.add_verify_event(by="lead")`.
 - confirmed 조건(facts_db 강제): 최소 1 evidence + 팀리드 verify_event. 무출처=confirm 불가.
+- WebFetch 요약 답은 재확인 근거가 아니다 — curl/`fetch.py` 원문에서 문자열 검색. 2차 집계 DB(IEA 등) 값은 1차 자료로 교차. 서지·수치 기록 규칙은 `agent-briefs.md` 철칙.
 - **영수증**: 재검증 선언은 `gates.py record [2] <work_dir> --evidence "..."`로 기록하고 `check [2]`로 G0·G1을 확인한다.
 
 ### [Bx] 반박검색 + claim-graph 게이트  【v3-B】
@@ -93,7 +96,9 @@ description: >-
 ### [3] 보고서 작성
 - 고객용 `report.md`: **11부 표준목차**(표지→Executive→개요→테마별 본론→시장수치→플레이어→검증요약→상충→상태변화→한계·반론→요약·인사이트→부록). 조사유형별 변형은 `report-format.md`.
 - 내부 `audit/`: facts 전수·폐기목록+사유·실패소스·검증이력·raw·세션 저널.
-- **도판**: 워커 `## FIGURES` 부터 수확, 순서·결박은 `image-research.md`. 0~3 소진 뒤에만 자작 차트.
+- **도판**: 워커 `## FIGURES` 부터 수확, 출처 순서·결박은 `image-research.md`. **시각화 우선**: 수치는 그림 기본·표는 예외(`visual-first.md`); `visual_audit.py` 미결 0건 = G4 조건(report.md + 납품 원고 모듈).
+- **핵심 메시지 귀결 점검**: 요약·각 장·10부 권고가 '독자의 결정'에 답하는가, 메시지 핵심어가 각 장에 등장하는가(`reader-goal.md` 운용 규칙 3). 금지 서술 목록 grep 0건.
+- 증빙판(report.md)과 납품 원고는 분리. 납품 변환 규칙은 `mdr-hwpx/references/deliverable-rules.md`, 관점·말투는 `reader-goal.md`. 쉬운 말·관점 재작성 뒤에는 **의미 대조 검수**(단정 강화·주체 바뀜·방향 반전).
 
 ### [G3] verify_facts + manifest (실패 0)
 - `python scripts/verify_calculations.py <work_dir>`: G3 전 CAGR 구간 검산 → `audit/calc-check.json`(원문 보존, 충돌은 미해결로 남김).
@@ -108,7 +113,7 @@ description: >-
 - `render_pdf.py` 로 report.pdf 생성(플래그·한글경로: `report-format.md` 렌더 절).
 - **[4b] 재봉인**: `manifest.extend` 만 허용(기존 항목 불변 확인 실패 시 거부 = G3 복귀, 렌더 산출물 artifacts 만 추가, G3 기준선 해시 대조). [G3]의 build 시점엔 report.pdf 가 아직 없어 매니페스트에 없으므로, 렌더 직후 기존 항목을 덮어쓰지 않고 report.pdf 등 렌더 산출물만 추가한다. 재봉인을 건너뛰면 report.pdf 는 변조·삭제해도 [G5] 가 잡지 못한다.
 - **영수증**: `render_pdf.py` CLI는 렌더 성공 직후 manifest extend와 [4b] 자기기록을 자동 수행한다. `manifest.py verify`는 [4b]·G4 영수증 없이는 실패하며, [4b] 영수증의 `manifest_sha256` 과 현재 `manifest.json` 해시를 대조(G5 가 [4b]↔manifest 결박을 검사)한 뒤 대조 결과를 **G5 영수증으로 자기기록**한다(실패도 기록 — 실패 이력이 원장에서 사라지지 않게).
-- `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 + **intent-diff 축별 대조**(개시분과 실제 발견 대조, 절차·복귀 규칙은 `references/verification-gates.md` G4 절 참조).
+- `preview_pdf.py`(fitz 페이지 이미지) 로 팀리드 육안검증 + **intent-diff 축별 대조**(개시분과 실제 발견 대조, 절차·복귀 규칙은 `references/verification-gates.md` G4 절 참조) + **독자 테스트**(`reader-goal.md` G4 절) + 대장→원고 역방향 고아 검사(결론을 좌우하는 confirmed 사실이 원고에 없는가). 캡처·도판은 리드가 눈으로 연다.
 - 최종: PDF 에서 F태그·링크·캡처 수 재검사 + `manifest.py verify`(재봉인 기준 — 이 시점부턴 신규 파일도 실패로 판정). 새 조사는 v4(`schema_version: 4`)로 출고한다 — 순수 v3 폴더는 `--allow-legacy-v3`를 명시해야만 통과하며 영수증에 `legacy_v3`로 남는다(호환 검사 통과 ≠ v4 증빙 검증 완료). 복귀 규칙은 `references/verification-gates.md` 참조(파일 변경/intent-diff gap 각각 다른 복귀처).
 - **영수증**: preview 전 `python scripts/gates.py check G4 <work_dir>`로 G0 계획 해시 드리프트를 검사하고, 확인 후 `record G4`로 기록한다.
 - **영수증 커버리지**: 원장 영수증은 G0·G1·[2]·G3·[4b]·G4·G5 — 소유 스크립트 게이트(G3·[4b]·G5)는 CLI 손기록이 차단되고 소유 스크립트만 기록한다. G2·G5c 는 원장 대신 내용검사로 강제된다(G2=verify_facts 의 캡처 실재 검사, G5c=`audit/verify-<slug>.md` 산출물).
@@ -118,12 +123,15 @@ description: >-
 ## 참조 문서 (필요할 때만 로드)
 | 파일 | 언제 |
 |---|---|
+| `references/reader-goal.md` | G0 맨 처음(독자·목표·핵심 메시지 가설·관점) · [3] 귀결 점검 · G4 독자 테스트 |
 | `references/agent-briefs.md` | [1] 워커 스폰 직전(프롬프트·반환 마커·철칙) |
 | `references/source-ladder.md` | WebFetch 403 시 · [2] 원문 재열람 · 검색 계층 |
 | `references/extract-recipes.md` | 증거유형별 추출·PDF fitz·특수소스 recipe |
 | `references/evidence-capture.md` | G2 캡처 직전(source_capture vs reconstructed) |
 | `references/report-format.md` | [3] 목차 작성 · [4] 렌더 플래그·한글경로 |
-| `references/image-research.md` | [3] 도판 수확 직전 |
+| `references/image-research.md` | [3] 도판 수확 직전(출처 순서) |
+| `references/visual-first.md` | [3] 표를 만들기 직전(그림 vs 표 결정표·차트 규칙) · G4 시각화 판정 |
 | `references/verification-gates.md` | 각 게이트 진입 시(G0~G5 상세·claim-graph) |
 | `references/research-plan.md` | G0 조사계획 확정(축·축별 충분조건·깊이캡·승인 목차) |
 | `references/entity-identity.md` | 기관·기업 조사 G0 직전(동일성 게이트) |
+| `references/competitive-positioning.md` | 경쟁·포지셔닝이 핵심으로 G0 확정 시 · 경쟁 챕터 서술/claim-review 직전 (의료기기·IVD 는 §6) |

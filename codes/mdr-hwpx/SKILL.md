@@ -29,7 +29,9 @@ Windows. 한글(`Hwp.exe`)·PyMuPDF·PIL·pywin32. cwd = 작업폴더(원고 `ma
 manuscript/Ⅲ_x.md ──build_hwpx.py build──▶ 모듈_Ⅲ_x_양식.hwpx ──export_pdf.py──▶ .pdf ──grade_pdf.py──▶ grade.json + 의심쪽 png
 ```
 
+원고를 쓰기 전에 `references/deliverable-rules.md`(작성 주체·내부 코드·불확실 정보·표·참고문헌·윤문 규칙)를 적용한다.
 결함(그림 크롭·낱말 잘림·쪽 밀림)은 **원고 md 수준에서만** 고치고 재빌드. 양식·코드는 건드리지 않는다.
+납품본은 `HWPX_TABLE_FLOAT_ALL=1` 환경변수로 빌드한다(모든 표가 쪽 경계에서 행 단위로 나뉨. 기본은 한 쪽에 드는 표를 글자처럼 두어 남은 공간보다 크면 통째로 밀려 빈 공간이 생긴다).
 워커는 build→export→grade 후 worker_done 에 grade 요약을 담는다.
 
 ```
@@ -45,6 +47,10 @@ python <this>/scripts/grade_pdf.py <pdf> --md <원고.md> [--profile ...] [--out
     최장 낱말×COL_UNIT > 열폭−IN_MARGIN 인 셀), 표 쪽걸침(캡션 없는 쪽의 긴 가로선 다수), 여백 낭비(쪽 하단 공백 > 3.5cm).
     의심쪽만 90dpi PNG. exit 0 이라도 결함 수는 JSON 에.
 python <this>/scripts/build_hwpx.py --demo
+python <this>/scripts/make_references.py --src <URL 목록 md> --out <부록.md> --evidence <evidence.jsonl> [--snapshot-root <WD>] [--style footnote|table]
+    부록 참고 출처(URL 표)를 APA 7판 각주형 목록으로. DOI→Crossref, 스냅샷 메타, 수기 캐시. 상세 `references/deliverable-rules.md` §5
+BEFORE_DIR=<백업 폴더> python <this>/scripts/check_numbers.py <원고stem> [...]   (cwd = manuscript/)
+    수정 전후 숫자 토큰 다중집합 비교. 빠짐(MISSING)=삭제분 확인, 새로 생김(EXTRA)=사실 추가 의심, 제목 변경 경고
 ```
 
 코어 인계: 승인된 `report.md`의 HWPX용 사본에서 부 헤딩을 `# Ⅰ. Executive Summary` 형식으로 수동 매핑하고 하위 축은 그 아래 유지한다(원문·F-ID·부록 마커 보존).
@@ -83,13 +89,13 @@ python <this>/scripts/merge_hwpx.py <m1.hwpx> <m2.hwpx> ... --out <out.hwpx>
 | `① ` | 짧으면 3단계 제목, 설명이 길면 본문 |
 | `❍ ` / 평문 | 본문 1단 |
 | `- ` | 본문 2단 |
-| `<표>` | 바로 뒤 표의 캡션 (표보다 먼저 나온다) |
+| `<표>` | 바로 뒤 표의 캡션 (표보다 먼저 나온다). `<표> 표 n. 제목` 으로 쓰면 `<표n> 제목` 으로 렌더(`<표> 표 1.` 중복 금지) |
 | `\| a \| b \|` | 표 |
 | `* 출처 :` | 직전 표의 출처행 / 직전 그림의 출처 문단 |
 | `![]()` | 그림 |
 | `[그림]` | 직전 그림의 캡션 |
 | `**굵게**` | 굵은 run — 양식에 12pt 굵게가 없으면 본문 charPr 을 복제해 `<hh:bold/>` 만 넣어 추가 |
-| `<sup>` | 각주 마커(평문 유지). 문서 끝 각주 정의 문단은 본문 불릿을 붙이면 안 된다 |
+| `<sup>` | 각주 마커(평문 유지). 문서 끝 각주 정의 문단은 본문 불릿을 붙이면 안 된다. 참고문헌 목록도 `<sup>n)</sup> 항목` 각주형으로 쓴다(번호·왼쪽 정렬·작은 글씨) |
 
 ## 새 양식을 만났을 때
 
@@ -120,3 +126,4 @@ python <this>/scripts/form_probe.py <양식.hwpx> [--profile <json>] [--json]
 |---|---|
 | `references/hwpx-form.md` | 새 양식 실측·그림/표 깨질 때 |
 | `references/consistency-review.md` | ② 단계 |
+| `references/deliverable-rules.md` | ① 원고 작성 전 · 발주처 수정의견(조사팀 표현·내부 코드·불확실 정보·분량·참고문헌·윤문) 반영 시 |

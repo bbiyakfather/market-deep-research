@@ -16,6 +16,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 import re
 import sys
 import tempfile
@@ -312,6 +313,18 @@ def cell(text: str, style: tuple[int, int], bf: int, col: int, row: int,
     )
 
 
+def _table_label(caption: str) -> str:
+    """캡션 '표 1. 제목' → '<표1> 제목' (번호 없으면 '<표> 제목'). 발주처 지적(2026-10-02): '<표> 표 1.' 중복."""
+    m = re.match(r"^표\s*([\d.]+?)\.?\s+(.*)$", caption)
+    return f"<표{m.group(1)}> {m.group(2)}" if m else f"<표> {caption}"
+
+
+def _figure_label(caption: str) -> str:
+    """캡션 '그림 1. 제목' → '[그림1] 제목' (번호 없으면 '[그림] 제목'). 표의 '<표> 표 1.' 중복 수정과 같은 규칙."""
+    m = re.match(r"^그림\s*([\d.]+?)\.?\s+(.*)$", caption)
+    return f"[그림{m.group(1)}] {m.group(2)}" if m else f"[그림] {caption}"
+
+
 def render_table(b: dict) -> str:
     rows = b["rows"]
     ncol = max(len(r) for r in rows)
@@ -344,7 +357,7 @@ def render_table(b: dict) -> str:
             f'linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" '
             f'hasNumRef="0">'
             f'<hp:p id="0" paraPrIDRef="{pid}" styleIDRef="0" pageBreak="0" columnBreak="0" '
-            f'merged="0">{runs("<표> " + b["caption"], cid)}</hp:p>'
+            f'merged="0">{runs(_table_label(b["caption"]), cid)}</hp:p>'
             f'</hp:subList></hp:caption>'
         )
 
@@ -357,7 +370,7 @@ def render_table(b: dict) -> str:
         # 글자처럼 취급된(treatAsChar=1) 표는 쪽 경계에서 나뉘지 않는다. 한 쪽에 들어가는 표는
         # 작년 완성본대로 1 로 두고, 한 쪽을 넘는 표만 0 으로 풀어 쪽을 걸쳐 이어지게 한다
         # (1 로 두면 들어갈 자리가 영영 없어 통째로 밀린다). 작년본 실측: 38건 중 33건이 1.
-        f'<hp:pos treatAsChar="{0 if tall else 1}" affectLSpacing="0" flowWithText="1" allowOverlap="0" '
+        f'<hp:pos treatAsChar="{0 if (tall or os.environ.get("HWPX_TABLE_FLOAT_ALL")) else 1}" affectLSpacing="0" flowWithText="1" allowOverlap="0" '
         f'holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="COLUMN" vertAlign="TOP" '
         f'horzAlign="LEFT" vertOffset="0" horzOffset="0"/>'
         f'<hp:outMargin left="141" right="141" top="141" bottom="141"/>'
@@ -392,7 +405,7 @@ def render_image(b: dict, bin_id: str) -> str:
             f'linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" '
             f'hasNumRef="0">'
             f'<hp:p id="0" paraPrIDRef="{pid}" styleIDRef="0" pageBreak="0" columnBreak="0" '
-            f'merged="0">{runs("[그림] " + txt, cid)}</hp:p>'
+            f'merged="0">{runs(_figure_label(txt), cid)}</hp:p>'
             f'</hp:subList></hp:caption>'
         )
 

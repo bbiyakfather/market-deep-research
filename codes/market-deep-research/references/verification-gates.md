@@ -12,10 +12,11 @@
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
 openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공공 MCP). 미설치 계층은
 "건너뜀+경고"로 진행(자체 스택이 보장 코어). ※ `curl_cffi` 는 사실상 필수 — 내장 우회(모바일
-iOS 지문 등)가 전부 그 위에 얹혀 있다. 요구사항 확정(유형·범위·**축별 충분조건**·
-환산옵션 OFF·출력형식·**승인 목차**) — 통과조건: `audit/research-plan.md` 존재 + 승인 기록 +
-승인 목차(`references/research-plan.md` 서식) 포함, 확정 전 팬아웃 금지. 기관조사면
-`entity-identity.md` 선행. `audit/intent-diff.md` 개시.
+iOS 지문 등)가 전부 그 위에 얹혀 있다. **독자·목표 §0**(`reader-goal.md` — 핵심 메시지 가설 포함)을
+먼저 확정하고 요구사항 확정(유형·범위·**축별 충분조건**·환산옵션 OFF·출력형식·납품 형식·**승인 목차**)
+— 통과조건: `audit/research-plan.md` 존재 + §0 독자·목표(팀리드 수동 확인, gates.py 미검사) + 승인 기록 + 승인 목차(`references/research-plan.md`
+서식) 포함, 확정 전 팬아웃 금지. 기관조사면 `entity-identity.md` 선행. `audit/intent-diff.md` 는 핵심
+메시지 가설을 축별 "참이라면 관측돼야 할 것 / Fails if"로 분해해 개시.
 
 ## G1 join + 수집 게이트
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
@@ -117,11 +118,14 @@ status의 `최종(판정시점)`은 원장 기반 결과와 현재 스냅샷의 
 report.pdf 생성 후 **재봉인**(`manifest.extend` — 기존 항목 불변 확인 실패 시 거부 = G3 복귀,
 렌더 산출물 artifacts 만 추가, G3 기준선 해시 대조) → `preview_pdf.py` 육안검증 + **intent-diff 축별 대조**
 (`audit/intent-diff.md` 개시분의 축별 "참이어야 하는가" 목록을 실제 보고서 발견과 대조 —
-축마다 gap 유무 판정, 결과를 `audit/intent-diff.md` 에 추기) → PDF F태그·링크·캡처 수 재검사
+축마다 gap 유무 판정, 결과를 `audit/intent-diff.md` 에 추기) → **독자 테스트**(`reader-goal.md` G4 절:
+1차 독자·설득 대상·신규 독자·핵심 메시지 귀결·인쇄 가독성) + 시각화 판정(`visual_audit.py` 후보 미결 0건,
+`visual-first.md`) + 대장→원고 역방향 고아 검사 → PDF F태그·링크·캡처 수 재검사
 + `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정. [4b]·G4 영수증 확인 +
 [4b]↔manifest 결박 대조 후 결과를 G5 영수증으로 자기기록).
 **복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
-**[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님).
+**[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님). 독자 테스트 실패
+(장이 핵심 메시지와 무관한 일반론으로 흐름·권고가 결정 형태가 아님)는 근거는 있으므로 **[3] 복귀**.
 **참고**: [G2]가 만드는 실패 캡처 `.FAILED` 산출물도 `_captures/**` 글롭에 잡힌다 — 재봉인(extend)
 이후 캡처를 재시도하면 그 결과물이 신규 파일로 잡혀 verify 가 실패로 뜬다. 내용 검토와 G3를
 다시 수행한 뒤 렌더·재봉인한다. 검토가 끝나지 않은 신규 근거를 최종 단계에서 바로 추가하지 않는다.
