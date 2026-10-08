@@ -26,6 +26,7 @@ import gates
 import manifest
 from skill_paths import WorkPaths
 from preflight import _find_chrome
+from visual_audit import strip_table_format_tags
 
 STYLE = ASSETS / "style.html"
 RENDER_TIMEOUT = 180
@@ -71,9 +72,11 @@ def _pandoc_html(md_path: Path, html_out: Path, resource_dir: Path) -> None:
                         local_image(value)
 
     # raw HTML은 제거/이스케이프되지만 이미지의 외부 참조는 명확한 오류로 알린다.
-    ImageCheck().feed(md_path.read_text(encoding="utf-8"))
+    # 캡션 끝 `{형식=A|B}` 는 납품 빌더(mdr-hwpx) 전용 — 증빙판 PDF 에는 찍지 않는다.
+    text = strip_table_format_tags(md_path.read_text(encoding="utf-8"))
+    ImageCheck().feed(text)
     try:
-        parsed = subprocess.run(["pandoc", str(md_path), "-f", "gfm-raw_html", "-t", "json", "--sandbox"],
+        parsed = subprocess.run(["pandoc", "-f", "gfm-raw_html", "-t", "json", "--sandbox"], input=text,
                                 capture_output=True, text=True, encoding="utf-8", timeout=RENDER_TIMEOUT)
     except subprocess.TimeoutExpired as exc:
         raise RuntimeError("pandoc 원고 파싱 시간 초과") from exc

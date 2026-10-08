@@ -23,6 +23,15 @@ FTAG = re.compile(r"\s*\((?:[A-Z]\d+[,\s]*)+\)")
 NUM = re.compile(r"^(약|~|≈|±|[+\-−]|[A-Z]{0,2}[$€¥₩])?\s*\d[\d,.]*(\s*[~\-–]\s*\d[\d,.]*)?\s*[^\d|]{0,10}$")
 YEAR = re.compile(r"(?<!\d)(19|20)\d{2}(?!\d)")
 CAPTION = re.compile(r"^(<표>\s*)?\**\[?표\]?\s*[\d{][^.\s]*[.\s]*\**\s*")
+# 캡션 끝 표 형식 태그 `{형식=A|B|matrix}` — mdr-hwpx build_hwpx.py FMT_RE 와 같은 문법(visual-first.md §2b). 납품 빌더만
+# 읽고, 증빙판 PDF 와 표 키에서는 지운다: 태그를 붙였다고 visual-decisions.json 의 keep 결정이 풀리면 안 된다.
+TABLE_FMT_TAG = re.compile(r"[ \t]*\{형식=(A|B|matrix)\}[ \t]*(?=\r?\n|\Z)")
+
+
+def strip_table_format_tags(text: str) -> str:
+    return TABLE_FMT_TAG.sub("", text)
+
+
 SERIAL_HEADERS = {"#", "no", "no.", "순번", "순위", "연번", "번호"}
 
 
@@ -83,7 +92,7 @@ def classify(header: list[str], rows: list[list[str]]) -> tuple[int, str | None]
 def key_for(lines: list[str], start: int, header: list[str], rows: list[list[str]]) -> str:
     """캡션 제목(번호 제거) → 없으면 머리행 / 첫 행 20자. 줄번호·선도문은 원고 수정에 흔들려 쓰지 않는다."""
     for k in range(start - 2, max(-1, start - 5), -1):
-        s = lines[k].strip()
+        s = TABLE_FMT_TAG.sub("", lines[k].strip())
         if CAPTION.match(s) and CAPTION.sub("", s).strip(" *"):
             return CAPTION.sub("", s).strip(" *")
     return " | ".join(header) + " / " + " ".join(rows[0])[:20]
@@ -123,7 +132,7 @@ def audit(text: str, decisions: dict[str, dict]) -> tuple[list[dict], int, set[s
 
 def _selftest() -> None:
     sample = "\n".join([
-        "## 2. 추이", "<표> 표 1. 연도별 용량",
+        "## 2. 추이", "<표> 표 1. 연도별 용량 {형식=A}",   # 태그는 키에서 빠진다
         "| 연도 | 용량(MW) |", "|---|---|", "| 2023 | 100 (F001) |", "| 2024 | 150 (F002) |", "| 2025 | 220 (F003) |",
         "", "(허가) 국내 허가 현황",
         # ponytail: '2등급' 같은 숫자 접두 범주는 수치로 잡힌다(리드가 keep 으로 닫음) — 시험은 비수치 표기로
@@ -138,6 +147,7 @@ def _selftest() -> None:
         assert _is_num(cell), cell
     for cell in ["1단계 100MW", "2027년 하반기 첫 생산 목표", "진전", "-", "제허 23-123"]:
         assert not _is_num(cell), cell
+    assert strip_table_format_tags("캡션 {형식=B}\r\n| a |\n끝 {형식=C}") == "캡션\r\n| a |\n끝 {형식=C}"
     found, unresolved, unmatched = audit(sample, {})
     assert [r["key"] for r in found] == ["연도별 용량", "국가 | 2025 | 2026 / 독일 31 29 (F010)"], [r["key"] for r in found]
     assert found[0]["suggestion"].startswith("시계열") and found[1]["suggestion"].startswith("2시점"), found

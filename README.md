@@ -227,6 +227,8 @@ verify_facts.py demo       : OK  (승인 목차 파서 12부·4축 그대로)
 
 | 변경 | 내용 |
 |---|---|
+| 2026-10-08 (T2) | 표 형식 다양화 — 사용자 편집 학습(대상별 묶음 세로 표 A·두 열 라벨형 B·가로 행렬 matrix), `visual-first.md` §2b 선택 규칙과 캡션 태그 `{형식=A\|B}`, `visual_audit.py` 표 키·`render_pdf.py` 에서 태그 제거. 빌더 쪽(mdr-hwpx `build_hwpx.py` A/B 렌더러)은 별도 세션 (`_planning/batches/batch-T2-table-format.md`) |
+| 2026-10-08 (T1) | 컨텍스트 예산 리팩토링 — SKILL.md 게이트 절을 카드(목적·절대규칙·영수증·포인터)로 줄이고 상세는 `verification-gates.md` 한 곳에, description ≤250자·본문 ≤12KB(목표 10KB) 가드 테스트, mdr-hwpx 통과 기준 1사본화 (`_planning/batches/batch-T1-context-budget.md`) |
 | 2026-10-08 | 독자·목표 설계(reader-goal) G0 신설 · 시각화 우선(visual-first) PRD·규칙·`visual_audit.py` · G0 필드 5개 · 워커 철칙 · 납품본 변환 규칙(mdr-hwpx) |
 | [#18](https://github.com/bbiyakfather/market-deep-research/pull/18) | 목적별 모듈화(mdr-search / market-deep-research / mdr-hwpx) + P0 검증 결함 수정 + 적대적 리뷰 결함 29건 처리 |
 | [#17](https://github.com/bbiyakfather/market-deep-research/pull/17) | README 를 실제 main 상태로 재작성 |

@@ -1363,15 +1363,20 @@ def intent_diff_closed_at_g4():
 
 @case
 def skill_frontmatter_intact():
-    """front-matter YAML 이 여전히 파싱되고, description 이 1024자 이하이며, 4번째 조사유형
-    '기술사업화 실사' 가 포함되는지."""
+    """front-matter YAML 이 여전히 파싱되고, 항상 로드되는 텍스트 예산(description ≤250자 —
+    모든 세션의 스킬 목록에 실림, 본문 ≤12KB — 스킬이 켜지면 매 턴 재전송) 안이며, 4번째
+    조사유형 '기술사업화 실사' 가 포함되는지. 상세 규칙은 references 로 보낸다(batch T1).
+    ponytail: 목표는 10KB 이나 카드 한 줄 보강마다 재배치하지 않도록 상한은 12KB. 10KB 를 다시
+    넘보면 흐름도·참조 표가 아닌 카드 문장을 references 로 보낸다."""
     text = _read("SKILL.md")
     m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     assert m, "front-matter 파싱 실패(--- 블록 없음)"
     data = yaml.safe_load(m.group(1))
     desc = data["description"]
-    assert len(desc) <= 1024, f"description {len(desc)}자 — 1024자 초과"
+    assert len(desc) <= 250, f"description {len(desc)}자 — 250자 초과(항상 로드되는 텍스트 예산)"
     assert "기술사업화 실사" in desc, "description 에 기술사업화 실사 없음"
+    body_bytes = len(text[m.end():].encode("utf-8"))
+    assert body_bytes <= 12288, f"SKILL.md 본문 {body_bytes}B — 12KB 초과(항상 로드되는 텍스트 예산, 목표 10KB; 상세는 references 로)"
 
 
 # --- 게이트 원장 소유권(영수증 위조·G5 자기기록 회귀) --------------------------

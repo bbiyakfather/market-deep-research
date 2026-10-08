@@ -31,7 +31,7 @@ manuscript/Ⅲ_x.md ──build_hwpx.py build──▶ 모듈_Ⅲ_x_양식.hwpx 
 
 원고를 쓰기 전에 `references/deliverable-rules.md`(작성 주체·내부 코드·불확실 정보·표·참고문헌·윤문 규칙)를 적용한다.
 결함(그림 크롭·낱말 잘림·쪽 밀림)은 **원고 md 수준에서만** 고치고 재빌드. 양식·코드는 건드리지 않는다.
-납품본은 `HWPX_TABLE_FLOAT_ALL=1` 환경변수로 빌드한다(모든 표가 쪽 경계에서 행 단위로 나뉨. 기본은 한 쪽에 드는 표를 글자처럼 두어 남은 공간보다 크면 통째로 밀려 빈 공간이 생긴다).
+납품본은 `HWPX_TABLE_FLOAT_ALL=1` 환경변수로 빌드한다(사유 `deliverable-rules.md` §4).
 워커는 build→export→grade 후 worker_done 에 grade 요약을 담는다.
 
 ```
@@ -47,8 +47,8 @@ python <this>/scripts/grade_pdf.py <pdf> --md <원고.md> [--profile ...] [--out
     최장 낱말×COL_UNIT > 열폭−IN_MARGIN 인 셀), 표 쪽걸침(캡션 없는 쪽의 긴 가로선 다수), 여백 낭비(쪽 하단 공백 > 3.5cm).
     의심쪽만 90dpi PNG. exit 0 이라도 결함 수는 JSON 에.
 python <this>/scripts/build_hwpx.py --demo
-python <this>/scripts/make_references.py --src <URL 목록 md> --out <부록.md> --evidence <evidence.jsonl> [--snapshot-root <WD>] [--style footnote|table]
-    부록 참고 출처(URL 표)를 APA 7판 각주형 목록으로. DOI→Crossref, 스냅샷 메타, 수기 캐시. 상세 `references/deliverable-rules.md` §5
+python <this>/scripts/make_references.py --src <URL 목록 md> --out <부록.md> --evidence <evidence.jsonl>
+    부록 참고 출처(URL 표) → APA 7판 각주형 목록. 인자·규칙은 `references/deliverable-rules.md` §5
 BEFORE_DIR=<백업 폴더> python <this>/scripts/check_numbers.py <원고stem> [...]   (cwd = manuscript/)
     수정 전후 숫자 토큰 다중집합 비교. 빠짐(MISSING)=삭제분 확인, 새로 생김(EXTRA)=사실 추가 의심, 제목 변경 경고
 ```
@@ -65,8 +65,7 @@ python <this>/scripts/build_hwpx.py outline <md> [<md> ...]
     모듈별 제목 트리(레벨·텍스트), <표>/[그림] 캡션 목록(순번 포함), 출처 수, 각주 정의 수, 단락 수. 사람이 읽는 표 + --json
 ```
 
-출력과 `references/consistency-review.md` 체크리스트로 본다
-(부 번호·표/그림 번호 연속, 목차↔제목 일치, 같은 수치가 부마다 같은가, 용어 표기, 전년판 대비 문구).
+출력과 `references/consistency-review.md` 체크리스트(a~m)로 본다.
 
 ### ③ 공식 양식 맞추기 (코디네이터)
 
@@ -111,8 +110,7 @@ python <this>/scripts/form_probe.py <양식.hwpx> [--profile <json>] [--json]
 
 ## 통과 기준
 
-- `grade_pdf.py` 4지표 결함 0 (또는 사유 기록).
-- 한글에서 열어 **의심쪽 PNG 를 사람이 본다**. XML 이 스키마에 맞아도 크롭·세로쏟아짐·쪽 밀림은 전부 통과한다 — **정적 검사는 검증이 아니다.**
+정본은 `references/consistency-review.md` 「통과」 — 체크리스트 전 항목, 합본 후 `grade_pdf.py` 결함 0, 한글에서 의심쪽 PNG 육안 확인.
 
 ## 만들지 않는 것
 
@@ -125,5 +123,5 @@ python <this>/scripts/form_probe.py <양식.hwpx> [--profile <json>] [--json]
 | 파일 | 언제 |
 |---|---|
 | `references/hwpx-form.md` | 새 양식 실측·그림/표 깨질 때 |
-| `references/consistency-review.md` | ② 단계 |
+| `references/consistency-review.md` | ② 단계 · 통과 기준 |
 | `references/deliverable-rules.md` | ① 원고 작성 전 · 발주처 수정의견(조사팀 표현·내부 코드·불확실 정보·분량·참고문헌·윤문) 반영 시 |
