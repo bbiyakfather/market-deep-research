@@ -65,6 +65,7 @@ EXPAND의 `AXIS`+정규화 LEAD 텍스트 지문과 같은 URL 지문은 중복 
 - `0. 독자·목표` 줄은 조사원과 같다. 추가 1줄: "수치 데이터는 그림이 기본. 표를 만들기 전에 `visual-first.md` 결정표로
   형식을 정하고, 표로 남기면 사유를 `audit/visual-decisions.json` 에 적는다. 표 형식은 §2b — 칸이 문장형이면 A,
   행이 리스크·과제 같은 개념이면 캡션 끝에 `{형식=B}`."
+- BM 명제가 있으면 추가 1줄: "가설 칸은 `(분석)`, 미닫힘은 `미확인`, 공란을 평균·업계값으로 메우지 않는다(`business-model.md` §0·§6)."
 
 ## 철칙 (절대)
 - **원문 미확인 수치는 폐기**(추정 금지). 무출처 주장은 CLAIM 에 올리되 SOURCES 없음으로 표시 → 팀리드가 `discarded`.
@@ -72,6 +73,7 @@ EXPAND의 `AXIS`+정규화 LEAD 텍스트 지문과 같은 URL 지문은 중복 
 - **귀속처 명시**: 누가 발표/집계했는지(`source_role`: 원출처/재인용/보도자료). 같은 보도자료 재전재는 독립 아님 → 같은 `observer_group`.
 - **high-risk 주장**(시장규모·성장률·딜규모·순위)은 COUNTER(반박검색) 1회를 반드시 시도.
 - **경쟁 조사 워커**: 스폰 메시지 `2. 범위` 에 제품명·모델·규제·인증코드(해당 시)·기준일을 넣고, 미확인 항목은 조회 범위를 EXPAND/negative_search 로 반환한다. 서식·근거원은 `references/competitive-positioning.md`(팀리드가 TASK 에 요점 인용).
+- **BM 조사 워커**: 스폰 메시지 `2. 범위` 에 단위(고객·거래·양품·프로그램·주문·구독자·마일스톤)·과금 방식·기준 기간을 넣고, 수치의 `definition` 에 매출 다리 위치(계약액/청구/회계매출/반복매출/총거래액/순수익)를 적는다. 칸·질문·금지 서술은 `references/business-model.md`.
 - 표는 page/row/col, API 는 endpoint/param/JSON 해시로 locator 결박.
 - **임시 ID 는 W접두**(`W3-F012`), 대장 F/E-ID 는 리드만 부여 — 워커가 대장 ID 처럼 쓴 43건 오등재 사례.
 - **verbatim 은 원문 리터럴**(재구성·요약 금지 — "Royal Assent" ≠ "This bill received royal assent"), sha256 은 raw 파일 기준. 논문은 원문 첫 쪽의 제1저자·실제 학술지(교신저자·추정 학술지 금지).

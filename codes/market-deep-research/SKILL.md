@@ -57,7 +57,7 @@ description: >-
 
 ### [G0] preflight + 요구사항 확정
 - 목적: `python scripts/preflight.py` 의존성 점검 → §0 독자·목표(`reader-goal.md`) 최선행 확정 → 조사유형·범위·**축별 충분조건**·승인 목차를 `audit/research-plan.md` 에 기록, `audit/intent-diff.md` 개시 【v3-D】.
-- 절대 규칙: **승인 전 팬아웃 금지**. §0 은 승인 후 동결(교체는 intent-diff `현행 메시지:` 줄). 기관·기업이면 `entity-identity.md` 동일성 게이트 선통과, 경쟁이 핵심이면 `competitive-positioning.md`.
+- 절대 규칙: **승인 전 팬아웃 금지**. §0 은 승인 후 동결(교체는 intent-diff `현행 메시지:` 줄). 기관·기업이면 `entity-identity.md` 동일성 게이트 선통과, 경쟁이 핵심이면 `competitive-positioning.md`, BM 명제(과금·수요기업·이전 조건)가 핵심이거나 독자 유형이 A/B/C 이면 `business-model.md`(§0·§1·§5 분야 행 + 해당 독자 §, G3 직전 §6).
 - 영수증: `gates.py record G0 <work_dir> --evidence "..." --refs <고정 산출물만>` → `check G0`. → `verification-gates.md` §G0 · `research-plan.md`
 
 ### [1] 병렬 조사 → [E] 확장·수렴
@@ -112,3 +112,4 @@ description: >-
 | `references/research-plan.md` | G0 조사계획 확정 |
 | `references/entity-identity.md` | 기관·기업 조사 G0 직전 |
 | `references/competitive-positioning.md` | 경쟁·포지셔닝 핵심 시 G0 · 경쟁 챕터 직전(의료기기·IVD 는 §6) |
+| `references/business-model.md` | BM 명제가 핵심이거나 독자 A/B/C 일 때 G0(§0·§1·§5 분야 행 + 해당 독자 §) · 5부 수요 표·9부 미닫힘 직전 · G3 직전 §6 금지 서술 grep |
