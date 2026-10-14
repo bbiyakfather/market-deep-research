@@ -27,10 +27,10 @@ cwd 는 반드시 작업폴더(`research_<주제>_<YYYYMMDD>/`)다. 스크립트
 
 1. **요구 확정** (1~2문장 확인): 주제 · 기간 · 언어 · 출처유형(`web`/`news`/`academic`/`filing`) · 목표 건수.
 2. **작업폴더**: `python <core>/scripts/skill_paths.py "<주제>"` 로 경로 확인한 뒤 그 폴더를 cwd 로 고정(동일 규칙이라 보고서 모드 승격 가능).
-3. **검색**: 내장 WebSearch 병행(도구 목록에 없으면 deferred — ToolSearch 로 먼저 로드) + `python <core>/scripts/search.py "<q>" --n 10 --type web|news|academic|filing`. 쿼리 3~6개 변형(`site:` `filetype:pdf` `intitle:` `"정확구문"`). 검색 완전성 미보장.
-4. **확보**: `python <core>/scripts/fetch.py get <url> --out _sources`. WebFetch 가 403 이어도 포기하지 말고 fetch.py 사다리를 탄다 — `references/source-ladder.md`.
+3. **검색**: 내장 WebSearch 병행(도구 목록에 없으면 deferred — ToolSearch 로 먼저 로드) + `python <core>/scripts/search.py "<q>" --n 10 --type web|news|academic|filing`. 쿼리 3~6개 변형(`site:` `filetype:pdf` `intitle:` `"정확구문"`). 검색 완전성 미보장. `search.py --json` 의 `backends[].status` 는 `ok|empty|blocked|error`. **종료 코드 2 는 전 백엔드 실패**라 0건이 아니라 `UNREACHABLE` 이다(`agent-briefs.md` `## COVERAGE`).
+4. **확보**: `python <core>/scripts/fetch.py get <url> --out _sources`. WebFetch 가 403 이어도 포기하지 말고 fetch.py 사다리를 탄다 — `references/source-ladder.md`. 증거로 남길 페이지는 발견 경로와 무관하게 fetch.py 로 다시 받는다.
 5. **목록**: `python <core>/scripts/source_index.py . --topic "<주제>"` → `sources.md`.
-6. **보고**: 사용자에게 `sources.md` 경로 · 건수 · 실패 URL 요약을 알린다.
+6. **보고**: 사용자에게 `sources.md` 경로 · 건수 · 실패 URL. 같은 보고에 `## COVERAGE` 를 남긴다(QUERY 의 BACKEND·RESULT, 못 찾은 항목은 GAP). 종료 코드 2 는 GAP STATE `UNREACHABLE`. 서식 정본은 `agent-briefs.md`.
 
 ## 하지 않는 것
 

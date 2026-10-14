@@ -6,6 +6,7 @@
   SEC EDGAR full-text=filing, Wikipedia). `--type` 은 `curated-sources.json` 에 있는 것만, 미지원 명시 실패.
 - 실패 계층은 경고 후 건너뜀(빈결과). "검색 완전성 미보장" — 내장 WebSearch 병행.
 - **검색 연산자**: `site:` `filetype:pdf` `intitle:` `"정확구문"` `-제외` `OR` `after:/before:`. 영문 우선.
+- 종료 코드 2·1차 출처 라우팅·`patents.google.com` 크롤링 금지의 정본은 `agent-briefs.md` COVERAGE·철칙이다. 이 절은 검색 계층만 다룬다.
 
 ## 검색만 모드 (`mdr-search`)
 사실대장·재검증·게이트·캡처·PDF 없이 출처목록(`sources.md`)과 `_sources/` 원문 스냅샷만 만든다.
@@ -38,14 +39,23 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
    ⚠ WebFetch 가 403 이라고 "원문확인불가"로 넘기지 말 것 — `fetch.py` 로 한 번 더 확인한다.
    실제로 WebFetch·데스크톱 지문이 전부 막힌 GVR 이 모바일 계층으로 열렸고, 스니펫으로만
    확인해 "일치" 판정했던 건에서 오류가 나왔다(2026-07-31).
-4. **Jina Reader**(`r.jina.ai`, JS렌더·정제) → `archived_url` 구분 기록.
-5. **Googlebot UA** — 봇 화이트리스트 사이트용.
-6. **RSS** — `rss.blog.naver.com/{id}.xml` · `/feed` · `/rss` · `/rss.xml` → `archived_url` 구분.
+4. **브라우저**(`patchright`, 없으면 `playwright` 헤드리스 Chromium). JS 로 그려지는 페이지.
+   네트워크가 잠잠해질 때까지 최대 20초, 스크롤은 최대 5회. 미설치·`MDR_BROWSER=0` 이면 건너뛴다.
+   리다이렉트·하위 자원도 SSRF 검사. 이미지·폰트·미디어는 받지 않고 컨텍스트는 호출마다 새로 연다.
+5. **Jina Reader**(`r.jina.ai`, JS렌더·정제) → `archived_url` 구분 기록.
+6. **Googlebot UA** — 봇 화이트리스트 사이트용.
+7. **RSS** — `rss.blog.naver.com/{id}.xml` · `/feed` · `/rss` · `/rss.xml` → `archived_url` 구분.
    요청 URL/GUID 또는 확인된 제목과 유일하게 대응하는 entry 본문만 검증해 `ok`로 인정한다.
    미일치 피드는 탐색 자료 `partial`로 보존하고 다음 계층을 계속 시도한다.
-7. **Wayback**(`archive.org/wayback/available`) → snapshot → `archived_url` 구분.
-8. **OGP 메타**(og:title·og:description) — 본문 실패 시 제목+요약만 `partial` 로(속성 순서 양방향 파싱).
-9. **소진 → `status:"fail"`**: 브라우저 MCP(JS 렌더링 — agent-browser 우선, playwright 폴백) 또는 대체출처로.
+8. **Wayback**(`archive.org/wayback/available`) → snapshot → `archived_url` 구분.
+9. **OGP 메타**(og:title·og:description) — 본문 실패 시 제목+요약만 `partial` 로(속성 순서 양방향 파싱).
+10. **소진 → `status:"fail"`**: 브라우저 계층까지 실패한 상태다. `MDR_BROWSER=0` 이었으면 hint 에 남긴다. 대체출처를 찾는다.
+
+| 스위치 | 효과 |
+|---|---|
+| `MDR_BROWSER=0` | 브라우저 계층을 건너뛴다 |
+| `MDR_BROWSER_HEADED=1` | 브라우저를 창을 띄워 연다(설치된 Chrome). JS 챌린지는 헤드리스에서 풀리지 않는다. 화면이 있는 PC 에서만 |
+| `MDR_NO_THIRD_PARTY=1` 또는 `--no-third-party` | `jina`·`wayback` 을 건너뛴다(대상 URL 을 외부로 보내지 않음) |
 
 **도메인 라우팅**(`fetch.ROUTES`): 네이버 블로그→모바일·RSS, 네이버 뉴스/증권→Jina,
 디시·펨코·요즘IT→모바일, 티스토리→RSS, 미디엄·서브스택→Jina·RSS 등.
@@ -72,7 +82,7 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
   나오고 요청/응답 본문은 못 본다 — 열위 폴백임을 인지할 것).
 
 ## 코어 내장 (구 insane-search 위임분)
-- 강방어 우회는 `fetch.py` 사다리에 **내장**됐다 — 도메인 라우팅·모바일 지문·Googlebot·RSS·OGP.
+- 강방어 우회는 `fetch.py` 사다리에 **내장**됐다 — 도메인 라우팅·모바일 지문·브라우저·Googlebot·RSS·OGP.
   `status:"delegate"` 는 폐지(현재 `ok`/`partial`/`fail`).
 - **내장하지 않은 것**(시장조사 범위 밖이라 의도적 제외): 미디어 자막·메타(yt-dlp, 1,858 사이트),
   X/Twitter Syndication, Reddit `.json`, GitHub·HN·arXiv 등 플랫폼 전용 공개 API.

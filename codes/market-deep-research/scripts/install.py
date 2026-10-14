@@ -15,6 +15,10 @@ CLI: python install.py                 # 기본 부모 ~/.claude/skills
      python install.py --dry-run
      python install.py --check         # 쓰지 않고 대조만(드리프트 감시, 불일치 시 exit 1)
      python install.py --help
+
+선택 브라우저 계층(없어도 나머지 사다리는 동작한다):
+  pip install patchright
+  patchright install chromium
 """
 from __future__ import annotations
 

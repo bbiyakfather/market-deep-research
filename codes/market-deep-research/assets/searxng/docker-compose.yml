@@ -1,0 +1,19 @@
+# 로컬 SearXNG. 검색 코드는 이 컨테이너를 띄우지 않는다. 사용자가 직접 실행한다.
+# 실행: docker compose -f assets/searxng/docker-compose.yml up -d
+# 중지: docker compose -f assets/searxng/docker-compose.yml down
+# 환경변수: MDR_SEARX_URL=http://127.0.0.1:8888
+# 호스트 127.0.0.1:8888 을 이미지 기본 포트 8080 에 묶는다.
+# 컨테이너 프로세스까지 127.0.0.1 로 묶으면 발행 포트로 접속이 안 되므로, 제한은 호스트 매핑만 한다.
+
+name: mdr-searxng
+
+services:
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    ports:
+      - "127.0.0.1:8888:8080"
+    environment:
+      SEARXNG_LIMITER: "false"
+      SEARXNG_BASE_URL: "http://127.0.0.1:8888/"
+    volumes:
+      - ./settings.yml:/etc/searxng/settings.yml

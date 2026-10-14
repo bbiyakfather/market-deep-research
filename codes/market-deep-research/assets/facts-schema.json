@@ -102,6 +102,17 @@
       "last_seen": {"type": ["string", "null"], "format": "iso-time", "description": "[v3-E] 마지막으로 소스에서 확인된 시점(상태변경 추적)"},
       "demoted_at": {"type": ["string", "null"], "format": "date-time"},
 
+      "discovery": {
+        "type": ["object", "null"],
+        "additionalProperties": false,
+        "description": "수집 경로(선택). 생략·null 가능. query·wave·axis·worker 는 모두 문자열이고 각각 생략 가능.",
+        "properties": {
+          "query": {"type": "string"},
+          "wave": {"type": "string"},
+          "axis": {"type": "string"},
+          "worker": {"type": "string"}
+        }
+      },
       "discard_reason": {"type": ["string", "null"]}
     },
     "conditional": {

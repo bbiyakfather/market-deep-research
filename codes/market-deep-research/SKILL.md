@@ -71,8 +71,11 @@ description: >-
 ### [1] 병렬 조사 → [E] 확장·수렴  【v3-A】
 - 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/사업현황/재무실적 전건 조사) · **기술동향**=축분할(기술요소·플레이어·시장·정책 + 교차검증1) · **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS 기존 스킬 조합) + 해외 · **기술사업화 실사**=축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도).
 - 워커는 에이전트별 `_research/<agent>/` 임시폴더에만 쓴다(파일충돌 방지). **읽기전용**(공식 대장 미기록) — 반환은 마커로. 【v3-F】 스폰 메시지 첫 줄은 `0. 독자·목표`(intent-diff 현행 메시지·관점·금지 서술), 스크립트는 WD 에서 절대경로로 실행(`agent-briefs.md`).
-- 반환 마커(`agent-briefs.md`): evidence 스키마 JSONL + `## CLAIMS`(CLAIM/RISK/SOURCES/COUNTER/PRIMARY) + `## EXPAND`(LEAD/WHY/ANGLE, DEAD END) + `## FIGURES`(원문 도판 위치·캡션) + `## 인사이트`(사실/추론 구분, 근거 F-ID) + `## 요약`.
-- **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에 축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0 에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건, 후자는 워커에게 전달되는 조사 깊이 기준): **축별 잔여 리드 각 0**(한 축이라도 잔여 리드가 남으면 미수렴), 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md` 확정값이 있으면 그 값 우선) 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅.
+- 반환 마커(`agent-briefs.md`): evidence 스키마 JSONL + `## CLAIMS`(CLAIM/RISK/SOURCES/COUNTER/PRIMARY) + `## EXPAND`(LEAD/WHY/ANGLE, DEAD END) + `## COVERAGE`(질의·공백. 누락 시 미수렴) + `## FIGURES`(원문 도판 위치·캡션) + `## 인사이트`(사실/추론 구분, 근거 F-ID) + `## 요약`.
+- **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에 축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0 에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건, 후자는 워커에게 전달되는 조사 깊이 기준): **축별 잔여 리드 각 0**(한 축이라도 잔여 리드가 남으면 미수렴), 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md` 확정값이 있으면 그 값 우선) 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅. 위 조건에 더해 **열린 공백 0, 또는 각 공백을 `audit/gap-log.md` 에 수용 사유와 함께 기록**해야 수렴이다. 열린 공백은 COVERAGE 의 UNREACHABLE·NOT_ATTEMPTED 와 COVERAGE 없는 워커다(`join_workers.py` 의 `open_gaps`·`coverage_missing`. 수용 판단은 팀리드, 코드는 gap-log 를 읽지 않음).
+- 목록형 조사(기업·제품·기관·프로젝트 여럿)는 본조사 전에 `audit/universe.md` 를 만든다(절차·표는 `research-plan.md` 0웨이브).
+- **교차검증1**(기술동향 분할의 추가 워커): 다른 워커 CLAIMS 중 단일 출처 normal 표본을 독립 질의로 재검색해 COUNTER 와 COVERAGE 로 반환한다.
+- 깊이캡의 기본 숫자는 3회/12명이다. BM·사업화 실측 5~6웨이브/30~40명(`research-plan.md`)은 그 유형의 초안 제안이고 기본값을 대체하지 않는다.
 
 ### [G1] join + 수집 게이트
 - 전 에이전트 완료/timeout/부분실패 처리. raw 산출물 `_research/` 보존.
@@ -83,6 +86,7 @@ description: >-
 - 보고서 진입 후보 **모든 fact** 를 팀리드가 원문 재열람. WebFetch 403 이면 `fetch.py` 로 한 번 더(사다리 상세: `source-ladder.md`). verbatim/locator 대조 → `db.add_verify_event(by="lead")`.
 - confirmed 조건(facts_db 강제): 최소 1 evidence + 팀리드 verify_event. 무출처=confirm 불가.
 - WebFetch 요약 답은 재확인 근거가 아니다 — curl/`fetch.py` 원문에서 문자열 검색. 2차 집계 DB(IEA 등) 값은 1차 자료로 교차. 서지·수치 기록 규칙은 `agent-briefs.md` 철칙.
+- 재열람·반박검색·claim-review 에서 탈락한 사실과 수용한 공백은 `audit/gap-log.md` 에 남긴다. 사유별 후속은 `verification-gates.md` [2] 복귀 규칙 한 곳만 본다.
 - **영수증**: 재검증 선언은 `gates.py record [2] <work_dir> --evidence "..."`로 기록하고 `check [2]`로 G0·G1을 확인한다.
 
 ### [Bx] 반박검색 + claim-graph 게이트  【v3-B】
