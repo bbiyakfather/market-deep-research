@@ -2,9 +2,11 @@
 
 python scripts/join_workers.py <raw.md> [<raw.md> ...] --out audit/join-results.json
 python scripts/join_workers.py --demo
+python scripts/join_workers.py coverage <work_dir>
 
 central_id=null은 팀리드의 add_fact/add_evidence 반환 ID로 채울 대기 칸이다.
 지문은 중복 후보 신호이며, 리드 동등성·기존 웨이브 대비 신규 여부는 팀리드가 판단한다.
+coverage 하위 명령은 보고용이다. 공백이 있어도 종료 코드는 0이다.
 """
 from __future__ import annotations
 
@@ -17,12 +19,23 @@ import unicodedata
 from pathlib import Path
 
 from facts_db import (ValidationError, load_schema, validate_fact, validate_evidence,
-                      check_ledger_references, evidence_ids)
+                      check_ledger_references, evidence_ids, _read_jsonl)
+from skill_paths import WorkPaths
 
 SECTIONS = ("EVIDENCE", "CLAIMS", "EXPAND", "FIGURES", "인사이트", "요약")
-HEADING = re.compile(r"^##\s+(EVIDENCE(?:\s*\(JSONL\))?|CLAIMS|EXPAND|FIGURES|인사이트|요약)\s*$")
+HEADING = re.compile(
+    r"^##\s+(EVIDENCE(?:\s*\(JSONL\))?|CLAIMS|EXPAND|FIGURES|인사이트|요약|COVERAGE)\s*$")
 FACT_ID = re.compile(r"(?<![A-Za-z0-9_])F\d{3,}(?![A-Za-z0-9_])")
 URL = re.compile(r"https?://[^\s<>\"`]+")
+_BACKEND = r"ddg|searx|WebSearch|MCP:[^\s—]+"
+QUERY_RE = re.compile(
+    rf"^-\s*QUERY:\s*(.+?)\s*—\s*BACKEND:\s*({_BACKEND})\s*—\s*RESULT:\s*(\d+|BLOCKED|ERROR)\s*$")
+GAP_RE = re.compile(
+    r"^-\s*GAP:\s*(.+?)\s*—\s*STATE:\s*(NOT_FOUND|UNREACHABLE|NOT_ATTEMPTED)"
+    r"\s*—\s*TRIED:\s*(\d+)\s*—\s*WHY:\s*(\S.*?)\s*$")
+GAP_STATES = ("NOT_FOUND", "UNREACHABLE", "NOT_ATTEMPTED")
+# fetch 로그 대조에서 빼는 증거. 웹 페이지를 다시 받을 대상이 아니다.
+LOG_EXEMPT_EVIDENCE = {"api_response", "negative_search", "calculation"}
 
 
 def _normalize(text: str) -> str:
@@ -32,6 +45,50 @@ def _normalize(text: str) -> str:
 def _fingerprint(axis: str, lead: str) -> str:
     payload = json.dumps([_normalize(axis), _normalize(lead)], ensure_ascii=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _parse_coverage(lines: list[tuple[int, str]], errors: list[dict]) -> tuple[list[dict], list[dict]]:
+    """COVERAGE 줄 파싱. 형식 오류는 EXPAND 와 같이 errors 에 넣고 해당 줄만 건너뛴다."""
+    queries, gaps = [], []
+    if not any(line.strip() for _, line in lines):
+        errors.append({"section": "COVERAGE", "message": "빈 섹션: 결과가 없으면 없음 표기 필요"})
+        return queries, gaps
+    for number, line in lines:
+        stripped = line.strip()
+        if not stripped or stripped == "없음":
+            continue
+        query = QUERY_RE.fullmatch(stripped)
+        if query:
+            queries.append({"line": number, "query": query.group(1).strip(),
+                            "backend": query.group(2), "result": query.group(3)})
+            continue
+        gap = GAP_RE.fullmatch(stripped)
+        if gap:
+            gaps.append({"line": number, "target": gap.group(1).strip(), "state": gap.group(2),
+                         "tried": int(gap.group(3)), "why": gap.group(4).strip()})
+            continue
+        errors.append({"section": "COVERAGE", "line": number, "message": "QUERY/GAP 마커 필요"})
+    return queries, gaps
+
+
+def _aggregate_coverage(results: list[dict]) -> dict:
+    """파일별 질의 수·GAP·상태 집계. 섹션이 없는 파일은 missing 에만 넣고 invalid 로 만들지 않는다."""
+    by_file, gaps, missing = [], [], []
+    by_state = {state: 0 for state in GAP_STATES}
+    for result in results:
+        parsed = result.get("coverage") or {"present": False, "queries": [], "gaps": []}
+        if not parsed.get("present"):
+            missing.append(result["file"])
+        states = {state: 0 for state in GAP_STATES}
+        for gap in parsed.get("gaps") or []:
+            state = gap.get("state")
+            if state in states:
+                states[state] += 1
+                by_state[state] += 1
+            gaps.append({**gap, "file": result["file"]})
+        by_file.append({"file": result["file"], "queries": len(parsed.get("queries") or []),
+                        "gaps": list(parsed.get("gaps") or []), "by_state": states})
+    return {"by_file": by_file, "gaps": gaps, "by_state": by_state, "missing": missing}
 
 
 def _sections(text: str, errors: list[dict]) -> dict[str, list[tuple[int, str]]]:
@@ -162,11 +219,16 @@ def validate_worker(text: str, source: str = "worker") -> dict:
         urls = sorted(set(url.rstrip(".,;)") for url in URL.findall(lead + " " + rest)))
         item["url_fingerprint"] = _fingerprint(axis, " ".join(urls)) if urls else None
         leads.append(item)
+    if "COVERAGE" in sections:
+        queries, gaps = _parse_coverage(sections["COVERAGE"], errors)
+        parsed_coverage = {"present": True, "queries": queries, "gaps": gaps}
+    else:
+        parsed_coverage = {"present": False, "queries": [], "gaps": []}
     verdict = "invalid" if errors else "blocked" if blocked else "ok"
     return {"file": source, "verdict": verdict, "blocked_reason": reason,
             "sections": list(sections), "errors": errors, "warnings": notices,
             "records": records, "id_remapping": list(remapping.values()),
-            "expand": leads, "dead_ends": dead_ends}
+            "expand": leads, "dead_ends": dead_ends, "coverage": parsed_coverage}
 
 
 def join_workers(paths: list[Path | str]) -> dict:
@@ -190,15 +252,176 @@ def join_workers(paths: list[Path | str]) -> dict:
                 if lead.get(key):
                     groups.setdefault((key, lead[key]), []).append(
                         {"file": result["file"], "line": lead["line"], "lead": lead["lead"]})
+    coverage = _aggregate_coverage(results)
     return {"ok": all(r["verdict"] != "invalid" for r in results), "files": results,
             "registration": "팀리드가 잠정 id와 evidence_ids를 제거하고 add_fact/add_evidence로 등재; "
                             "반환 ID로 central_id와 인사이트 등 references를 치환한다. 기존 claim_key는 명시적으로 병합한다.",
             "duplicate_leads": [{"kind": key, "fingerprint": digest, "occurrences": occurrences}
                                 for (key, digest), occurrences in groups.items() if len(occurrences) > 1],
+            "coverage": coverage,
             "convergence": {"eligible_workers": [r["file"] for r in eligible],
                 "excluded_workers": [r["file"] for r in results if r["verdict"] != "ok"],
                 "lead_count": sum(len(r["expand"]) for r in eligible),
-                "empty_expand_wave": len(eligible) == len(results) and all(not r["expand"] for r in eligible)}}
+                "empty_expand_wave": len(eligible) == len(results) and all(not r["expand"] for r in eligible),
+                "open_gaps": coverage["by_state"]["UNREACHABLE"] + coverage["by_state"]["NOT_ATTEMPTED"],
+                "coverage_missing": len(coverage["missing"])}}
+
+
+def _norm_label(text: str) -> str:
+    return " ".join(unicodedata.normalize("NFKC", text).casefold().split())
+
+
+def _split_labels(text: str) -> list[str]:
+    return [part.strip() for part in re.split(r"[,，、;/]", text) if part.strip()]
+
+
+def _parse_universe(text: str) -> list[dict]:
+    """audit/universe.md 표에서 데이터 행만 뽑는다. 포함/제외 필터는 호출자가 한다."""
+    rows = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) < 5:
+            continue
+        if cells[0] == "대상" or all(set(cell) <= set("-: ") and cell for cell in cells):
+            continue
+        rows.append({"name": cells[0], "aliases": _split_labels(cells[1]),
+                     "sources": cells[2], "include": cells[3], "reason": cells[4]})
+    return rows
+
+
+def _fact_matches(fact: dict, target: dict) -> bool:
+    """context.entity(쉼표 등으로 나뉜 조각 포함)가 대상명 또는 별칭과 같으면 그 대상의 사실로 센다."""
+    if not isinstance(fact, dict):
+        return False
+    context = fact.get("context")
+    entity = context.get("entity") if isinstance(context, dict) else None
+    if not isinstance(entity, str) or not entity.strip():
+        return False
+    names = {_norm_label(target["name"])}
+    names.update(_norm_label(alias) for alias in target["aliases"])
+    names.discard("")
+    pieces = [entity, *_split_labels(entity)]
+    return any(_norm_label(piece) in names for piece in pieces if piece.strip())
+
+
+def _norm_url(url: str) -> str:
+    return url.strip().rstrip("/")
+
+
+def _fetch_log_urls(path: Path) -> set[str]:
+    found = set()
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict) and isinstance(row.get("url"), str):
+            found.add(_norm_url(row["url"]))
+    return found
+
+
+def _read_ledger(path: Path, notices: list[str], label: str) -> list[dict] | None:
+    try:
+        return _read_jsonl(path)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        notices.append(f"{label} 파싱 실패 — 해당 검사를 건너뜀: {exc}")
+        return None
+
+
+def coverage_report(work_dir: Path | str) -> dict:
+    """포함 대상의 사실 0건·1건과 fetch-log 밖 증거 비율. 없는 파일은 그 검사만 건너뛴다."""
+    root = Path(work_dir)
+    wp = WorkPaths(root)
+    notices: list[str] = []
+    report = {"command": "coverage", "ok": True, "work_dir": str(root), "notices": notices,
+              "included": [], "zero_facts": [], "single_fact": [], "counts": [], "fetch_log": None}
+    if not root.is_dir():
+        notices.append(f"작업폴더 없음: {root} — 검사를 건너뜀")
+        return report
+
+    universe = wp.audit / "universe.md"
+    targets = None
+    if not universe.is_file():
+        notices.append("audit/universe.md 없음 — 대상 대조를 건너뜀")
+    else:
+        try:
+            rows = _parse_universe(universe.read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeError) as exc:
+            notices.append(f"audit/universe.md 읽기 실패 — 대상 대조를 건너뜀: {exc}")
+            rows = None
+        if rows is not None:
+            if not rows:
+                notices.append("audit/universe.md 에 표 행이 없음 — 대상 대조를 건너뜀")
+            else:
+                targets = [row for row in rows if row["include"] == "포함" and row["name"]]
+
+    facts = None
+    if not wp.facts.is_file():
+        notices.append("facts.jsonl 없음 — 사실 건수 대조를 건너뜀")
+    else:
+        facts = _read_ledger(wp.facts, notices, "facts.jsonl")
+
+    if targets is not None and facts is not None:
+        for target in targets:
+            count = sum(1 for fact in facts if _fact_matches(fact, target))
+            report["included"].append(target["name"])
+            report["counts"].append({"target": target["name"], "facts": count})
+            if count == 0:
+                report["zero_facts"].append(target["name"])
+            elif count == 1:
+                report["single_fact"].append(target["name"])
+
+    if not wp.evidence.is_file():
+        notices.append("evidence.jsonl 없음 — fetch-log 밖 증거 비율을 건너뜀")
+        return report
+    evidence = _read_ledger(wp.evidence, notices, "evidence.jsonl")
+    if evidence is None:
+        return report
+    fetch_log = wp.audit / "fetch-log.jsonl"
+    if not fetch_log.is_file():
+        notices.append("audit/fetch-log.jsonl 없음 — fetch-log 밖 증거 비율을 건너뜀")
+        return report
+    try:
+        logged = _fetch_log_urls(fetch_log)
+    except (OSError, UnicodeError) as exc:
+        notices.append(f"audit/fetch-log.jsonl 읽기 실패 — fetch-log 밖 증거 비율을 건너뜀: {exc}")
+        return report
+    checked = []
+    for item in evidence:
+        if not isinstance(item, dict) or item.get("type") in LOG_EXEMPT_EVIDENCE:
+            continue
+        url = item.get("source_url")
+        if isinstance(url, str) and url.strip():
+            checked.append(url.strip())
+    missing = [url for url in checked if _norm_url(url) not in logged]
+    ratio = round(len(missing) / len(checked), 4) if checked else None
+    warning = None
+    if missing:
+        warning = (f"증거 URL {len(missing)}/{len(checked)} ({ratio:.0%}) 가 "
+                   "audit/fetch-log.jsonl 에 없음")
+        notices.append(warning)
+    elif not checked:
+        notices.append("fetch-log 대조 대상 증거 URL 이 없음(api_response·negative_search·calculation 제외)")
+    report["fetch_log"] = {"evidence_urls": len(checked), "missing_urls": len(missing),
+                           "missing_ratio": ratio, "warning": warning}
+    return report
+
+
+def _print_coverage(args: list[str]) -> int:
+    if len(args) != 1:
+        result = {"command": "coverage", "ok": True, "notices": [
+            "사용법: python scripts/join_workers.py coverage <work_dir>"],
+            "included": [], "zero_facts": [], "single_fact": [], "counts": [], "fetch_log": None}
+    else:
+        result = coverage_report(args[0])
+    print(json.dumps(result, ensure_ascii=False, indent=2) + "\n", end="")
+    return 0
 
 
 def demo() -> dict:
@@ -216,6 +439,9 @@ def demo() -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "coverage":
+        return _print_coverage(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("files", nargs="*")
     parser.add_argument("--out", type=Path)
