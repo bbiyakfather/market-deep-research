@@ -33,6 +33,42 @@ lessons.md                    ← 실전에서 얻은 교훈 누적
 
 ---
 
+## 2026-10-14 업데이트 — 조사·크롤링 강화
+
+이 스킬은 "모은 사실이 맞는가"는 두껍게 검사했지만 "못 모은 것이 있는가"는 재지도 막지도 않았습니다. 과거 조사 7건을 집계해 보니 사실이 1건뿐인 조사 대상이 다수였고, 검색이 차단돼도 "결과 없음"으로 보고됐습니다. 그래서 **실패를 보이게 하고, 빠진 곳으로 되돌아가게** 고쳤습니다.
+
+| 들어온 것 | 왜 | 어디 |
+|---|---|---|
+| **검색 백엔드 상태** — 결과와 함께 백엔드별 `ok·empty·blocked·error` 를 돌려주고, 전 백엔드가 막히면 종료 코드 2 | 차단·오류가 빈 목록으로 바뀌어 워커가 "자료 없음"으로 읽음 | `scripts/search.py` (`search_report`, `--json`, `health`) |
+| **워커 `## COVERAGE`** — 시도한 검색식과, 못 채운 항목을 `NOT_FOUND`(찾아봤는데 없음)·`UNREACHABLE`(막혀서 못 봄)·`NOT_ATTEMPTED` 로 구분 보고. 열린 공백이 남으면 조사 루프가 수렴하지 않음 | 없는 것과 못 찾은 것이 한 칸이었고, 루프 종료가 워커의 자기 신고에만 달려 있었음 | `references/agent-briefs.md` · `scripts/join_workers.py` |
+| **0웨이브 대상 열거** — 목록형 조사는 본조사 전에 `audit/universe.md` 로 대상 목록부터 만들고, `join_workers.py coverage` 가 사실 0건·1건 대상을 보고 | 대상 목록을 빠짐없이 세는 단계가 없어 누락된 대상은 어떤 게이트도 못 잡음 | `references/research-plan.md` |
+| **탈락 사실의 복귀** — 재열람·반박검색에서 떨어진 사실을 사유 코드와 함께 `audit/gap-log.md` 에 남기고 사유별로 재조사 | 탈락하면 그대로 버려져 공백이 숨음 | `references/verification-gates.md` |
+| **의심 페이지 판정** — 로그인벽·동의창·없는 페이지 안내를 `partial` 로 강등. Jina 가 알려 주는 원 페이지 오류 코드를 반영 | 성공 판정이 "본문 1000자 이상" 하나라 죽은 페이지가 성공으로 저장됨(아래 벤치마크) | `scripts/fetch.py` (`validate_body`) |
+| **브라우저 계층** — `patchright`(없으면 `playwright`) 헤드리스 Chromium. 내부망 응답 차단, 호출마다 새 컨텍스트 | JS 로 그려지는 페이지를 여는 로컬 계층이 없어 제3자 서비스에 의존 | `scripts/fetch.py` (`browser` 계층) |
+| **대외비 스위치** — `MDR_NO_THIRD_PARTY=1` 이면 Jina·Wayback 계층을 건너뜀 | 열람 대상 URL 이 외부 서비스로 나감 | `references/source-ladder.md` |
+| **문서 파일·인코딩** — HWP·HWPX·XLSX·DOCX·PPTX·CSV·ZIP 원본 저장, 문서 상한 40MB, `<meta charset>` 인식, 지문 프로필 갱신(`chrome110`→`firefox`, `safari180_ios`→`safari_ios`) | 한국 공공·공시 자료가 모든 계층에서 실패, 2023년 지문 사용 | `scripts/fetch.py` · `requirements.txt` |
+
+### 벤치마크 (2026-10-14)
+
+과거 조사 4건에서 **끝내 열지 못했던 URL** 을 수정 전·후 코드로 한 번씩 다시 열었습니다. 원래 실패했던 어려운 표본이라 절대 성공률은 낮습니다. 측정 도구는 `_planning/recall-eval/recall_eval.py` 입니다.
+
+| 설정 (56건) | 진짜 확보 | 가짜 확보 | 부분 확보 | 실패 |
+|---|---|---|---|---|
+| 수정 전 | 10 | **8** | 19 | 19 |
+| 수정 후 | **16** | 0 | 3 | 37 |
+| 수정 후 + `MDR_NO_THIRD_PARTY=1` | 5 | 0 | 3 | 48 |
+| 수정 후 + `MDR_NO_THIRD_PARTY=1` + `MDR_BROWSER_HEADED=1` | 10 | 0 | 2 | 44 |
+
+- **가짜 확보**는 직접 요청이 404·410 인 죽은 페이지(56건 중 15건)를 "확보"로 집계한 건수입니다. 수정 전 코드는 Jina 가 200 으로 감싸 준 "Page not found" 안내문을 길이만 보고 통과시켰습니다.
+- 진짜 확보가 10 → 16건으로 늘었고(같은 표본을 한 번 더 쟀을 때는 18건 — 측정 간 편차 2건), 수정 전에 열었던 살아 있는 페이지를 수정 후에 잃은 경우는 없습니다. 실패가 늘어난 것은 죽은 페이지와 의심 페이지가 제자리(실패)로 분류됐기 때문입니다.
+- 남은 실패는 대부분 봇 차단(403)입니다. 헤드리스 브라우저는 `curl_cffi` 와 같은 403 을 받았고, 창을 띄우는 방식(`MDR_BROWSER_HEADED=1`)에서만 일부 JS 챌린지가 풀렸습니다(브라우저 계층 확보 3건).
+- 제3자 계층을 끄면 확보가 16 → 5건으로 줄어듭니다. 대외비 조사에서는 이만큼의 손실을 감수해야 합니다.
+- 검색 백엔드 실측: DuckDuckGo 는 정상, 공개 SearXNG 5곳은 JSON 응답 0곳(403·429·캡차·DNS 실패). 자체 인스턴스는 `assets/searxng/` 의 구성 파일로 띄우고 `MDR_SEARX_URL` 로 연결합니다.
+
+한계: 설정당 1~2회 측정, 단일 IP 입니다. `patents.google.com` 22건은 반복 측정 중 IP 단위로 차단(503)돼 표본에서 뺐습니다 — 특허는 크롤링 대신 특허 DB 도구로 조회하도록 워커 지침을 바꿨습니다. "얼마나 빠뜨리는가"(대상 재현율)는 도구만 만들었고, 독립 정답지로 잰 수치는 아직 없습니다.
+
+---
+
 ## 3대 절대 규칙
 
 1. **원문 미확인 수치는 폐기** — 추정 금지. 출처 없는 주장은 사실대장(`facts.jsonl`)에 등재 자체가 불가하며, 등재되지 않은 것은 본문에 쓸 수 없습니다.
@@ -140,8 +176,8 @@ python scripts/visual_audit.py report.md --decisions audit/visual-decisions.json
 
 ## 수집 스택 (유료 API 무의존)
 
-- **검색** (`scripts/search.py`): DuckDuckGo HTML → SearXNG 공개 인스턴스 로테이션 → 전문 무료 API(arXiv·SEC EDGAR·Wikipedia). 내장 WebSearch 와 병행.
-- **fetch** (`scripts/fetch.py`): 강방어 사이트 우회 사다리 — 도메인 라우팅 → curl_cffi TLS 지문 → **모바일 iOS 지문** → Jina Reader → Googlebot UA → RSS → Wayback → OGP. 성공 판정은 HTTP 200 이 아니라 본문 검증. 원본(raw)+정제본을 SHA-256 과 함께 보존.
+- **검색** (`scripts/search.py`): DuckDuckGo HTML → SearXNG(`MDR_SEARX_URL` 자체 인스턴스 우선, 없으면 공개 인스턴스) → 전문 무료 API(arXiv·SEC EDGAR·Wikipedia). 백엔드별 상태를 함께 돌려주고, 전 백엔드 실패는 종료 코드 2. 내장 WebSearch 와 병행.
+- **fetch** (`scripts/fetch.py`): 강방어 사이트 우회 사다리 — 도메인 라우팅 → curl_cffi TLS 지문 → **모바일 iOS 지문** → **브라우저**(patchright·선택) → Jina Reader → Googlebot UA → RSS → Wayback → OGP. 성공 판정은 HTTP 200 이 아니라 본문 검증(의심 페이지는 `partial`). `MDR_NO_THIRD_PARTY=1` 이면 Jina·Wayback 을 건너뜁니다. 원본(raw)+정제본을 SHA-256 과 함께 보존.
 - fetch.py 는 **현재 폴더** `audit/` 에 로그·스냅샷을 씁니다 — 모든 스크립트는 작업폴더(WD)에서 절대경로로 실행합니다. 스킬 폴더에서 돌리면 조사 원문이 저장소에 섞입니다.
 
 로그인·CAPTCHA·paywall 우회는 하지 않습니다.
@@ -214,9 +250,12 @@ python codes/market-deep-research/scripts/install.py --check
 
 설치 후 Claude Code 에서 "증빙/캡처 포함 시장조사 보고서", "기술동향·산업동향 조사", "기술사업화 실사", "근거 있는 딥리서치 PDF" 류의 요청이 이 스킬로 라우팅됩니다. 실전에서는 설치본에서 고친 변경이 먼저 생기기도 하므로, 조사 직전 `--check` 로 드리프트를 확인하고 변경분은 이 저장소 `codes/` 로 동기화합니다.
 
-## 검증 현황 (2026-10-08)
+## 검증 현황 (2026-10-14)
 
 ```
+pytest (v4 2개 파일 제외)  : 647 passed  (2026-09 기준선 602 + 신규 45)
+교차 리뷰                  : grok 1회(높음 3·중간 4 지적 → 6건 반영, 1건 한계로 수용)
+fetch.py demo / search.py demo : OK
 visual_audit.py --selftest : OK  (실전 report.md 1건: 후보 11건 추출, 연번 열 오탐 0)
 verify_facts.py demo       : OK  (승인 목차 파서 12부·4축 그대로)
 독립 리뷰                  : opus 2회(독자·목표 묶음 13건·시각화 묶음 13건 지적 → 반영)
@@ -227,6 +266,7 @@ verify_facts.py demo       : OK  (승인 목차 파서 12부·4축 그대로)
 
 | 변경 | 내용 |
 |---|---|
+| 2026-10-14 | 조사·크롤링 강화 — 검색 백엔드 상태·워커 COVERAGE·대상 열거·탈락 사실 복귀·의심 페이지 판정·브라우저 계층·대외비 스위치·문서 파일 저장 + 열람 벤치마크 |
 | 2026-10-08 | 독자·목표 설계(reader-goal) G0 신설 · 시각화 우선(visual-first) PRD·규칙·`visual_audit.py` · G0 필드 5개 · 워커 철칙 · 납품본 변환 규칙(mdr-hwpx) |
 | [#18](https://github.com/bbiyakfather/market-deep-research/pull/18) | 목적별 모듈화(mdr-search / market-deep-research / mdr-hwpx) + P0 검증 결함 수정 + 적대적 리뷰 결함 29건 처리 |
 | [#17](https://github.com/bbiyakfather/market-deep-research/pull/17) | README 를 실제 main 상태로 재작성 |
