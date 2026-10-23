@@ -252,8 +252,9 @@ python codes/market-deep-research/scripts/install.py
 # Codex 사용자 → ~/.agents/skills/ 에 설치 (Codex 가 사용자 스킬을 읽는 위치)
 python codes/market-deep-research/scripts/install.py --target ~/.agents/skills
 
-# 설치본이 저장소와 같은지 대조만 (불일치 시 exit 1)
+# 설치본이 저장소와 같은지 대조만 (불일치 시 exit 1). Codex 설치본은 --target 을 같이 준다
 python codes/market-deep-research/scripts/install.py --check
+python codes/market-deep-research/scripts/install.py --check --target ~/.agents/skills
 ```
 
 `install.py` 는 allowlist 3개 스킬 폴더 안만 mirror-sync(초과 파일 삭제) 하고 그 밖의 스킬은 건드리지 않습니다. 둘 다 쓰는 사람은 두 번 실행합니다.
@@ -270,7 +271,7 @@ cp -r template/ ~/work/<프로젝트명>/ && cd ~/work/<프로젝트명>/ && git
 | 규칙 파일 | `CLAUDE.md`(`@AGENTS.md` 한 줄) | `AGENTS.md` |
 | 시작 | `/market-deep-research <주제>` 또는 "증빙 포함 시장조사 보고서" 류 자연어 | `$market-deep-research <주제>` 또는 같은 자연어(`/skills` 로 설치 확인) |
 | 병렬 조사원 | `Agent` 서브에이전트(sonnet·background) | 내장 서브에이전트(기본 켜짐). 모델은 `~/.codex/config.toml` 의 `[agents].default_subagent_model` |
-| 원문 재열람 | WebFetch → 403 이면 `fetch.py` | `fetch.py` |
+| 원문 재열람 | WebFetch → 403 이면 `fetch.py` | `fetch.py`(증빙 스냅샷은 늘 이 경로) |
 
 도구 이름만 다르고 게이트·대장·검증 절차는 동일합니다(`SKILL.md` 「실행 환경」 표). 대외비 조사는 `MDR_NO_THIRD_PARTY=1` 로 Jina·Wayback 계층을 끕니다. 실전에서는 설치본에서 고친 변경이 먼저 생기기도 하므로, 조사 직전 `--check` 로 드리프트를 확인하고 변경분은 이 저장소 `codes/` 로 동기화합니다.
 

@@ -46,7 +46,7 @@ description: >-
 | 역할 | Claude Code | Codex (CLI·앱·IDE) |
 |---|---|---|
 | 조사원 팬아웃 | `Agent(model: "sonnet")` background | 서브에이전트 스폰("N명 병렬로 스폰, 전부 기다린 뒤 마커대로 요약"). 모델·effort 는 `config.toml` `[agents].default_subagent_model` 등 |
-| 원문 재열람 | WebFetch → 403 이면 `fetch.py` | `fetch.py` 만(내장 fetch 없음) |
+| 원문 재열람 | WebFetch → 403 이면 `fetch.py` | `fetch.py`(내장 웹 검색으로 본 페이지도 증빙은 `fetch.py` 로 다시 받는다) |
 | 웹 검색 | WebSearch + `search.py` | `search.py`(+web search 가 켜져 있으면 병행) |
 | 프로젝트 규칙 파일 | `CLAUDE.md` | `AGENTS.md`(`CLAUDE.md` 는 `@AGENTS.md` 한 줄로 가져옴) |
 | 스킬 설치 위치 | `~/.claude/skills/` | `~/.agents/skills/`(저장소용은 `<repo>/.agents/skills/`) |
