@@ -1,6 +1,6 @@
 # market-deep-research
 
-**증빙형(evidence-based) 시장조사 보고서 스킬** — Claude Code 스킬 `market-deep-research`(+ `mdr-hwpx` 납품 양식화)의 정본 저장소입니다.
+**증빙형(evidence-based) 시장조사 보고서 스킬** — `market-deep-research`(+ `mdr-search` 검색만, `mdr-hwpx` 납품 양식화)의 정본 저장소입니다. **Claude Code 와 Codex 양쪽에서** 같은 SKILL.md 로 동작하고, 주제(기술동향·기업 실사·구매의향·경쟁분석 등)에 묶이지 않습니다. 팀원 설치는 [설치·실행](#설치실행).
 
 ![fact → source → capture 증거 체인과 게이트](docs/img/evidence-chain.png)
 
@@ -211,6 +211,8 @@ codes/market-deep-research/
 
 codes/mdr-hwpx/              # 원고 md → 발주처 양식 hwpx (부별 모듈 빌드·정합성 검토·합본)
 └─ references/deliverable-rules.md   # 증빙판 → 납품본 변환 규칙                        ← 2026-10 신설
+
+template/                    # 새 조사 프로젝트 폴더 골격 — AGENTS.md(규칙 본문)·CLAUDE.md(@AGENTS.md)·.gitignore·tasks/lessons.md
 ```
 
 ## 조사 1건의 산출물
@@ -236,19 +238,42 @@ research_<주제>_<YYYYMMDD>/
 | ② 증빙형 보고서 초안(MD/PDF) | `market-deep-research` |
 | ③ 양식화: 원고 md → 양식 hwpx | `mdr-hwpx` |
 
-```bash
-# 의존성 점검 (HARD: python>=3.10, PyMuPDF, pandoc, chrome / SOFT: curl_cffi, trafilatura …)
-python codes/market-deep-research/scripts/preflight.py
+### 팀원 설치 — 5분
 
-# ~/.claude/skills/{market-deep-research,mdr-search,mdr-hwpx}/ 로 설치 (SHA-256 해시 검증 복사)
-# ⚠ 각 allowlist 스킬 폴더 안만 mirror-sync(초과 파일 삭제). 인자 없이 즉시 실행됩니다
+```bash
+git clone https://github.com/bbiyakfather/market-deep-research.git
+cd market-deep-research
+pip install -r codes/market-deep-research/requirements.txt   # 수집·PDF 스택 (python>=3.10)
+python codes/market-deep-research/scripts/preflight.py        # HARD: PyMuPDF·pandoc·chrome / SOFT: curl_cffi·trafilatura …
+
+# Claude Code 사용자 → ~/.claude/skills/ 에 3개 스킬 설치 (SHA-256 검증 복사)
 python codes/market-deep-research/scripts/install.py
 
-# 설치본이 저장소와 같은지 쓰지 않고 대조 (불일치 시 exit 1)
+# Codex 사용자 → ~/.agents/skills/ 에 설치 (Codex 가 사용자 스킬을 읽는 위치)
+python codes/market-deep-research/scripts/install.py --target ~/.agents/skills
+
+# 설치본이 저장소와 같은지 대조만 (불일치 시 exit 1). Codex 설치본은 --target 을 같이 준다
 python codes/market-deep-research/scripts/install.py --check
+python codes/market-deep-research/scripts/install.py --check --target ~/.agents/skills
 ```
 
-설치 후 Claude Code 에서 "증빙/캡처 포함 시장조사 보고서", "기술동향·산업동향 조사", "기술사업화 실사", "근거 있는 딥리서치 PDF" 류의 요청이 이 스킬로 라우팅됩니다. 실전에서는 설치본에서 고친 변경이 먼저 생기기도 하므로, 조사 직전 `--check` 로 드리프트를 확인하고 변경분은 이 저장소 `codes/` 로 동기화합니다.
+`install.py` 는 allowlist 3개 스킬 폴더 안만 mirror-sync(초과 파일 삭제) 하고 그 밖의 스킬은 건드리지 않습니다. 둘 다 쓰는 사람은 두 번 실행합니다.
+
+### 새 조사 프로젝트 시작 — 주제 무관
+
+```bash
+cp -r template/ ~/work/<프로젝트명>/ && cd ~/work/<프로젝트명>/ && git init
+# AGENTS.md 의 <조직> 자리만 채운다. 조사마다 research_<주제>_<YYYYMMDD>/ 가 그 아래 생긴다.
+```
+
+| | Claude Code | Codex |
+|---|---|---|
+| 규칙 파일 | `CLAUDE.md`(`@AGENTS.md` 한 줄) | `AGENTS.md` |
+| 시작 | `/market-deep-research <주제>` 또는 "증빙 포함 시장조사 보고서" 류 자연어 | `$market-deep-research <주제>` 또는 같은 자연어(`/skills` 로 설치 확인) |
+| 병렬 조사원 | `Agent` 서브에이전트(sonnet·background) | 내장 서브에이전트(기본 켜짐). 모델은 `~/.codex/config.toml` 의 `[agents].default_subagent_model` |
+| 원문 재열람 | WebFetch → 403 이면 `fetch.py` | `fetch.py`(증빙 스냅샷은 늘 이 경로) |
+
+도구 이름만 다르고 게이트·대장·검증 절차는 동일합니다(`SKILL.md` 「실행 환경」 표). 대외비 조사는 `MDR_NO_THIRD_PARTY=1` 로 Jina·Wayback 계층을 끕니다. 실전에서는 설치본에서 고친 변경이 먼저 생기기도 하므로, 조사 직전 `--check` 로 드리프트를 확인하고 변경분은 이 저장소 `codes/` 로 동기화합니다.
 
 ## 검증 현황 (2026-10-14)
 

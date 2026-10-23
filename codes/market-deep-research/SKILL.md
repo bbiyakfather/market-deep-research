@@ -13,7 +13,7 @@ description: >-
 
 # market-deep-research — 증빙형 시장조사 보고서
 
-내비온(기술사업화 기관)의 반복 업무(기술동향·산업동향·기관/기업 실사·시장조사)를 위한 스킬.
+기술사업화·시장조사 조직의 반복 업무(기술동향·산업동향·기관/기업 실사·시장조사·구매의향·경쟁분석 — 주제 무관)를 위한 스킬. Claude Code 와 Codex 어느 쪽에서든 같은 절차로 돈다(환경별 도구 대응은 아래 「실행 환경」 표).
 **AI 확률적 답변으로 조사마다 수치가 달라지는 문제**를, `fact + evidence[]` 증거모델 + 사실대장 + 팀리드 전건 재검증 + 검증게이트로 해소한다.
 
 ## 3대 원칙 (절대 규칙)
@@ -33,18 +33,29 @@ description: >-
 - `report.pdf`(고객용, 11부 표준목차 → `references/report-format.md`)
 - `audit/`(내부: facts 전수·폐기·실패소스·검증이력·세션 저널·raw agent output·manifest)
 
-작업폴더(WD)는 `scripts/skill_paths.py` 가 `research_<주제>_<YYYYMMDD>/` 아래에 생성한다. 대장·manifest 경로는 `skill_paths` 가 해석하지만 `fetch.py` 는 **현재 폴더** `audit/` 에 로그·스냅샷을 쓰므로 모든 스크립트는 WD 에서 절대경로로 실행한다(스킬 폴더에서 돌리면 조사 원문이 claude-sync 로 푸시된다).
+작업폴더(WD)는 `scripts/skill_paths.py` 가 `research_<주제>_<YYYYMMDD>/` 아래에 생성한다. 대장·manifest 경로는 `skill_paths` 가 해석하지만 `fetch.py` 는 **현재 폴더** `audit/` 에 로그·스냅샷을 쓰므로 모든 스크립트는 WD 에서 절대경로로 실행한다(스킬 폴더에서 돌리면 조사 원문이 스킬 소스에 섞여 공유 저장소로 푸시된다).
 
 ---
 
 ## 오케스트레이션 — 게이트 파이프라인 G0~G5
 
 각 게이트 상세는 `references/verification-gates.md`. 서브에이전트 프롬프트·반환 마커는 `references/agent-briefs.md`.
-조사원·손일 = sonnet·effort medium(병렬, background; 외부 워커 금지). 재검증·종합 = 메인 세션. 산출물 리뷰는 전역 규칙.
+조사원·손일 = 서브에이전트(병렬·background·중간 등급 모델; 외부 워커 금지). 재검증·종합 = 메인 세션. 산출물 리뷰는 전역 규칙.
+
+### 실행 환경 — 같은 절차, 다른 도구 이름
+| 역할 | Claude Code | Codex (CLI·앱·IDE) |
+|---|---|---|
+| 조사원 팬아웃 | `Agent(model: "sonnet")` background | 서브에이전트 스폰("N명 병렬로 스폰, 전부 기다린 뒤 마커대로 요약"). 모델·effort 는 `config.toml` `[agents].default_subagent_model` 등 |
+| 원문 재열람 | WebFetch → 403 이면 `fetch.py` | `fetch.py`(내장 웹 검색으로 본 페이지도 증빙은 `fetch.py` 로 다시 받는다) |
+| 웹 검색 | WebSearch + `search.py` | `search.py`(+web search 가 켜져 있으면 병행) |
+| 프로젝트 규칙 파일 | `CLAUDE.md` | `AGENTS.md`(`CLAUDE.md` 는 `@AGENTS.md` 한 줄로 가져옴) |
+| 스킬 설치 위치 | `~/.claude/skills/` | `~/.agents/skills/`(저장소용은 `<repo>/.agents/skills/`) |
+
+이 문서의 WebFetch·WebSearch·`Agent(...)` 는 Claude Code 이름이다. Codex 는 위 표의 대응 도구로 읽는다.
 
 ```
 [G0] preflight ─ 도구/의존성 점검 + 요구사항 확정 + intent-diff 개시
-[1]  병렬 조사 ─ 조사원 에이전트 팬아웃(sonnet·background·에이전트별 임시폴더)
+[1]  병렬 조사 ─ 조사원 에이전트 팬아웃(서브에이전트·background·에이전트별 임시폴더)
 [E]  확장→수렴 ─ EXPAND 리드 dedup → 후속워커 → 수렴까지 반복        【v3-A】
 [G1] join 게이트 ─ raw 보존 · 스키마검증 등재 · 무출처 즉시 discarded
 [2]  팀리드 재검증 ─ ★전건 원문 재열람 → verify_event(by=lead)
