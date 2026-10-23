@@ -17,7 +17,8 @@ from skill_paths import WorkPaths
 
 ATOMIC_INPUTS = ("base_value", "base_year", "forecast_value", "forecast_year",
                  "reported_cagr", "cagr_start_year", "cagr_end_year")
-_FORECAST = re.compile(r"(?:19|20)\d{2}.*?(?:→|->|~|–|-|부터|to).*?(?:19|20)\d{2}", re.I)
+# 두 연도가 구분자 하나로 붙은 구간만(2024→2030, 2025~2035). 사이를 건너뛰면 날짜·설문기간이 오탐된다.
+_FORECAST = re.compile(r"(?<!\d)(?:19|20)\d{2}\s*년?\s*(?:→|->|~|–|-|부터|to)\s*(?:19|20)\d{2}(?!\d)", re.I)
 
 
 def is_calculation_candidate(fact: dict) -> bool:
@@ -27,7 +28,7 @@ def is_calculation_candidate(fact: dict) -> bool:
                                     context.get("metric", ""), context.get("period", "")))
     return (any(k in value for k in ATOMIC_INPUTS)
             or bool(re.search(r"CAGR|연평균.*성장", text, re.I))
-            or bool(_FORECAST.search(text))
+            or (context.get("basis") != "actual" and bool(_FORECAST.search(text)))  # 실측 기간(2019-2025)은 전망 아님
             or (context.get("basis") == "forecast"
                 and any(term in str(context.get("metric", "")).lower() for term in ("market", "시장"))))
 

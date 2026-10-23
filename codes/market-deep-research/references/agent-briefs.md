@@ -1,7 +1,8 @@
 # agent-briefs — 서브에이전트 프롬프트·반환 마커·철칙
 
-조사원(explorer) 서브에이전트는 **sonnet·background**로 팬아웃한다. 판단이 필요 없는
-기계적 후속 웨이브(확정 리드의 fetch+스키마 구조화만)는 haiku 로 내려도 된다. 워커는 **읽기전용**:
+조사원(explorer) 서브에이전트는 **중간 등급 모델·background**로 팬아웃한다(Claude Code: sonnet /
+Codex: `[agents].default_subagent_model`). 판단이 필요 없는 기계적 후속 웨이브(확정 리드의 fetch+스키마
+구조화만)는 더 작은 모델로 내려도 된다. 워커는 **읽기전용**:
 자기 `_research/<agent>/` 임시폴더의 raw 만 쓰고, 공식 대장(facts.jsonl 등)은 **오케스트레이터
 (팀리드)만** 기록한다. 워커는 아래 마커로 반환하고, 팀리드가 파싱해 등재·확장한다.
 
