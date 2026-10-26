@@ -1,0 +1,186 @@
+{
+  "encoding": {
+    "x": {
+      "field": "Value",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null
+    }
+  },
+  "layer": [
+    {
+      "mark": "line",
+      "encoding": {
+        "detail": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true
+      },
+      "encoding": {
+        "color": {
+          "field": "Metric",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "scheme": "tableau10"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 329,
+      "continuousHeight": 300
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10
+    },
+    "axisY": {
+      "labelFontSize": 10
+    },
+    "facet": {
+      "spacing": 30
+    },
+    "mark": {
+      "tooltip": true
+    }
+  },
+  "height": {
+    "step": 27
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "USA",
+        "Value": 30,
+        "Metric": "Min"
+      },
+      {
+        "Country": "USA",
+        "Value": 92,
+        "Metric": "Max"
+      },
+      {
+        "Country": "China",
+        "Value": 41,
+        "Metric": "Min"
+      },
+      {
+        "Country": "China",
+        "Value": 94,
+        "Metric": "Max"
+      },
+      {
+        "Country": "Japan",
+        "Value": 64,
+        "Metric": "Min"
+      },
+      {
+        "Country": "Japan",
+        "Value": 65,
+        "Metric": "Max"
+      },
+      {
+        "Country": "Germany",
+        "Value": 70,
+        "Metric": "Min"
+      },
+      {
+        "Country": "Germany",
+        "Value": 61,
+        "Metric": "Max"
+      },
+      {
+        "Country": "UK",
+        "Value": 46,
+        "Metric": "Min"
+      },
+      {
+        "Country": "UK",
+        "Value": 80,
+        "Metric": "Max"
+      },
+      {
+        "Country": "France",
+        "Value": 69,
+        "Metric": "Min"
+      },
+      {
+        "Country": "France",
+        "Value": 80,
+        "Metric": "Max"
+      },
+      {
+        "Country": "India",
+        "Value": 43,
+        "Metric": "Min"
+      },
+      {
+        "Country": "India",
+        "Value": 75,
+        "Metric": "Max"
+      },
+      {
+        "Country": "Brazil",
+        "Value": 48,
+        "Metric": "Min"
+      },
+      {
+        "Country": "Brazil",
+        "Value": 70,
+        "Metric": "Max"
+      }
+    ]
+  },
+  "_width": 329,
+  "_height": 300,
+  "_options": [
+    {
+      "key": "logScale_x",
+      "label": "Log X",
+      "type": "binary",
+      "defaultValue": false,
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "logScale_y",
+      "label": "Log Y",
+      "type": "binary",
+      "defaultValue": false,
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "includeZero_x",
+      "label": "Zero X",
+      "type": "binary",
+      "applicable": true,
+      "value": false
+    },
+    {
+      "key": "includeZero_y",
+      "label": "Zero Y",
+      "type": "binary",
+      "applicable": false
+    }
+  ]
+}

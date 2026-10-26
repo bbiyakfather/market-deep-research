@@ -1,0 +1,49 @@
+{
+  "title": "Ordinal × Rank (single series, no color)",
+  "description": "4 quarters — bump chart without color encoding",
+  "chartType": "Bump Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Quarter": "Q1",
+          "Rank": 6
+        },
+        {
+          "Quarter": "Q2",
+          "Rank": 5
+        },
+        {
+          "Quarter": "Q3",
+          "Rank": 6
+        },
+        {
+          "Quarter": "Q4",
+          "Rank": 2
+        }
+      ]
+    },
+    "semantic_types": {
+      "Quarter": "Category",
+      "Rank": "Rank"
+    },
+    "chart_spec": {
+      "chartType": "Bump Chart",
+      "encodings": {
+        "x": {
+          "field": "Quarter"
+        },
+        "y": {
+          "field": "Rank"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

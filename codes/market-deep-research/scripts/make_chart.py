@@ -4,18 +4,25 @@ CLI:
   python make_chart.py bar  <work_dir> --facts F001,F002 --title "제목" [--out assets/<slug>.svg]
   python make_chart.py line <work_dir> --facts F010,F011,F012 --title "제목" [--out assets/<slug>.svg]
   python make_chart.py demo
+  python make_chart.py <type> <work_dir> --facts ... --title "제목" [--engine flint|native] [--top N]
+    type = CHART_MAP 의 키(hbar·bar·line·grouped·stacked100·scatter·pie·heatmap·lollipop·slope·bump·dot·area·radar·rose·pyramid).
+    기본 engine=flint: scripts/flint(내장, 수정 금지) → assets/<slug>.vl.json 사이드카 + (vl-convert 있으면) .svg.
+    native 는 bar·line 두 종만 있는 자체 SVG 폴백.
 """
 from __future__ import annotations
 
 import argparse
+import json
+import re
 import sys
 import tempfile
+import unicodedata
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from html import escape
 from pathlib import Path
 
-from facts_db import FactsDB, _write_jsonl_atomic
+from facts_db import FactsDB, _read_jsonl, _write_jsonl_atomic
 from skill_paths import WorkPaths, slugify
 
 
@@ -137,7 +144,7 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
         f"  <title>{escape(title)}</title>",
         f"  <desc>{escape(', '.join(fact_ids))}의 confirmed 사실로 생성한 {chart_type} 차트</desc>",
         '  <rect width="100%" height="100%" fill="#ffffff"/>',
-        f'  <text x="{width / 2:.1f}" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#172033">{escape(title)}</text>',
+        f'  <text x="{width / 2:.1f}" y="38" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="24" font-weight="700" fill="#172033">{escape(title)}</text>',
     ]
 
     for index in range(6):
@@ -145,14 +152,14 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
         y = y_pos(tick)
         lines.extend([
             f'  <line x1="{left}" y1="{y:.2f}" x2="{width - right}" y2="{y:.2f}" stroke="#d9dee8" stroke-width="1"/>',
-            f'  <text x="{left - 12}" y="{y + 4:.2f}" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#4b5565">{escape(_format_tick(tick))}</text>',
+            f'  <text x="{left - 12}" y="{y + 4:.2f}" text-anchor="end" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" fill="#4b5565">{escape(_format_tick(tick))}</text>',
         ])
 
     zero_y = y_pos(Decimal(0))
     lines.extend([
         f'  <line x1="{left}" y1="{top}" x2="{left}" y2="{bottom}" stroke="#586174" stroke-width="1.5"/>',
         f'  <line x1="{left}" y1="{zero_y:.2f}" x2="{width - right}" y2="{zero_y:.2f}" stroke="#586174" stroke-width="1.5"/>',
-        f'  <text x="24" y="{(top + bottom) / 2:.1f}" transform="rotate(-90 24 {(top + bottom) / 2:.1f})" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#384152">{escape(unit)}</text>',
+        f'  <text x="24" y="{(top + bottom) / 2:.1f}" transform="rotate(-90 24 {(top + bottom) / 2:.1f})" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="13" fill="#384152">{escape(unit)}</text>',
     ])
 
     if chart_type == "bar":
@@ -166,7 +173,7 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
             text_y = value_y - 8 if value >= 0 else value_y + 18
             lines.extend([
                 f'  <rect x="{x:.2f}" y="{rect_y:.2f}" width="{bar_width:.2f}" height="{rect_height:.2f}" fill="#2f6fed"/>',
-                f'  <text x="{x_pos(index):.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
+                f'  <text x="{x_pos(index):.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
             ])
     else:
         points = " ".join(f"{x_pos(i):.2f},{y_pos(value):.2f}" for i, value in enumerate(values))
@@ -176,16 +183,16 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
             text_y = y - 11 if value >= 0 else y + 21
             lines.extend([
                 f'  <circle cx="{x:.2f}" cy="{y:.2f}" r="5" fill="#0f766e"/>',
-                f'  <text x="{x:.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
+                f'  <text x="{x:.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
             ])
 
     for index, label in enumerate(labels):
         lines.append(
-            f'  <text x="{x_pos(index):.2f}" y="{bottom + 24}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#384152">{escape(label)}</text>'
+            f'  <text x="{x_pos(index):.2f}" y="{bottom + 24}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" fill="#384152">{escape(label)}</text>'
         )
     lines.extend([
-        f'  <text x="{left + plot_width / 2:.2f}" y="{bottom + 52}" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#384152">{escape(x_axis)}</text>',
-        f'  <text x="{width / 2:.1f}" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#586174">출처 사실: ({escape(", ".join(fact_ids))}) · 단위: {escape(unit)}</text>',
+        f'  <text x="{left + plot_width / 2:.2f}" y="{bottom + 52}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="13" fill="#384152">{escape(x_axis)}</text>',
+        f'  <text x="{width / 2:.1f}" y="510" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" fill="#586174">출처 사실: ({escape(", ".join(fact_ids))}) · 단위: {escape(unit)}</text>',
         "</svg>",
     ])
     return "\n".join(lines) + "\n"
@@ -215,6 +222,265 @@ def make_chart(chart_type: str, work_dir: Path | str, fact_ids: list[str], title
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(_svg(chart_type, facts, title), encoding="utf-8", newline="\n")
     return target
+
+
+# ---------------------------------------------------------------------------
+# flint 엔진 — scripts/flint(내장, 수정 금지)로 Vega-Lite 스펙을 만들고 사이드카로 남긴다.
+# ---------------------------------------------------------------------------
+# mdr 유형명 -> (flint chartType, {채널: 행 필드}, 시리즈 필수 여부, chartProperties)
+# 행 필드: label(축·범주) / series(fact.context.series, 없으면 label 만) / value.
+# 가정: 범주는 context.axis → period → entity 순, 시리즈는 context.series. scatter 는 series 가 "x"/"y" 인 fact 쌍.
+CHART_MAP: dict[str, tuple[str, dict, bool, dict]] = {
+    "hbar": ("Bar Chart", {"y": "label", "x": "value"}, False, {"includeZero_x": True}),
+    "bar": ("Bar Chart", {"x": "label", "y": "value"}, False, {"includeZero_y": True}),
+    "line": ("Line Chart", {"x": "label", "y": "value", "color": "series"}, False, {}),
+    "grouped": ("Grouped Bar Chart", {"x": "label", "y": "value", "group": "series"}, True, {"includeZero_y": True}),
+    "stacked100": ("Stacked Bar Chart", {"x": "label", "y": "value", "color": "series"}, True, {"stackMode": "normalize"}),
+    "scatter": ("Scatter Plot", {"x": "x", "y": "y"}, True, {}),
+    "pie": ("Pie Chart", {"size": "value", "color": "label"}, False, {}),
+    "heatmap": ("Heatmap", {"x": "label", "y": "series", "color": "value"}, True, {}),
+    "lollipop": ("Lollipop Chart", {"y": "label", "x": "value"}, False, {}),
+    "slope": ("Slope Chart", {"x": "series", "y": "value", "color": "label"}, True, {}),
+    "bump": ("Bump Chart", {"x": "series", "y": "value", "color": "label"}, True, {}),
+    "dot": ("Ranged Dot Plot", {"x": "value", "y": "label", "color": "series"}, True, {}),
+    "area": ("Area Chart", {"x": "label", "y": "value", "color": "series"}, False, {}),
+    "radar": ("Radar Chart", {"x": "label", "y": "value", "color": "series"}, False, {}),
+    "rose": ("Rose Chart", {"x": "label", "y": "value"}, False, {}),
+    "pyramid": ("Pyramid Chart", {"y": "label", "x": "value", "color": "series"}, True, {}),
+}
+MAX_CATEGORY, MAX_SERIES, MAX_HEATMAP_AXIS, MAX_PIE = 20, 12, 25, 5
+LABEL_WIDTH_CAP = 26  # 한글=1.6 단위(≈16자). flint 폭 추정(라틴 0.62)이 한글을 과소평가해 래퍼에서 상한을 둔다(26 은 probe_ko 육안 확인: 16자 라벨 무겹침).
+FONT_STACK = "Malgun Gothic, Noto Sans KR, sans-serif"
+
+
+# 값 라벨(value_raw 원문 텍스트 레이어) 유형별 위치. 그 밖의 유형은 겹침·가독 문제로 생략하고 mdr.note 에 기록한다.
+VALUE_LABEL = {
+    "hbar": ("value_raw", {"align": "left", "baseline": "middle", "dx": 4}),
+    "bar": ("value_raw", {"baseline": "bottom", "dy": -3}),
+    "grouped": ("value_raw", {"baseline": "bottom", "dy": -3}),
+    "lollipop": ("value_raw", {"align": "left", "baseline": "middle", "dx": 7}),
+    "dot": ("value_raw", {"baseline": "bottom", "dy": -6}),
+    "line": ("value_end", {"align": "left", "baseline": "middle", "dx": 6}),  # 시리즈별 끝점만
+}
+
+
+def _add_value_labels(spec: dict, chart_type: str) -> None:
+    field, pos = VALUE_LABEL[chart_type]
+    text = {"mark": {"type": "text", "fontSize": 12, **pos}}
+    if "mark" in spec:  # 단일 마크 -> 레이어로 감싼다
+        enc = spec.pop("encoding")
+        text["encoding"] = {k: v for k, v in enc.items() if k in ("x", "y", "xOffset")}
+        spec["layer"] = [{"mark": spec.pop("mark"), "encoding": enc}, text]
+    else:  # 이미 레이어: 최상위 encoding 을 상속하거나, 없으면 x·y 가 있는 마지막 레이어에서 복사
+        src = next((l["encoding"] for l in reversed(spec["layer"]) if "x" in l.get("encoding", {})), {})
+        text["encoding"] = {} if spec.get("encoding") else {k: v for k, v in src.items() if k in ("x", "y")}
+        spec["layer"].append(text)
+    text["encoding"]["text"] = {"field": field, "type": "nominal"}
+
+
+def _source_hosts(wp: WorkPaths, fact_ids: list[str]) -> list[str]:
+    """fact -> evidence.source_url 호스트(중복 제거, fact 순서). 가정: evidence 스키마에 문서명·제목 필드가 없어 호스트만 쓴다."""
+    from urllib.parse import urlparse
+    ev_by_fact: dict[str, list[dict]] = {}
+    for ev in _read_jsonl(wp.evidence):
+        ev_by_fact.setdefault(ev.get("fact_id"), []).append(ev)
+    hosts: list[str] = []
+    for fid in fact_ids:
+        for ev in ev_by_fact.get(fid, []):
+            host = (urlparse(str(ev.get("source_url") or "")).hostname or "").removeprefix("www.")
+            if host and host not in hosts:
+                hosts.append(host)
+    return hosts
+
+
+def _wide(text: str) -> float:
+    return sum(1.6 if unicodedata.east_asian_width(c) in "WF" else 1.0 for c in text)
+
+
+def _cap_label(text: str) -> str:
+    if _wide(text) <= LABEL_WIDTH_CAP:
+        return text
+    out = ""
+    for ch in text:
+        if _wide(out + ch) > LABEL_WIDTH_CAP - 1:
+            break
+        out += ch
+    return out + "…"
+
+
+def _flint_rows(chart_type: str, facts: list[dict]) -> list[dict]:
+    """fact -> 행. 값은 float, 원문은 value_raw 문자열로 따로 둔다."""
+    groups = [facts]
+    if chart_type == "scatter":
+        groups = [[f for f in facts if (f.get("context") or {}).get("series") == ax] for ax in ("x", "y")]
+        if sum(map(len, groups)) != len(facts) or not all(groups):
+            raise ChartError("scatter: 모든 fact 의 context.series 가 'x' 또는 'y' 여야 합니다")
+    rows: list[dict] = []
+    for group in groups:
+        values, raws, unit = _numeric_values(group)
+        for f, v, raw in zip(group, values, raws):
+            c = f.get("context") or {}
+            rows.append({"fact_id": f["id"], "value": float(v), "value_raw": raw, "unit": unit,
+                         "series": str(c.get("series", "")).strip(),
+                         "_axis": str(c.get("axis") or c.get("period") or c.get("entity") or "").strip()})
+    by_id = {r["fact_id"]: r for r in rows}
+    rows = [by_id[f["id"]] for f in facts]
+    if not any(r["series"] for r in rows):
+        for r, label in zip(rows, _axis_labels(facts)):
+            r["label"] = label
+    else:
+        for r, f in zip(rows, facts):
+            r["label"] = r["_axis"] or f["id"]
+        if len({(r["label"], r["series"]) for r in rows}) != len(rows):
+            raise ChartError("(범주, 시리즈) 조합이 중복됩니다 — context.axis/series 를 확인하세요")
+    for r in rows:
+        r.pop("_axis")
+    return rows
+
+
+def _check_limits(chart_type: str, rows: list[dict], top: int | None) -> tuple[list[dict], list[str]]:
+    """한도 초과는 FAIL(조용한 절단 금지). --top 으로 명시 선택한 경우만 상위 N 을 남기고 나머지 F-ID 를 기록한다."""
+    cats = {r["label"] for r in rows}
+    sers = {r["series"] for r in rows if r["series"]}
+    limit = MAX_PIE if chart_type == "pie" else MAX_HEATMAP_AXIS if chart_type == "heatmap" else MAX_CATEGORY
+    if chart_type == "pie" and len(cats) != len(rows):
+        raise ChartError("pie: 범주당 1행이어야 합니다")
+    if len(sers) > (MAX_HEATMAP_AXIS if chart_type == "heatmap" else MAX_SERIES):
+        raise ChartError(f"시리즈 {len(sers)}개가 한도를 넘습니다(시리즈 {MAX_SERIES}·히트맵 축 {MAX_HEATMAP_AXIS})")
+    if len(cats) <= limit:
+        return rows, []
+    if top is None:
+        raise ChartError(f"범주 {len(cats)}개 > 한도 {limit} — 조용한 절단은 하지 않습니다(--top N 으로 명시 선택)")
+    if sers:
+        raise ChartError("--top 은 시리즈 없는 차트에만 쓸 수 있습니다")
+    keep = {r["fact_id"] for r in sorted(rows, key=lambda r: -r["value"])[:top]}
+    return [r for r in rows if r["fact_id"] in keep], [r["fact_id"] for r in rows if r["fact_id"] not in keep]
+
+
+def _semantic(unit: str) -> str:
+    if "%" in unit or unit.upper() in ("PCT", "PERCENT"):
+        return "Percentage"
+    return "Count" if unit.lower() in ("count", "건", "개", "명") else "Quantity"
+
+
+def _pivot_scatter(rows: list[dict]) -> list[dict]:
+    pts: dict[str, dict] = {}
+    for r in rows:
+        pt = pts.setdefault(r["label"], {"label": r["label"]})
+        pt[r["series"]], pt["fact_id_" + r["series"]] = r["value"], r["fact_id"]
+    if not all("x" in p and "y" in p for p in pts.values()):
+        raise ChartError("scatter: 각 범주에 x·y fact 가 한 쌍씩 필요합니다")
+    return list(pts.values())
+
+
+def _resolve_target(wp: WorkPaths, title: str, out: Path | str | None) -> Path:
+    if out is None:
+        target = wp.gen_assets / f"{slugify(title)}.svg"
+    else:
+        out_path = Path(out)
+        target = out_path if out_path.is_absolute() else wp.root / out_path
+    target = target.resolve()
+    try:
+        target.relative_to(wp.gen_assets.resolve())
+    except ValueError as exc:
+        raise ChartError(f"--out은 작업 폴더의 assets/ 아래여야 합니다: {target}") from exc
+    if target.suffix.lower() != ".svg":
+        raise ChartError(f"--out 확장자는 .svg여야 합니다: {target.name}")
+    return target
+
+
+def make_chart_flint(chart_type: str, work_dir: Path | str, fact_ids: list[str], title: str,
+                     out: Path | str | None = None, top: int | None = None,
+                     native_fallback: bool = False) -> tuple[Path, Path | None]:
+    """(사이드카 경로, svg 경로|None) 반환. svg 는 vl_convert 가 없으면 None."""
+    if chart_type not in CHART_MAP:
+        raise ChartError(f"지원하지 않는 차트 종류: {chart_type} (지원: {', '.join(CHART_MAP)})")
+    from flint.vegalite import assemble_vegalite  # 임포트 지연: native 경로는 내장 패키지에 의존하지 않는다
+
+    flint_type, channels, need_series, props = CHART_MAP[chart_type]
+    wp = WorkPaths(work_dir)
+    facts = _load_confirmed_facts(wp, fact_ids)
+    target = _resolve_target(wp, title, out)
+    rows = _flint_rows(chart_type, facts)
+    if need_series and not any(r["series"] for r in rows):
+        raise ChartError(f"{chart_type}: fact.context.series 가 필요합니다")
+    rows, dropped = _check_limits(chart_type, rows, top)
+    shown = {r["label"]: _cap_label(r["label"]) for r in rows}
+    if len(set(shown.values())) != len(shown):
+        raise ChartError("라벨을 줄이면 중복됩니다 — 라벨을 짧게 고치세요")
+    values = [{**r, "label": shown[r["label"]]} for r in rows]
+    if chart_type == "line":  # 끝점 값 라벨용: 시리즈별 마지막 행만 원문, 나머지는 빈 문자열
+        last = {r["series"]: r["fact_id"] for r in values}
+        for r in values:
+            r["value_end"] = r["value_raw"] if last[r["series"]] == r["fact_id"] else ""
+    if chart_type == "scatter":
+        values = _pivot_scatter(values)
+    if chart_type == "hbar":
+        values.sort(key=lambda r: -r["value"])
+    types = {"x": "Quantity", "y": "Quantity"} if chart_type == "scatter" else {
+        "label": "Category", "series": "Category", "value": _semantic(rows[0]["unit"])}
+    spec = assemble_vegalite({
+        "data": {"values": values},
+        "semantic_types": types,
+        "chart_spec": {"chartType": flint_type, "encodings": {ch: {"field": f} for ch, f in channels.items()},
+                       **({"chartProperties": props} if props else {})},
+    })
+
+    warnings = [str(w) for w in spec.get("_warnings", [])]
+    for k in [k for k in spec if k.startswith("_")]:
+        del spec[k]  # flint 내부 메타 — Vega-Lite 에 넘기지 않는다
+    returned = {v.get("fact_id") for v in (spec.get("data") or {}).get("values", []) if isinstance(v, dict)}
+    if chart_type != "scatter" and not returned >= {r["fact_id"] for r in rows}:
+        raise ChartError("flint 가 행을 조용히 절단했습니다(overflow) — 행 수를 줄이거나 --top N 을 쓰세요")
+    notes = []
+    if chart_type in ("line", "area") and (((spec.get("encoding") or {}).get("y") or {}).get("scale") or {}).get("zero") is False:
+        notes.append("축 절단")
+    if chart_type in VALUE_LABEL:
+        _add_value_labels(spec, chart_type)
+    else:
+        notes.append("값 라벨 생략")
+    for enc in [spec.get("encoding") or {}] + [lay.get("encoding") or {} for lay in spec.get("layer", [])]:
+        for e in enc.values():  # 내부 필드명(label/value) 대신 축 제목: 값=단위, 범주=없음
+            if isinstance(e, dict) and e.get("field") in ("value", "label"):
+                e["title"] = rows[0]["unit"] if e["field"] == "value" else None
+    sources = _source_hosts(wp, [r["fact_id"] for r in rows])
+    spec["title"] = {"text": title, "subtitle": "출처: " + ", ".join(sources[:4]) + (f" 외 {len(sources) - 4}곳" if len(sources) > 4 else ""),
+                     "subtitleFontSize": 12, "subtitleColor": "#586174"} if sources else title
+    spec["description"] = f"{', '.join(fact_ids)}의 confirmed 사실로 생성한 {flint_type}"
+    cfg = spec.setdefault("config", {})
+    cfg["font"] = FONT_STACK
+    for k in ("axisX", "axisY"):  # flint 기본 라벨 10px(7.5pt) → 도판 린트 9pt(=12px) 하한 충족
+        if k in cfg:
+            cfg[k]["labelFontSize"] = 12
+    cfg["axis"] = {**cfg.get("axis", {}), "labelFontSize": 12, "titleFontSize": 12}
+    cfg["legend"] = {**cfg.get("legend", {}), "labelFontSize": 12, "titleFontSize": 12}
+    spec["mdr"] = {
+        "fact_ids": [r["fact_id"] for r in rows], "chart_type": chart_type, "flint_chart_type": flint_type, "title": title,
+        "values": [{"fact_id": r["fact_id"], "label": r["label"], "series": r["series"],
+                    "value_raw": r["value_raw"], "unit": r["unit"]} for r in rows],
+        "sources": sources, "dropped": dropped, "note": "; ".join(notes), "warnings": warnings,
+        "label_truncated": [k for k, v in shown.items() if k != v],
+    }
+    side = target.with_suffix(".vl.json")
+    side.parent.mkdir(parents=True, exist_ok=True)
+    target.unlink(missing_ok=True)  # 렌더 실패 시 낡은 SVG 가 새 사이드카로 통과하지 않게
+    side.write_text(json.dumps(spec, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    try:
+        import vl_convert as vlc
+    except ImportError:
+        if chart_type in ("bar", "line") and native_fallback:
+            print("[make_chart] vl_convert 없음 — native SVG 로 폴백(사이드카 제거)", file=sys.stderr)
+            side.unlink()
+            return side, make_chart(chart_type, work_dir, fact_ids, title, out)
+        return side, None
+    try:
+        vlc.register_font_directory("C:/Windows/Fonts")
+    except Exception:  # 폰트 디렉터리가 없어도 렌더는 진행
+        pass
+    svg = vlc.vegalite_to_svg({k: v for k, v in spec.items() if k != "mdr"})  # 모르는 최상위 키는 Vega-Lite 가 경고한다
+    svg = re.sub(r"(<svg\b[^>]*>)", lambda m: f"{m.group(1)}<title>{escape(title)}</title><desc>{escape(spec['description'])}</desc>", svg, count=1)  # Vega 는 title/desc 를 내지 않는다(접근성)
+    target.write_text(f"<!-- FACTS: {','.join(r['fact_id'] for r in rows)} -->\n" + svg, encoding="utf-8", newline="\n")
+    return side, target
 
 
 def demo() -> None:
@@ -257,12 +523,14 @@ def demo() -> None:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    for chart_type in ("bar", "line"):
+    for chart_type in CHART_MAP:
         chart_parser = subparsers.add_parser(chart_type)
         chart_parser.add_argument("work_dir")
         chart_parser.add_argument("--facts", required=True)
         chart_parser.add_argument("--title", required=True)
         chart_parser.add_argument("--out")
+        chart_parser.add_argument("--engine", choices=("flint", "native"), default="flint")
+        chart_parser.add_argument("--top", type=int)
     subparsers.add_parser("demo")
     return parser
 
@@ -274,11 +542,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     try:
         fact_ids = _parse_fact_ids(args.facts)
-        out = make_chart(args.command, args.work_dir, fact_ids, args.title, args.out)
+        if args.engine == "native":
+            print(make_chart(args.command, args.work_dir, fact_ids, args.title, args.out))
+            return 0
+        side, svg = make_chart_flint(args.command, args.work_dir, fact_ids, args.title, args.out, args.top,
+                                     native_fallback=True)
     except (ChartError, OSError) as exc:
         print(f"[make_chart] 실패: {exc}", file=sys.stderr)
         return 1
-    print(out)
+    print(side)
+    if svg is None:
+        print("[make_chart] SVG 미생성 — pip install vl-convert-python", file=sys.stderr)
+        return 2
+    print(svg)
     return 0
 
 

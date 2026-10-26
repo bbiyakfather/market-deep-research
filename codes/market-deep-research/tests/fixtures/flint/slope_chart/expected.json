@@ -1,0 +1,107 @@
+{
+  "mark": {
+    "type": "line",
+    "point": true,
+    "interpolate": "linear",
+    "strokeWidth": 2
+  },
+  "encoding": {
+    "x": {
+      "field": "Stage",
+      "type": "nominal",
+      "sort": [
+        "Start",
+        "End"
+      ],
+      "scale": {
+        "padding": 0.4
+      }
+    },
+    "y": {
+      "field": "Conversion",
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": true,
+        "padding": 12
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 560,
+      "continuousHeight": 360
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "labelAngle": 0,
+      "labelAlign": "center",
+      "labelBaseline": "top"
+    },
+    "axisY": {
+      "labelFontSize": 10
+    },
+    "facet": {
+      "spacing": 36
+    }
+  },
+  "width": {
+    "step": 224
+  },
+  "data": {
+    "values": [
+      {
+        "Stage": "Start",
+        "Conversion": 42
+      },
+      {
+        "Stage": "End",
+        "Conversion": 67
+      }
+    ]
+  },
+  "_width": 560,
+  "_height": 360,
+  "_options": [
+    {
+      "key": "independentYAxis",
+      "label": "Independent Y",
+      "type": "binary",
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "logScale_x",
+      "label": "Log X",
+      "type": "binary",
+      "defaultValue": false,
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "logScale_y",
+      "label": "Log Y",
+      "type": "binary",
+      "defaultValue": false,
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "includeZero_x",
+      "label": "Zero X",
+      "type": "binary",
+      "applicable": false
+    },
+    {
+      "key": "includeZero_y",
+      "label": "Zero Y",
+      "type": "binary",
+      "applicable": true,
+      "value": true
+    }
+  ]
+}

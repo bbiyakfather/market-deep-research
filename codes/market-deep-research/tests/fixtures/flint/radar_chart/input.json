@@ -1,0 +1,62 @@
+{
+  "title": "Single Player Stats (5 axes)",
+  "description": "One polygon, 5 numeric dimensions, long format",
+  "chartType": "Radar Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Player": "Player A",
+          "Metric": "Speed",
+          "Value": 85
+        },
+        {
+          "Player": "Player A",
+          "Metric": "Shooting",
+          "Value": 70
+        },
+        {
+          "Player": "Player A",
+          "Metric": "Passing",
+          "Value": 90
+        },
+        {
+          "Player": "Player A",
+          "Metric": "Dribbling",
+          "Value": 80
+        },
+        {
+          "Player": "Player A",
+          "Metric": "Defense",
+          "Value": 60
+        }
+      ]
+    },
+    "semantic_types": {
+      "Player": "Category",
+      "Metric": "Category",
+      "Value": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Radar Chart",
+      "encodings": {
+        "x": {
+          "field": "Metric"
+        },
+        "y": {
+          "field": "Value"
+        },
+        "color": {
+          "field": "Player"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

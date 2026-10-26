@@ -1,0 +1,49 @@
+{
+  "title": "Pie (small, 4 slices)",
+  "description": "4 categories",
+  "chartType": "Pie Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Category": "Electronics",
+          "Value": 103
+        },
+        {
+          "Category": "Clothing",
+          "Value": 215
+        },
+        {
+          "Category": "Food",
+          "Value": 342
+        },
+        {
+          "Category": "Books",
+          "Value": 560
+        }
+      ]
+    },
+    "semantic_types": {
+      "Category": "Category",
+      "Value": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Pie Chart",
+      "encodings": {
+        "size": {
+          "field": "Value"
+        },
+        "color": {
+          "field": "Category"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

@@ -1,0 +1,797 @@
+{
+  "width": 300,
+  "height": 300,
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": 0,
+            "__y2": -1
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": 0.9510565162951535,
+            "__y2": -0.30901699437494745
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": 0.5877852522924732,
+            "__y2": 0.8090169943749473
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": -0.587785252292473,
+            "__y2": 0.8090169943749475
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": -0.9510565162951536,
+            "__y2": -0.30901699437494723
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "stroke": "#ddd",
+        "strokeWidth": 0.8
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -1.18,
+              1.18
+            ]
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -1.18,
+              1.18
+            ]
+          },
+          "axis": null
+        },
+        "x2": {
+          "field": "__x2"
+        },
+        "y2": {
+          "field": "__y2"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": 0,
+            "__y": -0.25,
+            "__x2": 0.23776412907378838,
+            "__y2": -0.07725424859373686
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": 0.23776412907378838,
+            "__y": -0.07725424859373686,
+            "__x2": 0.1469463130731183,
+            "__y2": 0.20225424859373684
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": 0.1469463130731183,
+            "__y": 0.20225424859373684,
+            "__x2": -0.14694631307311826,
+            "__y2": 0.20225424859373686
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": -0.14694631307311826,
+            "__y": 0.20225424859373686,
+            "__x2": -0.2377641290737884,
+            "__y2": -0.07725424859373681
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": -0.2377641290737884,
+            "__y": -0.07725424859373681,
+            "__x2": 0,
+            "__y2": -0.25
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": 0,
+            "__y": -0.5,
+            "__x2": 0.47552825814757677,
+            "__y2": -0.15450849718747373
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": 0.47552825814757677,
+            "__y": -0.15450849718747373,
+            "__x2": 0.2938926261462366,
+            "__y2": 0.40450849718747367
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": 0.2938926261462366,
+            "__y": 0.40450849718747367,
+            "__x2": -0.2938926261462365,
+            "__y2": 0.4045084971874737
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": -0.2938926261462365,
+            "__y": 0.4045084971874737,
+            "__x2": -0.4755282581475768,
+            "__y2": -0.15450849718747361
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": -0.4755282581475768,
+            "__y": -0.15450849718747361,
+            "__x2": 0,
+            "__y2": -0.5
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": 0,
+            "__y": -0.75,
+            "__x2": 0.7132923872213651,
+            "__y2": -0.2317627457812106
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": 0.7132923872213651,
+            "__y": -0.2317627457812106,
+            "__x2": 0.4408389392193549,
+            "__y2": 0.6067627457812105
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": 0.4408389392193549,
+            "__y": 0.6067627457812105,
+            "__x2": -0.4408389392193548,
+            "__y2": 0.6067627457812106
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": -0.4408389392193548,
+            "__y": 0.6067627457812106,
+            "__x2": -0.7132923872213652,
+            "__y2": -0.23176274578121042
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": -0.7132923872213652,
+            "__y": -0.23176274578121042,
+            "__x2": 0,
+            "__y2": -0.75
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": 0,
+            "__y": -1,
+            "__x2": 0.9510565162951535,
+            "__y2": -0.30901699437494745
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": 0.9510565162951535,
+            "__y": -0.30901699437494745,
+            "__x2": 0.5877852522924732,
+            "__y2": 0.8090169943749473
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": 0.5877852522924732,
+            "__y": 0.8090169943749473,
+            "__x2": -0.587785252292473,
+            "__y2": 0.8090169943749475
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": -0.587785252292473,
+            "__y": 0.8090169943749475,
+            "__x2": -0.9510565162951536,
+            "__y2": -0.30901699437494723
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": -0.9510565162951536,
+            "__y": -0.30901699437494723,
+            "__x2": 0,
+            "__y2": -1
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "stroke": "#e0e0e0",
+        "strokeWidth": 0.6
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "x2": {
+          "field": "__x2"
+        },
+        "y2": {
+          "field": "__y2"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Speed",
+              "(100)"
+            ],
+            "__x": 0,
+            "__y": -1.15,
+            "__align": "center",
+            "__baseline": "bottom",
+            "__dx": 0,
+            "__dy": -4
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "center",
+        "baseline": "bottom",
+        "dx": 0,
+        "dy": -4,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Speed",
+            "(100)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Shooting",
+              "(100)"
+            ],
+            "__x": 1.0937149937394264,
+            "__y": -0.35536954353118955,
+            "__align": "left",
+            "__baseline": "bottom",
+            "__dx": 4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "left",
+        "baseline": "bottom",
+        "dx": 4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Shooting",
+            "(100)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Passing",
+              "(100)"
+            ],
+            "__x": 0.6759530401363442,
+            "__y": 0.9303695435311894,
+            "__align": "left",
+            "__baseline": "top",
+            "__dx": 4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "left",
+        "baseline": "top",
+        "dx": 4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Passing",
+            "(100)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Dribbling",
+              "(100)"
+            ],
+            "__x": -0.6759530401363439,
+            "__y": 0.9303695435311895,
+            "__align": "right",
+            "__baseline": "top",
+            "__dx": -4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "right",
+        "baseline": "top",
+        "dx": -4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Dribbling",
+            "(100)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Defense",
+              "(100)"
+            ],
+            "__x": -1.0937149937394266,
+            "__y": -0.35536954353118927,
+            "__align": "right",
+            "__baseline": "bottom",
+            "__dx": -4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "right",
+        "baseline": "bottom",
+        "dx": -4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Defense",
+            "(100)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__group": "Player A",
+            "__axis": "Speed",
+            "__value": 0.85,
+            "__raw": 85,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.85
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Shooting",
+            "__value": 0.7,
+            "__raw": 70,
+            "__angle": 72,
+            "__x": 0.6657395614066074,
+            "__y": -0.2163118960624632
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Passing",
+            "__value": 0.9,
+            "__raw": 90,
+            "__angle": 144,
+            "__x": 0.5290067270632259,
+            "__y": 0.7281152949374526
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Dribbling",
+            "__value": 0.8,
+            "__raw": 80,
+            "__angle": 216,
+            "__x": -0.47022820183397845,
+            "__y": 0.647213595499958
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Defense",
+            "__value": 0.6,
+            "__raw": 60,
+            "__angle": 288,
+            "__x": -0.5706339097770922,
+            "__y": -0.18541019662496833
+          }
+        ]
+      },
+      "mark": {
+        "type": "line",
+        "interpolate": "linear-closed",
+        "strokeWidth": 1.5,
+        "point": false,
+        "fillOpacity": 0.15,
+        "fill": "#4c78a8"
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "order": {
+          "field": "__angle",
+          "type": "quantitative"
+        },
+        "tooltip": [
+          {
+            "field": "__axis",
+            "type": "nominal",
+            "title": "Metric"
+          },
+          {
+            "field": "__raw",
+            "type": "quantitative",
+            "title": "Value"
+          }
+        ]
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__group": "Player A",
+            "__axis": "Speed",
+            "__value": 0.85,
+            "__raw": 85,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.85
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Shooting",
+            "__value": 0.7,
+            "__raw": 70,
+            "__angle": 72,
+            "__x": 0.6657395614066074,
+            "__y": -0.2163118960624632
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Passing",
+            "__value": 0.9,
+            "__raw": 90,
+            "__angle": 144,
+            "__x": 0.5290067270632259,
+            "__y": 0.7281152949374526
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Dribbling",
+            "__value": 0.8,
+            "__raw": 80,
+            "__angle": 216,
+            "__x": -0.47022820183397845,
+            "__y": 0.647213595499958
+          },
+          {
+            "__group": "Player A",
+            "__axis": "Defense",
+            "__value": 0.6,
+            "__raw": 60,
+            "__angle": 288,
+            "__x": -0.5706339097770922,
+            "__y": -0.18541019662496833
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 25
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "tooltip": [
+          {
+            "field": "__group",
+            "type": "nominal",
+            "title": "Player"
+          },
+          {
+            "field": "__axis",
+            "type": "nominal",
+            "title": "Metric"
+          },
+          {
+            "field": "__raw",
+            "type": "quantitative",
+            "title": "Value"
+          }
+        ]
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 300,
+      "continuousHeight": 300,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10
+    },
+    "axisY": {
+      "labelFontSize": 10
+    },
+    "facet": {
+      "spacing": 29
+    },
+    "mark": {
+      "tooltip": true
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Player": "Player A",
+        "Metric": "Speed",
+        "Value": 85
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Shooting",
+        "Value": 70
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Passing",
+        "Value": 90
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Dribbling",
+        "Value": 80
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Defense",
+        "Value": 60
+      }
+    ]
+  },
+  "_width": 400,
+  "_height": 285,
+  "_options": [
+    {
+      "key": "filled",
+      "label": "Filled",
+      "type": "binary",
+      "defaultValue": true,
+      "applicable": true,
+      "value": true
+    },
+    {
+      "key": "fillOpacity",
+      "label": "Fill Opacity",
+      "type": "continuous",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.05,
+      "defaultValue": 0.15,
+      "applicable": true,
+      "value": 0.15
+    },
+    {
+      "key": "strokeWidth",
+      "label": "Line Width",
+      "type": "continuous",
+      "min": 0.5,
+      "max": 4,
+      "step": 0.5,
+      "defaultValue": 1.5,
+      "applicable": true,
+      "value": 1.5
+    },
+    {
+      "key": "independentYAxis",
+      "label": "Independent Y",
+      "type": "binary",
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "logScale_x",
+      "label": "Log X",
+      "type": "binary",
+      "defaultValue": false,
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "logScale_y",
+      "label": "Log Y",
+      "type": "binary",
+      "defaultValue": false,
+      "applicable": false,
+      "value": false
+    },
+    {
+      "key": "includeZero_x",
+      "label": "Zero X",
+      "type": "binary",
+      "applicable": false
+    },
+    {
+      "key": "includeZero_y",
+      "label": "Zero Y",
+      "type": "binary",
+      "applicable": true,
+      "value": false
+    }
+  ]
+}

@@ -33,6 +33,7 @@ class _Body:
 @pytest.fixture(autouse=True)
 def _offline(monkeypatch):
     monkeypatch.delenv("MDR_SEARX_URL", raising=False)
+    monkeypatch.setitem(sys.modules, "ddgs", None)   # ddgs 미설치로 간주 — 실망 호출 없이 ddg 가 첫 백엔드
     monkeypatch.setattr(search.time, "sleep", lambda _delay: None)
 
 
@@ -286,9 +287,9 @@ def test_arxiv_sec_wikipedia_status_rules(monkeypatch, capsys):
     monkeypatch.setattr(search, "_get", lambda url, timeout=12: (500, "no"))
     report = search.search_report("q", n=2, type="academic")
     assert report["results"] == []
-    assert report["backends"][0]["name"] == "arxiv"
-    assert report["backends"][0]["status"] == "error"
-    assert report["backends"][0]["detail"] == "http 500"
+    arxiv = next(b for b in report["backends"] if b["name"] == "arxiv")   # academic 은 5개 백엔드 폴스루
+    assert arxiv["status"] == "error"
+    assert arxiv["detail"] == "http 500"
 
     def boom(url, timeout=12):
         raise OSError("down")
@@ -313,7 +314,7 @@ def test_arxiv_empty_feed_is_empty(monkeypatch):
     monkeypatch.setattr(search, "_get", lambda url, timeout=12: (200, feed))
     report = search.search_report("q", n=2, type="academic")
     assert report["results"] == []
-    assert report["backends"][0]["status"] == "empty"
+    assert next(b for b in report["backends"] if b["name"] == "arxiv")["status"] == "empty"
 
 
 def test_trusted_searx_does_not_follow_redirect():

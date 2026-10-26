@@ -49,6 +49,7 @@ from urllib.parse import unquote, urlsplit
 
 import manifest
 import gates
+import span_tools
 from facts_db import (_read_jsonl, check_ledger_references, evidence_ids as _evidence_ids,
                        ValidationError, check_capture_path, load_schema, is_v4_work,
                        validate_evidence, validate_fact, validate_capture_review, valid_iso_time)
@@ -874,6 +875,188 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
     return failures, warnings
 
 
+_SPAN_T = re.compile(r"\d{1,3}(?::\d{2}){1,2}")
+
+
+def check_spans(facts: dict, evidence: dict, wp: WorkPaths,
+                passed: set[str] | None = None, no_clean: set[str] | None = None) -> tuple[list[str], list[str]]:
+    """text_quote verbatim ↔ `_sources/<sha12>_clean.txt` 글자 대조(imozuru). 기존 검사는 건드리지 않는다.
+    가정: evidence.sha256 은 raw 해시이고 fetch.save 가 clean 을 `<sha12>_clean.txt` 로 저장하므로
+    sha12 = span.clean 또는 sha256[:12] 또는 local(`_sources/<sha12>_raw.*`)에서 얻는다.
+    passed 를 주면 대조를 통과한 evidence id 를 채운다(H1·H2 가 같은 결과를 재사용 — 재대조 금지)."""
+    passed = passed if passed is not None else set()
+    no_clean = no_clean if no_clean is not None else set()
+    failures: list[str] = []
+    warnings: list[str] = []
+    seen: set[str] = set()
+    for f in facts.values():
+        if f.get("status") not in ("confirmed", "disputed"):
+            continue
+        for eid in _evidence_ids(f):
+            e = evidence.get(eid)
+            if not e or eid in seen or e.get("type") != "text_quote" or not e.get("verbatim"):
+                continue
+            seen.add(eid)
+            span = e.get("span") if isinstance(e.get("span"), dict) else None
+            if span is not None and "line" not in span:
+                # 영상 t 만 있는 span 은 행 대조 대상이 아니다. 형식이 맞는 t 일 때만 통과(빈 span 우회 차단).
+                if isinstance(span.get("t"), str) and _SPAN_T.fullmatch(span["t"]):
+                    passed.add(eid)
+                else:
+                    failures.append(f"[span형식] {eid}: line 이 없으면 t(mm:ss) 형식이어야 함: {span!r}")
+                continue
+            if span is not None:
+                ln, en = span.get("line"), span.get("end", span.get("line"))
+                if not (type(ln) is int and type(en) is int and 1 <= ln <= en and isinstance(span.get("clean"), str)):
+                    failures.append(f"[span형식] {eid}: span 은 clean(str)·1<=line<=end(int) 여야 함: {span!r}")
+                    continue
+            ref = (span or {}).get("clean") or str(e.get("sha256") or "")[:12] or Path(str(e.get("local") or "")).name.split("_raw", 1)[0]
+            try:
+                exists = bool(ref) and span_tools.clean_path(wp.root, ref).exists()
+            except ValueError:                # 경로 이탈·형식 오류 ref 는 열지 않는다
+                if span is not None:
+                    failures.append(f"[span형식] {eid}: span.clean 은 <sha12>[_clean.txt] 여야 함: {ref!r}")
+                    continue
+                exists = False
+            if not exists:
+                warnings.append(f"[span없음] {eid}: clean 원문 없음({ref or '출처 연결 불가'}) — 글자 대조 불가")
+                no_clean.add(eid)
+                continue
+            lines = span_tools.load_clean(wp.root, ref)
+            if span is not None:
+                if not span_tools.check_span(lines, e["verbatim"], span["line"], span.get("end", span["line"])):
+                    failures.append(f"[span불일치] {eid}: verbatim 이 clean {span['line']}~{span.get('end')}행(±2)에 글자 그대로 없음")
+                else:
+                    passed.add(eid)
+            elif span_tools.find_span(lines, e["verbatim"]) is None:
+                warnings.append(f"[원문미포함] {eid}: verbatim 이 clean 원문 어디에도 글자 그대로 없음(측정 단계 WARN)")
+            else:
+                passed.add(eid)
+    return failures, warnings
+
+
+# --- imozuru H1·H2·H9: 문장 단위 인용, 뒷받침 자동 제안, 축별 근거 -----------------
+_PARTIAL_MARK = "(일부 근거)"
+_QUOTE_EXEMPT = ("derived", "hypothesis", "recommendation")   # 가정: 계산·가정·권고 fact 는 원문 인용 대상이 아님
+
+
+def _ws(s) -> str:
+    return " ".join(str(s or "").split())
+
+
+def _d(x) -> dict:
+    return x if isinstance(x, dict) else {}     # v3 legacy 대장은 context·value 타입이 깨져 있을 수 있다
+
+
+def _accepted_capture(f: dict, evidence: dict) -> bool:
+    return any(_d(_d(evidence.get(e)).get("capture_review")).get("verdict") == "accept" for e in _evidence_ids(f))
+
+
+def check_sentence_quotes(report_text: str, facts: dict, evidence: dict, passed: set[str],
+                          strict: bool, no_clean: set[str] | None = None) -> tuple[list[str], list[str]]:
+    """본문 F태그 문장마다 text_quote+verbatim+글자 대조 통과 evidence ≥1 (H1). v4 FAIL / v3 WARN,
+    capture_only_reason 이 적히고 accept 캡처가 있는 fact, 또는 clean 원문이 아직 없어 대조 자체가 불가한
+    fact(no_clean, 계획 §2.4 "WARN 측정 먼저")는 WARN 으로 완화. 대조는 check_spans 결과(passed)를 재사용한다."""
+    no_clean = no_clean or set()
+    body, _ = split_body_appendix(report_text)
+    failures: list[str] = []
+    warnings: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    for seg in split_segments(body, preserve_text=True):
+        for fid in dict.fromkeys(m.group(0).strip("()[]") for m in TAG.finditer(seg)):
+            f = facts.get(fid)
+            if (not f or f.get("status") not in ("confirmed", "disputed")
+                    or f.get("claim_type") in _QUOTE_EXEMPT or (seg, fid) in seen):
+                continue
+            seen.add((seg, fid))
+            if any(evidence.get(e, {}).get("type") == "text_quote" and e in passed for e in _evidence_ids(f)):
+                continue
+            msg = f"[문장인용없음] {fid}: 대조 통과한 text_quote verbatim 이 없음 — 문장: {_ws(seg)[:50]}"
+            if _text_present(f.get("capture_only_reason")) and _accepted_capture(f, evidence):
+                warnings.append(msg + f" (capture_only_reason: {_ws(f['capture_only_reason'])[:40]})")
+            elif any(e in no_clean for e in _evidence_ids(f)):
+                warnings.append(msg + " (clean 원문 없음 — 측정 단계 WARN)")
+            else:
+                (failures if strict else warnings).append(msg)
+    return failures, warnings
+
+
+def suggest_support(facts: dict, evidence: dict, passed: set[str]) -> dict[str, dict]:
+    """대조 통과 verbatim 으로 fact 별 support 를 제안(H2). 대장은 건드리지 않는다.
+    value.raw·entity·period 를 모두 담으면 supported, 일부만 담거나 value.raw 가 없으면 partial,
+    대조 통과 인용 자체가 없으면 제안 없음. 숫자는 span_tools 의 숫자 경계 규칙으로 찾는다("3" ⊄ "2023").
+    shortcut: 기간은 4자리 연도 토큰 포함 여부만 본다(분기·월 표기는 못 가림), 필요하면 확장."""
+    has = lambda text, needle: not needle or span_tools._contains(text, [needle])
+    out: dict[str, dict] = {}
+    for fid, f in facts.items():
+        if f.get("status") not in ("confirmed", "disputed"):
+            continue
+        raw = _ws(_d(f.get("value")).get("raw"))
+        ctx = _d(f.get("context"))
+        entity, period = _ws(ctx.get("entity")), _ws(ctx.get("period"))
+        years = re.findall(r"\d{4}", period)
+        for eid in _evidence_ids(f):
+            e = evidence.get(eid) or {}
+            v = _ws(e.get("verbatim"))
+            if eid not in passed or not v:
+                continue
+            period_ok = all(has(v, y) for y in years) if years else has(v, period)
+            missing = [n for n, ok in (("value", bool(raw) and has(v, raw)), ("entity", has(v, entity)),
+                                       ("period", period_ok)) if not ok]
+            cand = {"fact_id": fid, "evidence_id": eid, "support": "partial" if missing else "supported",
+                    "missing": missing}
+            if fid not in out or cand["support"] == "supported":
+                out[fid] = cand
+    return out
+
+
+def check_support_marks(report_text: str, suggestions: dict[str, dict], strict: bool,
+                        reviews: list[dict] | None = None) -> tuple[list[str], list[str]]:
+    """자동 제안이 partial 인 fact 가 '(일부 근거)' 없이 쓰인 문장(H2).
+    claim-review 가 그 문장을 partial 로 판정했으면 `[부분근거미표기]`(v4 FAIL), 판정이 다르거나 없으면
+    기계 제안일 뿐이므로 WARN `[부분근거불일치]`. unsupported·contradicted 는 claim-review 가 이미 차단한다."""
+    body, _ = split_body_appendix(report_text)
+    rows = [r for r in (reviews or []) if isinstance(r, dict) and r.get("support") == "partial"]
+    # 가정·권고의 partial 은 required_qualification 이 본문에 있는지를 claim-review 가 따로 검사하므로 제외한다
+    partial_rows = {(_ws(r.get("sentence_text")), fid) for r in rows
+                    if r.get("claim_type") in ("observed", "derived") for fid in (r.get("fact_ids") or [])}
+    qualified = {(_ws(r.get("sentence_text")), fid) for r in rows
+                 if r.get("claim_type") not in ("observed", "derived") for fid in (r.get("fact_ids") or [])}
+    fails: list[str] = []
+    warns: list[str] = []
+    for seg in split_segments(body, preserve_text=True):
+        for fid in dict.fromkeys(m.group(0).strip("()[]") for m in TAG.finditer(seg)):
+            sug = suggestions.get(fid)
+            if not (sug and sug["support"] == "partial") or _PARTIAL_MARK in seg or (_ws(seg), fid) in qualified:
+                continue
+            why = f"인용이 {'·'.join(sug['missing'])} 를 덮지 못함"
+            if (_ws(seg), fid) in partial_rows:
+                (fails if strict else warns).append(
+                    f"[부분근거미표기] {fid}: {why}, claim-review partial — 문장에 {_PARTIAL_MARK} 표기 필요: {_ws(seg)[:50]}")
+            else:
+                warns.append(f"[부분근거불일치] {fid}: 자동 제안 partial({why}) ≠ claim-review 판정 — 확인: {_ws(seg)[:50]}")
+    return fails, warns
+
+
+def write_support_auto(wp: WorkPaths, suggestions: dict[str, dict]) -> None:
+    wp.audit.mkdir(parents=True, exist_ok=True)
+    (wp.audit / "support-auto.jsonl").write_text(
+        "".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n" for r in suggestions.values()),
+        encoding="utf-8")
+
+
+def check_axis_evidence(wp: WorkPaths, facts: dict, passed: set[str], plan: Path | str | None = None) -> list[str]:
+    """research-plan 의 축 이름마다 fact.context.axis 가 같은 confirmed fact 에 대조 통과 인용 ≥1 (H9, WARN).
+    가정: 축 필드(context.axis)를 쓰는 작업폴더에서만 동작하고, 계획 파일이 없으면 생략한다."""
+    plan = Path(plan) if plan is not None else wp.audit / "research-plan.md"   # verify(plan=…) 인자를 우선
+    if not plan.is_file() or not any(_d(f.get("context")).get("axis") for f in facts.values()):
+        return []
+    _, axes = parse_plan_toc(plan.read_text(encoding="utf-8"))
+    ok = {_ws(_d(f.get("context")).get("axis")) for f in facts.values()
+          if f.get("status") == "confirmed" and any(e in passed for e in _evidence_ids(f))}
+    return [f"[축근거부족] {a}: 대조 통과한 confirmed fact 없음 — 미수렴" for a in axes if _ws(a) not in ok]
+
+
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 _IMG_HTML = re.compile(r'<img\b[^>]*\bsrc\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
 _IMG_REF = re.compile(r"!\[([^\]]*)\](?:\[([^\]]*)\])?(?!\()")
@@ -1070,6 +1253,52 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths,
     return failures, warnings
 
 
+def check_chart_sidecars(work_dir, report_text: str, facts: dict) -> tuple[list[str], list[str]]:
+    """assets/*.svg 도판의 짝 .vl.json(make_chart 사이드카)을 사실대장·캡션과 대조한다.
+
+    ① mdr.fact_ids 전부 confirmed ② values[].value_raw·unit 이 대장 value.raw·value.unit 과 일치
+    ③ 캡션 F태그 집합 ⊇ fact_ids. 사이드카 없는 svg 는 WARN.
+    """
+    root = work_dir.root if isinstance(work_dir, WorkPaths) else Path(work_dir)
+    failures: list[str] = []
+    warnings: list[str] = []
+    seen: set[str] = set()
+    for _start, end, path in _figure_refs(report_text):
+        if path in seen or not _scoped_ref(path, "assets") or not path.lower().split("?")[0].endswith(".svg"):
+            continue
+        seen.add(path)
+        kind, svg = _image_ref_local_path(path, root)
+        if kind != "ok":
+            continue  # 경로 문제는 check_figures 가 판정한다
+        side = svg.with_suffix(".vl.json")
+        if not side.is_file():
+            warnings.append(f"[도판사이드카없음] {path} — 짝 .vl.json 이 없어 값 대조를 건너뜀")
+            continue
+        try:
+            meta = json.loads(side.read_text(encoding="utf-8")).get("mdr") or {}
+        except (OSError, ValueError):
+            failures.append(f"[도판값불일치] {path} 사이드카를 읽을 수 없음")
+            continue
+        head = svg.read_text(encoding="utf-8", errors="replace").splitlines()[0:1]
+        head = head[0] if head else ""
+        m = re.match(r"<!--\s*FACTS:\s*([^>]*?)\s*-->", head)
+        if not m or set(i.strip() for i in m.group(1).split(",")) != set(meta.get("fact_ids", [])):
+            failures.append(f"[도판값불일치] {path} SVG FACTS 주석과 사이드카 fact_ids 불일치(낡은 SVG?)")
+        for fid in meta.get("fact_ids", []):
+            if (facts.get(fid) or {}).get("status") != "confirmed":
+                failures.append(f"[도판값불일치] {path} {fid} 가 confirmed 아님")
+        for v in meta.get("values", []):
+            led = (facts.get(v.get("fact_id")) or {}).get("value") or {}
+            if str(led.get("raw", "")) != str(v.get("value_raw")) or str(led.get("unit", "")) != str(v.get("unit")):
+                failures.append(f"[도판값불일치] {path} {v.get('fact_id')} 도판 {v.get('value_raw')} {v.get('unit')} "
+                                f"≠ 대장 {led.get('raw')} {led.get('unit')}")
+        caption = _caption_within_two_lines(report_text, end) or ""
+        missing = set(meta.get("fact_ids", [])) - set(re.findall(r"F\d{3,}", caption))
+        if missing:
+            failures.append(f"[도판값불일치] {path} 캡션 F태그에 없는 도판 사실: {', '.join(sorted(missing))}")
+    return failures, warnings
+
+
 # --- 목차(G9) ----------------------------------------------------------------
 # research-plan.md "승인 목차 예시" 서식 — 부 번호·제목은 '# 부 N. 제목', 3부 하위 축 챕터는
 # '## 축: 이름' 으로 고정 표기(문서 자체가 정본, 서식 임의 변경 금지 — 바뀌면 파서도 같이 깨져야
@@ -1249,9 +1478,33 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures += ec_fail
     warnings += ec_warn
 
+    span_passed: set[str] = set()
+    no_clean: set[str] = set()
+    sp_fail, sp_warn = check_spans(facts, evidence, wp, span_passed, no_clean)
+    failures += sp_fail
+    warnings += sp_warn
+
+    strict = is_v4_work([r for r in facts_raw if isinstance(r, dict)],
+                        [r for r in evidence_raw if isinstance(r, dict)])
+    sq_fail, sq_warn = check_sentence_quotes(md, facts, evidence, span_passed, strict, no_clean)
+    suggestions = suggest_support(facts, evidence, span_passed)
+    if not check_only:
+        write_support_auto(wp, suggestions)
+    review_path = wp.audit / "claim-review.jsonl"
+    try:
+        reviews = _read_jsonl(review_path) if review_path.is_file() else []
+    except (OSError, ValueError):
+        reviews = []                      # 읽기 실패는 verify_claims 가 따로 보고한다
+    pm_fail, pm_warn = check_support_marks(md, suggestions, strict, reviews)
+    failures += sq_fail + pm_fail
+    warnings += sq_warn + pm_warn + check_axis_evidence(wp, facts, span_passed, plan)
+
     fig_fail, fig_warn = check_figures(body, evidence, wp, report_text=md)
     failures += fig_fail
     warnings += fig_warn
+    cs_fail, cs_warn = check_chart_sidecars(wp, md, facts)
+    failures += cs_fail
+    warnings += cs_warn
 
     toc_fail, toc_warn = check_toc(md, wp, plan)
     failures += toc_fail

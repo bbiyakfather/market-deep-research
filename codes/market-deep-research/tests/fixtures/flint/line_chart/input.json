@@ -1,0 +1,53 @@
+{
+  "title": "Q×O(5) (5 pts)",
+  "description": "Horizontal ordinal — 5 ordered cats on y",
+  "chartType": "Line Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "X": 0,
+          "Step": "Stage 1"
+        },
+        {
+          "X": 25,
+          "Step": "Stage 2"
+        },
+        {
+          "X": 50,
+          "Step": "Stage 3"
+        },
+        {
+          "X": 75,
+          "Step": "Stage 4"
+        },
+        {
+          "X": 100,
+          "Step": "Stage 5"
+        }
+      ]
+    },
+    "semantic_types": {
+      "X": "Quantity",
+      "Step": "Category"
+    },
+    "chart_spec": {
+      "chartType": "Line Chart",
+      "encodings": {
+        "x": {
+          "field": "X"
+        },
+        "y": {
+          "field": "Step"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

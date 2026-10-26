@@ -60,7 +60,7 @@ def _seed_script_receipt(*args, **kwargs):
     return gates._record_script_result(*args, **kwargs)
 
 
-def _chain_to_g3(td, topic="봉인"):
+def _chain_to_g3(td, topic="봉인", passing=False):
     """하위 게이트 변조 검사용 합성 G3 체인. 소유 API 대신 테스트 전용 원장 시딩."""
     import gates
     wd = resolve_work_dir(topic, base=td)
@@ -68,6 +68,10 @@ def _chain_to_g3(td, topic="봉인"):
     (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
     wp.facts.write_text("", encoding="utf-8")
     wp.report_md.write_text("# r\n", encoding="utf-8")
+    if passing:      # 렌더 직전 verify 재실행(H3)을 통과하는 최소 원고: 출처 달린 대표 도판 1장
+        (wp.root / "_images").mkdir()
+        (wp.root / "_images" / "fig.png").write_bytes(b"\x89PNG")
+        wp.report_md.write_text("본문.\n\n![도판](_images/fig.png)\n[그림] 구조 · 출처: 자체 계산\n", encoding="utf-8")
     gates.record_manual(wp, "G0", "approved")
     gates.record_script_result(wp, "G1", 0, "join PASS")
     gates.record_manual(wp, "[2]", "lead reread")
@@ -1363,15 +1367,20 @@ def intent_diff_closed_at_g4():
 
 @case
 def skill_frontmatter_intact():
-    """front-matter YAML 이 여전히 파싱되고, description 이 1024자 이하이며, 4번째 조사유형
-    '기술사업화 실사' 가 포함되는지."""
+    """front-matter YAML 이 여전히 파싱되고, 항상 로드되는 텍스트 예산(description ≤250자 —
+    모든 세션의 스킬 목록에 실림, 본문 ≤12KB — 스킬이 켜지면 매 턴 재전송) 안이며, 4번째
+    조사유형 '기술사업화 실사' 가 포함되는지. 상세 규칙은 references 로 보낸다(batch T1).
+    ponytail: 목표는 10KB 이나 카드 한 줄 보강마다 재배치하지 않도록 상한은 12KB. 10KB 를 다시
+    넘보면 흐름도·참조 표가 아닌 카드 문장을 references 로 보낸다."""
     text = _read("SKILL.md")
     m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     assert m, "front-matter 파싱 실패(--- 블록 없음)"
     data = yaml.safe_load(m.group(1))
     desc = data["description"]
-    assert len(desc) <= 1024, f"description {len(desc)}자 — 1024자 초과"
+    assert len(desc) <= 250, f"description {len(desc)}자 — 250자 초과(항상 로드되는 텍스트 예산)"
     assert "기술사업화 실사" in desc, "description 에 기술사업화 실사 없음"
+    body_bytes = len(text[m.end():].encode("utf-8"))
+    assert body_bytes <= 12288, f"SKILL.md 본문 {body_bytes}B — 12KB 초과(항상 로드되는 텍스트 예산, 목표 10KB; 상세는 references 로)"
 
 
 # --- 게이트 원장 소유권(영수증 위조·G5 자기기록 회귀) --------------------------
@@ -1620,7 +1629,7 @@ def reseal_rejects_post_g3_tamper():
         assert manifest.sha256_file(wp.manifest) == baseline, "실패했는데 manifest.json 이 바뀜"
 
     with tempfile.TemporaryDirectory() as td:                          # 긍정형 짝
-        wd, wp = _chain_to_g3(td, "렌더정상")
+        wd, wp = _chain_to_g3(td, "렌더정상", passing=True)
         before = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
         r = _run_script("render_pdf.py", str(wp.report_md))
         assert r.returncode == 0, f"정상 체인인데 render CLI 실패: {r.stderr!r}"

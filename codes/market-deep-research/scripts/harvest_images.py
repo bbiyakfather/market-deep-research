@@ -470,6 +470,10 @@ def _searx_sites(query: str, n: int, sites: list[str]) -> list[dict]:
     if not sites:
         return []
     insts = _searx_instances()
+    if not insts:
+        print("  ⚠ searx 인스턴스 미등록 — --sites 검색 건너뜀", file=sys.stderr)
+        return [{"url": "", "title": "", "license": "", "page": "", "source": "searx-site",
+                 "kind": "error", "note": "searx 인스턴스 미등록(자체 호스트 필요)"}]
     restriction = " OR ".join(f"site:{site}" for site in sites)
     q = urllib.parse.quote(f"{query} ({restriction})")
     errors: list[dict] = []
@@ -725,7 +729,7 @@ def demo() -> None:
             fetch_module.fetch = original_fetch
         assert fetched["ok"] and any(item["kind"] == "figure" for item in fetched["candidates"]), fetched
         assert _normalize_sites("iea.org, energy.gov") == ["iea.org", "energy.gov"]
-        assert _searx_instances() and all(url.startswith("https://") for url in _searx_instances())
+        assert all(url.startswith("https://") for url in _searx_instances())   # 공개 인스턴스 전멸 → 빈 목록 허용
         pdf_candidate = _annotate_search_candidate(
             {"url": "https://iea.org/report.pdf", "page": "", "license": "CC BY 4.0"})
         assert pdf_candidate["kind"] == "pdf" and "pdf" in pdf_candidate["hint"].lower(), pdf_candidate

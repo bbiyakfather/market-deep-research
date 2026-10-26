@@ -2,9 +2,10 @@
 
 조사원(explorer) 서브에이전트는 **중간 등급 모델·background**로 팬아웃한다(Claude Code: sonnet /
 Codex: `[agents].default_subagent_model`). 판단이 필요 없는 기계적 후속 웨이브(확정 리드의 fetch+스키마
-구조화만)는 더 작은 모델로 내려도 된다. 워커는 **읽기전용**:
-자기 `_research/<agent>/` 임시폴더의 raw 만 쓰고, 공식 대장(facts.jsonl 등)은 **오케스트레이터
+구조화만)는 더 작은 모델(haiku 등)로 내려도 된다. 워커는 **읽기전용**:
+자기 `_research/<agent>/` 임시폴더(파일충돌 방지)의 raw 만 쓰고, 공식 대장(facts.jsonl 등)은 **오케스트레이터
 (팀리드)만** 기록한다. 워커는 아래 마커로 반환하고, 팀리드가 파싱해 등재·확장한다.
+기술동향 분할의 **교차검증1** 워커는 다른 워커 CLAIMS 중 단일 출처 normal 표본을 독립 질의로 재검색해 COUNTER 와 COVERAGE 로 반환한다.
 
 ## 스폰 메시지 계약
 ```
@@ -46,6 +47,10 @@ F/E-ID는 워커 파일 안에서만 유효한 잠정 ID다. `join_workers.py`�
   SOURCE_URL: <원문 URL 또는 확보한 PDF 경로>
   LICENSE_HINT: <기관 재사용 조건 단서. 모르면 unknown — 빈칸 금지>
 
+## 차트 제안(워커)
+- 워커는 차트 **유형(`visual-first.md` §1a 이름)·F-ID·제목**만 제안한다. 값·좌표·색 hex 는 쓰지 않는다 — 그림은 리드가 `make_chart.py` 로 confirmed fact 에서만 만든다.
+- 유형이 모호하면 고르지 말고 최소 선택지(2개 이내)로 리드에 올린다.
+
 ## 인사이트
 - <사실>: 근거 F-ID. <추론>: "추론" 명시(사실과 구분).
 
@@ -73,7 +78,9 @@ EXPAND의 `AXIS`+정규화 LEAD 텍스트 지문과 같은 URL 지문은 중복 
 
 ## 작성자(writer) 브리프 고정 문구 — [3] 원고 작성자 스폰 시
 - `0. 독자·목표` 줄은 조사원과 같다. 추가 1줄: "수치 데이터는 그림이 기본. 표를 만들기 전에 `visual-first.md` 결정표로
-  형식을 정하고, 표로 남기면 사유를 `audit/visual-decisions.json` 에 적는다."
+  형식을 정하고, 표로 남기면 사유를 `audit/visual-decisions.json` 에 적는다. 표 형식은 §2b — 칸이 문장형이면 A,
+  행이 리스크·과제 같은 개념이면 캡션 끝에 `{형식=B}`."
+- BM 명제가 있으면 추가 1줄: "가설 칸은 `(분석)`, 미닫힘은 `미확인`, 공란을 평균·업계값으로 메우지 않는다(`business-model.md` §0·§6)."
 
 ## 철칙 (절대)
 - **원문 미확인 수치는 폐기**(추정 금지). 무출처 주장은 CLAIM 에 올리되 SOURCES 없음으로 표시 → 팀리드가 `discarded`.
@@ -84,10 +91,15 @@ EXPAND의 `AXIS`+정규화 LEAD 텍스트 지문과 같은 URL 지문은 중복 
 - **1차 출처 라우팅**: 공시·재무 → DART(국내)·`search.py --type filing`(해외), 특허 → KIPRIS·특허 DB, 국가 R&D → NTIS, 통계 → KOSIS. 해당 MCP·스킬이 도구 목록에 있으면 웹 검색보다 먼저. `patents.google.com` 은 크롤링하지 않는다(과거 실패 URL 의 다수가 이 도메인) — 특허번호로 DB 도구를 조회하고, 도구 응답은 `api_response` 증거로 남긴다.
 - **코어 스택**: 증거로 쓸 웹 페이지는 발견 경로(WebSearch 포함)와 무관하게 `fetch.py` 로 다시 받아 `audit/fetch-log.jsonl` 과 원본 스냅샷을 남긴다. 내장 WebFetch 만 본 페이지는 차단·실패 기록도 원본도 남지 않기 때문이다.
 - **경쟁 조사 워커**: 스폰 메시지 `2. 범위` 에 제품명·모델·규제·인증코드(해당 시)·기준일을 넣고, 미확인 항목은 조회 범위를 EXPAND/negative_search 로 반환한다. 서식·근거원은 `references/competitive-positioning.md`(팀리드가 TASK 에 요점 인용).
+- **BM 조사 워커**: 스폰 메시지 `2. 범위` 에 단위(고객·거래·양품·프로그램·주문·구독자·마일스톤)·과금 방식·기준 기간을 넣고, 수치의 `definition` 에 매출 다리 위치(계약액/청구/회계매출/반복매출/총거래액/순수익)를 적는다. 칸·질문·금지 서술은 `references/business-model.md`.
 - 표는 page/row/col, API 는 endpoint/param/JSON 해시로 locator 결박.
+- **불완전 원문(OCR·자동자막·스캔)은 고치지 말고 `raw_quality`(ocr/auto-caption/scan) 표지**를 단다. verbatim 은 오타 포함 원문 그대로, 출처 유형은 `source_tier` 로 표시한다.
+- **verbatim 은 원문(clean)에서 글자 그대로 검색돼야 한다.** 줄임은 `…` 로만, 오타·띄어쓰기도 원문대로(바꿔 쓰면 G3 `[원문미포함]`/`[span불일치]`). 행 중간에서 끊긴 verbatim·ASCII `...` 는 실패한다(의도된 엄격함, 줄임은 `…` 만). 행 번호는 워커가 세지 않고 리드가 `span_tools.py find` 로 채운다.
 - **임시 ID 는 W접두**(`W3-F012`), 대장 F/E-ID 는 리드만 부여 — 워커가 대장 ID 처럼 쓴 43건 오등재 사례.
 - **verbatim 은 원문 리터럴**(재구성·요약 금지 — "Royal Assent" ≠ "This bill received royal assent"), sha256 은 raw 파일 기준. 논문은 원문 첫 쪽의 제1저자·실제 학술지(교신저자·추정 학술지 금지).
 - **수치에는 지표 성격(설치/제조/출하/누적)·시점·가격 성격(거래가/호가)을 함께** 기록. 등락률은 같은 출처·같은 시점만. 2차 집계 DB(IEA·시장조사기관) 값은 1차 자료 교차 전까지 `pending`.
 - 실행 중 팀리드로의 중간 전송 채널은 없다(서브에이전트는 완료 시 최종 보고 하나만 반환).
   막히면 질문하지 말고 `BLOCKED: <이유>` 를 최종 보고 맨 앞줄에 적고 종료한다 — 그때까지
   수집한 마커 블록은 빈손으로 버리지 말고 그대로 반환.
+
+부분 인용: microsoft/flint-chart (MIT License, Copyright (c) Microsoft Corporation)

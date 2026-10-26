@@ -13,7 +13,9 @@
     "claim_type": ["observed", "derived", "hypothesis", "recommendation"],
     "support": ["supported", "partial", "unsupported", "contradicted", "unresolved"],
     "page_state": ["content", "blocked", "login", "blank", "unknown"],
-    "capture_verdict": ["accept", "reject"]
+    "capture_verdict": ["accept", "reject"],
+    "source_tier": ["1차공시", "공식통계", "동료심사", "보도", "2차종합"],
+    "revision_status": ["original", "revised", "preliminary"]
   },
   "fact": {
     "required": ["claim_key", "id", "claim", "context", "value", "grade", "risk", "status"],
@@ -69,6 +71,7 @@
       },
       "risk": {"enum_ref": "risk", "description": "high = claim-graph 게이트(반박검색·독립그룹) 적용 대상"},
       "status": {"enum_ref": "status"},
+      "statement_class": {"type": ["string", "null"], "enum": ["fact", "estimate", "calculation", "forecast", "opinion", null], "description": "[선택] 진술 성격. 미기재 허용"},
       "verified_by": {"type": ["string", "null"], "description": "'lead' 만 confirm 가능. verifier 단독 confirm 금지."},
       "verify_events": {
         "type": "array", "items": {
@@ -113,7 +116,10 @@
           "worker": {"type": "string"}
         }
       },
-      "discard_reason": {"type": ["string", "null"]}
+      "discard_reason": {"type": ["string", "null"]},
+            "capture_only_reason": {"type": ["string", "null"], "description": "[선택] verbatim 인용 없이 캡처만 근거인 사유(H1 문장 인용 검사를 WARN 으로 완화)"},
+      "as_of": {"type": ["string", "null"], "format": "iso-time", "description": "[선택] 값의 기준 시점(context.as_of 와 별개로 fact 단위 기재)"},
+      "revision_status": {"type": ["string", "null"], "enum_ref": "revision_status", "description": "[선택] 수치 개정 상태(최초/개정/잠정)"}
     },
     "conditional": {
       "v4_requires_claim_type": "schema_version == 4 → claim_type 필수",
@@ -136,6 +142,19 @@
       "locator": {"type": ["object", "null"], "description": "{page,row,col} | {selector} 등"},
       "verbatim": {"type": ["string", "null"], "description": "text_quote 일 때 필수(원문 그대로)"},
       "source_role": {"enum_ref": "source_role", "nullable": true},
+      "span": {
+        "type": ["object", "null"],
+        "description": "[선택] clean 원문 행 좌표. clean=sha12 또는 clean 파일명, line..end=1부터(split('\\n') 기준), t=영상·오디오 mm:ss",
+        "required": ["clean"],
+        "properties": {
+          "clean": {"type": "string"},
+          "line": {"type": "integer"},
+          "end": {"type": "integer"},
+          "t": {"type": "string", "pattern": "[0-9]{1,3}(:[0-9]{2}){1,2}"}
+        }
+      },
+      "raw_quality": {"type": ["string", "null"], "enum": ["ocr", "auto-caption", "scan", null], "description": "[선택] 불완전 원문 표지. 보정 금지, verbatim 은 원문 그대로(오타 포함)"},
+      "source_tier": {"type": ["string", "null"], "enum_ref": "source_tier", "description": "[선택] 출처 유형 표지(증빙판 카드 표시용, 점수화 금지)"},
       "capture": {"type": ["string", "null"], "description": "_captures/E###.png (source_capture)"},
       "observer_group": {"type": ["string", "null"], "description": "[v3] 독립성 판정용 관찰그룹 라벨"},
       "observed_at": {"type": ["string", "null"], "format": "iso-time"},

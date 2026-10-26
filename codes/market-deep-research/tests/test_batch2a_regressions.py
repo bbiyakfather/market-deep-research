@@ -472,3 +472,106 @@ def test_k07_cli_json_keeps_hash_path_and_full_trace(monkeypatch, tmp_path, caps
     assert json.loads(Path(output["trace_path"]).read_text(encoding="utf-8")) == trace
     if mode == "get":
         assert len(output["sha256"]) == 64 and Path(output["local"]).is_file()
+
+
+HTML = f"<html><body><p>{ARTICLE}</p></body></html>"
+
+
+def _site(monkeypatch, pages, order):
+    """request_bytes(HTTP 층)만 흉내 내 _fetch_once→사다리 실제 경로를 탄다. pages: 요청URL → (최종URL, html)."""
+    def fake(url, **kw):
+        if url not in pages:
+            raise ValueError("404")
+        final, body = pages[url]
+        return {"status": 200, "headers": {"content-type": "text/html; charset=utf-8"},
+                "raw": body.encode(), "final_url": final}
+    monkeypatch.setattr(fetch, "request_bytes", fake)
+    monkeypatch.setattr(fetch, "_tier_order", lambda u: order)
+
+
+def _get(monkeypatch, url, final, html=HTML, order=("direct",)):
+    _site(monkeypatch, {url: (final, html)}, list(order))
+    return fetch.fetch(url)
+
+
+def test_redirect_to_other_doc_is_partial_not_ok(monkeypatch):
+    result = _get(monkeypatch, "https://origin.test/report/a?id=1", "https://origin.test/search.asp")
+    assert result["status"] == "partial"
+    assert result["failure_reason"] == "redirected_other_doc:https://origin.test/search.asp"
+    assert ARTICLE[:20] in result["text"]
+    row = json.loads(Path("audit/fetch-log.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert row["final_url"] == "https://origin.test/search.asp" and "redirected_other_doc" in row["failure_reason"]
+
+
+@pytest.mark.parametrize("req,final", [
+    ("https://origin.test/", "https://origin.test/ko/Main.do"),                       # 홈페이지
+    ("http://origin.test/a/?utm_x=1#f", "https://www.origin.test/a"),                  # 스킴·www·utm·fragment
+    ("https://한글.test/a", "https://xn--bj0bj06e.test/a"),                             # (a) IDN
+    ("https://origin.test/문서", "https://origin.test/%EB%AC%B8%EC%84%9C"),             # (b) 퍼센트 인코딩
+    ("https://origin.test/s?q=a+b", "https://origin.test/s?q=a%20b"),                  # (c) + 와 %20
+    ("https://origin.test/a/", "https://origin.test/a/index.html"),                    # (d) index.html
+])
+def test_cosmetic_redirects_stay_ok(monkeypatch, req, final):
+    assert _get(monkeypatch, req, final)["status"] == "ok"
+
+
+def test_query_style_doc_redirected_to_root_is_caught(monkeypatch):
+    assert _get(monkeypatch, "https://origin.test/?p=123", "https://origin.test/")["status"] == "partial"
+
+
+def test_naver_no_post_marker_is_partial(monkeypatch):
+    html = "<html><script>alert(\"게시물이 삭제되었거나 다른 페이지로 변경되었습니다.\");</script><body>" + ARTICLE + "</body></html>"
+    url = "https://blog.origin.test/x/223000000000"
+    assert _get(monkeypatch, url, url, html)["status"] == "partial"
+
+
+def test_naver_iframe_shell_partial_but_plain_mainframe_div_ok(monkeypatch):
+    url = "https://blog.origin.test/x/1"
+    shell = f'<html><body><iframe id="mainFrame" name="mainFrame" src="/PostView.naver"></iframe><p>{ARTICLE}</p></body></html>'
+    assert _get(monkeypatch, url, url, shell)["status"] == "partial"
+    article = f'<html><body><div id="mainFrame"><p>{ARTICLE}</p></div></body></html>'
+    assert _get(monkeypatch, url, url, article)["status"] == "ok"
+
+
+def test_short_landing_page_still_blocks_jina_ok(monkeypatch):
+    url = "https://origin.test/report/a"
+    pages = {url: ("https://origin.test/login", "<html><body>로그인</body></html>" + "x" * 300),
+             "https://r.jina.ai/" + url: ("https://r.jina.ai/" + url, HTML)}
+    _site(monkeypatch, pages, ["direct", "jina"])
+    result = fetch.fetch(url)
+    assert result["status"] == "partial" and result["failure_reason"].startswith("redirected_other_doc:")
+
+
+def test_mobile_redirect_not_inherited_so_jina_ok(monkeypatch):
+    url = "https://www.origin.test/a"
+    pages = {"https://m.origin.test/a": ("https://m.origin.test/", HTML),      # 파생 URL 이 홈으로 튕김
+             "https://r.jina.ai/" + url: ("https://r.jina.ai/" + url, HTML)}
+    _site(monkeypatch, pages, ["direct", "mobile", "jina"])
+    assert fetch.fetch(url)["status"] == "ok"
+
+
+def test_wayback_may_ok_after_redirect(monkeypatch):
+    url = "https://origin.test/report/a"
+    snap = "http://web.archive.org/web/2020/" + url
+    api = "http://archive.org/wayback/available?url=" + fetch.quote(url, safe="")
+    pages = {url: ("https://origin.test/search", HTML), snap: (snap, HTML),
+             api: (api, json.dumps({"archived_snapshots": {"closest": {"available": True, "url": snap}}}))}
+    _site(monkeypatch, pages, ["direct", "wayback"])
+    assert fetch.fetch(url)["status"] == "ok"
+
+
+def test_mobile_rewrite_replaces_www():
+    assert fetch._mobile_urls("https://www.origin.test/a")[0] == "https://m.origin.test/a"
+
+
+def test_cli_get_dns_failure_is_json_exit1_and_bad_arg_exit2(tmp_path):
+    import subprocess
+    import sys
+    script = Path(fetch.__file__).resolve()
+    run = lambda *a: subprocess.run([sys.executable, str(script), "get", *a], cwd=tmp_path,
+                                    capture_output=True, text=True, encoding="utf-8")
+    r = run("https://nonexistent-host-xyz.invalid/x")
+    assert r.returncode == 1 and json.loads(r.stdout)["failure_reason"].startswith("ssrf_blocked:")
+    (tmp_path / "audit").rename(tmp_path / "audit_before")   # --help 이 새 로그를 만들지 않는지 보려고 비운다
+    r = run("--help")
+    assert r.returncode == 2 and not (tmp_path / "audit").exists()

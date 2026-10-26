@@ -30,6 +30,9 @@ lessons.md                    ← 실전에서 얻은 교훈 누적
 | **워커 철칙 보강** — 임시 ID W접두, verbatim 리터럴, 수치에 지표 성격·시점 병기, WD 에서만 실행 | 임시 ID 오등재 43건, 재구성 인용, 스킬 폴더에 조사 로그가 쌓여 공유 저장소로 푸시 | `references/agent-briefs.md` |
 | **납품본 변환 규칙** — 작성 주체 표현·내부 코드 명칭화·불확실 정보 처리·분량·참고문헌 | 증빙판 표현('조사팀 판단'·F-ID·분류 코드)이 발주처 납품본에 그대로 나가 사후 치환 130건 | `codes/mdr-hwpx/references/deliverable-rules.md` |
 | **G4 독자 테스트** — 1차 독자·설득 대상·신규 독자·핵심 메시지 귀결·시각화·인쇄 가독성 | G4 육안검증이 사실·도판 정확성만 보고 "읽히는가"는 보지 않았음 | `reader-goal.md` G4 절 |
+| **flint 차트 엔진 내장**(2026-10-26) — microsoft/flint-chart 의 파이썬 포트를 `scripts/flint/` 에 그대로 내장(MIT, 파일 해시 고정). `make_chart.py` 가 confirmed fact 에서 16종 차트를 Vega-Lite 로 만들고 사이드카 `.vl.json` 으로 그림 값↔사실대장을 G3 가 대조 | 자작 차트가 막대·선 2종뿐이었고, 그림 속 숫자가 대장과 같은지는 아무도 검사하지 않았음 | `visual-first.md` §1a·§1b · `scripts/make_chart.py` · `visual_audit.py --figures` |
+| **요약→세부→원문 결박**(2026-10-26, imozuru 번안) — 근거 인용(verbatim)이 원문 clean 텍스트 어느 행에 글자 그대로 있는지 `span` 으로 기록·대조, F태그 문장마다 대조 통과 인용이 없으면 v4 FAIL, 실패 시 PDF 미생성·기존 PDF 보존, `audit/evidence.html` 증빙판(문장→인용→앞뒤 6행→원문) | verbatim 이 원문에 실재하는지는 규칙만 있고 기계가 막지 않았음 | `scripts/span_tools.py` · `build_evidence_html.py` · `verification-gates.md` §[2]·§G3 |
+| **검색 전건 기록·학술 출처 계층**(2026-10-26, scientific-agent-skills 번안) — 모든 검색을 `audit/search-log.jsonl` 에 기록, `--type academic` 이 OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv 폴스루, 학술 출처 6규칙·기술동향 축별 충분조건 기본값·근거 확실성 라벨·TRL 증거표 | 학술 검색이 arXiv 뿐이었고 어떤 검색식으로 몇 건을 봤는지 남지 않았음 | `source-ladder.md` · `academic-apis.md` · `trl-evidence.md` · `research-plan.md` |
 
 ---
 
@@ -176,7 +179,7 @@ python scripts/visual_audit.py report.md --decisions audit/visual-decisions.json
 
 ## 수집 스택 (유료 API 무의존)
 
-- **검색** (`scripts/search.py`): DuckDuckGo HTML → SearXNG(`MDR_SEARX_URL` 자체 인스턴스 우선, 없으면 공개 인스턴스) → 전문 무료 API(arXiv·SEC EDGAR·Wikipedia). 백엔드별 상태를 함께 돌려주고, 전 백엔드 실패는 종료 코드 2. 내장 WebSearch 와 병행.
+- **검색** (`scripts/search.py`): ddgs 다중 백엔드(`--type news` 는 ddgs news) 1차 → DuckDuckGo HTML 폴백 → SearXNG(`MDR_SEARX_URL` 자체 인스턴스 등록 시만) → 전문 무료 API(SEC EDGAR·Wikipedia; 학술은 OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv 폴스루, `references/academic-apis.md`). 백엔드별 상태를 함께 돌려주고, 전 백엔드 실패는 종료 코드 2. 호출마다 `<작업폴더>/audit/search-log.jsonl` 에 전건 기록. 내장 WebSearch 와 병행.
 - **fetch** (`scripts/fetch.py`): 강방어 사이트 우회 사다리 — 도메인 라우팅 → curl_cffi TLS 지문 → **모바일 iOS 지문** → **브라우저**(patchright·선택) → Jina Reader → Googlebot UA → RSS → Wayback → OGP. 성공 판정은 HTTP 200 이 아니라 본문 검증(의심 페이지는 `partial`). `MDR_NO_THIRD_PARTY=1` 이면 Jina·Wayback 을 건너뜁니다. 원본(raw)+정제본을 SHA-256 과 함께 보존.
 - fetch.py 는 **현재 폴더** `audit/` 에 로그·스냅샷을 씁니다 — 모든 스크립트는 작업폴더(WD)에서 절대경로로 실행합니다. 스킬 폴더에서 돌리면 조사 원문이 저장소에 섞입니다.
 
@@ -275,7 +278,7 @@ cp -r template/ ~/work/<프로젝트명>/ && cd ~/work/<프로젝트명>/ && git
 
 도구 이름만 다르고 게이트·대장·검증 절차는 동일합니다(`SKILL.md` 「실행 환경」 표). 대외비 조사는 `MDR_NO_THIRD_PARTY=1` 로 Jina·Wayback 계층을 끕니다. 실전에서는 설치본에서 고친 변경이 먼저 생기기도 하므로, 조사 직전 `--check` 로 드리프트를 확인하고 변경분은 이 저장소 `codes/` 로 동기화합니다.
 
-## 검증 현황 (2026-10-14)
+## 검증 현황 (2026-10-26)
 
 ```
 pytest (v4 2개 파일 제외)  : 647 passed  (2026-09 기준선 602 + 신규 45)
@@ -284,14 +287,20 @@ fetch.py demo / search.py demo : OK
 visual_audit.py --selftest : OK  (실전 report.md 1건: 후보 11건 추출, 연번 열 오탐 0)
 verify_facts.py demo       : OK  (승인 목차 파서 12부·4축 그대로)
 독립 리뷰                  : opus 2회(독자·목표 묶음 13건·시각화 묶음 13건 지적 → 반영)
-알려진 결함                : tests/test_v4_gates.py 가 finalize_report 모듈 부재로 수집 실패
+pytest                     : 739 passed (병합 후 재측정; test_e2e·test_v4_gates·test_v4_semantic 제외)
+flint 내장                 : 픽스처 17건 JS 출력과 바이트 동일, 한글 라벨 가로막대 실렌더 육안 확인(vl-convert 1.9.0)
+독립 리뷰                  : opus 2회 추가(외부 스킬 반영 1차 차단 3·권고 9, 2차 차단 3·권고 8 → 전부 반영)
+알려진 결함                : tests/test_v4_gates.py·test_v4_semantic.py 가 finalize_report 모듈 부재로 수집 실패 · v4 문장 단위 인용 강제의 오탐률은 실제 조사로 미측정
 ```
 
 ## 개발 이력
 
 | 변경 | 내용 |
 |---|---|
+| 2026-10-26 | 외부 스킬 3종 반영 — flint-chart 파이썬 포트 내장(16종 차트·사이드카 값 대조·SVG 린트), imozuru 강화 H1~H11(span 글자 대조·문장 단위 인용 강제·빌드 중단·증빙판 HTML·PDF 본문 하한), scientific-agent-skills(검색 전건 기록·학술 API 4종·축별 충분조건·확실성 라벨·TRL). 분석·반영안 `_planning/research-skill-repos-adoption-2026-10-26.md` |
 | 2026-10-14 | 조사·크롤링 강화 — 검색 백엔드 상태·워커 COVERAGE·대상 열거·탈락 사실 복귀·의심 페이지 판정·브라우저 계층·대외비 스위치·문서 파일 저장 + 열람 벤치마크 |
+| 2026-10-08 (T2) | 표 형식 다양화 — 사용자 편집 학습(대상별 묶음 세로 표 A·두 열 라벨형 B·가로 행렬 matrix), `visual-first.md` §2b 선택 규칙과 캡션 태그 `{형식=A\|B}`, `visual_audit.py` 표 키·`render_pdf.py` 에서 태그 제거. 빌더 쪽(mdr-hwpx `build_hwpx.py` A/B 렌더러)은 별도 세션 (`_planning/batches/batch-T2-table-format.md`) |
+| 2026-10-08 (T1) | 컨텍스트 예산 리팩토링 — SKILL.md 게이트 절을 카드(목적·절대규칙·영수증·포인터)로 줄이고 상세는 `verification-gates.md` 한 곳에, description ≤250자·본문 ≤12KB(목표 10KB) 가드 테스트, mdr-hwpx 통과 기준 1사본화 (`_planning/batches/batch-T1-context-budget.md`) |
 | 2026-10-08 | 독자·목표 설계(reader-goal) G0 신설 · 시각화 우선(visual-first) PRD·규칙·`visual_audit.py` · G0 필드 5개 · 워커 철칙 · 납품본 변환 규칙(mdr-hwpx) |
 | [#18](https://github.com/bbiyakfather/market-deep-research/pull/18) | 목적별 모듈화(mdr-search / market-deep-research / mdr-hwpx) + P0 검증 결함 수정 + 적대적 리뷰 결함 29건 처리 |
 | [#17](https://github.com/bbiyakfather/market-deep-research/pull/17) | README 를 실제 main 상태로 재작성 |

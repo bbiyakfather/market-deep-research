@@ -1,0 +1,168 @@
+{
+  "spacing": 0,
+  "resolve": {
+    "scale": {
+      "y": "shared"
+    }
+  },
+  "hconcat": [
+    {
+      "mark": "bar",
+      "encoding": {
+        "y": {
+          "field": "Degree Level",
+          "type": "nominal",
+          "sort": null
+        },
+        "x": {
+          "scale": {
+            "reverse": true,
+            "domain": [
+              0,
+              4171
+            ]
+          },
+          "stack": null,
+          "field": "Count",
+          "type": "quantitative"
+        },
+        "opacity": {
+          "value": 0.9
+        },
+        "color": {
+          "value": "#4e79a7"
+        }
+      },
+      "transform": [
+        {
+          "filter": {
+            "field": "Outcome",
+            "equal": "Admitted"
+          }
+        }
+      ],
+      "title": "Admitted",
+      "width": 246,
+      "height": 300
+    },
+    {
+      "mark": "bar",
+      "encoding": {
+        "y": {
+          "axis": null,
+          "field": "Degree Level",
+          "type": "nominal",
+          "sort": null
+        },
+        "x": {
+          "stack": null,
+          "field": "Count",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              4171
+            ]
+          }
+        },
+        "opacity": {
+          "value": 0.9
+        },
+        "color": {
+          "value": "#e15759"
+        }
+      },
+      "transform": [
+        {
+          "filter": {
+            "field": "Outcome",
+            "equal": "Rejected"
+          }
+        }
+      ],
+      "title": "Rejected",
+      "width": 246,
+      "height": 300
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 329,
+      "continuousHeight": 300,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10
+    },
+    "axisY": {
+      "labelFontSize": 10
+    },
+    "facet": {
+      "spacing": 30
+    },
+    "mark": {
+      "tooltip": true
+    }
+  },
+  "height": {
+    "step": 27
+  },
+  "data": {
+    "values": [
+      {
+        "Degree Level": "High School",
+        "Outcome": "Admitted",
+        "Count": 3305
+      },
+      {
+        "Degree Level": "High School",
+        "Outcome": "Rejected",
+        "Count": 2560
+      },
+      {
+        "Degree Level": "Associate",
+        "Outcome": "Admitted",
+        "Count": 4171
+      },
+      {
+        "Degree Level": "Associate",
+        "Outcome": "Rejected",
+        "Count": 1598
+      },
+      {
+        "Degree Level": "Bachelor",
+        "Outcome": "Admitted",
+        "Count": 2264
+      },
+      {
+        "Degree Level": "Bachelor",
+        "Outcome": "Rejected",
+        "Count": 1009
+      },
+      {
+        "Degree Level": "Master",
+        "Outcome": "Admitted",
+        "Count": 447
+      },
+      {
+        "Degree Level": "Master",
+        "Outcome": "Rejected",
+        "Count": 1535
+      },
+      {
+        "Degree Level": "Doctorate",
+        "Outcome": "Admitted",
+        "Count": 1663
+      },
+      {
+        "Degree Level": "Doctorate",
+        "Outcome": "Rejected",
+        "Count": 208
+      }
+    ]
+  },
+  "_width": 329,
+  "_height": 300,
+  "_options": []
+}

@@ -15,3 +15,5 @@ __pycache__/
 
 # codegraph 로컬 색인 (커밋하지 않음)
 .codegraph/
+# 스킬 폴더에서 스크립트를 돌렸을 때 생기는 로그(조사 산출물)
+codes/*/audit/

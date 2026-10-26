@@ -1,0 +1,57 @@
+{
+  "title": "Simple P&L (6 steps, auto type)",
+  "description": "Auto-detects first=start, last=end, rest=delta",
+  "chartType": "Waterfall Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Category": "Revenue",
+          "Amount": 1000
+        },
+        {
+          "Category": "COGS",
+          "Amount": -400
+        },
+        {
+          "Category": "Gross Profit",
+          "Amount": -150
+        },
+        {
+          "Category": "Operating Exp",
+          "Amount": -200
+        },
+        {
+          "Category": "Tax",
+          "Amount": -80
+        },
+        {
+          "Category": "Net Income",
+          "Amount": 170
+        }
+      ]
+    },
+    "semantic_types": {
+      "Category": "Category",
+      "Amount": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Waterfall Chart",
+      "encodings": {
+        "x": {
+          "field": "Category"
+        },
+        "y": {
+          "field": "Amount"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

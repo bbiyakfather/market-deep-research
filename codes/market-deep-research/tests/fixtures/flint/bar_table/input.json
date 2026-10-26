@@ -1,0 +1,37 @@
+{
+  "title": "Single row (% auto-hidden)",
+  "description": "n=1 → \"% of total\" is always 100%, column should be suppressed",
+  "chartType": "Bar Table",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Region": "APAC",
+          "Revenue": 4250000
+        }
+      ]
+    },
+    "semantic_types": {
+      "Region": "Region",
+      "Revenue": "Amount"
+    },
+    "chart_spec": {
+      "chartType": "Bar Table",
+      "encodings": {
+        "y": {
+          "field": "Region"
+        },
+        "x": {
+          "field": "Revenue"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

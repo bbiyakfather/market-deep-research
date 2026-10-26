@@ -10,29 +10,34 @@
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
-openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공공 MCP). 미설치 계층은
+openpyxl·yt-dlp / RUNTIME: 브라우저: agent-browser CLI → playwright MCP → claude-in-chrome·무료 공공 MCP). 미설치 계층은
 "건너뜀+경고"로 진행(자체 스택이 보장 코어). ※ `curl_cffi` 는 사실상 필수 — 내장 우회(모바일
 iOS 지문 등)가 전부 그 위에 얹혀 있다. **독자·목표 §0**(`reader-goal.md` — 핵심 메시지 가설 포함)을
 먼저 확정하고 요구사항 확정(유형·범위·**축별 충분조건**·환산옵션 OFF·출력형식·납품 형식·**승인 목차**)
 — 통과조건: `audit/research-plan.md` 존재 + §0 독자·목표(팀리드 수동 확인, gates.py 미검사) + 승인 기록 + 승인 목차(`references/research-plan.md`
 서식) 포함, 확정 전 팬아웃 금지. 기관조사면 `entity-identity.md` 선행. `audit/intent-diff.md` 는 핵심
 메시지 가설을 축별 "참이라면 관측돼야 할 것 / Fails if"로 분해해 개시.
+승인 후 `python scripts/gates.py record G0 <work_dir> --evidence "..." --refs ...`를 기록하고 `check G0`로 refs를 재검사한다. `--refs` 는 research-plan 등 고정 산출물만 — intent-diff·expansion-log 같은 수시 변경 문서를 결박하면 영수증이 무효화된다.
 
 ## G1 join + 수집 게이트
 전 워커 완료/timeout/부분실패 처리 → raw `_research/` 보존 → `facts_db.py` 스키마 검증 등재
 (위반은 제한적 재요청). **무출처 즉시 `discarded`**(audit 기록).
 등재 전 `python scripts/join_workers.py <raw1.md> <raw2.md> --out audit/join-results.json`을 실행하고 G1 영수증 refs에 그 결과 파일을 포함한다. invalid는 수정 후 재검증하고 blocked는 부분 실패로 기록한다.
+join 완료 영수증을 남긴 뒤 `python scripts/gates.py check G1 <work_dir>`로 G1 선행조건을 검사한다.
 파일별 잠정 ID 재매핑 표를 보존하고 `add_fact`/`add_evidence`의 중앙 ID로 채운 뒤 인사이트 참조도 치환한다. 기존 claim_key와 같으면 기존 fact에 `add_evidence`로 명시 병합한다.
 무신규 웨이브 판정은 **ok 워커의 EXPAND 기준**이며 blocked/invalid를 무신규로 세지 않는다. 지문은 중복 후보 신호이고 신규 여부의 최종 판단은 팀리드가 한다.
 v3 기존 claim_key는 legacy로 그대로 인정하며 자동 재작성하지 않는다. v3 신규 행도 기존 산식을 유지한다.
 v4 신규 등재부터 context의 metric/entity/entity_id/geography/period/basis/scenario/definition JSON SHA-256 키를 재계산·대조한다. v3→v4 전환 시 키 재계산과 [2] 이후 재검증이 필요하다.
+[E] 종료는 확신도가 아니라 증거로 판정한다: 축별 충분조건 논점마다 span 대조를 통과한 confirmed fact ≥1(`context.axis` 로 축 연결, 미충족은 G3 `[축근거부족]` WARN).
 evidence는 한 fact에만 속한다. G3는 모든 상태의 F→E 존재·E.fact_id 일치·E→F 존재와 역방향 목록 포함을 검사하며 신규 역참조 위반은 v4 FAIL/v3 WARN이다.
 FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노출한다. 단일 writer의 두 번째 저장 실패는 evidence pre-image로 롤백하며 프로세스 강제 종료 복구는 보장하지 않는다.
 
 ## [2] 팀리드 재검증(전건) + [Bx] claim-graph
-- 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람 →
+- 전건: 보고서 진입 후보 모든 fact 를 팀리드가 원문 재열람·verbatim/locator 대조 →
   `add_verify_event(by="lead", action="reread", reread_sha256=<재열람 원문 SHA-256: fetch.py get 의 sha256 / 로컬 PDF 파일 해시 / WebFetch verbatim 의 sha256_text>)`
   — 해시 없는 lead reread 는 add·validate 모두 거부. verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
+  재검증 선언은 `gates.py record [2] <work_dir> --evidence "..."`로 기록하고 `check [2]`로 G0·G1을 확인한다.
+- **글자 대조**: text_quote 는 `span_tools.py find <work_dir> <sha12> "<verbatim>"` 로 clean 원문 행을 확정해 evidence `span` 에 기록한다. 못 찾으면 confirm 불가(한 글자라도 다르면 실패 — 의미 검사가 아니라 "인용이 원문에 있다"까지만 보증).
 - **탈락 사실의 복귀**(`audit/gap-log.md`. 재열람·반박검색·claim-review 탈락과, 수렴에서 수용한 COVERAGE 공백을 여기 적는다. SKILL.md [2] 는 이 절만 참조): `reread_mismatch`(원문 불일치·워커 의역) → 같은 출처 재발췌 / `unreachable`(출처 접근 불가) → 대체 출처 탐색 / `refuted`(반박됨) → 반박 근거를 사실로 등재하고 종결. 공백 수용은 `ACCEPT:` 에 사유를 적는다. 줄 형식: `- <대상 또는 F-ID> — CODE: <코드> — NEXT: <후속> — ACCEPT: <사유 또는 없음>`.
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
   ② **1회 반박검색**(`counter_search.found_stronger_refutation=false`) ③ **기본소스**(`primary_source_ref`)
@@ -42,9 +47,10 @@ FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노�
   v3는 기존 ①② FAIL·③④ WARN을 유지하며 새 구조·날짜 형식 문제는 legacy WARN으로 노출한다. 본문·부록 어디에도 태그로 인용되지 않은 confirmed high-risk는 네 요건 부족 모두 WARN이다.
   불통과 → `disputed`/Unresolved(기권이 정답, audit 기록).
   판단 근거·순서는 `audit/verification-economics.md`(오류비용 vs 검증비용 vs 잔여위험).
+  반박검색 산출물은 `negative_search` 증거유형으로 결박한다.
 
 ## G2 증빙 게이트
-confirmed 전건 `source_capture`(capture_pdf 또는 브라우저 MCP 실화면 — 계층·recipe 는
+confirmed 전건 `source_capture`(capture_pdf 또는 브라우저 실화면 — 계층·recipe 는
 `evidence-capture.md`). htmlbox 재구성은 **불인정**.
 본문 사용 confirmed 핵심수치 또는 high-risk는 캡처 필수(`verify_facts.py`의 기존 FAIL 조건).
 v4의 연결 캡처는 `capture_review`가 존재하고, 현재 이미지 해시 일치·content·accept·주장/문맥
@@ -54,6 +60,8 @@ v4의 연결 캡처는 `capture_review`가 존재하고, 현재 이미지 해시
 
 ## G3 verify_facts + manifest (실패 0)
 `verify_facts.py <report.md> <work_dir> [--conversion]`:
+글자 대조: `span` 이 있으면 clean ±2행에 verbatim 이 없을 때 `[span불일치]` FAIL, `span` 이 없으면 원문 전체 탐색 실패 시 `[원문미포함]` WARN(측정 단계), clean 이 없으면 `[span없음]` WARN.
+문장 인용: 본문 F태그 문장마다 대조 통과 text_quote 가 ≥1 이어야 한다 — v4 FAIL `[문장인용없음]`, v3 WARN(계산·가정·권고 fact 는 면제, 캡처만 근거면 fact 에 `capture_only_reason` 을 적어 WARN 으로 완화). 뒷받침 자동 제안: 통과 verbatim 이 `value.raw`·entity·period 를 모두 담으면 supported, `value.raw` 만 담으면 partial 로 `audit/support-auto.jsonl` 에 제안(대장 불변)하고, partial 인 fact 가 `(일부 근거)` 표기 없이 쓰이면 `[부분근거미표기]`(v4 FAIL). 빌드 중단: `render_pdf.py` 는 렌더 직전 verify 를 다시 돌려 FAIL 이 1건이라도 있으면 PDF 를 쓰지 않고 기존 `report.pdf` 를 보존한다(임시 파일 → `os.replace`).
 본문/부록 분리(주석 `<!-- FACTSHEET:APPENDIX -->` 우선, 없으면 '## 부록' 헤딩 최후 출현) ·
 본문을 문장·표행 세그먼트로 나눠 수치↔(Fxxx) 1:1 최근접 결박(태그 하나가 줄 전체를 면제하지
 않음) · 무태그 숫자 차단 · 부록은 [무태그] 만 면제(→ [부록무태그] WARN)하고 오태그·미확정·값·단위는
@@ -64,7 +72,7 @@ high-risk 캡처 실재 · **목차 기계검사**(정규 `audit/research-plan.m
 그마저 없으면 생략 — 계획 파일 없는 기존 조사는 이 검사만으로 FAIL 하지 않음). →
 `verify_facts.py` CLI PASS 가 기준 `manifest.json` 을 자동 생성하고 G3 영수증에
 `manifest_sha256` 을 결박한다(이 시점은 report.pdf 생성 전이라 렌더 산출물은 [4] 이후
-extend 로만 추가됨).
+extend 로만 추가됨). CLI PASS는 G1·[2] 영수증을 확인한 뒤 G3 자기기록을 남기며, 누락 시 fail-closed한다.
 G3 refs에는 정규 `audit/research-plan.md` 해시(없으면 `missing`)도 결박한다.
 사용자 지정 계획은 `--check-only --plan <경로>` / `verify(..., check_only=True, plan=...)` 진단
 전용이다. 기록 경로 `verify_and_record`는 다른 계획 경로를 거부하며 진단은 영수증을 만들지 않는다.
@@ -107,13 +115,16 @@ v4의 `value`와 `capture_review`에 알 수 없는 필드가 있으면 오탈�
 유지한다. G3 이후 그 파일 내용을 바꾸면 재해시가 실패한다.
 
 ## G5c 실행코드 검증(계산·상충)
-자체포함 스크립트 실행 → stdout → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
+계산·상충·성능 주장은 최소 자체포함 스크립트 실행 → stdout 캡처 → `audit/verify-<slug>.md`(CONFIRMED/REFUTED/PARTIAL).
+시장조사 접점: 시장규모=수량×ASP·CAGR·통화환산 Decimal 검산.
 
 ## G4 preview → G5 최종 무결성
 단일 작업자를 전제로 하며 검증 중 동시 쓰기는 허용하지 않는다. 검사·기록 원자성 락은 제공하지 않는다.
 finalize는 봉인 항목 전체와 정규 원고·PDF·claim-review·계획을 검사 전후 재해시하고, 불일치하면 실패한다.
 출고 판정은 G5 `snapshot_hashes` 해시 집합이 가리키는 리비전에 대한 것이다. 이후 변경은 status/재verify가 드리프트로 탐지한다.
 G5 PDF 검사는 형식·개수 기반(F태그·링크·캡처 수)이며 내용 동일성을 보장하지 않는다. 그 확인은 G4 팀리드 육안검증의 역할이다.
+G4 육안(자작 차트 `.svg`): 빈 차트·잘린 마크·라벨 겹침·범례 불가독·잘못된 인코딩·깨진 척도·축 누락·왜곡을 본다 — 자동 지적(`[도판값불일치]` 등)은 확인 후 반영한다.
+G4 도판 린트: `python scripts/visual_audit.py --figures <work_dir>` 종료코드 0 필요(글자 9 이상·title/desc·FACTS 주석↔사이드카·외부 URL 없음·한글 폰트·막대 20 이하).
 같은 프로세스 권한의 원장·기록 위조는 신뢰 경계 밖이다. 출고 판정(`manifest.py verify`)은 영수증이 아닌 실검증으로 계산하므로 위조 기록이 판정을 바꾸지 못한다.
 status의 `최종(판정시점)`은 원장 기반 결과와 현재 스냅샷의 일치를 뜻하며, 재확인은 `manifest.py verify`로 수행한다.
 report.pdf 생성 후 **재봉인**(`manifest.extend` — 기존 항목 불변 확인 실패 시 거부 = G3 복귀,
@@ -121,9 +132,11 @@ report.pdf 생성 후 **재봉인**(`manifest.extend` — 기존 항목 불변 �
 (`audit/intent-diff.md` 개시분의 축별 "참이어야 하는가" 목록을 실제 보고서 발견과 대조 —
 축마다 gap 유무 판정, 결과를 `audit/intent-diff.md` 에 추기) → **독자 테스트**(`reader-goal.md` G4 절:
 1차 독자·설득 대상·신규 독자·핵심 메시지 귀결·인쇄 가독성) + 시각화 판정(`visual_audit.py` 후보 미결 0건,
-`visual-first.md`) + 대장→원고 역방향 고아 검사 → PDF F태그·링크·캡처 수 재검사
+`visual-first.md`) + 대장→원고 역방향 고아 검사(결론을 좌우하는 confirmed 사실이 원고에 없는가) → PDF F태그·링크·캡처 수 재검사
 + `manifest.py verify`(재봉인 기준 — 신규 파일도 실패로 판정. [4b]·G4 영수증 확인 +
 [4b]↔manifest 결박 대조 후 결과를 G5 영수증으로 자기기록).
+preview 전 `python scripts/gates.py check G4 <work_dir>`로 G0 계획 해시 드리프트를 검사하고, 확인 후 `record G4`로 기록한다.
+재봉인을 건너뛰면 report.pdf 는 변조·삭제해도 [G5] 가 잡지 못한다.
 **복귀 규칙**: 파일 변경 검출 시 G3 복귀. intent-diff gap(개시분 대비 누락 발견) 검출 시
 **[E] 확장수렴 루프로 복귀**(gap 난 축만 후속 워커 재스폰 — 축 전건 재조사 아님). 독자 테스트 실패
 (장이 핵심 메시지와 무관한 일반론으로 흐름·권고가 결정 형태가 아님)는 근거는 있으므로 **[3] 복귀**.
@@ -199,3 +212,8 @@ ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시),
 ## 상태 모델
 `confirmed`(검증완료) · `pending`(미검증) · `disputed`(정의차·상반 병기) · `superseded`(시계열 갱신,
 `last_seen`) · `discarded`(무출처·저품질, `discard_reason`). 단순 저등급 폐기 금지 — disputed/superseded 우선.
+
+## 참조문서 운영 규약
+1. 외부 의존 주장(API 한도·약관·가격)에는 `(검증 YYYY-MM-DD)` 를 붙인다.
+2. reference 가 150줄을 넘으면 분리를 검토한다.
+3. 외부 코드는 줄 단위로 직접 읽고 네트워크 호출만 확인한 뒤 들인다.

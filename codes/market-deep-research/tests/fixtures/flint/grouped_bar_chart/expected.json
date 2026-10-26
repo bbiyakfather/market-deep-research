@@ -1,0 +1,89 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Category",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Value",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 400,
+      "continuousHeight": 285
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10
+    },
+    "axisY": {
+      "labelFontSize": 10
+    },
+    "facet": {
+      "spacing": 29
+    },
+    "mark": {
+      "tooltip": true
+    }
+  },
+  "width": {
+    "step": 27
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 297
+      },
+      {
+        "Category": "Phone",
+        "Value": 378
+      },
+      {
+        "Category": "Tablet",
+        "Value": 48
+      },
+      {
+        "Category": "Desktop",
+        "Value": 911
+      },
+      {
+        "Category": "Monitor",
+        "Value": 351
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 316
+      },
+      {
+        "Category": "Mouse",
+        "Value": 34
+      },
+      {
+        "Category": "Headphones",
+        "Value": 62
+      }
+    ]
+  },
+  "_width": 400,
+  "_height": 285,
+  "_options": [
+    {
+      "key": "independentYAxis",
+      "label": "Independent Y",
+      "type": "binary",
+      "applicable": false,
+      "value": false
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "title": "Education pyramid (5 degrees)",
+  "description": "Degree levels — Admitted vs Rejected applicants",
+  "chartType": "Pyramid Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Degree Level": "High School",
+          "Outcome": "Admitted",
+          "Count": 3305
+        },
+        {
+          "Degree Level": "High School",
+          "Outcome": "Rejected",
+          "Count": 2560
+        },
+        {
+          "Degree Level": "Associate",
+          "Outcome": "Admitted",
+          "Count": 4171
+        },
+        {
+          "Degree Level": "Associate",
+          "Outcome": "Rejected",
+          "Count": 1598
+        },
+        {
+          "Degree Level": "Bachelor",
+          "Outcome": "Admitted",
+          "Count": 2264
+        },
+        {
+          "Degree Level": "Bachelor",
+          "Outcome": "Rejected",
+          "Count": 1009
+        },
+        {
+          "Degree Level": "Master",
+          "Outcome": "Admitted",
+          "Count": 447
+        },
+        {
+          "Degree Level": "Master",
+          "Outcome": "Rejected",
+          "Count": 1535
+        },
+        {
+          "Degree Level": "Doctorate",
+          "Outcome": "Admitted",
+          "Count": 1663
+        },
+        {
+          "Degree Level": "Doctorate",
+          "Outcome": "Rejected",
+          "Count": 208
+        }
+      ]
+    },
+    "semantic_types": {
+      "Degree Level": "Category",
+      "Count": "Count",
+      "Outcome": "Category"
+    },
+    "chart_spec": {
+      "chartType": "Pyramid Chart",
+      "encodings": {
+        "y": {
+          "field": "Degree Level"
+        },
+        "x": {
+          "field": "Count"
+        },
+        "color": {
+          "field": "Outcome"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}
