@@ -37,7 +37,7 @@
    openverse·commons(라이선스 필드 제공)+searx(가용 시).
    질의는 넓게(2~3 단어) 시작 — 과도하게 구체적이면 0건이 정상이다.
    **완성 인포그래픽은 openverse 에 거의 없다** — 있는 곳은 기관 사이트와 그 보고서 PDF 다.
-   `--sites` 로 기관 도메인을 직격하고(미지정 시 `assets/curated-sources.json` 의
+   `--sites` 로 기관 도메인을 직격하고(SearXNG 자체 호스트를 `searx-instances.json` 에 등록했을 때만)(미지정 시 `assets/curated-sources.json` 의
    `curated_domains` 사용), 결과에 PDF 링크가 섞이면 버리지 말고 받아서 위 1번 `pdf` 로
    크롭한다. 기관 인포그래픽의 최대 저장소가 보고서 PDF 이기 때문이다.
 4. **자작 차트** — 그 데이터를 보여주는 원문 도판(0~3)이 없으면 `scripts/make_chart.py`(막대·선) 또는 matplotlib

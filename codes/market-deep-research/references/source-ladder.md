@@ -2,8 +2,12 @@
 
 ## 검색 (`scripts/search.py`)
 `python search.py "쿼리" --n 10 --type web|news|academic|filing`
-- 계층: DuckDuckGo HTML → SearXNG 공개인스턴스 로테이션(헬스체크·백오프) → 전문 API(arXiv=academic,
-  SEC EDGAR full-text=filing, Wikipedia). `--type` 은 `curated-sources.json` 에 있는 것만, 미지원 명시 실패.
+- 계층: **ddgs 다중 백엔드**(bing·brave·duckduckgo·google·mojeek·startpage·yahoo·yandex 자동 선택; `--type news` 는
+  ddgs `news()`) → DuckDuckGo HTML 폴백 → SearXNG(`assets/searx-instances.json` 에 **자체 호스트 URL 을 등록했을 때만**,
+  공개 인스턴스는 2026-10-13 전멸) → 전문 API(arXiv=academic, 질의에 공백이 있으면 `all:"구문"` 먼저·0건이면 단어별 AND(`all:w1 AND all:w2`);
+  SEC EDGAR full-text=filing). 앞 계층 결과가 `max(3, n//2)` 미만일 때만 다음 계층이 보강한다.
+  `--type` 은 `curated-sources.json` 에 있는 것만, 미지원 명시 실패. ddgs 미설치는 `pip install ddgs`.
+- ddgs `auto` 는 질의를 bing·google·yandex·wikipedia 등 여러 회사에 동시에 보낸다 — 대외비 질의는 사용자 판단(필요하면 `DDGS().text(backend="duckduckgo")` 로 제한).
 - 실패 계층은 경고 후 건너뜀(빈결과). "검색 완전성 미보장" — 내장 WebSearch 병행.
 - **검색 연산자**: `site:` `filetype:pdf` `intitle:` `"정확구문"` `-제외` `OR` `after:/before:`. 영문 우선.
 
@@ -25,12 +29,12 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 
 ## fetch 사다리 (`scripts/fetch.py`)
 `python fetch.py get <URL> --out _sources`
-1. **공통 보안경계**(`fetch.request_bytes`, 검색·이미지 수집도 공유): HTTP(S)만 · private/loopback/link-local/reserved IP 및 리다이렉트 대상
+1. **공통 보안경계(계층이 아니라 공통 전제)**(`fetch.request_bytes`, 이미지 수집도 공유; **ddgs 계층은 예외** — primp 로 직접 통신하며 고정 검색엔진 호스트만 접속, 결과 URL 은 목록일 뿐, `DDGS_PROXY` 환경변수를 읽는다): HTTP(S)만 · private/loopback/link-local/reserved IP 및 리다이렉트 대상
    차단(매 홉 DNS 사전검증, 최대 5홉) · 검증한 IP로 연결 고정(curl RESOLVE / urllib 숫자 IP 연결, 원 호스트 TLS 검증 유지).
-   환경 프록시는 목적지 IP를 검증할 수 없어 사용하지 않는다. 추가 사후 IP 검사는 요청 송신 자체를 되돌리지 못한다.
+   fetch 사다리는 환경 프록시를 사용하지 않는다(목적지 IP를 검증할 수 없음). 추가 사후 IP 검사는 요청 송신 자체를 되돌리지 못한다.
    · 크기(8MB)·시간(25s)·**MIME 허용목록**(실제 게이트 — PDF 는 매직바이트`%PDF-` 로 판정, 확장자/헤더는 불신).
    원문=불신뢰(추출만, 실행 금지).
-2. **curl_cffi TLS 그리드**(chrome/safari/chrome110 전수, R6). 각 홉 SSRF 재검증. CA 번들은 ASCII 경로로.
+2. **curl_cffi TLS 그리드**(chrome/safari/chrome110 전수, R6). 로그 tier 라벨: `curl_cffi:<지문>`(=direct)·`mobile`·`jina`… 각 홉 SSRF 재검증. CA 번들은 ASCII 경로로.
 3. **모바일**(`safari180_ios` TLS 지문 + iPhone UA + ko-KR). 모바일 URL 재작성 —
    네이버 블로그는 `m.blog.naver.com/PostView.naver?blogId=..&logNo=..`(**logNo 가 숫자일 때만**),
    그 외는 `m.` 서브도메인 시도 후 원 URL 재시도.
@@ -45,7 +49,7 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
    미일치 피드는 탐색 자료 `partial`로 보존하고 다음 계층을 계속 시도한다.
 7. **Wayback**(`archive.org/wayback/available`) → snapshot → `archived_url` 구분.
 8. **OGP 메타**(og:title·og:description) — 본문 실패 시 제목+요약만 `partial` 로(속성 순서 양방향 파싱).
-9. **소진 → `status:"fail"`**: 브라우저 MCP(JS 렌더링 — agent-browser 우선, playwright 폴백) 또는 대체출처로.
+9. **소진 → `status:"fail"`**: 브라우저 계층(agent-browser CLI → playwright MCP, `evidence-capture.md`, JS 렌더링) 또는 대체출처로.
 
 **도메인 라우팅**(`fetch.ROUTES`): 네이버 블로그→모바일·RSS, 네이버 뉴스/증권→Jina,
 디시·펨코·요즘IT→모바일, 티스토리→RSS, 미디엄·서브스택→Jina·RSS 등.
@@ -64,11 +68,11 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
 
 ## WAF 조기감지 정찰 (R7) — ⚠ 이 항목만 playwright 우선
 반복의도 조회에서 초기 2~3회 challenge면: 백그라운드로 fetch 격자 계속 + 포어그라운드로
-브라우저 MCP 로 페이지 로드 → 네트워크 요청에서 내부 `/api/`·`/graphql`·`.json` XHR 포착 →
+브라우저 계층으로 페이지 로드 → 네트워크 요청에서 내부 `/api/`·`/graphql`·`.json` XHR 포착 →
 그 JSON 엔드포인트를 fetch 로 직접 호출(대부분 API 는 HTML 보다 방어 약함). 신규 인프라 0.
-- **도구 선택**: `agent-browser 에는 네트워크 요청 목록 도구가 없다` — 정찰만은
+- **도구 선택**: `agent-browser CLI 에는 네트워크 요청 목록 명령이 없다` — 정찰만은
   `mcp__*playwright*`(`browser_network_requests`)를 1순위로 쓴다. playwright 가 없으면
-  `agent_browser_eval` 로 `performance.getEntriesByType('resource')` 를 읽어 대체(리소스 URL 목록만
+  `agent-browser eval` 로 `performance.getEntriesByType('resource')` 를 읽어 대체(리소스 URL 목록만
   나오고 요청/응답 본문은 못 본다 — 열위 폴백임을 인지할 것).
 
 ## 코어 내장 (구 insane-search 위임분)
@@ -79,5 +83,5 @@ generic fetch 전에, 소스에 공식 엔드포인트 있으면 그것부터(`c
   이런 소스가 필요하면 `references/extract-recipes.md` 의 recipe 를 직접 쓴다.
 
 ## 정책선 (완화 불가)
-인가된 대상·본인 세션만. **무단 login/CAPTCHA/paywall 우회 금지**. Googlebot UA·범용 캐시 제외.
+인가된 대상·본인 세션만. **무단 login/CAPTCHA/paywall 우회 금지**. Googlebot UA·공개 캐시(Jina·Wayback)는 금지 대상이 아니다(공개 자료 접근).
 보존: 원본(raw) + 정제본(trafilatura clean) 둘 다 + SHA-256. archived_url 은 원 URL 과 구분.

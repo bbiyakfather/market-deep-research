@@ -4,7 +4,7 @@
 | 상황 | 방법 | 유형 | 증빙 인정 | 저장 |
 |---|---|---|---|---|
 | 로컬/다운로드 PDF | `capture_pdf.py`(fitz 정확숫자 하이라이트+크롭) | **source_capture** | ✅ | `_captures/E###.png` |
-| 접근 가능한 웹 | 실화면 스크린샷(브라우저 MCP — 아래 계층순) | **source_capture** | ✅ | `_captures/E###.png` |
+| 접근 가능한 웹 | 실화면 스크린샷(브라우저 계층 — 아래 순서) | **source_capture** | ✅ | `_captures/E###.png` |
 | 차단·유실 원문 | `capture_web.py`(insert_htmlbox 재구성) | **reconstructed_excerpt** | ❌ | `_reconstructed/` |
 
 - **재구성 발췌(htmlbox)는 증빙 불인정**: 연구자가 그린 재현물이라 조작 발췌도 통과할 수 있음.
@@ -23,28 +23,40 @@
   그래도 엉뚱한 표의 같은 숫자를 잡지 않았는지 육안 확인은 유지.
 
 ## 실화면 캡처 — 브라우저 계층 + 메타 결박(필수)
-계층(위에서부터 시도): **1순위 `agent-browser`** → 2순위 playwright MCP → 3순위 claude-in-chrome
-(브라우저에 이미 로그인 세션이 있어야 열리는 페이지). agent-browser 가 1순위인 이유 = `path` 로
-`_captures/E###.png` 에 **직접 저장** · `allowedDomains` 로 대상 도메인 밖 트래픽 차단(`fetch.py`
-보안경계와 정합) · `eval` 로 스크롤·메타를 직접 제어.
+계층(위에서부터 시도): **1순위 `agent-browser` CLI(Bash)** → 2순위 playwright MCP → 3순위 claude-in-chrome
+(브라우저에 이미 로그인 세션이 있어야 열리는 페이지). ※ 같은 이름의 `agent_browser_*` MCP 도구는
+등록돼 있지 않다(2026-10-13) — CLI 로만 쓴다. 1순위인 이유 = **절대경로**로 `_captures/E###.png` 에
+직접 저장 · `--allowed-domains` 로 대상 도메인 밖 트래픽 차단(`fetch.py` 보안경계와 정합 — **새 브라우저 컨텍스트를 띄울 때만 적용**되므로 출처(도메인)마다 `close` 후 새로 `open`, 또는 `--session <출처별 이름>` 분리) ·
+`eval` 로 스크롤·메타를 직접 제어. 모든 호출에 `timeout` 을 건다(첫 open 은 번들 Chrome
+콜드 스타트로 120초 넘게 멈춘 듯 보인다).
 
-### 표준 recipe (agent-browser) — 2026-08-03 실측 확인
-1. `agent_browser_open(url, allowedDomains=[대상도메인, 이미지CDN])` — 반환 `data.url` 이 리다이렉트
-   후 **최종 URL**(http→https 실측 확인).
-2. `agent_browser_wait_for_text(핵심수치 verbatim 일부)` — 렌더 완료 + 도달 검증 겸용.
-3. `agent_browser_eval` 로 **목표 요소를 화면에 올리고 메타를 한 번에 취득**:
-   `el.scrollIntoView({block:'center'})` 후 `innerWidth+'x'+innerHeight`(viewport) ·
-   `location.href`(최종 URL) · 요소 rect 를 반환. → `evidence.locator` 에 이때 쓴 CSS selector 기록.
-4. `agent_browser_screenshot(path="_captures/E###.png", format="png")` — **selector 없이 뷰포트 캡처**.
-5. 저장된 PNG 를 **팀리드가 Read 로 육안 확인**(핵심수치가 실제로 찍혔는지). 미확인이면 3~4 재시도.
+### 표준 recipe (agent-browser CLI) — 2026-10-13 실측 확인
+```bash
+timeout 180 agent-browser --allowed-domains "대상도메인,이미지CDN" open "<url>"  # 1. 첫 호출(콜드 스타트). 출력 `✓ <title>` + 최종 URL(리다이렉트 후)
+timeout 30 agent-browser wait --text "<핵심수치 verbatim 일부>"            # 2. 렌더 완료 + 도달 검증 겸용
+timeout 30 agent-browser eval "(()=>{const e=…;e.scrollIntoView({block:'center'});return location.href+' '+innerWidth+'x'+innerHeight+' '+JSON.stringify(e.getBoundingClientRect())})()"  # 3. 요소를 화면에 올리고 최종URL·viewport·rect 취득 → evidence.locator 에 selector 기록
+timeout 30 agent-browser screenshot "<절대경로>/_captures/E###.png"          # 4. 뷰포트 캡처(selector 없이, 1264x569). 경로는 데몬의 현재 폴더 기준 → `_captures/E###.png` 는 절대경로로
+timeout 30 agent-browser close --all                                        # 5. 출처(도메인)마다 세션째 닫기 → 다음 출처는 1번부터 새로 open
+```
+6. 저장된 PNG 를 **팀리드가 Read 로 육안 확인**(핵심수치가 실제로 찍혔는지). 미확인이면 3~4 재시도.
+   ⚠ `open` 이 **간헐적으로 멈춘다**(2026-10-13 실측 5회 중 2회, 세션 재기동 직후) — timeout 에 걸리면
+   `agent-browser close --all` 후 1번부터 1회 재시도. 그래도 멈추면 2순위 playwright 로.
+   (`scrollintoview <sel>` 로도 올릴 수 있으나 메타는 `eval`/`get url` 로 따로 취득.)
+
+### 2순위 recipe (playwright MCP) — 2026-10-13 실측 확인
+1. `browser_navigate(url)` → 2. `browser_evaluate` 로 `scrollIntoView` + `location.href`·`innerWidth+'x'+innerHeight`·rect 취득
+→ 3. `browser_take_screenshot(filename="research_…/_captures/E###.png")` → 4. Read 로 육안 확인.
+⚠ `filename` 은 **Claude Code 를 띄운 작업공간 루트(와 `.playwright-mcp/`) 아래만** 허용 — 다른 경로는
+"outside allowed roots" 거부. 작업공간 루트 기준 **상대경로**로 쓴다.
 
 ### ⛔ `selector` 크롭 금지 — 2026-08-03 실측 반증
-`agent_browser_screenshot(selector=…)` 는 **크롭 크기만 맞고 내용은 백지**로 저장되면서
-`success:true` 를 반환한다(요소가 화면 안이든 밖이든 동일, `scrollIntoView` 후에도 동일).
-`fullPage:true` 와 함께 주면 selector 는 **조용히 무시**된다. 자동 검출이 불가능한 백지 증빙이
+(MCP 시절 실측. CLI 에서 재검증하기 전까지 동일 적용.)
+`screenshot` 의 selector 크롭은 **크롭 크기만 맞고 내용은 백지**로 저장되면서
+성공을 반환한다(요소가 화면 안이든 밖이든 동일, `scrollIntoView` 후에도 동일).
+`fullPage` 와 함께 주면 selector 는 **조용히 무시**된다. 자동 검출이 불가능한 백지 증빙이
 `source_capture` 로 등재되는 최악의 경로이므로 **증빙 캡처에 selector 를 쓰지 않는다**.
 크롭이 필요하면 뷰포트 캡처 + 캡션으로 위치를 지정한다(원문 맥락이 함께 보이는 편이 증빙에 유리).
-⚠ 이 때문에 **5번 육안 확인은 생략 불가** — 도구의 `success:true` 는 캡처 성공을 보장하지 않는다.
+⚠ 이 때문에 **육안 확인은 생략 불가** — 도구의 성공 응답은 캡처 성공을 보장하지 않는다.
 
 ### 메타 결박 (계층 무관 동일 적용)
 스크린샷 evidence 는 **최종 URL · 접근 시각(accessed_at) · viewport · locator(selector)** 를 함께
@@ -87,12 +99,12 @@ v3 자료는 기존 실재 검사로 통과 가능하지만 신규 검토 누락
 IEA 스크롤리텔링·비네트 광고·무한스크롤 등 **휠 스크롤·PageDown·좌표 scroll_to 가 목표 문단에
 도달하지 못하는** 페이지(2026-07 PEM 조사에서 미캡처 4건 발생 → 전량 해소).
 
-**1순위 — agent-browser `eval` + `scrollIntoView`** (2026-08-03 실측: 뷰포트 높이 569 밖인 문서
+**1순위 — agent-browser CLI `scrollintoview <sel>` / `eval` + `scrollIntoView`** (2026-08-03 MCP 시절 실측: 뷰포트 높이 569 밖인 문서
 y=2702 위치의 표가 `scrollIntoView({block:'center'})` 후 뷰포트 캡처에 정확히 담겼다).
-`agent_browser_eval` 로 목표 요소를 셀렉터/텍스트로 찾아 `scrollIntoView` → 뷰포트 캡처.
+`eval` 로 목표 요소를 셀렉터/텍스트로 찾아 `scrollIntoView` → 뷰포트 캡처.
 좌표가 아니라 **요소 기준**이라 광고 오버레이·가상스크롤과 무관하게 도달한다.
 
-**3순위 폴백 — claude-in-chrome `find` → `scroll_to`** (agent-browser 미연결이거나 브라우저의
+**3순위 폴백 — claude-in-chrome `find` → `scroll_to`** (agent-browser·playwright 불가이거나 브라우저의
 기존 로그인 세션이 필요할 때):
 1. `mcp__claude-in-chrome__find` 로 목표 문단의 고유 텍스트(핵심수치 verbatim 일부)를 검색 → `ref` 확보.
 2. `mcp__claude-in-chrome__computer` `scroll_to(ref)` — 좌표가 아니라 **요소 ref 기준**으로 이동(광고 오버레이·가상스크롤 무관하게 도달).

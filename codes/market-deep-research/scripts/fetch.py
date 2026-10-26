@@ -21,6 +21,7 @@ import http.client
 import ipaddress
 import json
 import os
+import re
 import shutil
 import socket
 import sys
@@ -31,7 +32,7 @@ import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote, urljoin, urlparse
+from urllib.parse import quote, unquote, urljoin, urlparse
 
 MAX_BYTES = 8 * 1024 * 1024
 MAX_IMG_BYTES = 15 * 1024 * 1024
@@ -45,6 +46,9 @@ ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml"
 CHALLENGE_MARKERS = ("just a moment", "access denied", "cf-challenge", "datadome",
                      "sec-if-cpt-container", "enable javascript and cookies",
                      "verifying you are human", "captcha-delivery")
+# 본문 길이와 무관하게 partial 로 보낼 "오류 페이지·껍데기" 마커(네이버 블로그 글 없음 alert, 데스크톱 frameset 의 iframe 태그).
+# ponytail: 네이버 블로그 전용 문자열 일치뿐이다. 다른 사이트의 오류 페이지는 리다이렉트 비교(redirected_other_doc)에만 의존한다.
+SHELL_MARKERS = ("게시물이 삭제되었거나 다른 페이지로 변경되었습니다", '<iframe id="mainframe"')
 
 # --- 내장 우회 계층 상수 (구 insane-search 위임분 흡수) -----------------------
 MOBILE_UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 "
@@ -148,7 +152,8 @@ def _audit_fetch_attempt(url: str, tier: str, result: dict | None = None,
             "tier": tier,
             "status": result.get("acquisition_status", "fail"),
             "http_status": result.get("status"),
-            "failure_reason": failure_reason or (result.get("reason")
+            "final_url": result.get("final_url"),
+            "failure_reason": failure_reason or result.get("failure_reason") or (result.get("reason")
                                if result.get("acquisition_status") == "fail" or not result.get("ok") else None),
             "body_sha256": hashlib.sha256(body_bytes).hexdigest() if body_bytes else None,
             "snapshot_path": snapshot_path,
@@ -233,6 +238,9 @@ def validate_body(text: str, status: int, success_selectors: list[str] | None = 
     n = len(text or "")
     if success_selectors and any(s.lower() in low for s in success_selectors):
         return {"verdict": "ok", "reason": "success selector matched"}  # ① 성공 셀렉터 최우선
+    for m in SHELL_MARKERS:                            # ①-b 확정 성공(②)보다 앞: 긴 껍데기도 본문이 아니다
+        if m in low:
+            return {"verdict": "partial", "reason": f"error/shell page: {m}"}
     body = extract_text(text)
     if len(body) >= 1000:                              # ② 본문이 충분히 길면 확정 성공(V27 —
         return {"verdict": "ok", "reason": f"body {len(body)} chars"}  #   긴 기사 안의 챌린지 문구 인용은 오탐 아님)
@@ -390,7 +398,8 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = MAX_REDIRECTS,
     buf, status = response["raw"], response["status"]
     mime = response["headers"].get("content-type", "").split(";", 1)[0].strip().lower()
     text = response_text(response)
-    base = {"status": status, "text": text, "final_url": response["final_url"], "mime": mime}
+    base = {"status": status, "text": text, "final_url": response["final_url"], "mime": mime,
+            "requested_url": url}
     # PDF 판정 전에 상태를 거부한다. 진단 본문은 유지하되 확보 성공으로 쓰지 않는다.
     if not 200 <= status < 300:
         return {**base, "ok": False, "reason": f"http {status}", "is_pdf": False}
@@ -436,7 +445,7 @@ def _mobile_urls(url: str) -> list[str]:
             out.append(f"https://m.blog.naver.com/PostView.naver?blogId={seg[0]}&logNo={seg[1]}")
         out.append(url.replace("://blog.naver.com", "://m.blog.naver.com", 1))
     elif host and not host.startswith("m.") and host.count(".") >= 1:
-        out.append(p._replace(netloc="m." + p.netloc).geturl())
+        out.append(p._replace(netloc="m." + (p.netloc[4:] if host.startswith("www.") else p.netloc)).geturl())
     out.append(url)                                     # 원 URL + 모바일 UA 조합도 시도
     return list(dict.fromkeys(out))
 
@@ -538,6 +547,35 @@ def _try_derived(url: str, impersonate: str, headers: dict | None = None) -> dic
         return {"ok": False, "reason": f"error:{e}", "status": None, "text": "", "final_url": url}
 
 
+def _norm_url(u: str) -> str:
+    """리다이렉트 비교용 정규화: 스킴·www./m.·끝 슬래시·index.html·fragment·utm_*·퍼센트 인코딩·IDN 표기 무시, 그 외 쿼리는 유지(네이버 logNo).
+
+    ponytail: /about → /ko/about 같은 로케일 접두 리다이렉트는 404 로케일 리다이렉트와 구분 못 해 다루지 않는다.
+    """
+    p = urlparse(u)
+    host = (p.hostname or "").lower()
+    try:
+        host = host.encode("idna").decode()
+    except UnicodeError:
+        pass
+    for pre in ("www.", "m."):
+        host = host[len(pre):] if host.startswith(pre) else host
+    path = re.sub(r"/index\.html?$", "", unquote(p.path)).rstrip("/")
+    query = sorted(q for q in (unquote(x.replace("+", " ")) for x in p.query.split("&"))
+                   if q and not q.lower().startswith("utm_"))
+    return f"{host}{':%d' % p.port if p.port else ''}{path}?{'&'.join(query)}"
+
+
+def _redirected_other_doc(res: dict) -> bool:
+    req, final = res.get("requested_url"), res.get("final_url")
+    if not req or not final:
+        return False
+    rp = urlparse(req)
+    if rp.path in ("", "/") and not rp.query:           # 홈페이지 → 메인 앱 리다이렉트는 정상
+        return False
+    return _norm_url(req) != _norm_url(final)
+
+
 def _candidates(tier: str, url: str):
     """계층 이름 → (라벨, _fetch_once 형태 응답) 후보들을 순서대로 내놓는다."""
     if tier == "direct":
@@ -590,6 +628,7 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
     trace: list[dict] = []
     fetch_refs: list[str] = []
     partial_res: dict | None = None
+    moved: str | None = None                            # 앞선 live 시도가 남긴 redirected_other_doc 사유
     last_html: str = ""
     check_url_safe(url)                                 # 진입 전 1차 검증
 
@@ -610,6 +649,16 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
                     v = {"verdict": "ok", "reason": "pdf"}
                 else:
                     v = validate_body(res.get("text", ""), status, success_selectors)
+                if res.get("ok") and _redirected_other_doc(res):   # 판정과 무관하게 착지 문서가 다르면 기록
+                    res["failure_reason"] = f"redirected_other_doc:{res['final_url']}"
+                    if tier == "direct":                          # 파생 URL(mobile) 리다이렉트는 상속하지 않는다
+                        moved = res["failure_reason"]
+                    if v["verdict"] == "ok":                      # 본문은 보존, ok 만 금지
+                        v = {"verdict": "partial", "reason": res["failure_reason"]}
+                elif v["verdict"] == "ok" and moved and tier in ("jina", "googlebot", "rss"):
+                    # 프록시는 리다이렉트를 가려 준다. wayback 은 사라진 원문의 정당한 사본이라 예외.
+                    v = {"verdict": "partial", "reason": moved}
+                    res["failure_reason"] = moved
                 res["acquisition_status"] = v["verdict"] if v["verdict"] in ("ok", "partial") else "fail"
                 if res["acquisition_status"] == "fail":
                     res["reason"] = v["reason"]
@@ -648,7 +697,7 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
             return _result("partial", {"final_url": url, "text": og, "mime": "text/html"},
                            trace, note="ogp", fetch_refs=fetch_refs)
     return {"status": "fail", "final_url": url, "trace": trace, "fetch_refs": fetch_refs,
-            "hint": "자체 사다리 전 계층 소진 — 브라우저 MCP(agent-browser 우선, JS 렌더링) 또는 대체출처를 찾을 것"}
+            "hint": "자체 사다리 전 계층 소진 — 브라우저 계층(agent-browser CLI → playwright MCP, references/evidence-capture.md) 또는 대체출처를 찾을 것"}
 
 
 def fetch(url: str, success_selectors: list[str] | None = None,
@@ -675,7 +724,7 @@ def _result(status: str, res: dict, trace: list, note: str = "", fetch_refs: lis
             "archived_url": res.get("archived_url"), "mime": res.get("mime"),
             "text": res.get("text", ""), "raw": res.get("raw"), "is_pdf": res.get("is_pdf", False),
             "trace": trace, "note": note or res.get("_note", ""), "fetch_ref": res.get("_fetch_ref"),
-            "fetch_refs": fetch_refs or []}
+            "failure_reason": res.get("failure_reason"), "fetch_refs": fetch_refs or []}
 
 
 def _html_title(html: str) -> str | None:
@@ -886,8 +935,13 @@ def main(args: list[str] | None = None) -> None:
     args = sys.argv[1:] if args is None else args
     if not args or args[0] == "demo":
         demo()
-    elif args[0] in ("smoke", "get") and len(args) >= 2:
-        r = fetch(args[1])
+    elif args[0] in ("smoke", "get") and len(args) >= 2 and args[1].startswith(("http://", "https://")):
+        try:
+            r = fetch(args[1])
+        except SsrfBlocked as e:                      # 차단은 유지하고 보고만 JSON 으로
+            print(json.dumps({"status": "fail", "failure_reason": f"ssrf_blocked: {e}", "url": args[1]},
+                             ensure_ascii=False, indent=2))
+            sys.exit(1)
         if args[0] == "get":
             out = args[args.index("--out") + 1] if "--out" in args else "_sources"
             if r["status"] in ("ok", "partial"):

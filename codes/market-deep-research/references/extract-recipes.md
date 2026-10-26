@@ -17,7 +17,7 @@ fetch.py 가 깨끗한 본문을 확보하면, 서브에이전트(LLM=extractor)
 - 정확숫자 캡처는 `capture_pdf.py`. 스캔PDF(텍스트레이어 없음)는 OCR 한계 고지 + 실패상태.
 
 ## 특수 소스 recipe (비-v1 배선 — 필요 시 수동)
-v1 코어(DDG/SearXNG/arXiv/SEC/Wikipedia) 외.
+v1 코어(ddgs/DDG/SearXNG/arXiv/SEC) 외.
 - **강방어 사이트·네이버 블로그/뉴스는 `fetch.py` 사다리에 내장**됐다(도메인 라우팅·모바일
   iOS 지문·Googlebot·RSS·OGP). 그냥 `fetch(url)` 을 부르면 된다 — 별도 배선 불필요.
 - Semantic Scholar / CrossRef: 논문 메타(무료 API). GitHub: 코드·이슈. HN/Reddit: 토론(Algolia/.json).

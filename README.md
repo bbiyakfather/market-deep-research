@@ -140,7 +140,7 @@ python scripts/visual_audit.py report.md --decisions audit/visual-decisions.json
 
 ## 수집 스택 (유료 API 무의존)
 
-- **검색** (`scripts/search.py`): DuckDuckGo HTML → SearXNG 공개 인스턴스 로테이션 → 전문 무료 API(arXiv·SEC EDGAR·Wikipedia). 내장 WebSearch 와 병행.
+- **검색** (`scripts/search.py`): ddgs 다중 백엔드(`--type news` 는 ddgs news) → DuckDuckGo HTML 폴백 → SearXNG(자체 호스트 등록 시만) → 전문 무료 API(arXiv·SEC EDGAR). 내장 WebSearch 와 병행.
 - **fetch** (`scripts/fetch.py`): 강방어 사이트 우회 사다리 — 도메인 라우팅 → curl_cffi TLS 지문 → **모바일 iOS 지문** → Jina Reader → Googlebot UA → RSS → Wayback → OGP. 성공 판정은 HTTP 200 이 아니라 본문 검증. 원본(raw)+정제본을 SHA-256 과 함께 보존.
 - fetch.py 는 **현재 폴더** `audit/` 에 로그·스냅샷을 씁니다 — 모든 스크립트는 작업폴더(WD)에서 절대경로로 실행합니다. 스킬 폴더에서 돌리면 조사 원문이 저장소에 섞입니다.
 

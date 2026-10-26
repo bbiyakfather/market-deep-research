@@ -10,7 +10,7 @@
 
 ## G0 preflight
 `python scripts/preflight.py`(HARD: python·fitz·pandoc·chrome / SOFT: curl_cffi·trafilatura·
-openpyxl·yt-dlp / RUNTIME: 브라우저 MCP(agent-browser 우선)·무료 공공 MCP). 미설치 계층은
+openpyxl·yt-dlp / RUNTIME: 브라우저: agent-browser CLI → playwright MCP → claude-in-chrome·무료 공공 MCP). 미설치 계층은
 "건너뜀+경고"로 진행(자체 스택이 보장 코어). ※ `curl_cffi` 는 사실상 필수 — 내장 우회(모바일
 iOS 지문 등)가 전부 그 위에 얹혀 있다. **독자·목표 §0**(`reader-goal.md` — 핵심 메시지 가설 포함)을
 먼저 확정하고 요구사항 확정(유형·범위·**축별 충분조건**·환산옵션 OFF·출력형식·납품 형식·**승인 목차**)
@@ -47,7 +47,7 @@ FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노�
   반박검색 산출물은 `negative_search` 증거유형으로 결박한다.
 
 ## G2 증빙 게이트
-confirmed 전건 `source_capture`(capture_pdf 또는 브라우저 MCP 실화면 — 계층·recipe 는
+confirmed 전건 `source_capture`(capture_pdf 또는 브라우저 실화면 — 계층·recipe 는
 `evidence-capture.md`). htmlbox 재구성은 **불인정**.
 본문 사용 confirmed 핵심수치 또는 high-risk는 캡처 필수(`verify_facts.py`의 기존 FAIL 조건).
 v4의 연결 캡처는 `capture_review`가 존재하고, 현재 이미지 해시 일치·content·accept·주장/문맥
