@@ -20,7 +20,7 @@ fetch.py 가 깨끗한 본문을 확보하면, 서브에이전트(LLM=extractor)
 ## 특수 소스 recipe (비-v1 배선 — 필요 시 수동)
 v1 코어(ddgs/DDG/SearXNG/arXiv/SEC) 외.
 - **강방어 사이트·네이버 블로그/뉴스는 `fetch.py` 사다리에 내장**됐다(도메인 라우팅·모바일
-  iOS 지문·Googlebot·RSS·OGP). 그냥 `fetch(url)` 을 부르면 된다 — 별도 배선 불필요.
+  iOS 지문·브라우저·Googlebot·RSS·OGP). 그냥 `fetch(url)` 을 부르면 된다 — 별도 배선 불필요.
 - Semantic Scholar / CrossRef: 논문 메타(무료 API). GitHub: 코드·이슈. HN/Reddit: 토론(Algolia/.json).
 - X/Twitter Syndication · Reddit `.json` · 미디어 자막/메타(yt-dlp, SOFT): **미내장**.
   시장조사 범위 밖이라 의도적으로 뺐다. 필요하면 아래 명령을 수동으로 쓴다.

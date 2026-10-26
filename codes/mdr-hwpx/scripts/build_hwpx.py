@@ -28,6 +28,7 @@ from PIL import Image
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")   # 경고도 한글이라 같이 — cp949 콘솔에서 깨지면 못 읽는다
 except Exception:
     pass
 
@@ -67,6 +68,12 @@ DATA_CAP = 30
 TH_LINE = 1300
 TD_LINE = 1600
 CELL_VPAD = 282
+CELL_BULLET = 0               # patch_header 가 header itemCnt 로 할당 (셀 안 왼쪽정렬 + '-' 글머리)
+# 세로 묶음 표 열 너비 비율(%) — 실측 3567/9027/35584, 8953/39225
+GROUP_RATIO = {"A": (8, 18, 74), "B": (19, 81)}
+# 원고 표 캡션 끝의 명시 형식 표시 — 자동 판정보다 우선한다
+# 이름이 틀려도({형식=C}) 떼어낸다 — 발주처 문서에 표시가 인쇄되면 안 된다
+FMT_RE = re.compile(r"\s*\{형식=([^}]*)\}\s*$")
 
 # report.md 의 로마숫자 부는 `# Ⅰ.` 또는 `## Ⅰ.` 로 온다. 그룹 1 = 해시.
 CHAPTER_RE = re.compile(r"^(#{1,2})\s+([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ]+)\.\s*(.+)$")
@@ -147,6 +154,7 @@ def parse_md(text: str) -> list[dict]:
     lines = text.splitlines()
     i = 0
     pending_caption: str | None = None      # <표> 캡션은 표보다 먼저 나온다
+    pending_fmt = ""                        # 캡션 끝 {형식=A} 표시 — 표 블록으로 넘긴다
 
     while i < len(lines):
         ln = lines[i].rstrip()
@@ -169,7 +177,18 @@ def parse_md(text: str) -> list[dict]:
             blocks.append({"t": "footnote", "text": f"{m.group(1)} {m.group(2)}"})
 
         elif s.startswith("<표>"):
-            pending_caption = s[3:].strip()
+            cap = s[3:].strip()
+            m = FMT_RE.search(cap)
+            pending_fmt = ""
+            if m:
+                name = m.group(1).strip()
+                name = "matrix" if name.lower() == "matrix" else name.upper()
+                if name in ("A", "B", "matrix"):
+                    pending_fmt = name
+                else:                                   # 모르는 이름은 자동 판정으로 넘긴다
+                    print(f"  ! 알 수 없는 표 형식 {{형식={m.group(1)}}} — 자동 판정 사용: {cap}",
+                          file=sys.stderr)
+            pending_caption = FMT_RE.sub("", cap)       # 표시는 출력 문서에 남기지 않는다
 
         elif s.startswith("[그림]"):                       # 직전 그림의 캡션
             for b in reversed(blocks):
@@ -189,8 +208,10 @@ def parse_md(text: str) -> list[dict]:
                 i += 1
             i -= 1
             if rows:
-                blocks.append({"t": "table", "rows": rows, "caption": pending_caption or "", "src": ""})
+                blocks.append({"t": "table", "rows": rows, "caption": pending_caption or "", "src": "",
+                               "fmt": pending_fmt})
                 pending_caption = None
+                pending_fmt = ""
 
         elif m := re.match(r"^\* ([^:\n]{1,20}) : (.*)$", s):
             # "* 출처 : ..." — 직전이 표면 표의 출처행으로, 그림이면 캡션 아래 문단으로
@@ -293,20 +314,29 @@ def est_height(rows: list[list[str]], widths: list[int], has_src: bool) -> int:
     return h
 
 
-def cell(text: str, style: tuple[int, int], bf: int, col: int, row: int,
-         width: int, height: int, colspan: int = 1) -> str:
+def cell(text: str | list[str], style: tuple[int, int], bf: int, col: int, row: int,
+         width: int, height: int, colspan: int = 1, rowspan: int = 1) -> str:
+    """text 가 list 면 항목마다 글머리 문단 하나씩(줄바꿈 문자로 흉내내지 않는다)."""
     cid, pid = style
+    bold = TH[0] if style is TD else None
+    if isinstance(text, list):
+        # 셀은 <hp:p> 를 최소 1개 가져야 한다 — 빈 목록이면 한글이 파일을 못 연다
+        body = "".join(f'<hp:p id="0" paraPrIDRef="{CELL_BULLET}" styleIDRef="0" pageBreak="0" '
+                       f'columnBreak="0" merged="0">{runs(t, cid, bold)}</hp:p>'
+                       for t in text or ["-"])
+    else:
+        body = (f'<hp:p id="0" paraPrIDRef="{pid}" styleIDRef="0" pageBreak="0" columnBreak="0" '
+                f'merged="0">{runs(text, cid, bold)}</hp:p>')
     return (
         f'<hp:tc name="" header="{1 if row == 0 else 0}" hasMargin="0" protect="0" editable="0" '
         f'dirty="0" borderFillIDRef="{bf}">'
         f'<hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="CENTER" '
         f'linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" '
         f'hasNumRef="0">'
-        f'<hp:p id="0" paraPrIDRef="{pid}" styleIDRef="0" pageBreak="0" columnBreak="0" merged="0">'
-        f'{runs(text, cid, TH[0] if style is TD else None)}</hp:p>'
+        f'{body}'
         f'</hp:subList>'
         f'<hp:cellAddr colAddr="{col}" rowAddr="{row}"/>'
-        f'<hp:cellSpan colSpan="{colspan}" rowSpan="1"/>'
+        f'<hp:cellSpan colSpan="{colspan}" rowSpan="{rowspan}"/>'
         f'<hp:cellSz width="{width}" height="{height}"/>'
         f'<hp:cellMargin left="0" right="0" top="0" bottom="0"/>'
         f'</hp:tc>'
@@ -325,27 +355,124 @@ def _figure_label(caption: str) -> str:
     return f"[그림{m.group(1)}] {m.group(2)}" if m else f"[그림] {caption}"
 
 
+def pick_table_format(rows: list[list[str]]) -> str:
+    """칸 글이 문장형이면 세로 묶음("A"), 아니면 가로 행렬("matrix").
+
+    기준은 표시 폭(_disp_len)이 아니라 글자 수 — 묻는 것이 "문장형이냐"라서다. 1열은 대상 라벨이라 뺀다.
+    ponytail: A/B 는 행 대상이 비교 대상(나라·제품)이냐 개념(리스크·단계)이냐로 갈리는데 그건 의미
+    판정이라 코드가 모른다(속성 수·1열 중복으로는 실사례에서 맞지 않았다). 그래서 자동은 A 까지만 하고,
+    B 는 원고의 `{형식=B}` 로 지정한다. 명시 표시는 항상 이 판정을 덮어쓴다.
+    """
+    ncol = max(len(r) for r in rows)
+    longest = max((len(c) for r in rows[1:] for c in r[1:]), default=0)
+    if ncol <= 3 or longest < 25:                 # 16~24자 구간도 matrix (이미 좁지 않다)
+        return "matrix"
+    return "A"
+
+
+def _split_items(text: str) -> list[str]:
+    """쉼표로 이은 항목을 나눈다. 괄호 안 쉼표("심사 80일(보완 포함, 1회)")는 자르지 않는다."""
+    out, depth, start = [], 0, 0
+    for i, c in enumerate(text):
+        depth = max(0, depth + (c in "(（[") - (c in ")）]"))   # 짝 없는 `1)` 이 음수로 새지 않게
+        if c == "," and depth <= 0 and text[i + 1:i + 2] == " ":
+            out.append(text[start:i].strip())
+            start = i + 2
+    out.append(text[start:].strip())
+    return [t for t in out if t] or ["-"]
+
+
+def _grouped_rows(rows: list[list[str]], fmt: str) -> list[tuple[str, list[tuple[str, list[str]]]]]:
+    """가로 행렬 → [(대상, [(속성명, [문단...]), ...])].
+
+    A 는 속성마다 한 행(속성명이 가운데 열). B 는 속성명이 칸 안 "(속성명) " 접두로 들어가
+    대상당 한 행뿐이라 항목이 ("", 전 문단) 하나다. 머리행 칸이 비어도 데이터는 버리지 않는다 —
+    속성명을 "" 로 두고 열을 살린다(이웃 머리글을 물려 쓰는 건 작성자 의도 추측이라 하지 않는다).
+    """
+    head = rows[0]
+    out = []
+    for r in rows[1:]:
+        items = []
+        for ci in range(1, len(head)):
+            val = r[ci].strip() if ci < len(r) else ""
+            items.append((head[ci], _split_items(val) if val not in ("", "-") else ["-"]))
+        if fmt == "B":
+            items = [("", [f"({a}) {t}" if a.strip() else t for a, ps in items for t in ps])]
+        out.append((r[0], items or [("", ["-"])]))      # 속성 열이 없어도 본문 행을 잃지 않는다
+    return out
+
+
+def _grouped_trs(rows: list[list[str]], fmt: str) -> tuple[list[str], int, int, int]:
+    """세로 묶음 표의 <hp:tr> 목록. (trs, 열 수, 본문 행 수, 어림 높이) 를 돌려준다.
+
+    rowSpan>1 셀은 첫 행에만 쓰고, 병합에 먹히는 아래 행은 그 자리 <hp:tc> 를 아예 쓰지 않는다.
+    colAddr/rowAddr 는 병합 전 격자 좌표다.
+    """
+    ratio = GROUP_RATIO[fmt]
+    widths = [TBL_W * r // sum(ratio) for r in ratio]
+    widths[-1] += TBL_W - sum(widths)                       # 반올림 오차는 끝 열이 흡수
+    ncol = len(widths)
+    last = ncol - 1
+    avail = widths[last] - IN_MARGIN
+
+    def lines(ps: list[str]) -> int:
+        return sum(max(1, -(-_disp_len(t) * COL_UNIT // avail)) for t in ps)
+
+    # 머리행: 대상 열 제목 + "세부 내용"(A 는 속성명 열까지 2열 병합)
+    trs = ["<hp:tr>" + cell(rows[0][0], TH, BF_TH["first"], 0, 0, widths[0], 1467)
+           + cell("세부 내용", TH, BF_TH["last"], 1, 0, sum(widths[1:]), 1467, colspan=ncol - 1)
+           + "</hp:tr>"]
+    h, ri = TH_LINE + CELL_VPAD, 1
+    for target, items in _grouped_rows(rows, fmt):
+        n = len(items)
+        for j, (attr, paras) in enumerate(items):
+            tcs = []
+            # ponytail: rowSpan 셀은 한글이 쪽 경계에서 나눌 수 없어 대상 묶음째 다음 쪽으로 밀리고,
+            # 앞 쪽 하단에 공백이 날 수 있다. 확인은 한글에서 긴 표를 직접 열어 보는 수밖에 없다.
+            if j == 0:
+                tcs.append(cell(target, TD, BF_TD["first"], 0, ri, widths[0], 800 * n, rowspan=n))
+            if fmt == "A":
+                tcs.append(cell(attr, TD, BF_TD["mid"], 1, ri, widths[1], 800))
+            tcs.append(cell(paras, TD, BF_TD["last"], last, ri, widths[last], 800))
+            trs.append("<hp:tr>" + "".join(tcs) + "</hp:tr>")
+            h += lines(paras) * TD_LINE + CELL_VPAD
+            ri += 1
+    return trs, ncol, ri, h
+
+
 def render_table(b: dict) -> str:
     rows = b["rows"]
     ncol = max(len(r) for r in rows)
     rows = [r + [""] * (ncol - len(r)) for r in rows]
-    widths = col_widths(rows, ncol)
-    nrow = len(rows) + (1 if b["src"] else 0)
-    tall = est_height(rows, widths, bool(b["src"])) > PAGE_H
+    fmt = b.get("fmt") or pick_table_format(rows)
+    if fmt == "matrix":
+        h = (len(rows) + (1 if b["src"] else 0)) * 900      # 선언 높이 (기존 값)
+        widths = col_widths(rows, ncol)
+        nbody = len(rows)
+        tall = est_height(rows, widths, bool(b["src"])) > PAGE_H
 
-    trs = []
-    for ri, r in enumerate(rows):
-        tcs = []
-        for ci, txt in enumerate(r):
-            pos = "first" if ci == 0 else ("last" if ci == ncol - 1 else "mid")
-            if ri == 0:
-                tcs.append(cell(txt, TH, BF_TH[pos], ci, ri, widths[ci], 1467))
-            else:
-                tcs.append(cell(txt, TD, BF_TD[pos], ci, ri, widths[ci], 800))
-        trs.append("<hp:tr>" + "".join(tcs) + "</hp:tr>")
+        trs = []
+        for ri, r in enumerate(rows):
+            tcs = []
+            for ci, txt in enumerate(r):
+                pos = "first" if ci == 0 else ("last" if ci == ncol - 1 else "mid")
+                if ri == 0:
+                    tcs.append(cell(txt, TH, BF_TH[pos], ci, ri, widths[ci], 1467))
+                else:
+                    tcs.append(cell(txt, TD, BF_TD[pos], ci, ri, widths[ci], 800))
+            trs.append("<hp:tr>" + "".join(tcs) + "</hp:tr>")
+    else:
+        for ci, name in enumerate(rows[0][1:], 2):
+            if not name.strip():
+                print(f"  ! 표 '{b['caption']}' 머리행 {ci}번째 열이 비어 속성명 없이 그립니다", file=sys.stderr)
+        trs, ncol, nbody, h = _grouped_trs(rows, fmt)
+        # 세로 묶음 표는 거의 한 쪽을 넘는다 — 새 행·문단 수로 다시 어림해 쪽 넘김을 맞춘다
+        h += TD_LINE + CELL_VPAD if b["src"] else 0
+        tall = h > PAGE_H
+    nrow = nbody + (1 if b["src"] else 0)
 
     if b["src"]:
-        trs.append("<hp:tr>" + cell(b["src"], TSRC, BF_SRC, 0, len(rows), TBL_W, 500,
+        trs.append("<hp:tr>" + cell(b["src"], TSRC, BF_SRC, 0, nbody, TBL_W, 500,
                                     colspan=ncol) + "</hp:tr>")
 
     caption = ""
@@ -365,7 +492,7 @@ def render_table(b: dict) -> str:
         f'<hp:tbl id="{uid()}" zOrder="0" numberingType="TABLE" textWrap="TOP_AND_BOTTOM" '
         f'textFlow="BOTH_SIDES" lock="0" dropcapstyle="None" pageBreak="CELL" repeatHeader="1" '
         f'rowCnt="{nrow}" colCnt="{ncol}" cellSpacing="0" borderFillIDRef="{BF_TBL}" noAdjust="1">'
-        f'<hp:sz width="{TBL_W}" widthRelTo="ABSOLUTE" height="{nrow * 900}" '
+        f'<hp:sz width="{TBL_W}" widthRelTo="ABSOLUTE" height="{h}" '
         f'heightRelTo="ABSOLUTE" protect="0"/>'
         # 글자처럼 취급된(treatAsChar=1) 표는 쪽 경계에서 나뉘지 않는다. 한 쪽에 들어가는 표는
         # 작년 완성본대로 1 로 두고, 한 쪽을 넘는 표만 0 으로 풀어 쪽을 걸쳐 이어지게 한다
@@ -455,6 +582,25 @@ def patch_header(header: str) -> str:
     header = header.replace("</hh:charProperties>", bold + "</hh:charProperties>", 1)
     header = header.replace(f'<hh:charProperties itemCnt="{cnt}"',
                             f'<hh:charProperties itemCnt="{cnt + 1}"', 1)
+
+    # 셀 안 왼쪽정렬 + '-' 글머리 문단 — 양식엔 없다(셀 문단은 전부 가운데 정렬). 셀 본문 문단(TD)을
+    # 복제해 정렬·글머리만 바꾼다. 글머리 문자 '-' 는 양식에 이미 정의돼 있어 그 ID 를 찾아 쓴다.
+    global CELL_BULLET
+    pcnt = int(re.search(r'<hh:paraProperties itemCnt="(\d+)"', header).group(1))
+    CELL_BULLET = pcnt
+    bullet = re.search(r'<hh:bullet id="(\d+)" char="-"', header)
+    if not bullet:                                          # 모르는 양식에 글머리를 조용히 꽂지 않는다
+        raise ValueError("양식 header.xml 에 글머리 문자 '-' 의 <hh:bullet> 정의가 없습니다")
+    bullet_id = int(bullet.group(1))
+    pbase = re.search(rf'<hh:paraPr id="{TD[1]}".*?</hh:paraPr>', header, re.S).group(0)
+    # 여백·들여쓰기는 전부 0 그대로(사용자 최종본 실측) — '-' 가 칸 왼쪽 끝에서 시작하고 줄 간격 160% 는 TD 원본 값
+    cellp = (pbase.replace(f'id="{TD[1]}"', f'id="{CELL_BULLET}"', 1)
+                  .replace('<hh:align horizontal="CENTER"', '<hh:align horizontal="LEFT"', 1)
+                  .replace('<hh:heading type="NONE" idRef="0"',
+                           f'<hh:heading type="BULLET" idRef="{bullet_id}"', 1))
+    header = header.replace("</hh:paraProperties>", cellp + "</hh:paraProperties>", 1)
+    header = header.replace(f'<hh:paraProperties itemCnt="{pcnt}"',
+                            f'<hh:paraProperties itemCnt="{pcnt + 1}"', 1)
     return header
 
 
@@ -774,7 +920,92 @@ def demo() -> None:
         info = outline_md(bare)
         assert info["tables_total"] == 1, info
         assert info["tables"] == ["(캡션 없음)"], info
+    _demo_grouped_tables()
     print("demo ok")
+
+
+def _check_grid(xml: str) -> None:
+    """rowCnt×colCnt 격자가 <hp:tc> 로 빈틈·겹침 없이 덮이는지 — 병합으로 생략된 셀까지 감안한다."""
+    rc, cc = (int(x) for x in re.search(r'rowCnt="(\d+)" colCnt="(\d+)"', xml).groups())
+    trs = re.findall(r"<hp:tr>(.*?)</hp:tr>", xml, re.S)
+    assert len(trs) == rc, (len(trs), rc)
+    seen = set()
+    for ti, tr in enumerate(trs):
+        for ca, ra, cs, rs in re.findall(
+                r'<hp:cellAddr colAddr="(\d+)" rowAddr="(\d+)"/><hp:cellSpan colSpan="(\d+)" '
+                r'rowSpan="(\d+)"/>', tr):
+            ca, ra, cs, rs = int(ca), int(ra), int(cs), int(rs)
+            assert ra == ti, (ra, ti)                       # tc 는 자기 시작 행의 tr 안에 있다
+            for r in range(ra, ra + rs):
+                for c in range(ca, ca + cs):
+                    assert (r, c) not in seen, ("겹침", r, c)
+                    seen.add((r, c))
+    assert seen == {(r, c) for r in range(rc) for c in range(cc)}, "격자 빈틈"
+
+
+def _demo_grouped_tables() -> None:
+    """세로 묶음 표(A/B) 자체 점검 — 형식 판정·명시 표시·병합 좌표·쉼표 분리."""
+    tpl = SKILL_ROOT / "assets" / "forms" / "navion-2026.hwpx"
+    if not tpl.exists():                                    # 양식이 없으면 글머리 ID 를 알 수 없다
+        return
+    with zipfile.ZipFile(tpl) as z:                         # 글머리 문단이 header 에 실제로 생기는지
+        hdr0 = z.read("Contents/header.xml").decode("utf-8")
+    hdr = patch_header(hdr0)
+    n0 = int(re.search(r'<hh:paraProperties itemCnt="(\d+)"', hdr0).group(1))
+    assert CELL_BULLET == n0, (CELL_BULLET, n0)
+    assert f'<hh:paraProperties itemCnt="{n0 + 1}"' in hdr
+    pp = re.search(rf'<hh:paraPr id="{CELL_BULLET}".*?</hh:paraPr>', hdr, re.S).group(0)
+    assert 'horizontal="LEFT"' in pp and 'type="BULLET"' in pp, pp[:200]
+    short = [["구분", "값"], ["가", "1"], ["나", "2"]]
+    assert pick_table_format(short) == "matrix"
+    four = [["지역", "경로", "예상 기간", "선행 조건"],
+            ["가 지역", "인증 취득 후 등록해야 하며 절차가 길다", "심사 80일(보완 포함, 1회), 현장 실사 및 사후 점검", "제조업 등록, 시험 성적서"],
+            ["나 지역", "사전 신고", "심사 2~3개월", "현지 대리인 지정"]]
+    assert pick_table_format(four) == "A"                   # 속성 3개
+    five = [r + ["비고 항목이 문장형으로 길게 적힌다"] for r in four]
+    five[0][-1] = "비고"
+    assert pick_table_format(five) == "A"                   # 속성 수로 B 를 고르지 않는다
+    assert pick_table_format([r[:3] for r in four]) == "matrix"     # 열 3 이하
+    # 괄호 안 쉼표는 자르지 않고, 빈 값은 "-"
+    assert _split_items("심사 80일(보완 포함, 1회), 현장 실사") == ["심사 80일(보완 포함, 1회)", "현장 실사"]
+    assert _grouped_rows([["지역", "경로"], ["가", ""]], "A") == [("가", [("경로", ["-"])])]
+    # 명시 표시가 자동 판정을 덮어쓰고 캡션엔 남지 않는다
+    blk = parse_md("<표> 표 11. 지역별 진입 경로 {형식=B}\n\n| 지역 | 경로 | 기간 | 조건 |\n"
+                   "|---|---|---|---|\n| 가 | 1 | 2 | 3 |\n")[0]
+    assert blk["fmt"] == "B" and "{형식" not in blk["caption"] and blk["caption"] == "표 11. 지역별 진입 경로"
+    xml_b = render_table(blk)
+    assert 'colCnt="2"' in xml_b and "{형식" not in xml_b
+    # A: 열 3, rowSpan 합 = 대상별 속성 수 합, 격자 일관
+    xml_a = render_table({"rows": four, "caption": "표 1. 진입", "src": "* 출처 : x", "fmt": ""})
+    assert 'colCnt="3"' in xml_a and "{형식" not in xml_a
+    spans = [int(x) for x in re.findall(r'<hp:cellAddr colAddr="0" rowAddr="[1-9]\d*"/>'
+                                        r'<hp:cellSpan colSpan="1" rowSpan="(\d+)"', xml_a)]
+    assert sum(spans) == 3 * 2, spans                       # 대상 2 × 속성 3
+    assert "심사 80일(보완 포함, 1회)" in xml_a and xml_a.count(f'paraPrIDRef="{CELL_BULLET}"') == \
+        sum(len(ps) for _, its in _grouped_rows(four, "A") for _, ps in its)
+    _check_grid(xml_a)
+    _check_grid(xml_b)
+    _check_grid(render_table({"rows": five, "caption": "", "src": "", "fmt": "B"}))
+    # 경계 케이스: 머리행 속성 칸이 전부 빔 / 하나만 빔 — 빈 subList 없이 본문 행·데이터 보존
+    for f in ("A", "B"):
+        x = render_table({"rows": [["구분", "", ""], ["가", "x1", "x2"]], "caption": "", "src": "", "fmt": f})
+        assert "<hp:subList" in x and "<hp:p " in x and "x1" in x and "x2" in x, f
+        assert re.search(r"<hp:subList[^>]*></hp:subList>", x) is None, f
+        _check_grid(x)
+        x = render_table({"rows": [["구분", "경로", ""], ["가", "x1", "x2"]], "caption": "", "src": "", "fmt": f})
+        assert "x1" in x and "x2" in x, f
+        _check_grid(x)
+    x = render_table({"rows": [["구분"], ["가"]], "caption": "", "src": "", "fmt": "A"})
+    assert x.count("<hp:tr>") == 2 and "<hp:p " in x           # 속성 열이 없어도 본문 행 생존
+    _check_grid(x)
+    assert _split_items("1) 가(ㄱ, ㄴ)") == ["1) 가(ㄱ, ㄴ)"]    # 짝 없는 닫는 괄호
+    for mark in ("b", "C", "세로"):
+        blk = parse_md(f"<표> 표 1. ㄱ {{형식={mark}}}\n\n| a | b |\n|---|---|\n| 1 | 2 |\n")[0]
+        assert "{형식" not in blk["caption"], blk["caption"]
+        assert blk["fmt"] == ("B" if mark == "b" else ""), (mark, blk["fmt"])
+    # 긴 세로 묶음 표는 쪽을 걸쳐 이어지게 풀린다
+    long_rows = [four[0]] + [[f"대상{i}"] + four[1][1:] for i in range(40)]
+    assert 'treatAsChar="0"' in render_table({"rows": long_rows, "caption": "", "src": "", "fmt": "A"})
 
 
 def _cmd_build(args: argparse.Namespace) -> int:

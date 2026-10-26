@@ -9,7 +9,7 @@ description: >-
 
 # market-deep-research — 증빙형 시장조사 보고서
 
-내비온(기술사업화 기관)의 반복 업무(기술동향·산업동향·기관/기업 실사·시장조사)를 위한 스킬.
+기술사업화·시장조사 조직의 반복 업무(기술동향·산업동향·기관/기업 실사·경쟁분석 등 주제 무관)를 위한 스킬. Claude Code·Codex 공용.
 **AI 확률적 답변으로 조사마다 수치가 달라지는 문제**를, `fact + evidence[]` 증거모델 + 사실대장 + 팀리드 전건 재검증 + 검증게이트로 해소한다.
 
 ## 3대 원칙 (절대 규칙)
@@ -29,18 +29,26 @@ description: >-
 - `report.pdf`(고객용, 11부 표준목차 → `references/report-format.md`)
 - `audit/`(내부: facts 전수·폐기·실패소스·검증이력·세션 저널·raw agent output·manifest)
 
-작업폴더(WD)는 `scripts/skill_paths.py` 가 `research_<주제>_<YYYYMMDD>/` 아래에 생성한다. 대장·manifest 경로는 `skill_paths` 가 해석하지만 `fetch.py` 는 **현재 폴더** `audit/` 에 로그·스냅샷을 쓰므로 모든 스크립트는 WD 에서 절대경로로 실행한다(스킬 폴더에서 돌리면 조사 원문이 claude-sync 로 푸시된다).
+작업폴더(WD)는 `scripts/skill_paths.py` 가 `research_<주제>_<YYYYMMDD>/` 아래에 생성한다. 대장·manifest 경로는 `skill_paths` 가 해석하지만 `fetch.py` 는 **현재 폴더** `audit/` 에 로그·스냅샷을 쓰므로 모든 스크립트는 WD 에서 절대경로로 실행한다(스킬 폴더에서 돌리면 조사 원문이 공유 저장소로 푸시된다).
 
 ---
 
 ## 오케스트레이션 — 게이트 파이프라인 G0~G5
 
 각 게이트 상세는 `references/verification-gates.md`. 서브에이전트 프롬프트·반환 마커는 `references/agent-briefs.md`.
-조사원·손일 = sonnet·effort medium(병렬, background; 외부 워커 금지). 재검증·종합 = 메인 세션. 산출물 리뷰는 전역 규칙.
+조사원·손일 = 서브에이전트(병렬·background·중간 등급 모델; 외부 워커 금지). 재검증·종합 = 메인 세션. 산출물 리뷰는 전역 규칙.
+
+### 실행 환경
+| 역할 | Claude Code | Codex |
+|---|---|---|
+| 조사원 팬아웃 | `Agent(model: "sonnet")` background | 서브에이전트 |
+| 재열람·검색 | WebFetch(403→`fetch.py`) · WebSearch+`search.py` | `fetch.py` · `search.py` |
+| 규칙 파일 · 설치 | `CLAUDE.md` · `~/.claude/skills/` | `AGENTS.md` · `~/.agents/skills/` |
+
 
 ```
 [G0] preflight ─ 도구/의존성 점검 + 요구사항 확정 + intent-diff 개시
-[1]  병렬 조사 ─ 조사원 에이전트 팬아웃(sonnet·background·에이전트별 임시폴더)
+[1]  병렬 조사 ─ 조사원 에이전트 팬아웃(서브에이전트·background·에이전트별 임시폴더)
 [E]  확장→수렴 ─ EXPAND 리드 dedup → 후속워커 → 수렴까지 반복        【v3-A】
 [G1] join 게이트 ─ raw 보존 · 스키마검증 등재 · 무출처 즉시 discarded
 [2]  팀리드 재검증 ─ ★전건 원문 재열람 → verify_event(by=lead) + span_tools.py 로 verbatim 행 확정(span)
@@ -62,14 +70,16 @@ description: >-
 
 ### [1] 병렬 조사 → [E] 확장·수렴
 - 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/사업현황/재무실적 전건 조사) · **기술동향**=축분할(기술요소·플레이어·시장·정책 + 교차검증1) · **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS 기존 스킬 조합) + 해외 · **기술사업화 실사**=축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도).
-- 워커는 `_research/<agent>/` 에만 쓰고 대장은 기록하지 않는다(읽기전용). 검색은 `search.py --axis <축>` 으로 호출해 `audit/search-log.jsonl` 에 전건 기록(2부 커버리지 선언의 근거). 【v3-F】 스폰 첫 줄은 `0. 독자·목표`. 반환 마커 6종·스폰 계약은 `agent-briefs.md`.
-- **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에 축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0 에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건, 후자는 워커에게 전달되는 조사 깊이 기준): **축별 잔여 리드 각 0**(한 축이라도 잔여 리드가 남으면 미수렴), 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md` 확정값이 있으면 그 값 우선) 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅. **증거 기반 종료**: 축별 충분조건 논점마다 span 대조를 통과한 confirmed fact ≥1, 미충족 축은 미수렴(G3 `[축근거부족]` WARN).
+- 워커는 `_research/<agent>/` 에만 쓰고 대장은 기록하지 않는다(읽기전용). 검색은 `search.py --axis <축>` 으로 호출(`audit/search-log.jsonl` 전건 기록). 【v3-F】 스폰 첫 줄은 `0. 독자·목표`. 반환 마커(`agent-briefs.md`)에 `## COVERAGE`(질의·공백)가 있고, 누락 시 미수렴.
+- **확장수렴 루프**: EXPAND 리드를 `AXIS` 별로 `audit/expansion-log.md` 에 집계(dedup, 미확인 포함) → 새 리드마다 후속 워커 스폰. **루프 수렴조건**(G0 축별 충분조건과 별개): **축별 잔여 리드 각 0**, 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md` 확정값 우선) 도달(사용자에 연장 문의). **증거 기반 종료**: 충분조건 논점마다 span 대조 통과 confirmed fact ≥1(미충족 축은 미수렴, G3 `[축근거부족]` WARN). **열린 공백 0, 또는 각 공백을 gap-log 에 수용 사유와 기록**해야 수렴(열린 공백 = COVERAGE 의 UNREACHABLE·NOT_ATTEMPTED·COVERAGE 없는 워커).
+- 목록형 조사는 본조사 전 `audit/universe.md`(`research-plan.md` 0웨이브).
 
 ### [G1] join + 수집 게이트
 - **무출처 즉시 `discarded`**, 같은 보도자료 재전재는 1출처. 영수증: join 영수증을 남긴 뒤 `gates.py check G1 <work_dir>`. → `verification-gates.md` §G1
 
 ### [2] 팀리드 재검증 (★전건)
 - 보고서 진입 후보 **전건**을 팀리드가 원문 재열람(403 이면 `fetch.py`) → `add_verify_event(by="lead")`. **verifier 단독 confirm 금지**, 무출처=confirm 불가. WebFetch 요약 답은 재확인 근거가 아니다 — 원문에서 문자열 검색.
+- 탈락 사실·수용 공백은 `audit/gap-log.md`(복귀 규칙 `verification-gates.md` [2]).
 - 영수증: `gates.py record [2] <work_dir> --evidence "..."` → `check [2]`. → `verification-gates.md` §[2]+[Bx] · `agent-briefs.md` 철칙
 
 ### [Bx] 반박검색 + claim-graph 게이트

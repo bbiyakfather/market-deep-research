@@ -1,0 +1,17 @@
+# 임시·캐시·재생성 가능물
+.playwright-mcp/
+__pycache__/
+*.pyc
+~$*
+*.bak_*
+*.prerestore_*
+_preview*/
+
+# 팀리드 검수용 임시 대지(contact sheet) — 산출물 아님
+**/_images/_sheet_*.png
+**/_images/_pdf_sheet.png
+**/_images/_chk*.png
+
+# 조사 원문 스냅샷·캡처가 커지면 아래 주석을 풀어 저장소 밖(공유 드라이브)에 둔다
+# research_*/_sources/
+# research_*/_captures/

@@ -17,8 +17,9 @@ def test_ddgs_import_failure_falls_back_to_ddg(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     called = []
-    monkeypatch.setattr(search, "_ddg", lambda q, n: called.append(q) or [
-        {"title": "t", "url": f"https://e.com/{i}", "snippet": "", "source": "ddg"} for i in range(5)])
+    monkeypatch.setattr(search, "_ddg_report", lambda q, n: (called.append(q) or [
+        {"title": "t", "url": f"https://e.com/{i}", "snippet": "", "source": "ddg"} for i in range(5)],
+        search._backend("ddg", "ok", 5, "stub")))
     res = search.search("x", 5, "web")
     assert called == ["x"] and res[0]["source"] == "ddg"
 

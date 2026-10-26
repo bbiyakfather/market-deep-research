@@ -1,7 +1,7 @@
 """fetch.py — 자체 fetch/extract 스택 (plan-v2 핵심설계3 + v3-C).
 
-보안경계(선제) → [도메인 라우팅] → curl_cffi TLS 그리드 → 모바일(iOS 지문+UA) → Jina Reader
-→ Googlebot UA → RSS → Wayback → OGP 메타. 우회 전략을 **내장**한다(외부 스킬 위임 없음).
+보안경계(선제) → [도메인 라우팅] → curl_cffi TLS 그리드 → 모바일(iOS 지문+UA) → 브라우저
+→ Jina Reader → Googlebot UA → RSS → Wayback → OGP 메타. 우회 전략을 **내장**한다(외부 스킬 위임 없음).
 원본(raw) + 정제본(trafilatura) 둘 다 저장 + SHA-256. archived_url(Jina/Wayback)은 원 URL과 구분.
 
 철칙(정책·완화 불가):
@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import http.client
 import ipaddress
+import re
 import json
 import os
 import re
@@ -34,34 +35,72 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote, unquote, urljoin, urlparse
 
-MAX_BYTES = 8 * 1024 * 1024
+MAX_BYTES = 8 * 1024 * 1024          # HTML·일반 응답
+DOC_MAX_BYTES = 40 * 1024 * 1024    # PDF·문서 파일만. HTML 은 MAX_BYTES
 MAX_IMG_BYTES = 15 * 1024 * 1024
 MAX_REDIRECTS = 5
 CHUNK_BYTES = 65536
 TIMEOUT = 25
-IMPERSONATE_GRID = ["chrome", "safari", "chrome110"]
+# chrome/safari 는 설치본 최신 별칭. firefox 는 다른 엔진 계열 최신(0.16.2 → firefox147).
+IMPERSONATE_GRID = ["chrome", "safari", "firefox"]
+# 문서 MIME. octet-stream 은 URL 확장자로 다시 본다(_office_kind).
+_DOC_MIME = {
+    "application/x-hwp": "hwp",
+    "application/haansofthwp": "hwp",
+    "application/vnd.hancom.hwp": "hwp",
+    "application/hwp+zip": "hwpx",
+    "application/vnd.hancom.hwpx": "hwpx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+    "text/csv": "csv",
+    "application/csv": "csv",
+    "application/zip": "zip",
+    "application/x-zip-compressed": "zip",
+}
+_DOC_EXT = {"hwp", "hwpx", "xlsx", "xls", "docx", "pptx", "csv", "zip", "pdf"}
 ALLOWED_MIME = ("text/html", "text/plain", "application/json", "application/xml", "text/xml",
                 "application/xhtml", "application/pdf", "application/rss",
-                "application/rss+xml", "application/atom+xml")
+                "application/rss+xml", "application/atom+xml", *tuple(_DOC_MIME))
 CHALLENGE_MARKERS = ("just a moment", "access denied", "cf-challenge", "datadome",
                      "sec-if-cpt-container", "enable javascript and cookies",
                      "verifying you are human", "captcha-delivery")
 # 본문 길이와 무관하게 partial 로 보낼 "오류 페이지·껍데기" 마커(네이버 블로그 글 없음 alert, 데스크톱 frameset 의 iframe 태그).
 # ponytail: 네이버 블로그 전용 문자열 일치뿐이다. 다른 사이트의 오류 페이지는 리다이렉트 비교(redirected_other_doc)에만 의존한다.
 SHELL_MARKERS = ("게시물이 삭제되었거나 다른 페이지로 변경되었습니다", '<iframe id="mainframe"')
+# 차단 페이지에만 나오는 구절. 동의·쿠키·404·로그인·삭제된·consent 같은 한 단어는
+# 기사 제목·본문에 흔해서 쓰지 않는다. 제목·본문 모두 정제 본문 1000자 미만일 때만(V27).
+_BODY_SUSPECT: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("not_found", ("page not found", "페이지를 찾을 수 없", "요청하신 페이지")),
+    ("login", ("로그인이 필요", "로그인 후 이용", "sign in to continue")),
+    ("access_denied", ("access denied", "접근이 거부")),
+    ("consent", ("쿠키 사용에 동의", "accept all cookies")),
+)
+# 제목은 '포함'이 아니라 그 문구로 시작하거나, 구분자(- | · :) 앞 첫 토막·제목 전체가 그 문구일 때.
+_TITLE_SUSPECT: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("not_found", ("404", "not found", "page not found", "페이지를 찾을 수 없습니다")),
+    ("login", ("로그인", "sign in", "log in")),
+    ("access_denied", ("access denied", "접근이 거부")),
+)
+_TITLE_SPLIT_RE = r"\s*[-|·:]\s*"
+_SEP = r"[\s:\-|·–—]*"
+_DEAD_TITLE_RE = re.compile(
+    rf"(?:(?:error|http){_SEP}404(?!\d)"                                  # Error: 404 … / HTTP 404 …
+    rf"|404(?!\d){_SEP}(?:error|(?:page\s+)?not\s+found)(?![a-z])"       # 404 - Page Not Found
+    rf"|(?:page\s+)?not\s+found(?![a-z])"                                # Page not found | …
+    rf"|페이지를 찾을 수 없습니다)", re.I)
 
 # --- 내장 우회 계층 상수 (구 insane-search 위임분 흡수) -----------------------
-MOBILE_UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 "
-             "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")
-MOBILE_HEADERS = {"User-Agent": MOBILE_UA,
-                  "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+# User-Agent 는 빼 둔다. safari_ios 가 프로필 UA 를 넣게 해 TLS 지문과 버전을 맞춘다.
+MOBILE_HEADERS = {"Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
                   "Referer": "https://m.naver.com/"}
 GOOGLEBOT_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; "
                                    "+http://www.google.com/bot.html)"}
-# iOS TLS 지문 우선, 없으면 데스크톱 safari로 degrade
-MOBILE_IMPERSONATE = "safari180_ios"
+# iOS 최신 별칭(0.16.2 → safari260_ios). 미지원이면 reason 이 error: 로 시작해 safari 로 degrade.
+MOBILE_IMPERSONATE = "safari_ios"
 
-DEFAULT_ORDER = ["direct", "mobile", "jina", "googlebot", "rss", "wayback"]
+DEFAULT_ORDER = ["direct", "mobile", "browser", "jina", "googlebot", "rss", "wayback"]
 
 # 도메인 라우팅 — 매칭되면 그 계층을 앞에 세운다(insane-search 사이트 인덱스 흡수).
 # (호스트 정규식, 우선 계층). 나머지 계층은 DEFAULT_ORDER 순서로 뒤따른다.
@@ -230,6 +269,72 @@ def check_response_ip(r) -> None:
 
 
 # --- 4계층 성공검증 (R2) -----------------------------------------------------
+def _phrase_in(text: str, phrases: tuple[str, ...]) -> bool:
+    low = text.casefold()
+    return any(phrase.casefold() in low for phrase in phrases)
+
+
+def _body_suspect(text: str) -> str | None:
+    raw = text or ""
+    if not raw.strip():
+        return None
+    for kind, phrases in _BODY_SUSPECT:
+        if _phrase_in(raw, phrases):
+            return kind
+    return None
+
+
+def _title_starts(low: str, phrase: str) -> bool:
+    """문구로 시작하고 바로 뒤가 글자·숫자가 아니면 참."""
+    if not low.startswith(phrase):
+        return False
+    rest = low[len(phrase):]
+    return not (rest and rest[0].isalnum())             # 404억·not founders·sign industry 는 시작이 아니다
+
+
+def _title_suspect(title: str) -> str | None:
+    import re
+    raw = (title or "").strip()
+    if not raw:
+        return None
+    low = raw.casefold()
+    first = re.split(_TITLE_SPLIT_RE, raw, maxsplit=1)[0].strip().casefold()
+    for kind, phrases in _TITLE_SUSPECT:
+        for phrase in phrases:
+            folded = phrase.casefold()
+            if low == folded or first == folded or _title_starts(low, folded):
+                return kind
+    return None
+
+
+def _url_ext(url: str) -> str:
+    return Path(urlparse(url).path).suffix.lower().lstrip(".")
+
+
+def _mime_base(mime: str) -> str:
+    return (mime or "").split(";", 1)[0].strip().lower()
+
+
+def _office_kind(mime: str, url: str) -> str | None:
+    """PDF 가 아닌 문서. octet-stream 은 URL 확장자로만 종류를 정한다."""
+    base = _mime_base(mime)
+    if base in _DOC_MIME:
+        return _DOC_MIME[base]
+    if base == "application/octet-stream":
+        ext = _url_ext(url)
+        if ext in _DOC_EXT and ext != "pdf":
+            return ext
+    return None
+
+
+def _doc_byte_cap(mime: str, url: str) -> bool:
+    """PDF·문서(또는 octet-stream+문서 확장자)면 40MB. HTML 은 호출자 상한 그대로."""
+    base = _mime_base(mime)
+    if base == "application/pdf" or base in _DOC_MIME:
+        return True
+    return base == "application/octet-stream" and _url_ext(url) in _DOC_EXT
+
+
 def validate_body(text: str, status: int, success_selectors: list[str] | None = None) -> dict:
     """{verdict: ok|partial|challenge|empty, reason}. HTTP200 ≠ 성공."""
     if not isinstance(status, int) or not 200 <= status < 300:
@@ -242,6 +347,14 @@ def validate_body(text: str, status: int, success_selectors: list[str] | None = 
         if m in low:
             return {"verdict": "partial", "reason": f"error/shell page: {m}"}
     body = extract_text(text)
+    # 길이 판정 앞. 1000자 이상은 확정 성공으로 넘어가고, 그 미만만 차단 구절을 본다.
+    title = _html_title(text) or ""
+    # 없는 페이지 안내는 메뉴·푸터 때문에 본문이 길다. 제목이 그 문구로 시작하면 길이와 무관하게 건다.
+    suspect = "not_found" if _DEAD_TITLE_RE.match(title.strip()) else None
+    if not suspect and len(body) < 1000:
+        suspect = _title_suspect(title) or _body_suspect(body)
+    if suspect:
+        return {"verdict": "partial", "reason": f"suspect:{suspect}"}
     if len(body) >= 1000:                              # ② 본문이 충분히 길면 확정 성공(V27 —
         return {"verdict": "ok", "reason": f"body {len(body)} chars"}  #   긴 기사 안의 챌린지 문구 인용은 오탐 아님)
     for m in CHALLENGE_MARKERS:                        # ③ 챌린지 마커(짧은 인터스티셜만 여기 도달)
@@ -294,9 +407,10 @@ def extract_text(html: str) -> str:
         out = trafilatura.extract(html, include_comments=False, include_tables=True)
         if out:
             return out
-    # 폴백: 태그 제거(정제 라이브러리 없을 때)
+    # 폴백: script/style 을 먼저 지운 뒤 태그 제거(빈 SPA 셸이 길이로 ok 가 되지 않게).
     import re
-    return re.sub(r"<[^>]+>", " ", html or "")
+    cleaned = re.sub(r"(?is)<(script|style)\b[^>]*>.*?</\1>", " ", html or "")
+    return re.sub(r"<[^>]+>", " ", cleaned)
 
 
 # --- 공통 transport: 수동 리다이렉트·고정 IP·스트리밍 크기캡 -----------------
@@ -354,8 +468,12 @@ _DEFAULT_CLIENT = object()
 
 def request_bytes(url: str, *, impersonate: str = "chrome", headers: dict | None = None,
                   timeout: int = TIMEOUT, max_bytes: int = MAX_BYTES,
-                  max_redirects: int = MAX_REDIRECTS, client=_DEFAULT_CLIENT) -> dict:
-    """fetch·검색·이미지 수집이 공유하는 유일한 HTTP 경계."""
+                  max_redirects: int = MAX_REDIRECTS, client=_DEFAULT_CLIENT,
+                  doc_cap: bool = False) -> dict:
+    """fetch·검색·이미지 수집이 공유하는 유일한 HTTP 경계.
+
+    doc_cap 은 열람(_fetch_once)만 켠다. 검색·이미지 JSON 호출이 서버가 붙인 Content-Type 만으로 40MB 를 받지 않게 한다.
+    """
     client = creq if client is _DEFAULT_CLIENT else client
     cur = url
     deadline = time.monotonic() + timeout
@@ -384,6 +502,9 @@ def request_bytes(url: str, *, impersonate: str = "chrome", headers: dict | None
             check_response_ip(r)
             status = r.status_code if client is not None else r.code
             response_headers = {k.lower(): v for k, v in r.headers.items()}
+            cap = max_bytes
+            if doc_cap and max_bytes == MAX_BYTES and _doc_byte_cap(response_headers.get("content-type", ""), cur):
+                cap = DOC_MAX_BYTES
             if status in (301, 302, 303, 307, 308):
                 loc = response_headers.get("location")
                 if not loc:
@@ -393,7 +514,7 @@ def request_bytes(url: str, *, impersonate: str = "chrome", headers: dict | None
                 cur = urljoin(cur, loc)
                 continue
             length = response_headers.get("content-length", "")
-            if length.isdigit() and int(length) > max_bytes:
+            if length.isdigit() and int(length) > cap:
                 raise DownloadLimitError("oversize")
             chunks = r.iter_content(chunk_size=CHUNK_BYTES) if client is not None else iter(
                 lambda: r.read(CHUNK_BYTES), b"")
@@ -401,7 +522,7 @@ def request_bytes(url: str, *, impersonate: str = "chrome", headers: dict | None
             for chunk in chunks:
                 if time.monotonic() > deadline:
                     raise TimeoutError("다운로드 시간 초과")
-                if len(buf) + len(chunk) > max_bytes:
+                if len(buf) + len(chunk) > cap:
                     raise DownloadLimitError("oversize")
                 buf.extend(chunk)
             return {"status": status, "headers": response_headers, "raw": bytes(buf),
@@ -411,10 +532,33 @@ def request_bytes(url: str, *, impersonate: str = "chrome", headers: dict | None
     raise ValueError("too many redirects")
 
 
+def _header_charset(ctype: str) -> str | None:
+    for part in (ctype or "").split(";")[1:]:
+        if part.strip().lower().startswith("charset="):
+            charset = part.split("=", 1)[1].strip().strip('"').strip("'")
+            return charset or None
+    return None
+
+
+def _meta_charset(raw: bytes) -> str | None:
+    """헤더에 charset 이 없을 때만. 앞 2048바이트의 meta charset / http-equiv Content-Type."""
+    import re
+    if not raw:
+        return None
+    for tag in re.findall(br"<meta\b[^>]*>", raw[:2048], re.I):
+        low = tag.lower()
+        found = re.search(br"""charset\s*=\s*["']?\s*([A-Za-z0-9._-]+)""", tag, re.I)
+        if not found:
+            continue
+        if b"http-equiv" in low and b"content-type" not in low:
+            continue
+        return found.group(1).decode("ascii")
+    return None
+
+
 def response_text(response: dict) -> str:
     ctype = response.get("headers", {}).get("content-type", "")
-    charset = next((p.split("=", 1)[1].strip().strip('"') for p in ctype.split(";")[1:]
-                    if p.strip().lower().startswith("charset=")), "utf-8")
+    charset = _header_charset(ctype) or _meta_charset(response.get("raw") or b"") or "utf-8"
     try:
         return response["raw"].decode(charset)
     except (LookupError, UnicodeDecodeError):
@@ -425,11 +569,15 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = MAX_REDIRECTS,
                 headers: dict | None = None) -> dict:
     try:
         response = request_bytes(url, impersonate=impersonate, headers=headers,
-                                 max_redirects=max_redirects)
+                                 max_redirects=max_redirects, doc_cap=True)
     except SsrfBlocked:
         raise
     except (DownloadLimitError, ValueError, OSError) as exc:
-        return {"ok": False, "reason": str(exc), "status": None, "text": "", "final_url": url}
+        reason = str(exc)
+        # ImpersonateError 는 OSError 라 여기서 삼켜진다. mobile degrade 는 error: 접두를 본다.
+        if exc.__class__.__name__ == "ImpersonateError":
+            reason = f"error:{reason}"
+        return {"ok": False, "reason": reason, "status": None, "text": "", "final_url": url}
     buf, status = response["raw"], response["status"]
     mime = response["headers"].get("content-type", "").split(";", 1)[0].strip().lower()
     text = response_text(response)
@@ -439,9 +587,14 @@ def _fetch_once(url: str, impersonate: str, max_redirects: int = MAX_REDIRECTS,
     if not 200 <= status < 300:
         return {**base, "ok": False, "reason": f"http {status}", "is_pdf": False}
     is_pdf = buf[:5] == b"%PDF-"
-    if not is_pdf and mime and mime not in ALLOWED_MIME:
+    doc_kind = None if is_pdf else _office_kind(mime, response["final_url"])
+    if not is_pdf and not doc_kind and mime and mime not in ALLOWED_MIME:
         return {**base, "ok": False, "reason": f"mime:{mime}"}
-    return {**base, "ok": True, "text": "" if is_pdf else text, "raw": buf, "is_pdf": is_pdf}
+    binary = is_pdf or bool(doc_kind)
+    out = {**base, "ok": True, "text": "" if binary else text, "raw": buf, "is_pdf": is_pdf}
+    if doc_kind:
+        out["doc_kind"] = doc_kind
+    return out
 
 
 # --- 폴백 계층 ---------------------------------------------------------------
@@ -449,6 +602,15 @@ def _via_jina(url: str) -> dict:
     j = "https://r.jina.ai/" + url
     res = _fetch_once(j, "chrome")
     if res.get("ok"):
+        import re
+        # Jina 는 죽은 페이지·차단 페이지도 200 과 긴 본문으로 감싼다. 머리말이 알려 주는 원 응답 코드를 믿는다.
+        head = res.get("text", "").split("Markdown Content:", 1)[0][:8000]
+        origin = re.search(r"^Warning: Target URL returned error (\d{3})", head, re.M)
+        if origin:
+            return {**res, "ok": False, "status": int(origin.group(1)), "reason": f"http {origin.group(1)}"}
+        title = re.search(r"^Title:[ \t]*(.*)$", head, re.M)   # Jina 본문에는 <title> 이 없어 validate_body 가 못 본다
+        if title and _DEAD_TITLE_RE.match(title.group(1).strip()):
+            return {**res, "ok": False, "reason": "suspect:not_found"}
         res["archived_url"] = j
     return res
 
@@ -611,17 +773,244 @@ def _redirected_other_doc(res: dict) -> bool:
     return _norm_url(req) != _norm_url(final)
 
 
+def _mobile_dns_missing(url: str) -> bool:
+    """합성한 m. 호스트가 풀리지 않으면 True. 요청·시도 로그 없이 그 후보만 건너뛴다."""
+    host = (urlparse(url).hostname or "").lower()
+    if not host.startswith("m."):
+        return False
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror:
+        return True
+    return not infos
+
+
+def _third_party_blocked(explicit: bool | None = None) -> bool:
+    """jina·wayback 은 대상 URL 을 외부 서비스로 보낸다. 대외비 조사에서 끈다."""
+    if explicit is not None:
+        return explicit
+    return os.environ.get("MDR_NO_THIRD_PARTY") == "1"
+
+
+# --- 브라우저 계층 (선택 의존성. 없어도 나머지 사다리는 동작한다) ------------
+_BROWSER_IDLE_MS = 20_000
+_BROWSER_SCROLLS = 5
+_BROWSER_ABORT_TYPES = frozenset({"image", "font", "media"})
+
+
+def _browser_skip(url: str) -> dict:
+    return {"ok": False, "status": None, "text": "", "final_url": url, "mime": "",
+            "reason": "skip:browser 미설치"}
+
+
+def _browser_fail(url: str, exc: BaseException) -> dict:
+    return {"ok": False, "status": None, "text": "", "final_url": url, "mime": "",
+            "reason": f"error:{exc}"}
+
+
+def _load_sync_playwright(package: str):
+    try:
+        if package == "patchright":
+            from patchright.sync_api import sync_playwright
+        elif package == "playwright":
+            from playwright.sync_api import sync_playwright
+        else:
+            return None
+        return sync_playwright
+    except Exception:
+        return None
+
+
+def _browser_engines() -> list[tuple]:
+    """import 되는 엔진을 patchright, playwright 순으로 낸다."""
+    found = []
+    for name in ("patchright", "playwright"):
+        fn = _load_sync_playwright(name)
+        if fn is not None:
+            found.append((fn, name))
+    return found
+
+
+def _is_missing_browser(exc: BaseException) -> bool:
+    text = str(exc).casefold()
+    return ("executable doesn't exist" in text
+            or "executable does not exist" in text
+            or "please run the following command to download" in text)
+
+
+def _is_main_document(request) -> bool:
+    if getattr(request, "resource_type", "") != "document":
+        return False
+    frame = getattr(request, "frame", None)
+    if frame is None:
+        return True
+    return getattr(frame, "parent_frame", None) is None
+
+
+def _browser_route_action(url: str, resource_type: str) -> str:
+    """abort 또는 continue. 이미지·폰트·미디어와 사설·비 http(s) 는 받지 않는다."""
+    if resource_type in _BROWSER_ABORT_TYPES:
+        return "abort"
+    try:
+        check_url_safe(url)
+    except SsrfBlocked:
+        return "abort"
+    return "continue"
+
+
+def _guard_browser_route(route, blocked: list | None = None) -> None:
+    request = route.request
+    action = _browser_route_action(request.url, getattr(request, "resource_type", "") or "")
+    if action == "abort":
+        route.abort()
+        if blocked is not None and _is_main_document(request):
+            blocked.append(request.url)
+        return
+    route.continue_()
+
+
+def _read_rendered_page(page) -> str:
+    """네트워크가 잠잠해질 때까지(상한 20초) 기다린 뒤, 높이가 늘지 않으면 멈추는 스크롤 최대 5회."""
+    try:
+        page.wait_for_load_state("networkidle", timeout=_BROWSER_IDLE_MS)
+    except Exception:
+        pass
+    height_js = ("() => { const el = document.scrollingElement || document.body;"
+                 " return el ? el.scrollHeight : 0; }")
+    scroll_js = ("() => { const el = document.scrollingElement || document.body;"
+                 " if (el) window.scrollTo(0, el.scrollHeight); }")
+    for _ in range(_BROWSER_SCROLLS):
+        height = page.evaluate(height_js)
+        page.evaluate(scroll_js)
+        page.wait_for_timeout(200)
+        if page.evaluate(height_js) <= height:
+            break
+    return page.content()
+
+
+def _launch_chromium(playwright):
+    """헤드리스 Chromium. 번들 실행이 죽거나 없으면 설치된 Chrome 을 헤드리스로 한 번 더 연다.
+
+    지문·UA 는 넣지 않는다. 이 환경의 번들 headless shell 은 ICU 데이터 오류로 바로 죽는다.
+    """
+    if os.environ.get("MDR_BROWSER_HEADED") == "1":      # 창이 뜬다. JS 챌린지는 헤드리스에서 안 풀린다
+        return playwright.chromium.launch(headless=False, channel="chrome")
+    try:
+        return playwright.chromium.launch(headless=True)
+    except Exception as bundled:
+        try:
+            return playwright.chromium.launch(headless=True, channel="chrome")
+        except Exception:
+            raise bundled
+
+
+def _render_url(sync_playwright, url: str) -> dict:
+    blocked: list[str] = []
+    status = {"code": None}
+    with sync_playwright() as pw:
+        browser = _launch_chromium(pw)
+        context = None
+        try:
+            # 호출마다 새 컨텍스트. 닫으면 쿠키·저장소가 남지 않는다. 다운로드·권한은 거부.
+            # 서비스 워커는 route 검사를 우회하므로 막는다.
+            context = browser.new_context(accept_downloads=False, service_workers="block")
+            page = context.new_page()
+            page.on("dialog", lambda dialog: dialog.dismiss())
+
+            def on_response(response):
+                if _is_main_document(response.request):
+                    status["code"] = response.status
+                # route 는 처음 주소만 본다. 리다이렉트·DNS 재해석으로 내부망에 닿은 응답은 여기서 잡는다.
+                # shortcut: 요청은 이미 한 번 나간 뒤다(내용만 버린다), 송신까지 막으려면 필터링 프록시를 둔다.
+                try:
+                    ip = (response.server_addr() or {}).get("ipAddress")
+                    if ip and _ip_is_unsafe(ip):
+                        blocked.append(response.url)
+                except Exception:
+                    pass
+
+            page.on("response", on_response)
+            page.route("**/*", lambda route: _guard_browser_route(route, blocked))
+            # WebSocket 은 위 route 를 타지 않는다. 열람에는 필요 없으므로 전부 닫는다(내부망 ws:// 우회 차단).
+            page.route_web_socket("**", lambda ws: ws.close())
+            try:
+                page.goto(url, wait_until="domcontentloaded", timeout=_BROWSER_IDLE_MS)
+            except Exception as exc:
+                if blocked:
+                    raise SsrfBlocked(f"브라우저 주 문서 차단: {blocked[0]}") from exc
+                raise
+            if blocked:
+                raise SsrfBlocked(f"브라우저 주 문서 차단: {blocked[0]}")
+            if status["code"] in (403, 503):             # 챌린지가 스스로 풀리고 다시 싣는 시간을 준다
+                try:
+                    page.wait_for_event("response", predicate=lambda r: _is_main_document(r.request)
+                                        and 200 <= r.status < 300, timeout=10_000)
+                except Exception:
+                    pass
+            text = _read_rendered_page(page)
+            final_url = page.url
+            if blocked:                                  # 내부망 응답이 섞인 페이지는 통째로 버린다
+                raise SsrfBlocked(f"브라우저 내부망 응답 차단: {blocked[0]}")
+            check_url_safe(final_url)
+        finally:
+            if context is not None:
+                context.close()
+            browser.close()
+    code = status["code"]
+    base = {"status": code, "text": text, "final_url": final_url, "mime": "text/html"}
+    if not isinstance(code, int) or not 200 <= code < 300:
+        return {**base, "ok": False, "reason": f"http {code}"}
+    return {**base, "ok": True}
+
+
+def _via_browser(url: str) -> dict:
+    """헤드리스 Chromium. 엔진·실행 파일이 없으면 skip 하고 사다리가 다음으로 간다.
+
+    patchright 가 import 되면 그것을 쓴다. 그 실행 파일만 없으면 playwright 로 한 번 더 연다.
+    주 문서가 사설·루프백·링크로컬·비 http(s) 로 막히면 SsrfBlocked 를 전파한다.
+    """
+    check_url_safe(url)
+    engines = _browser_engines()
+    if not engines:
+        return _browser_skip(url)
+    for sync_playwright, _name in engines:
+        try:
+            return _render_url(sync_playwright, url)
+        except SsrfBlocked:
+            raise
+        except Exception as exc:
+            if _is_missing_browser(exc):
+                continue
+            return _browser_fail(url, exc)
+    return _browser_skip(url)
+
+
+def _exhausted_hint() -> str:
+    if os.environ.get("MDR_BROWSER") == "0":
+        return ("자체 사다리 전 계층 소진 — 브라우저 계층은 꺼져 있었다(MDR_BROWSER=0). "
+                "JS 렌더가 필요하면 스위치를 켜고, 아니면 대체출처를 찾을 것")
+    return ("자체 사다리 전 계층 소진 — 브라우저 계층(patchright 또는 playwright)까지 실패했다. "
+            "agent-browser CLI → playwright MCP(references/evidence-capture.md) 또는 대체출처를 찾을 것")
+
+
 def _candidates(tier: str, url: str):
     """계층 이름 → (라벨, _fetch_once 형태 응답) 후보들을 순서대로 내놓는다."""
     if tier == "direct":
         for imp in IMPERSONATE_GRID:
-            yield f"curl_cffi:{imp}", _fetch_once(url, imp)      # SSRF 는 전파(보안 사건)
+            res = _fetch_once(url, imp)                          # SSRF 는 전파(보안 사건)
+            yield f"curl_cffi:{imp}", res
+            if res.get("status") == 429:                        # 같은 계층의 남은 프로필은 치지 않는다
+                break
     elif tier == "mobile":
         for u in _mobile_urls(url):
+            if _mobile_dns_missing(u):
+                continue
             res = _try_derived(u, MOBILE_IMPERSONATE, headers=MOBILE_HEADERS)
             if not res.get("ok") and str(res.get("reason", "")).startswith("error:"):
                 res = _try_derived(u, "safari", headers=MOBILE_HEADERS)  # iOS 지문 미지원 빌드
             yield "mobile", res
+    elif tier == "browser":
+        yield "browser", _via_browser(url)
     elif tier == "jina":
         yield "jina", _via_jina(url)
     elif tier == "googlebot":
@@ -655,7 +1044,7 @@ def _tier_order(url: str) -> list[str]:
 
 
 def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
-                  expected_title: str | None = None) -> dict:
+                  expected_title: str | None = None, *, no_third_party: bool | None = None) -> dict:
     """자체 사다리 전체(도메인 라우팅 + 내장 우회). 반환 status ∈ {ok, partial, fail}.
 
     구 버전의 `delegate`(insane-search 스킬 위임)는 사다리에 흡수돼 사라졌다.
@@ -666,14 +1055,30 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
     moved: str | None = None                            # 앞선 live 시도가 남긴 redirected_other_doc 사유
     last_html: str = ""
     thin_pdf = False
+    blocked = _third_party_blocked(no_third_party)
+    direct_dead = False
     check_url_safe(url)                                 # 진입 전 1차 검증
 
     for tier in _tier_order(url):
-        if thin_pdf:
+        if thin_pdf:                                    # 얇은 PDF 는 다음 계층에서 같은 파일을 다시 받지 않는다
             break
+        if blocked and tier in ("jina", "wayback"):
+            trace.append({"tier": tier, "skip": "no-third-party"})
+            continue
+        # direct 가 전부 404/410 이면 죽은 페이지. 아카이브(wayback)만 남긴다.
+        if direct_dead and tier != "wayback":
+            trace.append({"tier": tier, "skip": "direct-404"})
+            continue
+        if tier == "browser" and os.environ.get("MDR_BROWSER") == "0":
+            trace.append({"tier": tier, "skip": "MDR_BROWSER=0"})
+            continue
+        direct_statuses: list = []
+        tier_done = False
         try:
             for label, res in _candidates(tier, url):
                 res = dict(res or {})
+                if tier == "direct":
+                    direct_statuses.append(res.get("status"))
                 status = res.get("status")
                 if res.get("ok") and (not isinstance(status, int) or not 200 <= status < 300):
                     res.update(ok=False, reason=f"http {status}")
@@ -685,6 +1090,8 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
                     v = {"verdict": "partial", "reason": res["reason"]}
                 elif res.get("is_pdf"):
                     v = validate_pdf_text(pdf_text(res.get("raw") or b"", stop_at=PDF_MIN_CHARS))
+                elif res.get("doc_kind"):
+                    v = {"verdict": "ok", "reason": res["doc_kind"]}
                 else:
                     v = validate_body(res.get("text", ""), status, success_selectors)
                 if res.get("ok") and _redirected_other_doc(res):   # 판정과 무관하게 착지 문서가 다르면 기록
@@ -712,6 +1119,8 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
                 res["_fetch_ref"] = ref
                 if res.get("is_pdf") and v["verdict"] == "ok":
                     return _result("ok", res, trace, note="pdf", fetch_refs=fetch_refs)
+                if res.get("doc_kind") and v["verdict"] == "ok":
+                    return _result("ok", res, trace, note=res["doc_kind"], fetch_refs=fetch_refs)
                 trace.append({"tier": label, "verdict": v["verdict"], "reason": v["reason"],
                               "fetch_ref": ref})
                 if v["verdict"] == "ok":
@@ -723,12 +1132,16 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
                     break
                 if res.get("text"):
                     last_html = res["text"]
+            tier_done = True
         except SsrfBlocked:
             raise
         except Exception as e:
             ref = _audit_fetch_attempt(url, tier, failure_reason=str(e))
             fetch_refs.append(ref)
             trace.append({"tier": tier, "error": str(e)})
+        if (tier_done and tier == "direct" and direct_statuses
+                and all(code in (404, 410) for code in direct_statuses)):
+            direct_dead = True
 
     if partial_res is not None:
         return _result("partial", partial_res, trace, fetch_refs=fetch_refs)
@@ -740,15 +1153,15 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
             return _result("partial", {"final_url": url, "text": og, "mime": "text/html"},
                            trace, note="ogp", fetch_refs=fetch_refs)
     return {"status": "fail", "final_url": url, "trace": trace, "fetch_refs": fetch_refs,
-            "hint": "자체 사다리 전 계층 소진 — 브라우저 계층(agent-browser CLI → playwright MCP, references/evidence-capture.md) 또는 대체출처를 찾을 것"}
+            "hint": _exhausted_hint()}
 
 
 def fetch(url: str, success_selectors: list[str] | None = None,
-          expected_title: str | None = None) -> dict:
+          expected_title: str | None = None, *, no_third_party: bool | None = None) -> dict:
     """한 호출의 최종 확보 상태를 시도 로그와 구분해 기록한다."""
     result = {"status": "fail"}
     try:
-        result = _fetch_ladder(url, success_selectors, expected_title)
+        result = _fetch_ladder(url, success_selectors, expected_title, no_third_party=no_third_party)
         return result
     finally:
         try:
@@ -763,11 +1176,14 @@ def fetch(url: str, success_selectors: list[str] | None = None,
 
 
 def _result(status: str, res: dict, trace: list, note: str = "", fetch_refs: list[str] | None = None) -> dict:
-    return {"status": status, "final_url": res.get("final_url"), "http_status": res.get("status"),
-            "archived_url": res.get("archived_url"), "mime": res.get("mime"),
-            "text": res.get("text", ""), "raw": res.get("raw"), "is_pdf": res.get("is_pdf", False),
-            "trace": trace, "note": note or res.get("_note", ""), "fetch_ref": res.get("_fetch_ref"),
-            "failure_reason": res.get("failure_reason"), "fetch_refs": fetch_refs or []}
+    out = {"status": status, "final_url": res.get("final_url"), "http_status": res.get("status"),
+           "archived_url": res.get("archived_url"), "mime": res.get("mime"),
+           "text": res.get("text", ""), "raw": res.get("raw"), "is_pdf": res.get("is_pdf", False),
+           "trace": trace, "note": note or res.get("_note", ""), "fetch_ref": res.get("_fetch_ref"),
+           "failure_reason": res.get("failure_reason"), "fetch_refs": fetch_refs or []}
+    if res.get("doc_kind"):
+        out["doc_kind"] = res["doc_kind"]
+    return out
 
 
 def _html_title(html: str) -> str | None:
@@ -799,19 +1215,26 @@ def save(result: dict, out_dir: Path | str, url: str | None = None) -> dict:
         return result
     sha = hashlib.sha256(raw).hexdigest()
     sha12 = sha[:12]
-    ext = "pdf" if result.get("is_pdf") else ("html" if "<" in result.get("text", "")[:200] else "txt")
+    binary = bool(result.get("is_pdf") or result.get("doc_kind"))
+    if result.get("is_pdf"):
+        ext = "pdf"
+    elif result.get("doc_kind"):
+        ext = result["doc_kind"]
+    else:
+        ext = "html" if "<" in result.get("text", "")[:200] else "txt"
     raw_name = f"{sha12}_raw.{ext}"
     (out / raw_name).write_bytes(raw)
     clean_name = None
+    clean = None
     if result.get("is_pdf"):
         clean = pdf_text(raw)                 # fitz 가 없거나 열리지 않으면 clean 생략(span 대조 불가 → WARN)
-    else:
+    elif not binary:
         clean = extract_text(result.get("text", ""))
     if clean:
         clean_name = f"{sha12}_clean.txt"
         (out / clean_name).write_text(clean, encoding="utf-8")
     accessed = _now()
-    title = None if result.get("is_pdf") else _html_title(result.get("text") or "")
+    title = None if binary else _html_title(result.get("text") or "")
     status = result.get("status")
     if status not in ("ok", "partial"):
         status = "ok"
@@ -977,21 +1400,45 @@ def _print_cli_result(result: dict) -> None:
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
 
+def _cli_target(args: list[str]) -> tuple[str | None, str, bool]:
+    """(url, out, no_third_party). `--no-third-party` 와 `--out` 은 위치와 무관하게 읽는다."""
+    no_tp = "--no-third-party" in args or os.environ.get("MDR_NO_THIRD_PARTY") == "1"
+    out = "_sources"
+    url = None
+    i = 1
+    while i < len(args):
+        item = args[i]
+        if item == "--no-third-party":
+            i += 1
+            continue
+        if item == "--out":
+            out = args[i + 1]
+            i += 2
+            continue
+        if url is None and not item.startswith("-"):   # --help 같은 미지 플래그는 URL 이 아니다 → 사용법·exit 2
+            url = item
+        i += 1
+    return url, out, no_tp
+
+
 def main(args: list[str] | None = None) -> None:
     args = sys.argv[1:] if args is None else args
     if not args or args[0] == "demo":
         demo()
-    elif args[0] in ("smoke", "get") and len(args) >= 2 and args[1].startswith(("http://", "https://")):
+    elif args[0] in ("smoke", "get"):
+        url, out, no_tp = _cli_target(args)
+        if not url:
+            print(__doc__)
+            sys.exit(2)
         try:
-            r = fetch(args[1])
+            # 플래그가 꺼져 있으면 기존 호출 형태(fetch(url))를 유지한다.
+            r = fetch(url, no_third_party=True) if no_tp else fetch(url)
         except SsrfBlocked as e:                      # 차단은 유지하고 보고만 JSON 으로
-            print(json.dumps({"status": "fail", "failure_reason": f"ssrf_blocked: {e}", "url": args[1]},
+            print(json.dumps({"status": "fail", "failure_reason": f"ssrf_blocked: {e}", "url": url},
                              ensure_ascii=False, indent=2))
             sys.exit(1)
-        if args[0] == "get":
-            out = args[args.index("--out") + 1] if "--out" in args else "_sources"
-            if r["status"] in ("ok", "partial"):
-                r = save(r, out, url=args[1])
+        if args[0] == "get" and r["status"] in ("ok", "partial"):
+            r = save(r, out, url=url)
         _print_cli_result(r)
     else:
         print(__doc__)

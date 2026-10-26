@@ -1,6 +1,6 @@
 # market-deep-research
 
-**증빙형(evidence-based) 시장조사 보고서 스킬** — Claude Code 스킬 `market-deep-research`(+ `mdr-hwpx` 납품 양식화)의 정본 저장소입니다.
+**증빙형(evidence-based) 시장조사 보고서 스킬** — `market-deep-research`(+ `mdr-search` 검색만, `mdr-hwpx` 납품 양식화)의 정본 저장소입니다. **Claude Code 와 Codex 양쪽에서** 같은 SKILL.md 로 동작하고, 주제(기술동향·기업 실사·구매의향·경쟁분석 등)에 묶이지 않습니다. 팀원 설치는 [설치·실행](#설치실행).
 
 ![fact → source → capture 증거 체인과 게이트](docs/img/evidence-chain.png)
 
@@ -33,6 +33,42 @@ lessons.md                    ← 실전에서 얻은 교훈 누적
 | **flint 차트 엔진 내장**(2026-10-26) — microsoft/flint-chart 의 파이썬 포트를 `scripts/flint/` 에 그대로 내장(MIT, 파일 해시 고정). `make_chart.py` 가 confirmed fact 에서 16종 차트를 Vega-Lite 로 만들고 사이드카 `.vl.json` 으로 그림 값↔사실대장을 G3 가 대조 | 자작 차트가 막대·선 2종뿐이었고, 그림 속 숫자가 대장과 같은지는 아무도 검사하지 않았음 | `visual-first.md` §1a·§1b · `scripts/make_chart.py` · `visual_audit.py --figures` |
 | **요약→세부→원문 결박**(2026-10-26, imozuru 번안) — 근거 인용(verbatim)이 원문 clean 텍스트 어느 행에 글자 그대로 있는지 `span` 으로 기록·대조, F태그 문장마다 대조 통과 인용이 없으면 v4 FAIL, 실패 시 PDF 미생성·기존 PDF 보존, `audit/evidence.html` 증빙판(문장→인용→앞뒤 6행→원문) | verbatim 이 원문에 실재하는지는 규칙만 있고 기계가 막지 않았음 | `scripts/span_tools.py` · `build_evidence_html.py` · `verification-gates.md` §[2]·§G3 |
 | **검색 전건 기록·학술 출처 계층**(2026-10-26, scientific-agent-skills 번안) — 모든 검색을 `audit/search-log.jsonl` 에 기록, `--type academic` 이 OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv 폴스루, 학술 출처 6규칙·기술동향 축별 충분조건 기본값·근거 확실성 라벨·TRL 증거표 | 학술 검색이 arXiv 뿐이었고 어떤 검색식으로 몇 건을 봤는지 남지 않았음 | `source-ladder.md` · `academic-apis.md` · `trl-evidence.md` · `research-plan.md` |
+
+---
+
+## 2026-10-14 업데이트 — 조사·크롤링 강화
+
+이 스킬은 "모은 사실이 맞는가"는 두껍게 검사했지만 "못 모은 것이 있는가"는 재지도 막지도 않았습니다. 과거 조사 7건을 집계해 보니 사실이 1건뿐인 조사 대상이 다수였고, 검색이 차단돼도 "결과 없음"으로 보고됐습니다. 그래서 **실패를 보이게 하고, 빠진 곳으로 되돌아가게** 고쳤습니다.
+
+| 들어온 것 | 왜 | 어디 |
+|---|---|---|
+| **검색 백엔드 상태** — 결과와 함께 백엔드별 `ok·empty·blocked·error` 를 돌려주고, 전 백엔드가 막히면 종료 코드 2 | 차단·오류가 빈 목록으로 바뀌어 워커가 "자료 없음"으로 읽음 | `scripts/search.py` (`search_report`, `--json`, `health`) |
+| **워커 `## COVERAGE`** — 시도한 검색식과, 못 채운 항목을 `NOT_FOUND`(찾아봤는데 없음)·`UNREACHABLE`(막혀서 못 봄)·`NOT_ATTEMPTED` 로 구분 보고. 열린 공백이 남으면 조사 루프가 수렴하지 않음 | 없는 것과 못 찾은 것이 한 칸이었고, 루프 종료가 워커의 자기 신고에만 달려 있었음 | `references/agent-briefs.md` · `scripts/join_workers.py` |
+| **0웨이브 대상 열거** — 목록형 조사는 본조사 전에 `audit/universe.md` 로 대상 목록부터 만들고, `join_workers.py coverage` 가 사실 0건·1건 대상을 보고 | 대상 목록을 빠짐없이 세는 단계가 없어 누락된 대상은 어떤 게이트도 못 잡음 | `references/research-plan.md` |
+| **탈락 사실의 복귀** — 재열람·반박검색에서 떨어진 사실을 사유 코드와 함께 `audit/gap-log.md` 에 남기고 사유별로 재조사 | 탈락하면 그대로 버려져 공백이 숨음 | `references/verification-gates.md` |
+| **의심 페이지 판정** — 로그인벽·동의창·없는 페이지 안내를 `partial` 로 강등. Jina 가 알려 주는 원 페이지 오류 코드를 반영 | 성공 판정이 "본문 1000자 이상" 하나라 죽은 페이지가 성공으로 저장됨(아래 벤치마크) | `scripts/fetch.py` (`validate_body`) |
+| **브라우저 계층** — `patchright`(없으면 `playwright`) 헤드리스 Chromium. 내부망 응답 차단, 호출마다 새 컨텍스트 | JS 로 그려지는 페이지를 여는 로컬 계층이 없어 제3자 서비스에 의존 | `scripts/fetch.py` (`browser` 계층) |
+| **대외비 스위치** — `MDR_NO_THIRD_PARTY=1` 이면 Jina·Wayback 계층을 건너뜀 | 열람 대상 URL 이 외부 서비스로 나감 | `references/source-ladder.md` |
+| **문서 파일·인코딩** — HWP·HWPX·XLSX·DOCX·PPTX·CSV·ZIP 원본 저장, 문서 상한 40MB, `<meta charset>` 인식, 지문 프로필 갱신(`chrome110`→`firefox`, `safari180_ios`→`safari_ios`) | 한국 공공·공시 자료가 모든 계층에서 실패, 2023년 지문 사용 | `scripts/fetch.py` · `requirements.txt` |
+
+### 벤치마크 (2026-10-14)
+
+과거 조사 4건에서 **끝내 열지 못했던 URL** 을 수정 전·후 코드로 한 번씩 다시 열었습니다. 원래 실패했던 어려운 표본이라 절대 성공률은 낮습니다. 측정 도구는 `_planning/recall-eval/recall_eval.py` 입니다.
+
+| 설정 (56건) | 진짜 확보 | 가짜 확보 | 부분 확보 | 실패 |
+|---|---|---|---|---|
+| 수정 전 | 10 | **8** | 19 | 19 |
+| 수정 후 | **16** | 0 | 3 | 37 |
+| 수정 후 + `MDR_NO_THIRD_PARTY=1` | 5 | 0 | 3 | 48 |
+| 수정 후 + `MDR_NO_THIRD_PARTY=1` + `MDR_BROWSER_HEADED=1` | 10 | 0 | 2 | 44 |
+
+- **가짜 확보**는 직접 요청이 404·410 인 죽은 페이지(56건 중 15건)를 "확보"로 집계한 건수입니다. 수정 전 코드는 Jina 가 200 으로 감싸 준 "Page not found" 안내문을 길이만 보고 통과시켰습니다.
+- 진짜 확보가 10 → 16건으로 늘었고(같은 표본을 한 번 더 쟀을 때는 18건 — 측정 간 편차 2건), 수정 전에 열었던 살아 있는 페이지를 수정 후에 잃은 경우는 없습니다. 실패가 늘어난 것은 죽은 페이지와 의심 페이지가 제자리(실패)로 분류됐기 때문입니다.
+- 남은 실패는 대부분 봇 차단(403)입니다. 헤드리스 브라우저는 `curl_cffi` 와 같은 403 을 받았고, 창을 띄우는 방식(`MDR_BROWSER_HEADED=1`)에서만 일부 JS 챌린지가 풀렸습니다(브라우저 계층 확보 3건).
+- 제3자 계층을 끄면 확보가 16 → 5건으로 줄어듭니다. 대외비 조사에서는 이만큼의 손실을 감수해야 합니다.
+- 검색 백엔드 실측: DuckDuckGo 는 정상, 공개 SearXNG 5곳은 JSON 응답 0곳(403·429·캡차·DNS 실패). 자체 인스턴스는 `assets/searxng/` 의 구성 파일로 띄우고 `MDR_SEARX_URL` 로 연결합니다.
+
+한계: 설정당 1~2회 측정, 단일 IP 입니다. `patents.google.com` 22건은 반복 측정 중 IP 단위로 차단(503)돼 표본에서 뺐습니다 — 특허는 크롤링 대신 특허 DB 도구로 조회하도록 워커 지침을 바꿨습니다. "얼마나 빠뜨리는가"(대상 재현율)는 도구만 만들었고, 독립 정답지로 잰 수치는 아직 없습니다.
 
 ---
 
@@ -143,8 +179,8 @@ python scripts/visual_audit.py report.md --decisions audit/visual-decisions.json
 
 ## 수집 스택 (유료 API 무의존)
 
-- **검색** (`scripts/search.py`): ddgs 다중 백엔드(`--type news` 는 ddgs news) → DuckDuckGo HTML 폴백 → SearXNG(자체 호스트 등록 시만) → 전문 무료 API(SEC EDGAR; 학술은 OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv 폴스루, `references/academic-apis.md`). 호출마다 `<작업폴더>/audit/search-log.jsonl` 에 전건 기록. 내장 WebSearch 와 병행.
-- **fetch** (`scripts/fetch.py`): 강방어 사이트 우회 사다리 — 도메인 라우팅 → curl_cffi TLS 지문 → **모바일 iOS 지문** → Jina Reader → Googlebot UA → RSS → Wayback → OGP. 성공 판정은 HTTP 200 이 아니라 본문 검증. 원본(raw)+정제본을 SHA-256 과 함께 보존.
+- **검색** (`scripts/search.py`): ddgs 다중 백엔드(`--type news` 는 ddgs news) 1차 → DuckDuckGo HTML 폴백 → SearXNG(`MDR_SEARX_URL` 자체 인스턴스 등록 시만) → 전문 무료 API(SEC EDGAR·Wikipedia; 학술은 OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv 폴스루, `references/academic-apis.md`). 백엔드별 상태를 함께 돌려주고, 전 백엔드 실패는 종료 코드 2. 호출마다 `<작업폴더>/audit/search-log.jsonl` 에 전건 기록. 내장 WebSearch 와 병행.
+- **fetch** (`scripts/fetch.py`): 강방어 사이트 우회 사다리 — 도메인 라우팅 → curl_cffi TLS 지문 → **모바일 iOS 지문** → **브라우저**(patchright·선택) → Jina Reader → Googlebot UA → RSS → Wayback → OGP. 성공 판정은 HTTP 200 이 아니라 본문 검증(의심 페이지는 `partial`). `MDR_NO_THIRD_PARTY=1` 이면 Jina·Wayback 을 건너뜁니다. 원본(raw)+정제본을 SHA-256 과 함께 보존.
 - fetch.py 는 **현재 폴더** `audit/` 에 로그·스냅샷을 씁니다 — 모든 스크립트는 작업폴더(WD)에서 절대경로로 실행합니다. 스킬 폴더에서 돌리면 조사 원문이 저장소에 섞입니다.
 
 로그인·CAPTCHA·paywall 우회는 하지 않습니다.
@@ -178,6 +214,8 @@ codes/market-deep-research/
 
 codes/mdr-hwpx/              # 원고 md → 발주처 양식 hwpx (부별 모듈 빌드·정합성 검토·합본)
 └─ references/deliverable-rules.md   # 증빙판 → 납품본 변환 규칙                        ← 2026-10 신설
+
+template/                    # 새 조사 프로젝트 폴더 골격 — AGENTS.md(규칙 본문)·CLAUDE.md(@AGENTS.md)·.gitignore·tasks/lessons.md
 ```
 
 ## 조사 1건의 산출물
@@ -203,27 +241,53 @@ research_<주제>_<YYYYMMDD>/
 | ② 증빙형 보고서 초안(MD/PDF) | `market-deep-research` |
 | ③ 양식화: 원고 md → 양식 hwpx | `mdr-hwpx` |
 
-```bash
-# 의존성 점검 (HARD: python>=3.10, PyMuPDF, pandoc, chrome / SOFT: curl_cffi, trafilatura …)
-python codes/market-deep-research/scripts/preflight.py
+### 팀원 설치 — 5분
 
-# ~/.claude/skills/{market-deep-research,mdr-search,mdr-hwpx}/ 로 설치 (SHA-256 해시 검증 복사)
-# ⚠ 각 allowlist 스킬 폴더 안만 mirror-sync(초과 파일 삭제). 인자 없이 즉시 실행됩니다
+```bash
+git clone https://github.com/bbiyakfather/market-deep-research.git
+cd market-deep-research
+pip install -r codes/market-deep-research/requirements.txt   # 수집·PDF 스택 (python>=3.10)
+python codes/market-deep-research/scripts/preflight.py        # HARD: PyMuPDF·pandoc·chrome / SOFT: curl_cffi·trafilatura …
+
+# Claude Code 사용자 → ~/.claude/skills/ 에 3개 스킬 설치 (SHA-256 검증 복사)
 python codes/market-deep-research/scripts/install.py
 
-# 설치본이 저장소와 같은지 쓰지 않고 대조 (불일치 시 exit 1)
+# Codex 사용자 → ~/.agents/skills/ 에 설치 (Codex 가 사용자 스킬을 읽는 위치)
+python codes/market-deep-research/scripts/install.py --target ~/.agents/skills
+
+# 설치본이 저장소와 같은지 대조만 (불일치 시 exit 1). Codex 설치본은 --target 을 같이 준다
 python codes/market-deep-research/scripts/install.py --check
+python codes/market-deep-research/scripts/install.py --check --target ~/.agents/skills
 ```
 
-설치 후 Claude Code 에서 "증빙/캡처 포함 시장조사 보고서", "기술동향·산업동향 조사", "기술사업화 실사", "근거 있는 딥리서치 PDF" 류의 요청이 이 스킬로 라우팅됩니다. 실전에서는 설치본에서 고친 변경이 먼저 생기기도 하므로, 조사 직전 `--check` 로 드리프트를 확인하고 변경분은 이 저장소 `codes/` 로 동기화합니다.
+`install.py` 는 allowlist 3개 스킬 폴더 안만 mirror-sync(초과 파일 삭제) 하고 그 밖의 스킬은 건드리지 않습니다. 둘 다 쓰는 사람은 두 번 실행합니다.
+
+### 새 조사 프로젝트 시작 — 주제 무관
+
+```bash
+cp -r template/ ~/work/<프로젝트명>/ && cd ~/work/<프로젝트명>/ && git init
+# AGENTS.md 의 <조직> 자리만 채운다. 조사마다 research_<주제>_<YYYYMMDD>/ 가 그 아래 생긴다.
+```
+
+| | Claude Code | Codex |
+|---|---|---|
+| 규칙 파일 | `CLAUDE.md`(`@AGENTS.md` 한 줄) | `AGENTS.md` |
+| 시작 | `/market-deep-research <주제>` 또는 "증빙 포함 시장조사 보고서" 류 자연어 | `$market-deep-research <주제>` 또는 같은 자연어(`/skills` 로 설치 확인) |
+| 병렬 조사원 | `Agent` 서브에이전트(sonnet·background) | 내장 서브에이전트(기본 켜짐). 모델은 `~/.codex/config.toml` 의 `[agents].default_subagent_model` |
+| 원문 재열람 | WebFetch → 403 이면 `fetch.py` | `fetch.py`(증빙 스냅샷은 늘 이 경로) |
+
+도구 이름만 다르고 게이트·대장·검증 절차는 동일합니다(`SKILL.md` 「실행 환경」 표). 대외비 조사는 `MDR_NO_THIRD_PARTY=1` 로 Jina·Wayback 계층을 끕니다. 실전에서는 설치본에서 고친 변경이 먼저 생기기도 하므로, 조사 직전 `--check` 로 드리프트를 확인하고 변경분은 이 저장소 `codes/` 로 동기화합니다.
 
 ## 검증 현황 (2026-10-26)
 
 ```
+pytest (v4 2개 파일 제외)  : 647 passed  (2026-09 기준선 602 + 신규 45)
+교차 리뷰                  : grok 1회(높음 3·중간 4 지적 → 6건 반영, 1건 한계로 수용)
+fetch.py demo / search.py demo : OK
 visual_audit.py --selftest : OK  (실전 report.md 1건: 후보 11건 추출, 연번 열 오탐 0)
 verify_facts.py demo       : OK  (승인 목차 파서 12부·4축 그대로)
 독립 리뷰                  : opus 2회(독자·목표 묶음 13건·시각화 묶음 13건 지적 → 반영)
-pytest                     : 739 passed (test_e2e·test_v4_gates·test_v4_semantic 제외)
+pytest                     : 739 passed (병합 후 재측정; test_e2e·test_v4_gates·test_v4_semantic 제외)
 flint 내장                 : 픽스처 17건 JS 출력과 바이트 동일, 한글 라벨 가로막대 실렌더 육안 확인(vl-convert 1.9.0)
 독립 리뷰                  : opus 2회 추가(외부 스킬 반영 1차 차단 3·권고 9, 2차 차단 3·권고 8 → 전부 반영)
 알려진 결함                : tests/test_v4_gates.py·test_v4_semantic.py 가 finalize_report 모듈 부재로 수집 실패 · v4 문장 단위 인용 강제의 오탐률은 실제 조사로 미측정
@@ -234,6 +298,7 @@ flint 내장                 : 픽스처 17건 JS 출력과 바이트 동일, �
 | 변경 | 내용 |
 |---|---|
 | 2026-10-26 | 외부 스킬 3종 반영 — flint-chart 파이썬 포트 내장(16종 차트·사이드카 값 대조·SVG 린트), imozuru 강화 H1~H11(span 글자 대조·문장 단위 인용 강제·빌드 중단·증빙판 HTML·PDF 본문 하한), scientific-agent-skills(검색 전건 기록·학술 API 4종·축별 충분조건·확실성 라벨·TRL). 분석·반영안 `_planning/research-skill-repos-adoption-2026-10-26.md` |
+| 2026-10-14 | 조사·크롤링 강화 — 검색 백엔드 상태·워커 COVERAGE·대상 열거·탈락 사실 복귀·의심 페이지 판정·브라우저 계층·대외비 스위치·문서 파일 저장 + 열람 벤치마크 |
 | 2026-10-08 (T2) | 표 형식 다양화 — 사용자 편집 학습(대상별 묶음 세로 표 A·두 열 라벨형 B·가로 행렬 matrix), `visual-first.md` §2b 선택 규칙과 캡션 태그 `{형식=A\|B}`, `visual_audit.py` 표 키·`render_pdf.py` 에서 태그 제거. 빌더 쪽(mdr-hwpx `build_hwpx.py` A/B 렌더러)은 별도 세션 (`_planning/batches/batch-T2-table-format.md`) |
 | 2026-10-08 (T1) | 컨텍스트 예산 리팩토링 — SKILL.md 게이트 절을 카드(목적·절대규칙·영수증·포인터)로 줄이고 상세는 `verification-gates.md` 한 곳에, description ≤250자·본문 ≤12KB(목표 10KB) 가드 테스트, mdr-hwpx 통과 기준 1사본화 (`_planning/batches/batch-T1-context-budget.md`) |
 | 2026-10-08 | 독자·목표 설계(reader-goal) G0 신설 · 시각화 우선(visual-first) PRD·규칙·`visual_audit.py` · G0 필드 5개 · 워커 철칙 · 납품본 변환 규칙(mdr-hwpx) |

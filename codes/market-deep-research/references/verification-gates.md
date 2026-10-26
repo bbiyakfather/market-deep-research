@@ -38,6 +38,7 @@ FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노�
   — 해시 없는 lead reread 는 add·validate 모두 거부. verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
   재검증 선언은 `gates.py record [2] <work_dir> --evidence "..."`로 기록하고 `check [2]`로 G0·G1을 확인한다.
 - **글자 대조**: text_quote 는 `span_tools.py find <work_dir> <sha12> "<verbatim>"` 로 clean 원문 행을 확정해 evidence `span` 에 기록한다. 못 찾으면 confirm 불가(한 글자라도 다르면 실패 — 의미 검사가 아니라 "인용이 원문에 있다"까지만 보증).
+- **탈락 사실의 복귀**(`audit/gap-log.md`. 재열람·반박검색·claim-review 탈락과, 수렴에서 수용한 COVERAGE 공백을 여기 적는다. SKILL.md [2] 는 이 절만 참조): `reread_mismatch`(원문 불일치·워커 의역) → 같은 출처 재발췌 / `unreachable`(출처 접근 불가) → 대체 출처 탐색 / `refuted`(반박됨) → 반박 근거를 사실로 등재하고 종결. 공백 수용은 `ACCEPT:` 에 사유를 적는다. 줄 형식: `- <대상 또는 F-ID> — CODE: <코드> — NEXT: <후속> — ACCEPT: <사유 또는 없음>`.
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
   ② **1회 반박검색**(`counter_search.found_stronger_refutation=false`) ③ **기본소스**(`primary_source_ref`)
   ④ **시간증거**(`observed_at` 또는 `valid_at`). v4 본문 사용 confirmed high-risk는 ①~④ 전부 G3 FAIL 조건이다.

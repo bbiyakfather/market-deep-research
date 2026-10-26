@@ -1,0 +1,18 @@
+# 로컬 SearXNG 설정. JSON 검색 출력을 허용하고 limiter 는 끈다.
+# 실행: docker compose -f assets/searxng/docker-compose.yml up -d
+# 중지: docker compose -f assets/searxng/docker-compose.yml down
+# 환경변수: MDR_SEARX_URL=http://127.0.0.1:8888
+# secret_key 는 공식 문서의 자리표시자다. 띄우기 전에 바꿀 것.
+
+use_default_settings: true
+
+search:
+  formats:
+    - html
+    - json
+
+server:
+  secret_key: "ultrasecretkey"
+  limiter: false
+  image_proxy: false
+  public_instance: false

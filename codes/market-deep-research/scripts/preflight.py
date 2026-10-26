@@ -25,6 +25,15 @@ from pathlib import Path
 
 HARD_PY = ["fitz"]
 SOFT_PY = ["curl_cffi", "trafilatura", "openpyxl", "yt_dlp", "ddgs", "vl_convert"]  # vl_convert: make_chart SVG 렌더(없으면 사이드카만)
+# 배포 이름(import 이름과 다른 것 포함). preflight 가 설치본 버전을 출력한다.
+_VERSION_DISTS = (
+    ("curl_cffi", "curl_cffi"),
+    ("trafilatura", "trafilatura"),
+    ("fitz", "PyMuPDF"),
+    ("openpyxl", "openpyxl"),
+    ("yt_dlp", "yt-dlp"),
+    ("certifi", "certifi"),
+)
 
 _CHROME_CANDIDATES = [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
@@ -48,8 +57,43 @@ def _find_chrome() -> str | None:
     return None
 
 
+def _dist_version(dist: str) -> str:
+    try:
+        from importlib.metadata import version
+        return version(dist)
+    except Exception:
+        return "없음"
+
+
+def _impersonate_gap() -> tuple[list[str], str | None]:
+    """코드가 쓰는 impersonate 별칭이 설치본에 없으면 그 목록. 확인 불가면 사유."""
+    try:
+        import fetch
+        from curl_cffi.requests.impersonate import REAL_TARGET_MAP, BrowserType
+    except Exception as exc:
+        return [], f"impersonate 별칭 확인 불가({exc.__class__.__name__})"
+    supported = set(REAL_TARGET_MAP) | {item.value for item in BrowserType}
+    aliases = list(dict.fromkeys([*fetch.IMPERSONATE_GRID, fetch.MOBILE_IMPERSONATE]))
+    return [alias for alias in aliases if alias not in supported], None
+
+
+def _browser_layer() -> dict:
+    """브라우저 계층은 선택. patchright 가 있으면 그것을, 없으면 playwright, 둘 다 없으면 없음."""
+    if _has_py("patchright"):
+        label = "patchright"
+    elif _has_py("playwright"):
+        label = "playwright"
+    else:
+        label = "없음"
+    return {"ok": label != "없음", "detail": f"브라우저 계층: {label}"}
+
+
 def check() -> dict:
     py_ok = sys.version_info >= (3, 10)
+    missing, note = _impersonate_gap()
+    soft = {m: {"ok": _has_py(m)} for m in SOFT_PY}
+    soft["browser"] = _browser_layer()
+    soft["agent-browser(cli)"] = {"ok": shutil.which("agent-browser") is not None, "detail": shutil.which("agent-browser")}
     report = {
         "hard": {
             "python>=3.10": {"ok": py_ok, "detail": sys.version.split()[0]},
@@ -58,14 +102,14 @@ def check() -> dict:
             "chrome": {"ok": _find_chrome() is not None, "detail": _find_chrome()},
         },
         # 강방어 우회는 fetch.py 에 내장됨 — insane-search 스킬 의존 없음(2026-07-31)
-        "soft": {
-            **{m: {"ok": _has_py(m)} for m in SOFT_PY},
-            "agent-browser(cli)": {"ok": shutil.which("agent-browser") is not None, "detail": shutil.which("agent-browser")},
-        },
+        "soft": soft,
         "runtime_check_needed": [
             "브라우저: agent-browser CLI → playwright MCP → claude-in-chrome",
             "무료 공공 MCP: opendart · KOSIS · KakaoMap 등",
         ],
+        "versions": {name: _dist_version(dist) for name, dist in _VERSION_DISTS},
+        "impersonate_unsupported": missing,
+        "impersonate_note": note,
     }
     report["hard_ok"] = all(v["ok"] for v in report["hard"].values())
     return report
@@ -103,6 +147,14 @@ def _fmt(report: dict) -> str:
             det = f"  ({v.get('detail')})" if v.get("detail") else ""
             lines.append(f"    [{mark}] {k}{det}")
     lines.append("  RUNTIME(오케스트레이터 확인): " + " · ".join(report["runtime_check_needed"]))
+    lines.append("  VERSIONS:")
+    for name, ver in report.get("versions", {}).items():
+        lines.append(f"    {name} {ver}")
+    unsupported = report.get("impersonate_unsupported") or []
+    if unsupported:
+        lines.append("  ⚠ SOFT impersonate 별칭 미지원: " + ", ".join(unsupported))
+    if report.get("impersonate_note"):
+        lines.append("  ⚠ SOFT " + report["impersonate_note"])
     if not report["hard_ok"]:
         lines.append("  ✗ HARD 의존성 누락 — 설치 후 재실행. (SOFT 누락은 해당 계층만 건너뜀)")
     else:

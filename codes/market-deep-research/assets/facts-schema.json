@@ -105,8 +105,19 @@
       "last_seen": {"type": ["string", "null"], "format": "iso-time", "description": "[v3-E] 마지막으로 소스에서 확인된 시점(상태변경 추적)"},
       "demoted_at": {"type": ["string", "null"], "format": "date-time"},
 
+      "discovery": {
+        "type": ["object", "null"],
+        "additionalProperties": false,
+        "description": "수집 경로(선택). 생략·null 가능. query·wave·axis·worker 는 모두 문자열이고 각각 생략 가능.",
+        "properties": {
+          "query": {"type": "string"},
+          "wave": {"type": "string"},
+          "axis": {"type": "string"},
+          "worker": {"type": "string"}
+        }
+      },
       "discard_reason": {"type": ["string", "null"]},
-      "capture_only_reason": {"type": ["string", "null"], "description": "[선택] verbatim 인용 없이 캡처만 근거인 사유(H1 문장 인용 검사를 WARN 으로 완화)"},
+            "capture_only_reason": {"type": ["string", "null"], "description": "[선택] verbatim 인용 없이 캡처만 근거인 사유(H1 문장 인용 검사를 WARN 으로 완화)"},
       "as_of": {"type": ["string", "null"], "format": "iso-time", "description": "[선택] 값의 기준 시점(context.as_of 와 별개로 fact 단위 기재)"},
       "revision_status": {"type": ["string", "null"], "enum_ref": "revision_status", "description": "[선택] 수치 개정 상태(최초/개정/잠정)"}
     },
