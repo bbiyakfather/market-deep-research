@@ -87,7 +87,7 @@
 - matplotlib 범주축은 **위치 인덱스 + `set_yticklabels`** — 문자열 라벨을 직접 넘기면 같은 문자열이 한 막대로 병합돼
   값이 한 칸씩 밀린 사고(2026-08-07).
 - 생성 후 팀리드가 Read 로 연다 — 스크립트 성공 ≠ 그림 정상.
-- 도구: `scripts/make_chart.py`(§1a 17종, facts.jsonl 직결, 기본 `--engine flint`; 사이드카 `.vl.json` 을 `verify_facts` 가 사실대장과 대조) → 그 외 유형은 matplotlib. 스크립트와 출력 PNG 모두
+- 도구: `scripts/make_chart.py`(§1a 16종, facts.jsonl 직결, 기본 `--engine flint`; 사이드카 `.vl.json` 을 `verify_facts` 가 사실대장과 대조) → 그 외 유형은 matplotlib. 스크립트와 출력 PNG 모두
   `assets/` 에 둔다(다른 폴더면 `[도판무결박]` 검사를 비켜 간다), 값 상수 옆에 F-ID 주석.
 
 ## 4. 운영

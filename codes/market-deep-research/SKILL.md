@@ -80,7 +80,7 @@ description: >-
 
 ### [3] 보고서 작성
 - `report.md`(11부·`report-format.md`)와 `audit/` 동시 작성. 납품 원고는 분리(`mdr-hwpx/references/deliverable-rules.md`, 관점·말투 `reader-goal.md`)하고 재작성 뒤 **의미 대조 검수**(단정 강화·주체 바뀜·방향 반전). 요약·각 장·10부 권고가 '독자의 결정'에 답하는지 점검(`reader-goal.md` 운용 규칙 3), 금지 서술 grep 0건.
-- 도판 `image-research.md`(자작 차트는 `make_chart.py --engine flint` — 내장 flint-py 17종, 사이드카 `.vl.json` 이 G3 값 대조 대상) · 수치는 그림 기본, 표로 남기면 형식 matrix/A/B 와 캡션 태그 `visual-first.md` §2b(`visual_audit.py` 미결 0건 = G4 조건).
+- 도판 `image-research.md`(자작 차트는 `make_chart.py --engine flint` — 내장 flint-py 16종, 사이드카 `.vl.json` 이 G3 값 대조 대상) · 수치는 그림 기본, 표로 남기면 형식 matrix/A/B 와 캡션 태그 `visual-first.md` §2b(`visual_audit.py` 미결 0건 = G4 조건).
 
 ### [G3] verify_facts + manifest (실패 0)
 - `verify_calculations.py`·`verify_claims.py` 는 G3 가 자동 호출. 근거의 인용·출처·캡처를 바꾸면 그 문장을 다시 검토한다(`claim-review.md`).
