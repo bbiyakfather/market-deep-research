@@ -60,7 +60,7 @@ def _seed_script_receipt(*args, **kwargs):
     return gates._record_script_result(*args, **kwargs)
 
 
-def _chain_to_g3(td, topic="봉인"):
+def _chain_to_g3(td, topic="봉인", passing=False):
     """하위 게이트 변조 검사용 합성 G3 체인. 소유 API 대신 테스트 전용 원장 시딩."""
     import gates
     wd = resolve_work_dir(topic, base=td)
@@ -68,6 +68,10 @@ def _chain_to_g3(td, topic="봉인"):
     (wp.audit / "research-plan.md").write_text("# plan\n", encoding="utf-8")
     wp.facts.write_text("", encoding="utf-8")
     wp.report_md.write_text("# r\n", encoding="utf-8")
+    if passing:      # 렌더 직전 verify 재실행(H3)을 통과하는 최소 원고: 출처 달린 대표 도판 1장
+        (wp.root / "_images").mkdir()
+        (wp.root / "_images" / "fig.png").write_bytes(b"\x89PNG")
+        wp.report_md.write_text("본문.\n\n![도판](_images/fig.png)\n[그림] 구조 · 출처: 자체 계산\n", encoding="utf-8")
     gates.record_manual(wp, "G0", "approved")
     gates.record_script_result(wp, "G1", 0, "join PASS")
     gates.record_manual(wp, "[2]", "lead reread")
@@ -1625,7 +1629,7 @@ def reseal_rejects_post_g3_tamper():
         assert manifest.sha256_file(wp.manifest) == baseline, "실패했는데 manifest.json 이 바뀜"
 
     with tempfile.TemporaryDirectory() as td:                          # 긍정형 짝
-        wd, wp = _chain_to_g3(td, "렌더정상")
+        wd, wp = _chain_to_g3(td, "렌더정상", passing=True)
         before = json.loads(wp.manifest.read_text(encoding="utf-8"))["entries"]
         r = _run_script("render_pdf.py", str(wp.report_md))
         assert r.returncode == 0, f"정상 체인인데 render CLI 실패: {r.stderr!r}"

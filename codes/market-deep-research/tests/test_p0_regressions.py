@@ -83,6 +83,8 @@ def work(tmp_path):
         "verbatim": quote, "capture": "_captures/E001.png", "capture_review": capture_review(cap)})
     db.add_verify_event("F001", "lead", "reread", reread_sha256=gates.sha256_text(quote))
     db.set_status("F001", "confirmed")
+    # H1: 문장 인용 검사가 대조할 clean 원문(evidence.sha256[:12] 로 연결)
+    (wp.root / "_sources" / f"{gates.sha256_text(quote)[:12]}_clean.txt").write_text(quote + "\n", encoding="utf-8")
     wp.report_md.write_text(LIMITED + "\n\n![증빙](_captures/E001.png)\n", encoding="utf-8")
     (wp.audit / "research-plan.md").write_text("# 조사 승인\n", encoding="utf-8")
     review(wp)

@@ -28,6 +28,7 @@ join 완료 영수증을 남긴 뒤 `python scripts/gates.py check G1 <work_dir>
 무신규 웨이브 판정은 **ok 워커의 EXPAND 기준**이며 blocked/invalid를 무신규로 세지 않는다. 지문은 중복 후보 신호이고 신규 여부의 최종 판단은 팀리드가 한다.
 v3 기존 claim_key는 legacy로 그대로 인정하며 자동 재작성하지 않는다. v3 신규 행도 기존 산식을 유지한다.
 v4 신규 등재부터 context의 metric/entity/entity_id/geography/period/basis/scenario/definition JSON SHA-256 키를 재계산·대조한다. v3→v4 전환 시 키 재계산과 [2] 이후 재검증이 필요하다.
+[E] 종료는 확신도가 아니라 증거로 판정한다: 축별 충분조건 논점마다 span 대조를 통과한 confirmed fact ≥1(`context.axis` 로 축 연결, 미충족은 G3 `[축근거부족]` WARN).
 evidence는 한 fact에만 속한다. G3는 모든 상태의 F→E 존재·E.fact_id 일치·E→F 존재와 역방향 목록 포함을 검사하며 신규 역참조 위반은 v4 FAIL/v3 WARN이다.
 FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노출한다. 단일 writer의 두 번째 저장 실패는 evidence pre-image로 롤백하며 프로세스 강제 종료 복구는 보장하지 않는다.
 
@@ -59,6 +60,7 @@ v4의 연결 캡처는 `capture_review`가 존재하고, 현재 이미지 해시
 ## G3 verify_facts + manifest (실패 0)
 `verify_facts.py <report.md> <work_dir> [--conversion]`:
 글자 대조: `span` 이 있으면 clean ±2행에 verbatim 이 없을 때 `[span불일치]` FAIL, `span` 이 없으면 원문 전체 탐색 실패 시 `[원문미포함]` WARN(측정 단계), clean 이 없으면 `[span없음]` WARN.
+문장 인용: 본문 F태그 문장마다 대조 통과 text_quote 가 ≥1 이어야 한다 — v4 FAIL `[문장인용없음]`, v3 WARN(계산·가정·권고 fact 는 면제, 캡처만 근거면 fact 에 `capture_only_reason` 을 적어 WARN 으로 완화). 뒷받침 자동 제안: 통과 verbatim 이 `value.raw`·entity·period 를 모두 담으면 supported, `value.raw` 만 담으면 partial 로 `audit/support-auto.jsonl` 에 제안(대장 불변)하고, partial 인 fact 가 `(일부 근거)` 표기 없이 쓰이면 `[부분근거미표기]`(v4 FAIL). 빌드 중단: `render_pdf.py` 는 렌더 직전 verify 를 다시 돌려 FAIL 이 1건이라도 있으면 PDF 를 쓰지 않고 기존 `report.pdf` 를 보존한다(임시 파일 → `os.replace`).
 본문/부록 분리(주석 `<!-- FACTSHEET:APPENDIX -->` 우선, 없으면 '## 부록' 헤딩 최후 출현) ·
 본문을 문장·표행 세그먼트로 나눠 수치↔(Fxxx) 1:1 최근접 결박(태그 하나가 줄 전체를 면제하지
 않음) · 무태그 숫자 차단 · 부록은 [무태그] 만 면제(→ [부록무태그] WARN)하고 오태그·미확정·값·단위는
@@ -121,6 +123,7 @@ finalize는 봉인 항목 전체와 정규 원고·PDF·claim-review·계획을 
 출고 판정은 G5 `snapshot_hashes` 해시 집합이 가리키는 리비전에 대한 것이다. 이후 변경은 status/재verify가 드리프트로 탐지한다.
 G5 PDF 검사는 형식·개수 기반(F태그·링크·캡처 수)이며 내용 동일성을 보장하지 않는다. 그 확인은 G4 팀리드 육안검증의 역할이다.
 G4 육안(자작 차트 `.svg`): 빈 차트·잘린 마크·라벨 겹침·범례 불가독·잘못된 인코딩·깨진 척도·축 누락·왜곡을 본다 — 자동 지적(`[도판값불일치]` 등)은 확인 후 반영한다.
+G4 도판 린트: `python scripts/visual_audit.py --figures <work_dir>` 종료코드 0 필요(글자 9 이상·title/desc·FACTS 주석↔사이드카·외부 URL 없음·한글 폰트·막대 20 이하).
 같은 프로세스 권한의 원장·기록 위조는 신뢰 경계 밖이다. 출고 판정(`manifest.py verify`)은 영수증이 아닌 실검증으로 계산하므로 위조 기록이 판정을 바꾸지 못한다.
 status의 `최종(판정시점)`은 원장 기반 결과와 현재 스냅샷의 일치를 뜻하며, 재확인은 `manifest.py verify`로 수행한다.
 report.pdf 생성 후 **재봉인**(`manifest.extend` — 기존 항목 불변 확인 실패 시 거부 = G3 복귀,
@@ -208,3 +211,8 @@ ON 시 Decimal 검산(계산식·환율출처·기준일·종가/평균 명시),
 ## 상태 모델
 `confirmed`(검증완료) · `pending`(미검증) · `disputed`(정의차·상반 병기) · `superseded`(시계열 갱신,
 `last_seen`) · `discarded`(무출처·저품질, `discard_reason`). 단순 저등급 폐기 금지 — disputed/superseded 우선.
+
+## 참조문서 운영 규약
+1. 외부 의존 주장(API 한도·약관·가격)에는 `(검증 YYYY-MM-DD)` 를 붙인다.
+2. reference 가 150줄을 넘으면 분리를 검토한다.
+3. 외부 코드는 줄 단위로 직접 읽고 네트워크 호출만 확인한 뒤 들인다.

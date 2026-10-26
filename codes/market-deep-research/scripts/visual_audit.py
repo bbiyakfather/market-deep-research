@@ -1,11 +1,14 @@
 """본문 표 가운데 시각화 후보를 뽑는다 — 표 만능 교정(`references/visual-first.md` §4).
 
 사용: python visual_audit.py <report.md 또는 manuscript/<모듈>.md> [--decisions audit/visual-decisions.json]
+      python visual_audit.py --figures <work_dir>     (assets/*.svg 린트 — 아래 §도판 린트)
       python visual_audit.py --selftest
 - 후보 = 부록 마커(<!-- FACTSHEET:APPENDIX -->) 앞의 표 중 행 3개 이상·수치열 1개 이상(연번·'출처' 열 제외).
 - decisions 파일: [{"key": "<표 키>", "decision": "chart|keep", "reason": "..."}]
   해결 = `keep` + 사유. `chart` 는 표를 지워 후보에서 사라져야 해결(표가 남아 있으면 '미전환').
   표 키 = 캡션에서 번호를 뗀 제목, 캡션이 없으면 "머리행 / 첫 행 20자"(원고 문장을 고쳐도 표 자체가 안 바뀌면 유지).
+- 도판 린트(--figures): assets/*.svg 마다 ①글자 9 이상 ②<title>·<desc> ③FACTS 주석 F-ID == 짝 .vl.json mdr.fact_ids
+  ④외부 URL(href) 없음 ⑤한글 폰트 스택 ⑥막대 20 이하. 위반이 있으면 종료코드 1. 표 감사와 별개 함수(의존성 0).
 - 종료코드: 0 미결 없음 / 1 미결 있음 / 2 입력·판정 파일 오류.
 """
 from __future__ import annotations
@@ -130,6 +133,58 @@ def audit(text: str, decisions: dict[str, dict]) -> tuple[list[dict], int, set[s
     return rows_out, unresolved, set(decisions) - used
 
 
+FIG_MIN_FONT, FIG_MAX_BARS = 9.0, 20
+FIG_FONT_SIZE = re.compile(r"font-size[=:]\s*[\"']?\s*([\d.]+)\s*(px|pt|em)?")
+# 가정: pt 는 그대로, px 는 ×0.75(96dpi), em 은 ×12(기준 16px 의 근사), 단위 없음은 px.
+_PT = {"pt": 1.0, "px": 0.75, "em": 12.0, None: 0.75, "": 0.75}
+FIG_FACTS = re.compile(r"<!--\s*FACTS:\s*([^>]*?)\s*-->")
+FIG_HREF = re.compile(r"""(?:href|url\()\s*=?\s*["']?\s*https?:""", re.I)
+FIG_KO_FONT = re.compile(r"font-family[=:]\s*[\"']?[^;\">]*(Malgun Gothic|Noto Sans KR|맑은 고딕)", re.I)
+# 가정: Vega SVG 의 막대는 class="mark-rect" 그룹 안의 <path>, 자체(native) SVG 는 <rect>(배경 width="100%" 제외).
+# 시리즈가 있는 유형(grouped·stacked100·heatmap 등)은 범주 한도를 make_chart 가 이미 강제하므로 막대 수 검사에서 뺀다.
+FIG_MARK_GROUP = re.compile(r'<g class="mark-rect[^"]*"[^>]*>(.*?)</g>', re.S)
+
+
+def audit_figures(work_dir: Path | str) -> list[str]:
+    """assets/*.svg 린트. 위반 문자열 목록(빈 목록 = 통과)."""
+    bad: list[str] = []
+    for svg in sorted((Path(work_dir) / "assets").glob("*.svg")):
+        txt, n = svg.read_text(encoding="utf-8-sig"), svg.name
+        small = sorted({round(float(v) * _PT[u], 2) for v, u in FIG_FONT_SIZE.findall(txt)
+                        if v.replace(".", "", 1).isdigit() and float(v) * _PT[u] < FIG_MIN_FONT})
+        if small:
+            bad.append(f"{n}: ①글자 크기 {small[0]:g} < {FIG_MIN_FONT:g}")
+        if not (re.search(r"<title>.+?</title>", txt, re.S) and re.search(r"<desc>.+?</desc>", txt, re.S)):
+            bad.append(f"{n}: ②<title>/<desc> 없음")
+        side = svg.with_suffix(".vl.json")
+        meta: dict = {}
+        if side.exists():
+            try:
+                loaded = json.loads(side.read_text(encoding="utf-8"))
+            except ValueError:
+                loaded = None
+            if not isinstance(loaded, dict) or not isinstance(loaded.get("mdr", {}), dict):
+                bad.append(f"{n}: [도판사이드카형식] .vl.json 이 객체가 아니거나 mdr 가 객체가 아님")
+            else:
+                meta = loaded.get("mdr") or {}
+                m = FIG_FACTS.search((txt.splitlines() or [""])[0])
+                ids = {x.strip() for x in m.group(1).split(",") if x.strip()} if m else set()
+                if ids != set(meta.get("fact_ids") or []):
+                    bad.append(f"{n}: ③FACTS 주석 {sorted(ids)} ≠ 사이드카 fact_ids {sorted(meta.get('fact_ids') or [])}")
+        elif not FIG_FACTS.search((txt.splitlines() or [""])[0]):
+            bad.append(f"{n}: ③첫 줄 FACTS 주석 없음")
+        if FIG_HREF.search(txt):
+            bad.append(f"{n}: ④외부 URL(href) 포함")
+        if not FIG_KO_FONT.search(txt):
+            bad.append(f"{n}: ⑤한글 폰트 스택(Malgun Gothic/Noto Sans KR) 없음")
+        if meta.get("chart_type", "bar") in ("bar", "hbar"):
+            bars = (sum(len(re.findall(r"<path", g)) for g in FIG_MARK_GROUP.findall(txt))
+                    or len(re.findall(r'<rect(?![^>]*width="100%")', txt)))
+            if bars > FIG_MAX_BARS:
+                bad.append(f"{n}: ⑥막대 {bars}개 > {FIG_MAX_BARS}")
+    return bad
+
+
 def _selftest() -> None:
     sample = "\n".join([
         "## 2. 추이", "<표> 표 1. 연도별 용량 {형식=A}",   # 태그는 키에서 빠진다
@@ -164,8 +219,15 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("report", nargs="?", help="report.md 또는 납품 원고 모듈 .md")
     ap.add_argument("--decisions", help="판정 JSON (visual-first.md §4). 없으면 첫 실행으로 보고 전건 미결")
+    ap.add_argument("--figures", metavar="WORK_DIR", help="assets/*.svg 도판 린트(표 감사와 별개)")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args(argv)
+    if args.figures:
+        bad = audit_figures(args.figures)
+        print(f"도판 린트 위반 {len(bad)}건" if bad else "도판 린트 통과")
+        for b in bad:
+            print("  " + b)
+        return 1 if bad else 0
     if args.selftest:
         _selftest()
         return 0

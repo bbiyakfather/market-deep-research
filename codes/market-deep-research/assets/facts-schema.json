@@ -13,7 +13,9 @@
     "claim_type": ["observed", "derived", "hypothesis", "recommendation"],
     "support": ["supported", "partial", "unsupported", "contradicted", "unresolved"],
     "page_state": ["content", "blocked", "login", "blank", "unknown"],
-    "capture_verdict": ["accept", "reject"]
+    "capture_verdict": ["accept", "reject"],
+    "source_tier": ["1차공시", "공식통계", "동료심사", "보도", "2차종합"],
+    "revision_status": ["original", "revised", "preliminary"]
   },
   "fact": {
     "required": ["claim_key", "id", "claim", "context", "value", "grade", "risk", "status"],
@@ -103,7 +105,10 @@
       "last_seen": {"type": ["string", "null"], "format": "iso-time", "description": "[v3-E] 마지막으로 소스에서 확인된 시점(상태변경 추적)"},
       "demoted_at": {"type": ["string", "null"], "format": "date-time"},
 
-      "discard_reason": {"type": ["string", "null"]}
+      "discard_reason": {"type": ["string", "null"]},
+      "capture_only_reason": {"type": ["string", "null"], "description": "[선택] verbatim 인용 없이 캡처만 근거인 사유(H1 문장 인용 검사를 WARN 으로 완화)"},
+      "as_of": {"type": ["string", "null"], "format": "iso-time", "description": "[선택] 값의 기준 시점(context.as_of 와 별개로 fact 단위 기재)"},
+      "revision_status": {"type": ["string", "null"], "enum_ref": "revision_status", "description": "[선택] 수치 개정 상태(최초/개정/잠정)"}
     },
     "conditional": {
       "v4_requires_claim_type": "schema_version == 4 → claim_type 필수",
@@ -138,6 +143,7 @@
         }
       },
       "raw_quality": {"type": ["string", "null"], "enum": ["ocr", "auto-caption", "scan", null], "description": "[선택] 불완전 원문 표지. 보정 금지, verbatim 은 원문 그대로(오타 포함)"},
+      "source_tier": {"type": ["string", "null"], "enum_ref": "source_tier", "description": "[선택] 출처 유형 표지(증빙판 카드 표시용, 점수화 금지)"},
       "capture": {"type": ["string", "null"], "description": "_captures/E###.png (source_capture)"},
       "observer_group": {"type": ["string", "null"], "description": "[v3] 독립성 판정용 관찰그룹 라벨"},
       "observed_at": {"type": ["string", "null"], "format": "iso-time"},

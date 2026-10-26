@@ -11,8 +11,7 @@ fetch.py 가 깨끗한 본문을 확보하면, 서브에이전트(LLM=extractor)
 | `api_response` | JSON/API | {endpoint,param,json_hash} | 선택 |
 | `negative_search` | "제재 0건" 등 부정 사실 + **반박검색** | {query, 조회범위} | 선택(조회 결과 요지) |
 | `calculation` | 파생수치(시장규모=수량×ASP·CAGR·환산) | {inputs, formula} | 선택(계산식) |
-| (공통) `span` | clean 원문 행 좌표(선택) | `span:{clean,line,end[,t]}` — locator 는 원문서 좌표, span 은 `_sources/<sha12>_clean.txt` 행(`split("
-")` 기준). `python scripts/span_tools.py find <work_dir> <sha12> "<verbatim>"` 로 확정 | `…` 줄임은 조각 순서 대조 |
+| (공통) `span` | clean 원문 행 좌표(선택) | `span:{clean,line,end[,t]}` — locator 는 원문서 좌표, span 은 `_sources/<sha12>_clean.txt` 행(`split("\n")` 기준). `python scripts/span_tools.py find <work_dir> <sha12> "<verbatim>"` 로 확정 | `…` 줄임은 조각 순서 대조(2단 PDF 는 단 경계마다 `…` 로 끊어 위→아래 순서로 적는다). 영상·오디오는 `span:{t:"mm:ss"}` 만 적어도 되고, 증빙판은 출처 URL 에 `t=` 를 붙인다 |
 
 ## PDF 파싱 (fitz)
 - 텍스트: `page.get_text()`. 표: `page.find_tables()` → cell 좌표로 row/col locator.

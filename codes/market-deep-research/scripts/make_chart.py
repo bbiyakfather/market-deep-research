@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import tempfile
 import unicodedata
@@ -21,7 +22,7 @@ from decimal import Decimal, InvalidOperation
 from html import escape
 from pathlib import Path
 
-from facts_db import FactsDB, _write_jsonl_atomic
+from facts_db import FactsDB, _read_jsonl, _write_jsonl_atomic
 from skill_paths import WorkPaths, slugify
 
 
@@ -143,7 +144,7 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
         f"  <title>{escape(title)}</title>",
         f"  <desc>{escape(', '.join(fact_ids))}의 confirmed 사실로 생성한 {chart_type} 차트</desc>",
         '  <rect width="100%" height="100%" fill="#ffffff"/>',
-        f'  <text x="{width / 2:.1f}" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#172033">{escape(title)}</text>',
+        f'  <text x="{width / 2:.1f}" y="38" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="24" font-weight="700" fill="#172033">{escape(title)}</text>',
     ]
 
     for index in range(6):
@@ -151,14 +152,14 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
         y = y_pos(tick)
         lines.extend([
             f'  <line x1="{left}" y1="{y:.2f}" x2="{width - right}" y2="{y:.2f}" stroke="#d9dee8" stroke-width="1"/>',
-            f'  <text x="{left - 12}" y="{y + 4:.2f}" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#4b5565">{escape(_format_tick(tick))}</text>',
+            f'  <text x="{left - 12}" y="{y + 4:.2f}" text-anchor="end" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" fill="#4b5565">{escape(_format_tick(tick))}</text>',
         ])
 
     zero_y = y_pos(Decimal(0))
     lines.extend([
         f'  <line x1="{left}" y1="{top}" x2="{left}" y2="{bottom}" stroke="#586174" stroke-width="1.5"/>',
         f'  <line x1="{left}" y1="{zero_y:.2f}" x2="{width - right}" y2="{zero_y:.2f}" stroke="#586174" stroke-width="1.5"/>',
-        f'  <text x="24" y="{(top + bottom) / 2:.1f}" transform="rotate(-90 24 {(top + bottom) / 2:.1f})" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#384152">{escape(unit)}</text>',
+        f'  <text x="24" y="{(top + bottom) / 2:.1f}" transform="rotate(-90 24 {(top + bottom) / 2:.1f})" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="13" fill="#384152">{escape(unit)}</text>',
     ])
 
     if chart_type == "bar":
@@ -172,7 +173,7 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
             text_y = value_y - 8 if value >= 0 else value_y + 18
             lines.extend([
                 f'  <rect x="{x:.2f}" y="{rect_y:.2f}" width="{bar_width:.2f}" height="{rect_height:.2f}" fill="#2f6fed"/>',
-                f'  <text x="{x_pos(index):.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
+                f'  <text x="{x_pos(index):.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
             ])
     else:
         points = " ".join(f"{x_pos(i):.2f},{y_pos(value):.2f}" for i, value in enumerate(values))
@@ -182,16 +183,16 @@ def _svg(chart_type: str, facts: list[dict], title: str) -> str:
             text_y = y - 11 if value >= 0 else y + 21
             lines.extend([
                 f'  <circle cx="{x:.2f}" cy="{y:.2f}" r="5" fill="#0f766e"/>',
-                f'  <text x="{x:.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
+                f'  <text x="{x:.2f}" y="{text_y:.2f}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" font-weight="600" fill="#172033">{escape(raw_label)}</text>',
             ])
 
     for index, label in enumerate(labels):
         lines.append(
-            f'  <text x="{x_pos(index):.2f}" y="{bottom + 24}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#384152">{escape(label)}</text>'
+            f'  <text x="{x_pos(index):.2f}" y="{bottom + 24}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" fill="#384152">{escape(label)}</text>'
         )
     lines.extend([
-        f'  <text x="{left + plot_width / 2:.2f}" y="{bottom + 52}" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#384152">{escape(x_axis)}</text>',
-        f'  <text x="{width / 2:.1f}" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#586174">출처 사실: ({escape(", ".join(fact_ids))}) · 단위: {escape(unit)}</text>',
+        f'  <text x="{left + plot_width / 2:.2f}" y="{bottom + 52}" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="13" fill="#384152">{escape(x_axis)}</text>',
+        f'  <text x="{width / 2:.1f}" y="510" text-anchor="middle" font-family="Malgun Gothic, Noto Sans KR, Arial, sans-serif" font-size="12" fill="#586174">출처 사실: ({escape(", ".join(fact_ids))}) · 단위: {escape(unit)}</text>',
         "</svg>",
     ])
     return "\n".join(lines) + "\n"
@@ -248,8 +249,48 @@ CHART_MAP: dict[str, tuple[str, dict, bool, dict]] = {
     "pyramid": ("Pyramid Chart", {"y": "label", "x": "value", "color": "series"}, True, {}),
 }
 MAX_CATEGORY, MAX_SERIES, MAX_HEATMAP_AXIS, MAX_PIE = 20, 12, 25, 5
-LABEL_WIDTH_CAP = 14  # 한글=1.6 단위. flint 폭 추정(라틴 0.62)이 한글을 과소평가하므로 래퍼에서 라벨 길이를 제한한다.
+LABEL_WIDTH_CAP = 26  # 한글=1.6 단위(≈16자). flint 폭 추정(라틴 0.62)이 한글을 과소평가해 래퍼에서 상한을 둔다(26 은 probe_ko 육안 확인: 16자 라벨 무겹침).
 FONT_STACK = "Malgun Gothic, Noto Sans KR, sans-serif"
+
+
+# 값 라벨(value_raw 원문 텍스트 레이어) 유형별 위치. 그 밖의 유형은 겹침·가독 문제로 생략하고 mdr.note 에 기록한다.
+VALUE_LABEL = {
+    "hbar": ("value_raw", {"align": "left", "baseline": "middle", "dx": 4}),
+    "bar": ("value_raw", {"baseline": "bottom", "dy": -3}),
+    "grouped": ("value_raw", {"baseline": "bottom", "dy": -3}),
+    "lollipop": ("value_raw", {"align": "left", "baseline": "middle", "dx": 7}),
+    "dot": ("value_raw", {"baseline": "bottom", "dy": -6}),
+    "line": ("value_end", {"align": "left", "baseline": "middle", "dx": 6}),  # 시리즈별 끝점만
+}
+
+
+def _add_value_labels(spec: dict, chart_type: str) -> None:
+    field, pos = VALUE_LABEL[chart_type]
+    text = {"mark": {"type": "text", "fontSize": 12, **pos}}
+    if "mark" in spec:  # 단일 마크 -> 레이어로 감싼다
+        enc = spec.pop("encoding")
+        text["encoding"] = {k: v for k, v in enc.items() if k in ("x", "y", "xOffset")}
+        spec["layer"] = [{"mark": spec.pop("mark"), "encoding": enc}, text]
+    else:  # 이미 레이어: 최상위 encoding 을 상속하거나, 없으면 x·y 가 있는 마지막 레이어에서 복사
+        src = next((l["encoding"] for l in reversed(spec["layer"]) if "x" in l.get("encoding", {})), {})
+        text["encoding"] = {} if spec.get("encoding") else {k: v for k, v in src.items() if k in ("x", "y")}
+        spec["layer"].append(text)
+    text["encoding"]["text"] = {"field": field, "type": "nominal"}
+
+
+def _source_hosts(wp: WorkPaths, fact_ids: list[str]) -> list[str]:
+    """fact -> evidence.source_url 호스트(중복 제거, fact 순서). 가정: evidence 스키마에 문서명·제목 필드가 없어 호스트만 쓴다."""
+    from urllib.parse import urlparse
+    ev_by_fact: dict[str, list[dict]] = {}
+    for ev in _read_jsonl(wp.evidence):
+        ev_by_fact.setdefault(ev.get("fact_id"), []).append(ev)
+    hosts: list[str] = []
+    for fid in fact_ids:
+        for ev in ev_by_fact.get(fid, []):
+            host = (urlparse(str(ev.get("source_url") or "")).hostname or "").removeprefix("www.")
+            if host and host not in hosts:
+                hosts.append(host)
+    return hosts
 
 
 def _wide(text: str) -> float:
@@ -368,6 +409,10 @@ def make_chart_flint(chart_type: str, work_dir: Path | str, fact_ids: list[str],
     if len(set(shown.values())) != len(shown):
         raise ChartError("라벨을 줄이면 중복됩니다 — 라벨을 짧게 고치세요")
     values = [{**r, "label": shown[r["label"]]} for r in rows]
+    if chart_type == "line":  # 끝점 값 라벨용: 시리즈별 마지막 행만 원문, 나머지는 빈 문자열
+        last = {r["series"]: r["fact_id"] for r in values}
+        for r in values:
+            r["value_end"] = r["value_raw"] if last[r["series"]] == r["fact_id"] else ""
     if chart_type == "scatter":
         values = _pivot_scatter(values)
     if chart_type == "hbar":
@@ -390,25 +435,30 @@ def make_chart_flint(chart_type: str, work_dir: Path | str, fact_ids: list[str],
     notes = []
     if chart_type in ("line", "area") and (((spec.get("encoding") or {}).get("y") or {}).get("scale") or {}).get("zero") is False:
         notes.append("축 절단")
-    if chart_type in ("hbar", "bar") and isinstance(spec.get("mark"), str):  # 값 라벨은 value_raw 원문 그대로
-        pos = {"hbar": {"align": "left", "baseline": "middle", "dx": 4}, "bar": {"baseline": "bottom", "dy": -3}}[chart_type]
-        enc = spec.pop("encoding")
-        spec["layer"] = [{"mark": spec.pop("mark"), "encoding": enc},
-                         {"mark": {"type": "text", "fontSize": 10, **pos},
-                          "encoding": {**{k: v for k, v in enc.items() if k in ("x", "y")},
-                                       "text": {"field": "value_raw", "type": "nominal"}}}]
+    if chart_type in VALUE_LABEL:
+        _add_value_labels(spec, chart_type)
+    else:
+        notes.append("값 라벨 생략")
     for enc in [spec.get("encoding") or {}] + [lay.get("encoding") or {} for lay in spec.get("layer", [])]:
         for e in enc.values():  # 내부 필드명(label/value) 대신 축 제목: 값=단위, 범주=없음
             if isinstance(e, dict) and e.get("field") in ("value", "label"):
                 e["title"] = rows[0]["unit"] if e["field"] == "value" else None
-    spec["title"] = title
+    sources = _source_hosts(wp, [r["fact_id"] for r in rows])
+    spec["title"] = {"text": title, "subtitle": "출처: " + ", ".join(sources[:4]) + (f" 외 {len(sources) - 4}곳" if len(sources) > 4 else ""),
+                     "subtitleFontSize": 12, "subtitleColor": "#586174"} if sources else title
     spec["description"] = f"{', '.join(fact_ids)}의 confirmed 사실로 생성한 {flint_type}"
-    spec.setdefault("config", {})["font"] = FONT_STACK
+    cfg = spec.setdefault("config", {})
+    cfg["font"] = FONT_STACK
+    for k in ("axisX", "axisY"):  # flint 기본 라벨 10px(7.5pt) → 도판 린트 9pt(=12px) 하한 충족
+        if k in cfg:
+            cfg[k]["labelFontSize"] = 12
+    cfg["axis"] = {**cfg.get("axis", {}), "labelFontSize": 12, "titleFontSize": 12}
+    cfg["legend"] = {**cfg.get("legend", {}), "labelFontSize": 12, "titleFontSize": 12}
     spec["mdr"] = {
         "fact_ids": [r["fact_id"] for r in rows], "chart_type": chart_type, "flint_chart_type": flint_type, "title": title,
         "values": [{"fact_id": r["fact_id"], "label": r["label"], "series": r["series"],
                     "value_raw": r["value_raw"], "unit": r["unit"]} for r in rows],
-        "dropped": dropped, "note": "; ".join(notes), "warnings": warnings,
+        "sources": sources, "dropped": dropped, "note": "; ".join(notes), "warnings": warnings,
         "label_truncated": [k for k, v in shown.items() if k != v],
     }
     side = target.with_suffix(".vl.json")
@@ -428,6 +478,7 @@ def make_chart_flint(chart_type: str, work_dir: Path | str, fact_ids: list[str],
     except Exception:  # 폰트 디렉터리가 없어도 렌더는 진행
         pass
     svg = vlc.vegalite_to_svg({k: v for k, v in spec.items() if k != "mdr"})  # 모르는 최상위 키는 Vega-Lite 가 경고한다
+    svg = re.sub(r"(<svg\b[^>]*>)", lambda m: f"{m.group(1)}<title>{escape(title)}</title><desc>{escape(spec['description'])}</desc>", svg, count=1)  # Vega 는 title/desc 를 내지 않는다(접근성)
     target.write_text(f"<!-- FACTS: {','.join(r['fact_id'] for r in rows)} -->\n" + svg, encoding="utf-8", newline="\n")
     return side, target
 

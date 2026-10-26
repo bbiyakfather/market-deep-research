@@ -37,6 +37,10 @@ v4에서는 위 필드가 모두 필수이며 `unsupported_terms`는 빈 배열,
 표 행은 제외하되 기존 상충 병기 검토는 유지하고, v4 부록 문장·목록의 명시적 인용도 검토한다. 태그 없는 주장도 수동 검토
 대상이지만 자동 전건성은 태그가 붙은 문장에 한정된다. `tagged_sentences()`로 검사 단위를 확인할 수 있다.
 
+## 자동 제안 연결
+`verify_facts.py` 가 대조 통과 verbatim 으로 `audit/support-auto.jsonl`(fact 별 supported/partial 제안, 대장 불변)을 쓴다. 이 제안은 검토자의 판정을 대신하지 않고 출발점이다.
+제안이 partial 인 fact 가 본문에 쓰이면 문장에 `(일부 근거)` 를 표기해야 한다(`[부분근거미표기]`). unsupported·contradicted 는 아래 표가 이미 차단한다.
+
 ## 판정 기준과 차단
 | support | 의미 | observed/derived | hypothesis/recommendation |
 |---|---|---|---|

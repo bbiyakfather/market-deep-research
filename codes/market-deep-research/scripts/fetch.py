@@ -254,6 +254,41 @@ def validate_body(text: str, status: int, success_selectors: list[str] | None = 
     return {"verdict": "empty", "reason": "no usable body"}
 
 
+# PDF 본문 하한(H6, imozuru). 한글 비중 50% 이상이면 글자당 정보량이 높아 1,500자로 완화한다.
+# 가정: imozuru 의 일본어 완화를 한글에 그대로 번안했다. 실측 후 조정.
+PDF_MIN_CHARS, PDF_MIN_CHARS_KO = 3000, 1500
+
+
+def pdf_text(raw: bytes, stop_at: int | None = None) -> str | None:
+    """PyMuPDF 로 PDF 텍스트 추출. 라이브러리가 없거나 열리지 않으면 None(판정 생략 — fail-open).
+    stop_at 이 있으면 공백 제외 글자 수가 그 값에 닿는 즉시 페이지 추출을 멈춘다(하한 판정용)."""
+    try:
+        import fitz
+        out, n = [], 0
+        with fitz.open(stream=raw, filetype="pdf") as doc:
+            for page in doc:
+                t = page.get_text()
+                out.append(t)
+                n += len("".join(t.split()))
+                if stop_at and n >= stop_at:
+                    break
+        return "\n".join(out)
+    except Exception:
+        return None
+
+
+def validate_pdf_text(text: str | None) -> dict:
+    """{verdict: ok|partial, reason}. 텍스트를 못 얻었으면(None) 기존처럼 ok."""
+    if text is None:
+        return {"verdict": "ok", "reason": "pdf"}
+    body = "".join(text.split())
+    ko = sum("가" <= c <= "힣" for c in body)
+    floor = PDF_MIN_CHARS_KO if body and ko / len(body) >= 0.5 else PDF_MIN_CHARS
+    if len(body) < floor:
+        return {"verdict": "partial", "reason": f"thin pdf ({len(body)} chars < {floor})"}
+    return {"verdict": "ok", "reason": "pdf"}
+
+
 def extract_text(html: str) -> str:
     if trafilatura:
         out = trafilatura.extract(html, include_comments=False, include_tables=True)
@@ -630,9 +665,12 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
     partial_res: dict | None = None
     moved: str | None = None                            # 앞선 live 시도가 남긴 redirected_other_doc 사유
     last_html: str = ""
+    thin_pdf = False
     check_url_safe(url)                                 # 진입 전 1차 검증
 
     for tier in _tier_order(url):
+        if thin_pdf:
+            break
         try:
             for label, res in _candidates(tier, url):
                 res = dict(res or {})
@@ -646,7 +684,7 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
                 elif res.get("rss_match") is False:
                     v = {"verdict": "partial", "reason": res["reason"]}
                 elif res.get("is_pdf"):
-                    v = {"verdict": "ok", "reason": "pdf"}
+                    v = validate_pdf_text(pdf_text(res.get("raw") or b"", stop_at=PDF_MIN_CHARS))
                 else:
                     v = validate_body(res.get("text", ""), status, success_selectors)
                 if res.get("ok") and _redirected_other_doc(res):   # 판정과 무관하게 착지 문서가 다르면 기록
@@ -662,6 +700,8 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
                 res["acquisition_status"] = v["verdict"] if v["verdict"] in ("ok", "partial") else "fail"
                 if res["acquisition_status"] == "fail":
                     res["reason"] = v["reason"]
+                if res.get("is_pdf") and str(v["reason"]).startswith("thin pdf"):
+                    res["failure_reason"] = v["reason"]       # fetch-log.jsonl 의 시도 기록에 사유가 남는다
                 if tier == "direct" and res.get("ok") and v["verdict"] == "partial" and not expected_title:
                     expected_title = _html_title(res.get("text", ""))
                 ref = _audit_fetch_attempt(url, label, res)
@@ -678,6 +718,9 @@ def _fetch_ladder(url: str, success_selectors: list[str] | None = None,
                     return _result("ok", res, trace, note=tier, fetch_refs=fetch_refs)
                 if v["verdict"] == "partial" and partial_res is None:
                     partial_res = res
+                if res.get("is_pdf") and str(v["reason"]).startswith("thin pdf"):
+                    thin_pdf = True                  # 같은 PDF 를 다음 계층에서 다시 받지 않는다(결과 캐시 = partial_res)
+                    break
                 if res.get("text"):
                     last_html = res["text"]
         except SsrfBlocked:
@@ -760,8 +803,11 @@ def save(result: dict, out_dir: Path | str, url: str | None = None) -> dict:
     raw_name = f"{sha12}_raw.{ext}"
     (out / raw_name).write_bytes(raw)
     clean_name = None
-    if not result.get("is_pdf"):
+    if result.get("is_pdf"):
+        clean = pdf_text(raw)                 # fitz 가 없거나 열리지 않으면 clean 생략(span 대조 불가 → WARN)
+    else:
         clean = extract_text(result.get("text", ""))
+    if clean:
         clean_name = f"{sha12}_clean.txt"
         (out / clean_name).write_text(clean, encoding="utf-8")
     accessed = _now()

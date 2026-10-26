@@ -1,7 +1,7 @@
 """search.py — 자체 검색 (유료 API 무의존). plan-v2 핵심설계3.
 
 계층: ddgs 다중 백엔드(web=text, news=news) → DuckDuckGo HTML → SearXNG(자체 호스트 등록 시만)
-      → 전문 무료 API(arXiv=academic, SEC EDGAR full-text=filing). --type 은 curated-sources.json
+      → 전문 무료 API(academic=OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv, SEC EDGAR full-text=filing). --type 은 curated-sources.json
       의 type_backends 에 있는 것만. 미지원 유형은 명시적 실패. 0건 계층은 stderr 경고 후 건너뜀.
 
 주의: "검색 완전성 미보장". 에이전트는 내장 WebSearch 와 병행한다.
@@ -62,9 +62,9 @@ def log_search(query: str, type: str, n: int, results: list[dict] | None, axis: 
         print(f"  ⚠ search-log 기록 실패: {e}", file=sys.stderr)
 
 
-def _get(url: str, timeout: int = 12) -> tuple[int, str]:
+def _get(url: str, timeout: int = 12, headers: dict | None = None) -> tuple[int, str]:
     response = request_bytes(url, timeout=timeout, client=creq,
-                             headers={"User-Agent": "Mozilla/5.0"})
+                             headers=headers or {"User-Agent": "Mozilla/5.0"})
     return response["status"], response_text(response)
 
 
@@ -141,10 +141,11 @@ def _searx(query: str, n: int) -> list[dict]:
     return []
 
 
-def _arxiv(query: str, n: int) -> list[dict]:
+def _arxiv(query: str, n: int, strict: bool = False) -> list[dict]:
+    """strict=True(academic 경로)면 HTTP 오류·Error 항목·파싱 실패를 삼키지 않고 _BackendError 로 올려 로그에 error 가 남게 한다."""
     q = query.strip()
     if " " in q and not q.startswith('"'):   # 무인용 all: 은 단어별 OR 라 무관 논문이 섞임 → 구문 먼저, 0건이면 AND
-        res = _arxiv(f'"{q}"', n)
+        res = _arxiv(f'"{q}"', n, strict)
         if res:
             return res
         q = " AND ".join(f"all:{w}" for w in q.split())
@@ -152,20 +153,165 @@ def _arxiv(query: str, n: int) -> list[dict]:
         q = f"all:{q}"
     url = f"https://export.arxiv.org/api/query?search_query={quote(q, safe=":")}&max_results={n}"
     try:
-        _, xml = _get(url, timeout=25)                   # arXiv API 는 느릴 수 있음
+        st, xml = _get(url, timeout=25)                  # arXiv API 는 느릴 수 있음
+        if st != 200:                                    # 429 는 XML 이 아니라 "Rate exceeded." 평문
+            raise _BackendError(f"HTTP {st}")
         ns = {"a": "http://www.w3.org/2005/Atom"}
         out = []
-        for e in ET.fromstring(xml).findall("a:entry", ns):
+        entries = ET.fromstring(xml).findall("a:entry", ns)
+        if any((e.findtext("a:title", "", ns) or "").strip() == "Error" for e in entries):
+            raise _BackendError("arXiv 가 오류를 <title>Error</title> 항목으로 반환")   # HTTP 200 이어도 논문이 아님
+        for e in entries:
+            summary = (e.findtext("a:summary", "", ns) or "").strip()
             out.append({"title": (e.findtext("a:title", "", ns) or "").strip(),
-                        "url": (e.findtext("a:id", "", ns) or "").strip(),
-                        "snippet": (e.findtext("a:summary", "", ns) or "").strip()[:300],
-                        "source": "arxiv"})
+                        "url": (e.findtext("a:id", "", ns) or "").strip(), "source": "arxiv",
+                        "year": (e.findtext("a:published", "", ns) or "")[:4], "doi": None,
+                        "authors": [x.findtext("a:name", "", ns) for x in e.findall("a:author", ns)],
+                        "abstract": summary, "snippet": summary[:300]})
         if not out:
             print("  ⚠ arxiv 0건(건너뜀)", file=sys.stderr)
         return out
     except Exception as e:
+        if strict:
+            raise _BackendError(str(e)) from e
         print(f"  ⚠ arxiv 실패(건너뜀): {e}", file=sys.stderr)
         return []
+
+
+# --- 학술 어댑터 (--type academic) --------------------------------------------
+# 순서: OpenAlex → Crossref → Europe PMC → Semantic Scholar → arXiv. 첫 비어있지 않은 백엔드 결과를 쓴다.
+# 공통 반환: {title, url, source, year, doi, authors, abstract, snippet}. 각 백엔드는 audit 로그 1줄.
+class _BackendError(Exception):
+    """HTTP 200 이어도 실패(총건수 불일치·오류 본문)와 비200 을 한데 묶는 신호."""
+
+
+def _api(url: str, headers: dict | None = None) -> dict:
+    """학술 API GET → JSON. 비200(429 포함)·JSON 아님이면 _BackendError."""
+    mail = os.environ.get("MDR_CONTACT_EMAIL", "").strip()
+    ua = "market-deep-research/1.0" + (f" (mailto:{mail})" if mail else "")
+    st, txt = _get(url, 15, {"User-Agent": ua, **(headers or {})})
+    if st != 200:
+        raise _BackendError(f"HTTP {st}")
+    try:
+        return json.loads(txt)
+    except ValueError:
+        raise _BackendError("JSON 아님")
+
+
+def _mailto() -> str:
+    mail = os.environ.get("MDR_CONTACT_EMAIL", "").strip()
+    return f"&mailto={quote(mail)}" if mail else ""
+
+
+def _check_total(total, items: list, name: str) -> None:
+    """총건수와 반환 건수가 (0 여부 기준으로) 어긋나면 200 응답이어도 실패."""
+    if not isinstance(total, int) or (total > 0) != bool(items):
+        raise _BackendError(f"{name} 총건수 {total} ≠ 반환 {len(items)}건")
+
+
+def _rec(source: str, title, url: str, year, doi, authors: list, abstract) -> dict:
+    abstract = re.sub(r"<[^>]+>", "", abstract or "").strip()
+    doi = (doi or "").removeprefix("https://doi.org/") or None
+    return {"title": re.sub(r"<[^>]+>", "", title or "").strip(), "url": f"https://doi.org/{doi}" if doi else url,
+            "source": source, "year": str(year) if year else None, "doi": doi,
+            "authors": [a for a in authors if a], "abstract": abstract, "snippet": abstract[:300]}
+
+
+def _parse_openalex(data: dict, n: int) -> list[dict]:
+    if "error" in data or "results" not in data:
+        raise _BackendError(str(data.get("error") or "results 없음")[:100])
+    _check_total((data.get("meta") or {}).get("count"), data["results"], "openalex")
+    out = []
+    for w in data["results"][:n]:
+        words = sorted((p, t) for t, ps in (w.get("abstract_inverted_index") or {}).items() for p in ps)
+        out.append(_rec("openalex", w.get("title"), w.get("id", ""), w.get("publication_year"), w.get("doi"),
+                        [(a.get("author") or {}).get("display_name") for a in w.get("authorships") or []],
+                        " ".join(t for _, t in words)))
+    return out
+
+
+def _parse_crossref(data: dict, n: int) -> list[dict]:
+    msg = data.get("message")
+    if data.get("status") != "ok" or not isinstance(msg, dict) or "items" not in msg:
+        raise _BackendError("status≠ok 또는 items 없음")
+    _check_total(msg.get("total-results"), msg["items"], "crossref")
+    out = []
+    for w in msg["items"][:n]:
+        year = ((w.get("issued") or {}).get("date-parts") or [[None]])[0][0]
+        out.append(_rec("crossref", (w.get("title") or [""])[0], w.get("URL", ""), year, w.get("DOI"),
+                        [f"{a.get('given', '')} {a.get('family', '')}".strip() for a in w.get("author") or []],
+                        w.get("abstract")))
+    return out
+
+
+def _parse_europepmc(data: dict, n: int) -> list[dict]:
+    if data.get("errCode") or "resultList" not in data:        # 오류는 HTTP 200 + resultList 없음으로 온다
+        raise _BackendError(f"errCode={data.get('errCode')} {data.get('errMsg', '')}"[:100])
+    items = data["resultList"].get("result", [])
+    _check_total(data.get("hitCount"), items, "europepmc")
+    return [_rec("europepmc", w.get("title"), f"https://europepmc.org/article/{w.get('source')}/{w.get('id')}",
+                 w.get("pubYear") or (w.get("firstPublicationDate") or "")[:4], w.get("doi"),
+                 [a.strip() for a in (w.get("authorString") or "").rstrip(".").split(",")], w.get("abstractText"))
+            for w in items[:n]]
+
+
+def _parse_s2(data: dict, n: int) -> list[dict]:
+    if "message" in data or "error" in data or "total" not in data:
+        raise _BackendError(str(data.get("message") or data.get("error") or "total 없음")[:100])
+    items = data.get("data") or []
+    _check_total(data["total"], items, "semanticscholar")
+    return [_rec("semanticscholar", w.get("title"), w.get("url", ""), w.get("year"),
+                 (w.get("externalIds") or {}).get("DOI"), [(a or {}).get("name") for a in w.get("authors") or []],
+                 w.get("abstract")) for w in items[:n]]
+
+
+def _openalex(query: str, n: int) -> list[dict]:
+    sel = "id,doi,title,publication_year,authorships,abstract_inverted_index"
+    return _parse_openalex(_api(f"https://api.openalex.org/works?search={quote(query)}&per_page={n}&select={sel}{_mailto()}"), n)
+
+
+def _crossref(query: str, n: int) -> list[dict]:
+    sel = "DOI,title,URL,issued,author,abstract"
+    return _parse_crossref(_api(f"https://api.crossref.org/works?query={quote(query)}&rows={n}&select={sel}{_mailto()}"), n)
+
+
+def _europepmc(query: str, n: int) -> list[dict]:
+    return _parse_europepmc(_api("https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&resultType=core"
+                                 f"&pageSize={n}&query={quote(query)}"), n)
+
+
+def _s2(query: str, n: int) -> list[dict]:
+    url = ("https://api.semanticscholar.org/graph/v1/paper/search?fields=title,year,abstract,authors,externalIds,url"
+           f"&limit={n}&query={quote(query)}")
+    key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY", "").strip()
+    hdr = {"x-api-key": key} if key else None
+    try:
+        data = _api(url, hdr)
+    except _BackendError as e:
+        if "429" not in str(e):
+            raise
+        time.sleep(3)                                    # 키 없는 공유 풀은 429 가 잦다 — 1회 재시도 후 포기
+        data = _api(url, hdr)
+    return _parse_s2(data, n)
+
+
+_ACADEMIC = [("openalex", _openalex), ("crossref", _crossref), ("europepmc", _europepmc),
+             ("semanticscholar", _s2), ("arxiv", lambda q, n: _arxiv(q, n, strict=True))]
+
+
+def _academic(query: str, n: int, axis: str | None, audit: Path) -> list[dict]:
+    """백엔드를 순서대로 시도, 백엔드마다 로그 1줄. 실패·0건이면 다음으로."""
+    for name, run in _ACADEMIC:
+        res, err = [], None
+        try:
+            res = run(query, n)
+        except Exception as e:
+            err = str(e)
+            print(f"  ⚠ {name} 실패(건너뜀): {e}", file=sys.stderr)
+        log_search(query, f"academic:{name}", n, res, axis, error=err, audit=audit)
+        if res:
+            return res
+    return []
 
 
 def _sec_edgar(query: str, n: int) -> list[dict]:
@@ -199,6 +345,8 @@ def search(query: str, n: int = 10, type: str = "web", axis: str | None = None,
            work_dir: str | Path | None = None) -> list[dict]:
     """검색 + <work_dir>/audit/search-log.jsonl 기록. work_dir 기본값은 MDR_WORK_DIR, 없으면 현재 폴더."""
     audit = Path(work_dir or os.environ.get("MDR_WORK_DIR") or ".") / "audit"
+    if type == "academic":                               # 백엔드별 로그를 _academic 이 직접 남긴다
+        return _academic(query, n, axis, audit)
     try:
         res = _search(query, n, type)
     except Exception as e:
@@ -265,7 +413,9 @@ if __name__ == "__main__":
     for _s in (sys.stdout, sys.stderr):
         _s.reconfigure(encoding="utf-8")
     args = sys.argv[1:]
-    if not args or args[0] == "demo":
+    if args and args[0] in ("-h", "--help"):
+        print(__doc__)
+    elif not args or args[0] == "demo":
         demo()
     else:
         q = args[0]

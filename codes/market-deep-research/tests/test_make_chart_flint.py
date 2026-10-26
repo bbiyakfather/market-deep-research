@@ -125,3 +125,74 @@ def test_sidecar_check_detects_mismatch(work):
     assert any("캡션" in f for f in fails)
     side.unlink()
     assert check_chart_sidecars(work.root, _report(svg), facts)[1][0].startswith("[도판사이드카없음]")
+
+
+vlc = pytest.importorskip("vl_convert")  # 아래는 SVG 렌더 경로 — vl_convert 없으면 skip
+
+
+def _ev(i, url):
+    return {"id": f"E{i:03d}", "fact_id": f"F{i:03d}", "source_url": url}
+
+
+def test_svg_korean_sources_and_lint(work):
+    from visual_audit import audit_figures
+    _write_jsonl_atomic(work.evidence, [_ev(1, "https://www.kisti.re.kr/a"), _ev(2, "https://oecd.org/b"),
+                                        _ev(3, "https://www.kisti.re.kr/c")])
+    side, svg = mc.make_chart_flint("hbar", work.root, ["F001", "F002", "F003"], "기관별 특허")
+    text = svg.read_text(encoding="utf-8")
+    assert "삼성전자" in text and "Malgun Gothic" in text  # 한글이 글리프가 아니라 텍스트로 들어간다
+    spec = json.loads(side.read_text(encoding="utf-8"))
+    assert spec["mdr"]["sources"] == ["kisti.re.kr", "oecd.org"]
+    assert spec["title"]["subtitle"] == "출처: kisti.re.kr, oecd.org"
+    assert "<title>기관별 특허</title>" in text and audit_figures(work.root) == []
+
+
+def test_no_evidence_means_plain_title(work):
+    side, _ = mc.make_chart_flint("hbar", work.root, ["F001", "F002"], "출처없음")
+    spec = json.loads(side.read_text(encoding="utf-8"))
+    assert spec["title"] == "출처없음" and spec["mdr"]["sources"] == []
+
+
+def _series_facts(wp):
+    facts = [{**_fact(i + 1, str(10 + i), "e"), "context": {"axis": f"c{i % 3}", "series": ["s1", "s2"][i // 3]}} for i in range(6)]
+    _write_jsonl_atomic(wp.facts, facts)
+    return [f["id"] for f in facts]
+
+
+def _texts(spec):
+    return [l["encoding"]["text"]["field"] for l in spec.get("layer", []) if "text" in l.get("encoding", {})]
+
+
+def test_line_end_value_labels(tmp_path):
+    wp = WorkPaths(tmp_path / "research_l")
+    ids = _series_facts(wp)
+    side, svg = mc.make_chart_flint("line", wp.root, ids, "추이")
+    spec = json.loads(side.read_text(encoding="utf-8"))
+    assert _texts(spec) == ["value_end"]
+    ends = [v["value_end"] for v in spec["data"]["values"]]
+    assert ends == ["", "", "12", "", "", "15"]  # 시리즈별 마지막 행만 원문
+    assert "12" in svg.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("t", ["lollipop", "dot", "grouped"])
+def test_value_labels_other_types(tmp_path, t):
+    wp = WorkPaths(tmp_path / "research_v")
+    side, _ = mc.make_chart_flint(t, wp.root, _series_facts(wp), "라벨 " + t)
+    spec = json.loads(side.read_text(encoding="utf-8"))
+    assert _texts(spec) == ["value_raw"] and "값 라벨 생략" not in spec["mdr"]["note"]
+
+
+@pytest.mark.parametrize("t", ["heatmap", "area", "stacked100"])
+def test_overlap_types_skip_labels(tmp_path, t):
+    wp = WorkPaths(tmp_path / "research_s")
+    side, _ = mc.make_chart_flint(t, wp.root, _series_facts(wp), "생략 " + t)
+    spec = json.loads(side.read_text(encoding="utf-8"))
+    assert _texts(spec) == [] and "값 라벨 생략" in spec["mdr"]["note"]
+
+
+@pytest.mark.parametrize("t", ["hbar", "line", "grouped", "dot", "lollipop"])
+def test_rendered_svgs_pass_lint(tmp_path, t):
+    from visual_audit import audit_figures
+    wp = WorkPaths(tmp_path / "research_r")
+    mc.make_chart_flint(t, wp.root, _series_facts(wp), "린트 " + t)
+    assert audit_figures(wp.root) == []

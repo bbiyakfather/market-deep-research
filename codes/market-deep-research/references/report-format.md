@@ -50,7 +50,7 @@ verify_facts.py 가 이 마커 이후를 부록으로 보고 '본문 사용'에�
 축(조사질문=에이전트 분할=3부 챕터, 1:1 대응) 이름은 **이 절에서만** 정의한다. `SKILL.md`·
 `agent-briefs.md`·`references/research-plan.md` 는 이 절을 참조만 하고 축 이름을 다시 나열하지
 않는다. 축 도출 절차·품질 기준(MECE·3~5개)은 `references/research-plan.md` 참조.
-- **기술동향**: 3부 축=기술요소/플레이어/시장/정책 · 4부=IP 랜드스케이프(출원 추이·주요 출원인·CPC 분포·권리 존속)+기술지표(TRL·특허·성능, 구 축 1개 폐기분 흡수) · 5부=연구기관 매핑.
+- **기술동향**: 3부 축=기술요소/플레이어/시장/정책 · 4부=IP 랜드스케이프(출원 추이·주요 출원인·CPC 분포·권리 존속)+기술지표(TRL·특허·성능, 구 축 1개 폐기분 흡수; TRL 판정 증거는 `references/trl-evidence.md`) · 5부=연구기관 매핑.
 - **산업동향**: 3부 축=밸류체인/통계(KOSIS·DART·KIPRIS)/해외 · 4부=시장규모·성장률 · 8부(규제·정책 변화) 비중↑.
 - **기관·기업 실사**: 0부 entity-identity 선고정 · 3부 축=일반현황/사업현황/재무실적 · 5부=지배구조·계열사 엔티티 매핑(재무는 3부 소관, 5부와 중복 금지) · 6부(검증요약) 비중↑.
 - **기술사업화 실사**: 3부 축=기술성/권리성/시장성/사업성(2018 기술가치평가 실무매뉴얼 체계) · 4부=시장성 지표 · 5부=공급(기술보유 기관)·수요(수요기업 후보, 채택근거 F태그 결박) 이중매핑. 시장성 축 챕터는 하위 템플릿(경쟁 대안 지도 → 비교표 → 열세 시나리오)을 쓴다 — `references/competitive-positioning.md`. 경쟁 구도가 핵심인 다른 유형도 해당 축 챕터 안에서 같은 템플릿을 쓴다. 포지셔닝 방향은 축이 아니라 10부(조사팀 인사이트) 안 권고(recommendation) 1절. BM 후보·수요기업 롱리스트·이전 조건은 `references/business-model.md` §2 — 5부 수요 행마다 시장 대리신호 유형 열 필수, 이전 가격은 비교 거래 캡처가 있을 때만.
@@ -73,7 +73,8 @@ verify_facts.py 가 이 마커 이후를 부록으로 보고 '본문 사용'에�
 `research-plan.md`(G0 확정 조사계획·승인 목차) · `facts.jsonl`(전수표) · 폐기목록+사유 ·
 실패소스URL · 검증이력(verify_events) · raw agent output · 세션 저널(`intent-diff.md`·
 `expansion-log.md`·`verification-economics.md`·`cause-disappearance.md`) · `manifest.json` ·
-`verify-<slug>.md`(실행검증).
+`verify-<slug>.md`(실행검증) · `evidence.html`(증빙판: 문장→인용 카드→±6행 맥락→원문 링크→검색 기록, `build_evidence_html.py`; `--customer` 는 `evidence-customer.html` 로 맥락·전문 링크·검색 기록 제거) · `support-auto.jsonl`(뒷받침 자동 제안) · `search-log.jsonl`.
+근거표에는 evidence 의 `source_tier`(1차공시/공식통계/동료심사/보도/2차종합)·`raw_quality`(ocr/auto-caption/scan)가 있으면 표지로 병기한다(점수화 금지, 원문은 고치지 않는다).
 
 ## 렌더
 `render_pdf.py`(pandoc gfm→html --embed-resources + style.html → HeadlessChrome --print-to-pdf,

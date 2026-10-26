@@ -89,6 +89,7 @@
 - 생성 후 팀리드가 Read 로 연다 — 스크립트 성공 ≠ 그림 정상.
 - 도구: `scripts/make_chart.py`(§1a 16종, facts.jsonl 직결, 기본 `--engine flint`; 사이드카 `.vl.json` 을 `verify_facts` 가 사실대장과 대조) → 그 외 유형은 matplotlib. 스크립트와 출력 PNG 모두
   `assets/` 에 둔다(다른 폴더면 `[도판무결박]` 검사를 비켜 간다), 값 상수 옆에 F-ID 주석.
+- 도판 린트: `visual_audit.py --figures <work_dir>`(글자 9 이상·title/desc·FACTS↔사이드카·외부 URL·한글 폰트·막대 20 이하) — G4 조건. 하단 출처는 사이드카 `mdr.sources`(evidence 호스트)가 부제로 찍힌다.
 
 ## 4. 운영
 - 작성자 brief 고정 문구(`agent-briefs.md` 작성자 절): "수치 데이터는 그림이 기본. 표를 만들기 전에 `visual-first.md`

@@ -13,6 +13,7 @@ from __future__ import annotations
 import base64
 import json
 import mimetypes
+import os
 import subprocess
 import sys
 import tempfile
@@ -39,30 +40,35 @@ def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+def embed_local_image(target: str, resource_dir: Path) -> str:
+    """로컬 이미지를 data URI 로 내장(작업폴더 밖·원격 금지). 증빙판 HTML 도 재사용한다."""
+    p = urlsplit(target)
+    if p.scheme == "data":
+        if not target.lower().startswith("data:image/"):
+            raise ValueError(f"이미지 data URI만 허용: {target[:80]}")
+        return target
+    # UNC/프로토콜 상대 경로도 원격 리소스다. 드라이브 문자는 로컬 절대경로로 허용.
+    drive_path = len(p.scheme) == 1 and len(target) > 2 and target[1] == ":"
+    if p.netloc or target.startswith(("//", "\\\\")) or (p.scheme and not drive_path and p.scheme != "file"):
+        raise ValueError(f"오프라인 렌더: 외부 이미지 금지: {target}")
+    raw_path = unquote(p.path) if not drive_path else unquote(target)
+    if p.scheme == "file" and len(raw_path) > 2 and raw_path[0] == "/" and raw_path[2] == ":":
+        raw_path = raw_path[1:]
+    if raw_path.startswith(("//", "\\\\")):
+        raise ValueError(f"오프라인 렌더: 외부 이미지 금지: {target}")
+    root = resource_dir.resolve()
+    path = (root / raw_path).resolve()
+    if not path.is_relative_to(root):
+        raise ValueError(f"작업폴더 내부 이미지 파일 필요: {target}")
+    if not path.is_file():
+        raise RuntimeError(f"pandoc 리소스 사전검사: 이미지 파일 없음: {target}")
+    mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode("ascii")
+
+
 def _pandoc_html(md_path: Path, html_out: Path, resource_dir: Path) -> None:
     def local_image(target: str) -> str:
-        p = urlsplit(target)
-        if p.scheme == "data":
-            if not target.lower().startswith("data:image/"):
-                raise ValueError(f"이미지 data URI만 허용: {target[:80]}")
-            return target
-        # UNC/프로토콜 상대 경로도 원격 리소스다. 드라이브 문자는 로컬 절대경로로 허용.
-        drive_path = len(p.scheme) == 1 and len(target) > 2 and target[1] == ":"
-        if p.netloc or target.startswith(("//", "\\\\")) or (p.scheme and not drive_path and p.scheme != "file"):
-            raise ValueError(f"오프라인 렌더: 외부 이미지 금지: {target}")
-        raw_path = unquote(p.path) if not drive_path else unquote(target)
-        if p.scheme == "file" and len(raw_path) > 2 and raw_path[0] == "/" and raw_path[2] == ":":
-            raw_path = raw_path[1:]
-        if raw_path.startswith(("//", "\\\\")):
-            raise ValueError(f"오프라인 렌더: 외부 이미지 금지: {target}")
-        root = resource_dir.resolve()
-        path = (root / raw_path).resolve()
-        if not path.is_relative_to(root):
-            raise ValueError(f"작업폴더 내부 이미지 파일 필요: {target}")
-        if not path.is_file():
-            raise RuntimeError(f"pandoc 리소스 사전검사: 이미지 파일 없음: {target}")
-        mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
-        return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode("ascii")
+        return embed_local_image(target, resource_dir)
 
     class ImageCheck(HTMLParser):
         def handle_starttag(self, tag, attrs):
@@ -166,13 +172,20 @@ def render(md_path: Path | str, pdf_out: Path | str | None = None,
     md_path = Path(md_path).resolve()
     pdf_out = Path(pdf_out).resolve() if pdf_out else md_path.with_suffix(".pdf")
     resource_dir = Path(resource_dir) if resource_dir else md_path.parent
-    with tempfile.TemporaryDirectory() as td:
-        html_out = Path(td) / "render.html"
-        _pandoc_html(md_path, html_out, resource_dir)
-        if allow_no_sandbox:
-            _chrome_pdf(html_out, pdf_out, allow_no_sandbox=True)
-        else:
-            _chrome_pdf(html_out, pdf_out)
+    # H3: 임시 파일에 쓴 뒤 교체한다. 렌더가 중간에 실패해도 기존 PDF 는 그대로 남는다.
+    tmp_pdf = pdf_out.with_name(f".{pdf_out.name}.tmp")
+    tmp_pdf.unlink(missing_ok=True)           # 이전 실행이 남긴 잔존 임시 파일 정리
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            html_out = Path(td) / "render.html"
+            _pandoc_html(md_path, html_out, resource_dir)
+            _chrome_pdf(html_out, tmp_pdf, allow_no_sandbox=allow_no_sandbox)
+        try:
+            os.replace(tmp_pdf, pdf_out)
+        except PermissionError as e:
+            raise RuntimeError(f"기존 PDF 잠김 — 뷰어 닫고 재시도: {pdf_out} ({e})")
+    finally:
+        tmp_pdf.unlink(missing_ok=True)
     # artifacts: 봉인([4b] extend) 대상 목록 — 양식 모듈 공통 반환 계약(hwpx 등도 같은 키로 돌려준다)
     return {"ok": True, "pdf": str(pdf_out), "size": pdf_out.stat().st_size, "at": _now(),
             "artifacts": [str(pdf_out)], "publication_state": "초안"}
@@ -190,6 +203,14 @@ def render_and_record(work: WorkPaths | Path | str,
     try:
         if gates.sha256_file(wp.manifest) != baseline:
             raise gates.GateError("manifest.json 이 G3 영수증의 기준선과 다름 — G3 복귀")
+        # H3: 영수증 이후 대장·원고가 바뀌었을 수 있으니 FAIL 이 1건이라도 있으면 PDF 를 쓰지 않는다(기존 PDF 보존).
+        import verify_facts
+        try:
+            rep = verify_facts.verify(wp.report_md, wp, check_only=True)
+        except Exception as exc:              # 재검증 중 어떤 예외도 [4b] 실패 기록 경로로 보낸다
+            raise gates.GateError(f"렌더 전 재검증 예외 — PDF 미생성: {exc!r}") from exc
+        if not rep["ok"]:
+            raise gates.GateError(f"verify_facts FAIL {len(rep['failures'])}건 — PDF 미생성: {rep['failures'][0]}")
         rendered = (render(wp.report_md, pdf_out, allow_no_sandbox=True) if allow_no_sandbox
                     else render(wp.report_md, pdf_out))
         if not rendered["ok"] or not rendered.get("artifacts"):

@@ -10,6 +10,7 @@ SOFT(경고): curl_cffi, trafilatura, openpyxl, yt-dlp.
 
 CLI: python preflight.py          # 리포트 출력, HARD 누락 시 exit 1
      python preflight.py --json   # JSON
+     python preflight.py --check-help   # scripts/*.py 의 --help 종료코드 0 여부(선택 경고)
 """
 from __future__ import annotations
 
@@ -17,7 +18,9 @@ import importlib.util
 import json
 import os
 import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HARD_PY = ["fitz"]
@@ -68,6 +71,29 @@ def check() -> dict:
     return report
 
 
+def check_help_contract(timeout: int = 30) -> dict:
+    """scripts/*.py 가 `--help` 로 종료코드 0 인지 점검(하위 폴더 flint/ 제외). 실패만 {파일: 코드} 로 반환. 소스에 argparse·--help 가 없으면 실행하지 않고 "help 미지원".
+    --help 를 모르는 스크립트는 본 동작을 실행할 수 있어, 빈 임시 폴더에서 MDR_WORK_DIR 없이 돌려 부작용을 가둔다."""
+    env = {k: v for k, v in os.environ.items() if k != "MDR_WORK_DIR"}
+    bad: dict = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        for f in sorted(Path(__file__).parent.glob("*.py")):
+            if f.name == Path(__file__).name:
+                continue
+            src = f.read_text(encoding="utf-8", errors="replace")
+            if "argparse" not in src and "--help" not in src:   # --help 를 모르면 본동작이 실행될 수 있어 돌리지 않는다
+                bad[f.name] = "help 미지원"
+                continue
+            try:
+                rc = subprocess.run([sys.executable, str(f), "--help"], cwd=tmp, env=env, timeout=timeout,
+                                    capture_output=True).returncode
+            except subprocess.TimeoutExpired:
+                rc = "timeout"
+            if rc != 0:
+                bad[f.name] = rc
+    return bad
+
+
 def _fmt(report: dict) -> str:
     lines = ["[G0 preflight]"]
     for grp in ("hard", "soft"):
@@ -86,6 +112,8 @@ def _fmt(report: dict) -> str:
             lines.append("    설치: pip install curl_cffi trafilatura  (+선택 yt-dlp)")
             if "vl_convert" in soft_miss:
                 lines.append("    차트 SVG 렌더: pip install vl-convert-python")
+    if report.get("help_contract"):
+        lines.append("  ⚠ --help 종료코드≠0 (선택 경고): " + ", ".join(f"{k}={v}" for k, v in report["help_contract"].items()))
     return "\n".join(lines)
 
 
@@ -95,6 +123,8 @@ if __name__ == "__main__":
         if _reconf:
             _reconf(encoding="utf-8", errors="replace")
     rep = check()
+    if "--check-help" in sys.argv:                     # 느리므로(스크립트 수만큼 프로세스) 옵션. exit 코드에는 영향 없음
+        rep["help_contract"] = check_help_contract()
     if "--json" in sys.argv:
         print(json.dumps(rep, ensure_ascii=False, indent=2))
     else:

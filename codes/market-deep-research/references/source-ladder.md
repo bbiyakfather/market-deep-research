@@ -4,8 +4,8 @@
 `python search.py "쿼리" --n 10 --type web|news|academic|filing --axis <축이름> --work <work_dir>`
 - 계층: **ddgs 다중 백엔드**(bing·brave·duckduckgo·google·mojeek·startpage·yahoo·yandex 자동 선택; `--type news` 는
   ddgs `news()`) → DuckDuckGo HTML 폴백 → SearXNG(`assets/searx-instances.json` 에 **자체 호스트 URL 을 등록했을 때만**,
-  공개 인스턴스는 2026-10-13 전멸) → 전문 API(arXiv=academic, 질의에 공백이 있으면 `all:"구문"` 먼저·0건이면 단어별 AND(`all:w1 AND all:w2`);
-  SEC EDGAR full-text=filing). 앞 계층 결과가 `max(3, n//2)` 미만일 때만 다음 계층이 보강한다.
+  공개 인스턴스는 2026-10-13 전멸) → 전문 API(academic=OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv; **arXiv 만** 질의에 공백이 있으면 `all:"구문"` 먼저·0건이면 단어별 AND(`all:w1 AND all:w2`);
+  SEC EDGAR full-text=filing). web·news 는 앞 계층 결과가 `max(3, n//2)` 미만일 때만 다음 계층이 보강하고, academic 은 보강 없이 **첫 비어있지 않은 백엔드 결과**만 쓴다.
   `--type` 은 `curated-sources.json` 에 있는 것만, 미지원 명시 실패. ddgs 미설치는 `pip install ddgs`.
 - ddgs `auto` 는 질의를 bing·google·yandex·wikipedia 등 여러 회사에 동시에 보낸다 — 대외비 질의는 사용자 판단(필요하면 `DDGS().text(backend="duckduckgo")` 로 제한).
 - 실패 계층은 경고 후 건너뜀(빈결과). "검색 완전성 미보장" — 내장 WebSearch 병행.
@@ -20,6 +20,7 @@
 4. 인용수·h-index 는 읽는 순서용이지 포함 기준이 아니다.
 5. 프리프린트는 `preprint` 로 표기하고 학술지판 게재 여부를 함께 기록한다.
 6. 인용 전 Crossref `update-type:retraction` 을 1회 확인한다. 없으면 "확인한 출처 내 공지 없음" 으로 적는다.
+7. `--type academic` 은 OpenAlex→Crossref→Europe PMC→Semantic Scholar→arXiv 순이다. 백엔드별 함정·한도·완전성 4단계 → `references/academic-apis.md`.
 참고: K-Dense-AI/scientific-agent-skills (MIT) paper-lookup·literature-review 의 규약을 번안
 
 ## 검색만 모드 (`mdr-search`)
