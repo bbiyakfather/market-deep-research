@@ -1,0 +1,117 @@
+{
+  "title": "Ranged Dot Plot (8 items)",
+  "description": "8 countries with min/max range",
+  "chartType": "Ranged Dot Plot",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Country": "USA",
+          "Value": 30,
+          "Metric": "Min"
+        },
+        {
+          "Country": "USA",
+          "Value": 92,
+          "Metric": "Max"
+        },
+        {
+          "Country": "China",
+          "Value": 41,
+          "Metric": "Min"
+        },
+        {
+          "Country": "China",
+          "Value": 94,
+          "Metric": "Max"
+        },
+        {
+          "Country": "Japan",
+          "Value": 64,
+          "Metric": "Min"
+        },
+        {
+          "Country": "Japan",
+          "Value": 65,
+          "Metric": "Max"
+        },
+        {
+          "Country": "Germany",
+          "Value": 70,
+          "Metric": "Min"
+        },
+        {
+          "Country": "Germany",
+          "Value": 61,
+          "Metric": "Max"
+        },
+        {
+          "Country": "UK",
+          "Value": 46,
+          "Metric": "Min"
+        },
+        {
+          "Country": "UK",
+          "Value": 80,
+          "Metric": "Max"
+        },
+        {
+          "Country": "France",
+          "Value": 69,
+          "Metric": "Min"
+        },
+        {
+          "Country": "France",
+          "Value": 80,
+          "Metric": "Max"
+        },
+        {
+          "Country": "India",
+          "Value": 43,
+          "Metric": "Min"
+        },
+        {
+          "Country": "India",
+          "Value": 75,
+          "Metric": "Max"
+        },
+        {
+          "Country": "Brazil",
+          "Value": 48,
+          "Metric": "Min"
+        },
+        {
+          "Country": "Brazil",
+          "Value": 70,
+          "Metric": "Max"
+        }
+      ]
+    },
+    "semantic_types": {
+      "Country": "Country",
+      "Value": "Quantity",
+      "Metric": "Category"
+    },
+    "chart_spec": {
+      "chartType": "Ranged Dot Plot",
+      "encodings": {
+        "x": {
+          "field": "Value"
+        },
+        "y": {
+          "field": "Country"
+        },
+        "color": {
+          "field": "Metric"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

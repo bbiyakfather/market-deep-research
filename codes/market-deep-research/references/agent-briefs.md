@@ -41,6 +41,10 @@ F/E-ID는 워커 파일 안에서만 유효한 잠정 ID다. `join_workers.py`�
   SOURCE_URL: <원문 URL 또는 확보한 PDF 경로>
   LICENSE_HINT: <기관 재사용 조건 단서. 모르면 unknown — 빈칸 금지>
 
+## 차트 제안(워커)
+- 워커는 차트 **유형(`visual-first.md` §1a 이름)·F-ID·제목**만 제안한다. 값·좌표·색 hex 는 쓰지 않는다 — 그림은 리드가 `make_chart.py` 로 confirmed fact 에서만 만든다.
+- 유형이 모호하면 고르지 말고 최소 선택지(2개 이내)로 리드에 올린다.
+
 ## 인사이트
 - <사실>: 근거 F-ID. <추론>: "추론" 명시(사실과 구분).
 
@@ -75,9 +79,12 @@ EXPAND의 `AXIS`+정규화 LEAD 텍스트 지문과 같은 URL 지문은 중복 
 - **경쟁 조사 워커**: 스폰 메시지 `2. 범위` 에 제품명·모델·규제·인증코드(해당 시)·기준일을 넣고, 미확인 항목은 조회 범위를 EXPAND/negative_search 로 반환한다. 서식·근거원은 `references/competitive-positioning.md`(팀리드가 TASK 에 요점 인용).
 - **BM 조사 워커**: 스폰 메시지 `2. 범위` 에 단위(고객·거래·양품·프로그램·주문·구독자·마일스톤)·과금 방식·기준 기간을 넣고, 수치의 `definition` 에 매출 다리 위치(계약액/청구/회계매출/반복매출/총거래액/순수익)를 적는다. 칸·질문·금지 서술은 `references/business-model.md`.
 - 표는 page/row/col, API 는 endpoint/param/JSON 해시로 locator 결박.
+- **verbatim 은 원문(clean)에서 글자 그대로 검색돼야 한다.** 줄임은 `…` 로만, 오타·띄어쓰기도 원문대로(바꿔 쓰면 G3 `[원문미포함]`/`[span불일치]`). 행 중간에서 끊긴 verbatim·ASCII `...` 는 실패한다(의도된 엄격함, 줄임은 `…` 만). 행 번호는 워커가 세지 않고 리드가 `span_tools.py find` 로 채운다.
 - **임시 ID 는 W접두**(`W3-F012`), 대장 F/E-ID 는 리드만 부여 — 워커가 대장 ID 처럼 쓴 43건 오등재 사례.
 - **verbatim 은 원문 리터럴**(재구성·요약 금지 — "Royal Assent" ≠ "This bill received royal assent"), sha256 은 raw 파일 기준. 논문은 원문 첫 쪽의 제1저자·실제 학술지(교신저자·추정 학술지 금지).
 - **수치에는 지표 성격(설치/제조/출하/누적)·시점·가격 성격(거래가/호가)을 함께** 기록. 등락률은 같은 출처·같은 시점만. 2차 집계 DB(IEA·시장조사기관) 값은 1차 자료 교차 전까지 `pending`.
 - 실행 중 팀리드로의 중간 전송 채널은 없다(서브에이전트는 완료 시 최종 보고 하나만 반환).
   막히면 질문하지 말고 `BLOCKED: <이유>` 를 최종 보고 맨 앞줄에 적고 종료한다 — 그때까지
   수집한 마커 블록은 빈손으로 버리지 말고 그대로 반환.
+
+부분 인용: microsoft/flint-chart (MIT License, Copyright (c) Microsoft Corporation)

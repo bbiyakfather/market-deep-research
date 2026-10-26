@@ -1,0 +1,172 @@
+{
+  "encoding": {
+    "theta": {
+      "field": "Department",
+      "type": "nominal",
+      "sort": null,
+      "stack": true
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "stroke": "white",
+        "padAngle": 0.03
+      },
+      "encoding": {
+        "radius": {
+          "field": "Score",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "color": {
+          "field": "Department",
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "radiusOffset": 15,
+        "fontSize": 11
+      },
+      "encoding": {
+        "text": {
+          "field": "Department",
+          "type": "nominal"
+        },
+        "radius": {
+          "field": "Score",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        }
+      },
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "sum",
+              "field": "Score",
+              "as": "Score"
+            }
+          ],
+          "groupby": [
+            "Department"
+          ]
+        }
+      ]
+    }
+  ],
+  "width": 285,
+  "height": 285,
+  "config": {
+    "view": {
+      "continuousWidth": 285,
+      "continuousHeight": 285
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10
+    },
+    "axisY": {
+      "labelFontSize": 10
+    },
+    "facet": {
+      "spacing": 29
+    },
+    "mark": {
+      "tooltip": true
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Department": "Engineering",
+        "Score": 70
+      },
+      {
+        "Department": "Sales",
+        "Score": 71
+      },
+      {
+        "Department": "Marketing",
+        "Score": 76
+      },
+      {
+        "Department": "HR",
+        "Score": 98
+      },
+      {
+        "Department": "Finance",
+        "Score": 56
+      },
+      {
+        "Department": "Legal",
+        "Score": 80
+      },
+      {
+        "Department": "Operations",
+        "Score": 61
+      },
+      {
+        "Department": "Support",
+        "Score": 79
+      }
+    ]
+  },
+  "_width": 400,
+  "_height": 285,
+  "_options": [
+    {
+      "key": "innerRadius",
+      "label": "Inner Radius",
+      "type": "continuous",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "defaultValue": 0,
+      "applicable": true,
+      "value": 0
+    },
+    {
+      "key": "padAngle",
+      "label": "Gap",
+      "type": "continuous",
+      "min": 0,
+      "max": 0.1,
+      "step": 0.005,
+      "defaultValue": 0,
+      "applicable": true,
+      "value": 0.03
+    },
+    {
+      "key": "alignment",
+      "label": "Alignment",
+      "type": "discrete",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left (default)"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "applicable": true
+    },
+    {
+      "key": "independentYAxis",
+      "label": "Independent Y",
+      "type": "binary",
+      "applicable": false,
+      "value": false
+    }
+  ]
+}

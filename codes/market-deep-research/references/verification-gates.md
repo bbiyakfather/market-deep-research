@@ -36,6 +36,7 @@ FactsDB 로드도 같은 참조 검사로 v4는 예외/FAIL, v3는 WARN을 노�
   `add_verify_event(by="lead", action="reread", reread_sha256=<재열람 원문 SHA-256: fetch.py get 의 sha256 / 로컬 PDF 파일 해시 / WebFetch verbatim 의 sha256_text>)`
   — 해시 없는 lead reread 는 add·validate 모두 거부. verifier 단독 confirm 금지. confirmed = ≥1 evidence + lead verify_event(facts_db 강제).
   재검증 선언은 `gates.py record [2] <work_dir> --evidence "..."`로 기록하고 `check [2]`로 G0·G1을 확인한다.
+- **글자 대조**: text_quote 는 `span_tools.py find <work_dir> <sha12> "<verbatim>"` 로 clean 원문 행을 확정해 evidence `span` 에 기록한다. 못 찾으면 confirm 불가(한 글자라도 다르면 실패 — 의미 검사가 아니라 "인용이 원문에 있다"까지만 보증).
 - **claim-graph 게이트(risk=high 만)**: ① ≥2 **독립 관찰그룹**(`observer_group` 상이, 재전재 제외)
   ② **1회 반박검색**(`counter_search.found_stronger_refutation=false`) ③ **기본소스**(`primary_source_ref`)
   ④ **시간증거**(`observed_at` 또는 `valid_at`). v4 본문 사용 confirmed high-risk는 ①~④ 전부 G3 FAIL 조건이다.
@@ -57,6 +58,7 @@ v4의 연결 캡처는 `capture_review`가 존재하고, 현재 이미지 해시
 
 ## G3 verify_facts + manifest (실패 0)
 `verify_facts.py <report.md> <work_dir> [--conversion]`:
+글자 대조: `span` 이 있으면 clean ±2행에 verbatim 이 없을 때 `[span불일치]` FAIL, `span` 이 없으면 원문 전체 탐색 실패 시 `[원문미포함]` WARN(측정 단계), clean 이 없으면 `[span없음]` WARN.
 본문/부록 분리(주석 `<!-- FACTSHEET:APPENDIX -->` 우선, 없으면 '## 부록' 헤딩 최후 출현) ·
 본문을 문장·표행 세그먼트로 나눠 수치↔(Fxxx) 1:1 최근접 결박(태그 하나가 줄 전체를 면제하지
 않음) · 무태그 숫자 차단 · 부록은 [무태그] 만 면제(→ [부록무태그] WARN)하고 오태그·미확정·값·단위는
@@ -118,6 +120,7 @@ v4의 `value`와 `capture_review`에 알 수 없는 필드가 있으면 오탈�
 finalize는 봉인 항목 전체와 정규 원고·PDF·claim-review·계획을 검사 전후 재해시하고, 불일치하면 실패한다.
 출고 판정은 G5 `snapshot_hashes` 해시 집합이 가리키는 리비전에 대한 것이다. 이후 변경은 status/재verify가 드리프트로 탐지한다.
 G5 PDF 검사는 형식·개수 기반(F태그·링크·캡처 수)이며 내용 동일성을 보장하지 않는다. 그 확인은 G4 팀리드 육안검증의 역할이다.
+G4 육안(자작 차트 `.svg`): 빈 차트·잘린 마크·라벨 겹침·범례 불가독·잘못된 인코딩·깨진 척도·축 누락·왜곡을 본다 — 자동 지적(`[도판값불일치]` 등)은 확인 후 반영한다.
 같은 프로세스 권한의 원장·기록 위조는 신뢰 경계 밖이다. 출고 판정(`manifest.py verify`)은 영수증이 아닌 실검증으로 계산하므로 위조 기록이 판정을 바꾸지 못한다.
 status의 `최종(판정시점)`은 원장 기반 결과와 현재 스냅샷의 일치를 뜻하며, 재확인은 `manifest.py verify`로 수행한다.
 report.pdf 생성 후 **재봉인**(`manifest.extend` — 기존 항목 불변 확인 실패 시 거부 = G3 복귀,

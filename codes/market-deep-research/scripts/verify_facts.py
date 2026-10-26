@@ -49,6 +49,7 @@ from urllib.parse import unquote, urlsplit
 
 import manifest
 import gates
+import span_tools
 from facts_db import (_read_jsonl, check_ledger_references, evidence_ids as _evidence_ids,
                        ValidationError, check_capture_path, load_schema, is_v4_work,
                        validate_evidence, validate_fact, validate_capture_review, valid_iso_time)
@@ -874,6 +875,49 @@ def check_evidence_chain(facts: dict, evidence: dict, wp: WorkPaths, used: set[s
     return failures, warnings
 
 
+def check_spans(facts: dict, evidence: dict, wp: WorkPaths) -> tuple[list[str], list[str]]:
+    """text_quote verbatim ↔ `_sources/<sha12>_clean.txt` 글자 대조(imozuru). 기존 검사는 건드리지 않는다.
+    가정: evidence.sha256 은 raw 해시이고 fetch.save 가 clean 을 `<sha12>_clean.txt` 로 저장하므로
+    sha12 = span.clean 또는 sha256[:12] 또는 local(`_sources/<sha12>_raw.*`)에서 얻는다."""
+    failures: list[str] = []
+    warnings: list[str] = []
+    seen: set[str] = set()
+    for f in facts.values():
+        if f.get("status") not in ("confirmed", "disputed"):
+            continue
+        for eid in _evidence_ids(f):
+            e = evidence.get(eid)
+            if not e or eid in seen or e.get("type") != "text_quote" or not e.get("verbatim"):
+                continue
+            seen.add(eid)
+            span = e.get("span") if isinstance(e.get("span"), dict) else None
+            if span is not None and "line" not in span:
+                continue                      # 영상 t 만 있는 span 은 행 대조 대상이 아니다
+            if span is not None:
+                ln, en = span.get("line"), span.get("end", span.get("line"))
+                if not (type(ln) is int and type(en) is int and 1 <= ln <= en and isinstance(span.get("clean"), str)):
+                    failures.append(f"[span형식] {eid}: span 은 clean(str)·1<=line<=end(int) 여야 함: {span!r}")
+                    continue
+            ref = (span or {}).get("clean") or str(e.get("sha256") or "")[:12] or Path(str(e.get("local") or "")).name.split("_raw", 1)[0]
+            try:
+                exists = bool(ref) and span_tools.clean_path(wp.root, ref).exists()
+            except ValueError:                # 경로 이탈·형식 오류 ref 는 열지 않는다
+                if span is not None:
+                    failures.append(f"[span형식] {eid}: span.clean 은 <sha12>[_clean.txt] 여야 함: {ref!r}")
+                    continue
+                exists = False
+            if not exists:
+                warnings.append(f"[span없음] {eid}: clean 원문 없음({ref or '출처 연결 불가'}) — 글자 대조 불가")
+                continue
+            lines = span_tools.load_clean(wp.root, ref)
+            if span is not None:
+                if not span_tools.check_span(lines, e["verbatim"], span["line"], span.get("end", span["line"])):
+                    failures.append(f"[span불일치] {eid}: verbatim 이 clean {span['line']}~{span.get('end')}행(±2)에 글자 그대로 없음")
+            elif span_tools.find_span(lines, e["verbatim"]) is None:
+                warnings.append(f"[원문미포함] {eid}: verbatim 이 clean 원문 어디에도 글자 그대로 없음(측정 단계 WARN)")
+    return failures, warnings
+
+
 _IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 _IMG_HTML = re.compile(r'<img\b[^>]*\bsrc\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
 _IMG_REF = re.compile(r"!\[([^\]]*)\](?:\[([^\]]*)\])?(?!\()")
@@ -1070,6 +1114,52 @@ def check_figures(body: str, evidence: dict, wp: WorkPaths,
     return failures, warnings
 
 
+def check_chart_sidecars(work_dir, report_text: str, facts: dict) -> tuple[list[str], list[str]]:
+    """assets/*.svg 도판의 짝 .vl.json(make_chart 사이드카)을 사실대장·캡션과 대조한다.
+
+    ① mdr.fact_ids 전부 confirmed ② values[].value_raw·unit 이 대장 value.raw·value.unit 과 일치
+    ③ 캡션 F태그 집합 ⊇ fact_ids. 사이드카 없는 svg 는 WARN.
+    """
+    root = work_dir.root if isinstance(work_dir, WorkPaths) else Path(work_dir)
+    failures: list[str] = []
+    warnings: list[str] = []
+    seen: set[str] = set()
+    for _start, end, path in _figure_refs(report_text):
+        if path in seen or not _scoped_ref(path, "assets") or not path.lower().split("?")[0].endswith(".svg"):
+            continue
+        seen.add(path)
+        kind, svg = _image_ref_local_path(path, root)
+        if kind != "ok":
+            continue  # 경로 문제는 check_figures 가 판정한다
+        side = svg.with_suffix(".vl.json")
+        if not side.is_file():
+            warnings.append(f"[도판사이드카없음] {path} — 짝 .vl.json 이 없어 값 대조를 건너뜀")
+            continue
+        try:
+            meta = json.loads(side.read_text(encoding="utf-8")).get("mdr") or {}
+        except (OSError, ValueError):
+            failures.append(f"[도판값불일치] {path} 사이드카를 읽을 수 없음")
+            continue
+        head = svg.read_text(encoding="utf-8", errors="replace").splitlines()[0:1]
+        head = head[0] if head else ""
+        m = re.match(r"<!--\s*FACTS:\s*([^>]*?)\s*-->", head)
+        if not m or set(i.strip() for i in m.group(1).split(",")) != set(meta.get("fact_ids", [])):
+            failures.append(f"[도판값불일치] {path} SVG FACTS 주석과 사이드카 fact_ids 불일치(낡은 SVG?)")
+        for fid in meta.get("fact_ids", []):
+            if (facts.get(fid) or {}).get("status") != "confirmed":
+                failures.append(f"[도판값불일치] {path} {fid} 가 confirmed 아님")
+        for v in meta.get("values", []):
+            led = (facts.get(v.get("fact_id")) or {}).get("value") or {}
+            if str(led.get("raw", "")) != str(v.get("value_raw")) or str(led.get("unit", "")) != str(v.get("unit")):
+                failures.append(f"[도판값불일치] {path} {v.get('fact_id')} 도판 {v.get('value_raw')} {v.get('unit')} "
+                                f"≠ 대장 {led.get('raw')} {led.get('unit')}")
+        caption = _caption_within_two_lines(report_text, end) or ""
+        missing = set(meta.get("fact_ids", [])) - set(re.findall(r"F\d{3,}", caption))
+        if missing:
+            failures.append(f"[도판값불일치] {path} 캡션 F태그에 없는 도판 사실: {', '.join(sorted(missing))}")
+    return failures, warnings
+
+
 # --- 목차(G9) ----------------------------------------------------------------
 # research-plan.md "승인 목차 예시" 서식 — 부 번호·제목은 '# 부 N. 제목', 3부 하위 축 챕터는
 # '## 축: 이름' 으로 고정 표기(문서 자체가 정본, 서식 임의 변경 금지 — 바뀌면 파서도 같이 깨져야
@@ -1249,9 +1339,16 @@ def verify(report_md: Path | str, work: WorkPaths | Path | str, conversion: bool
     failures += ec_fail
     warnings += ec_warn
 
+    sp_fail, sp_warn = check_spans(facts, evidence, wp)
+    failures += sp_fail
+    warnings += sp_warn
+
     fig_fail, fig_warn = check_figures(body, evidence, wp, report_text=md)
     failures += fig_fail
     warnings += fig_warn
+    cs_fail, cs_warn = check_chart_sidecars(wp, md, facts)
+    failures += cs_fail
+    warnings += cs_warn
 
     toc_fail, toc_warn = check_toc(md, wp, plan)
     failures += toc_fail

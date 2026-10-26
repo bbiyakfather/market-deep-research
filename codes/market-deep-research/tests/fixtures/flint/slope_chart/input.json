@@ -1,0 +1,38 @@
+{
+  "title": "Two periods × single series (no color)",
+  "description": "A single line connecting two periods — degenerate slopegraph",
+  "chartType": "Slope Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Stage": "Start",
+          "Conversion": 42
+        },
+        {
+          "Stage": "End",
+          "Conversion": 67
+        }
+      ]
+    },
+    "semantic_types": {
+      "Stage": "Category",
+      "Conversion": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Slope Chart",
+      "encodings": {
+        "x": {
+          "field": "Stage"
+        },
+        "y": {
+          "field": "Conversion"
+        }
+      },
+      "baseSize": {
+        "width": 560,
+        "height": 360
+      }
+    }
+  }
+}

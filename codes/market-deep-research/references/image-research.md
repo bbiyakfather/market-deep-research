@@ -40,12 +40,18 @@
    `--sites` 로 기관 도메인을 직격하고(SearXNG 자체 호스트를 `searx-instances.json` 에 등록했을 때만)(미지정 시 `assets/curated-sources.json` 의
    `curated_domains` 사용), 결과에 PDF 링크가 섞이면 버리지 말고 받아서 위 1번 `pdf` 로
    크롭한다. 기관 인포그래픽의 최대 저장소가 보고서 PDF 이기 때문이다.
-4. **자작 차트** — 그 데이터를 보여주는 원문 도판(0~3)이 없으면 `scripts/make_chart.py`(막대·선) 또는 matplotlib
+4. **자작 차트** — 그 데이터를 보여주는 원문 도판(0~3)이 없으면 `scripts/make_chart.py`(기본 `--engine flint`, 17종) 또는 matplotlib
    (유형·스타일은 `visual-first.md`)로 만든다. 수치 데이터의 기본 표현이므로 표로 도피하지 않는다.
+   절차 4단계: ① `visual-first.md` §1·§1a 로 유형(첫 위치 인자) 고르기 ② 쓸 confirmed fact 의 F-ID 모으기(범주·시리즈는 `context.axis`/`series`)
+   ③ 아래 명령 실행 → `assets/<slug>.svg` + `<slug>.vl.json`(스펙 사이드카) ④ Read 로 그림을 열어 보고 캡션에 도판 fact 전부 `(Fxxx)`.
    ```
-   python make_chart.py bar  <work_dir> --facts F001,F002 --title "제목" [--out assets/<slug>.svg]
-   python make_chart.py line <work_dir> --facts F010,F011,F012 --title "제목" [--out ...]
+   python make_chart.py hbar <work_dir> --facts F001,F002,F003 --title "발견 한 문장" [--out assets/<slug>.svg] [--top N]
+   python make_chart.py line <work_dir> --facts F010,F011,F012 --title "제목"   # --engine native 는 막대·선 자체 SVG 폴백
    ```
+   SVG 렌더에는 `pip install vl-convert-python` 이 필요하다(없으면 사이드카만 쓰고 종료코드 2).
+   검증 체크리스트(7): ① 유형명이 `visual-first.md` §1a 지원 목록에 있다 ② F-ID 가 전부 confirmed 다 ③ 단위가 명시됐다
+   ④ 유형별 필수 채널(series 등)이 채워졌다 ⑤ 옵션(`--top`)이 범위 안이다 ⑥ 데이터·스타일을 손으로 고치지 않았다
+   ⑦ 합계·소계 행이 구성 행과 한 축에 섞이지 않았다.
    값은 CLI 로 직접 받지 않고 `facts.jsonl` 의 `confirmed` fact 에서만 읽는다. 임의 숫자를 그려
    출처·F태그 없는 차트가 본문에 들어가는 일을 구조적으로 막기 위한 설계다. 유료 스톡 무단
    사용은 어떤 경우에도 금지.
@@ -73,3 +79,5 @@
 - openverse·commons 결과의 `license` 필드를 인덱스에 그대로 기록, BY·SA 조건 준수.
 - 다운로드는 SSRF 경계 + 매직바이트(래스터만)·크기 검증 통과분만 저장(`get`).
 - HTTP 429(rate limit)·403 은 사유 그대로 기록하고 다음 후보로 — 재시도 남발 금지.
+
+부분 인용: microsoft/flint-chart (MIT License, Copyright (c) Microsoft Corporation)

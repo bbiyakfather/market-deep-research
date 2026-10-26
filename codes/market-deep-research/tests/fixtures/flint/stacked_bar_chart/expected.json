@@ -1,0 +1,208 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Category",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Value",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "ColorVal",
+      "type": "ordinal",
+      "sort": "ascending",
+      "scale": {
+        "scheme": "purples"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 400,
+      "continuousHeight": 285
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10
+    },
+    "axisY": {
+      "labelFontSize": 10
+    },
+    "facet": {
+      "spacing": 29
+    },
+    "mark": {
+      "tooltip": true
+    }
+  },
+  "width": {
+    "step": 27
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 628,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Laptop",
+        "Value": 621,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Laptop",
+        "Value": 178,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Laptop",
+        "Value": 771,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Phone",
+        "Value": 55,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Phone",
+        "Value": 607,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Phone",
+        "Value": 379,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Phone",
+        "Value": 187,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Tablet",
+        "Value": 571,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Tablet",
+        "Value": 860,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Tablet",
+        "Value": 656,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Tablet",
+        "Value": 949,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Desktop",
+        "Value": 787,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Desktop",
+        "Value": 363,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Desktop",
+        "Value": 255,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Desktop",
+        "Value": 789,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Monitor",
+        "Value": 724,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Monitor",
+        "Value": 162,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Monitor",
+        "Value": 951,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Monitor",
+        "Value": 148,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 42,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 319,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 96,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 435,
+        "ColorVal": 4
+      }
+    ]
+  },
+  "_width": 400,
+  "_height": 285,
+  "_options": [
+    {
+      "key": "stackMode",
+      "label": "Stack",
+      "type": "discrete",
+      "options": [
+        {
+          "label": "Stacked (default)"
+        },
+        {
+          "value": "normalize",
+          "label": "Normalize (100%)"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "layered",
+          "label": "Layered (overlap)"
+        }
+      ],
+      "applicable": true
+    },
+    {
+      "key": "independentYAxis",
+      "label": "Independent Y",
+      "type": "binary",
+      "applicable": false,
+      "value": false
+    }
+  ]
+}

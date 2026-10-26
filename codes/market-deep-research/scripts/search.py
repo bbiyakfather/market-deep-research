@@ -8,11 +8,14 @@
 
 CLI:
   python search.py demo
-  python search.py "쿼리" --n 8 --type web|news|academic|filing
+  python search.py "쿼리" --n 8 --type web|news|academic|filing [--axis 축이름] [--work <작업폴더>]
+
+검색 호출마다 <작업폴더>/audit/search-log.jsonl(기본 MDR_WORK_DIR, 없으면 현재 폴더) 에 1줄 기록(빈 결과·실패 포함) — 커버리지 선언의 집계 근거.
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import time
@@ -31,6 +34,32 @@ _SEARX = json.loads((ASSETS / "searx-instances.json").read_text(encoding="utf-8"
 
 def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+_SECRET = re.compile(r"((?:api[_-]?)?key|secret|password|auth|token|mailto|email)=[^&\s]+|Bearer\s+\S+|[\w.+-]+@[\w-]+\.[\w.]+", re.I)
+
+
+def _mask(text: str) -> str:
+    """로그에 키·이메일이 새지 않게 가린다."""
+    return _SECRET.sub(lambda m: (m.group(1) + "=***") if m.group(1) else "***", text)
+
+
+def log_search(query: str, type: str, n: int, results: list[dict] | None, axis: str | None = None,
+               error: str | None = None, audit: Path | None = None) -> None:
+    """audit/search-log.jsonl 에 검색 1회를 1줄 append. 기록 실패가 검색을 막지 않는다."""
+    audit = audit or Path("audit")
+    n_ret = len(results or [])
+    row = {"ts": _now(), "axis": axis, "tier": (results[0]["source"] if n_ret else None), "backend": type,
+           "query": _mask(query), "filters": {"type": type}, "n_requested": n, "n_returned": n_ret,
+           "n_kept": len({r["url"] for r in results or []})}
+    if error:
+        row["error"] = _mask(error)
+    try:
+        audit.mkdir(parents=True, exist_ok=True)
+        with (audit / "search-log.jsonl").open("a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError as e:
+        print(f"  ⚠ search-log 기록 실패: {e}", file=sys.stderr)
 
 
 def _get(url: str, timeout: int = 12) -> tuple[int, str]:
@@ -166,7 +195,20 @@ def _sec_edgar(query: str, n: int) -> list[dict]:
 
 
 # --- 디스패치 ----------------------------------------------------------------
-def search(query: str, n: int = 10, type: str = "web") -> list[dict]:
+def search(query: str, n: int = 10, type: str = "web", axis: str | None = None,
+           work_dir: str | Path | None = None) -> list[dict]:
+    """검색 + <work_dir>/audit/search-log.jsonl 기록. work_dir 기본값은 MDR_WORK_DIR, 없으면 현재 폴더."""
+    audit = Path(work_dir or os.environ.get("MDR_WORK_DIR") or ".") / "audit"
+    try:
+        res = _search(query, n, type)
+    except Exception as e:
+        log_search(query, type, n, None, axis, error=str(e), audit=audit)
+        raise
+    log_search(query, type, n, res, axis, audit=audit)
+    return res
+
+
+def _search(query: str, n: int, type: str) -> list[dict]:
     backends = _CURATED["type_backends"]
     if type not in backends:
         raise ValueError(f"미지원 --type: {type!r} (지원: {list(backends)})")
@@ -229,5 +271,8 @@ if __name__ == "__main__":
         q = args[0]
         n = int(args[args.index("--n") + 1]) if "--n" in args else 10
         t = args[args.index("--type") + 1] if "--type" in args else "web"
-        for i, r in enumerate(search(q, n, t), 1):
+        axis = args[args.index("--axis") + 1] if "--axis" in args else None
+        work = args[args.index("--work") + 1] if "--work" in args else None
+        found = search(q, n, t, axis, work)
+        for i, r in enumerate(found, 1):
             print(f"{i:2}. [{r['source']}] {r['title'][:70]}\n    {r['url']}")

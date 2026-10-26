@@ -1,7 +1,7 @@
 # source-ladder — 검색 계층 · fetch 폴백 · Phase0 API · 4계층 검증 · WAF 정찰 · 위임
 
 ## 검색 (`scripts/search.py`)
-`python search.py "쿼리" --n 10 --type web|news|academic|filing`
+`python search.py "쿼리" --n 10 --type web|news|academic|filing --axis <축이름> --work <work_dir>`
 - 계층: **ddgs 다중 백엔드**(bing·brave·duckduckgo·google·mojeek·startpage·yahoo·yandex 자동 선택; `--type news` 는
   ddgs `news()`) → DuckDuckGo HTML 폴백 → SearXNG(`assets/searx-instances.json` 에 **자체 호스트 URL 을 등록했을 때만**,
   공개 인스턴스는 2026-10-13 전멸) → 전문 API(arXiv=academic, 질의에 공백이 있으면 `all:"구문"` 먼저·0건이면 단어별 AND(`all:w1 AND all:w2`);
@@ -9,7 +9,18 @@
   `--type` 은 `curated-sources.json` 에 있는 것만, 미지원 명시 실패. ddgs 미설치는 `pip install ddgs`.
 - ddgs `auto` 는 질의를 bing·google·yandex·wikipedia 등 여러 회사에 동시에 보낸다 — 대외비 질의는 사용자 판단(필요하면 `DDGS().text(backend="duckduckgo")` 로 제한).
 - 실패 계층은 경고 후 건너뜀(빈결과). "검색 완전성 미보장" — 내장 WebSearch 병행.
+- **전건 기록**: 검색식·검색일·건수를 `<work_dir>/audit/search-log.jsonl` 에 전건 기록한다(빈 검색 포함, `--axis` 로 축 표기, `--work` 생략 시 `MDR_WORK_DIR`·현재 폴더; `search()` import 호출도 기록).
+  2부 커버리지 선언은 이 로그를 집계해 쓴다. Ranked web results cannot establish exhaustive coverage — 상위 결과만으로 "빠짐없음" 을 주장하지 않는다.
 - **검색 연산자**: `site:` `filetype:pdf` `intitle:` `"정확구문"` `-제외` `OR` `after:/before:`. 영문 우선.
+
+## 학술 출처 취급
+1. 레코드 ≠ 보고서 ≠ 연구: 같은 연구의 프리프린트·학술지판·보도자료·학회초록은 독립 관찰 **1건**이다.
+2. DOI 가 실존한다고 근거가 되는 것은 아니다. 수치는 원문을 다시 열어 확인한다.
+3. 집계처(OpenAlex·Semantic Scholar·특허 DB)와 원출처는 독립 교차검증이 아니다.
+4. 인용수·h-index 는 읽는 순서용이지 포함 기준이 아니다.
+5. 프리프린트는 `preprint` 로 표기하고 학술지판 게재 여부를 함께 기록한다.
+6. 인용 전 Crossref `update-type:retraction` 을 1회 확인한다. 없으면 "확인한 출처 내 공지 없음" 으로 적는다.
+참고: K-Dense-AI/scientific-agent-skills (MIT) paper-lookup·literature-review 의 규약을 번안
 
 ## 검색만 모드 (`mdr-search`)
 사실대장·재검증·게이트·캡처·PDF 없이 출처목록(`sources.md`)과 `_sources/` 원문 스냅샷만 만든다.

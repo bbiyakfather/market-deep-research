@@ -1,0 +1,1 @@
+bump_chart__04__ordinal_rank_single_series_no_color

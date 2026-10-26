@@ -1,0 +1,5 @@
+{"ts": "2026-10-26T10:12:30", "axis": null, "tier": "ddg", "backend": "web", "query": "x", "filters": {"type": "web"}, "n_requested": 5, "n_returned": 5, "n_kept": 5}
+{"ts": "2026-10-26T10:15:03", "axis": null, "tier": "ddg", "backend": "web", "query": "x", "filters": {"type": "web"}, "n_requested": 5, "n_returned": 5, "n_kept": 5}
+{"ts": "2026-10-26T10:15:45", "axis": null, "tier": "ddg", "backend": "web", "query": "x", "filters": {"type": "web"}, "n_requested": 5, "n_returned": 5, "n_kept": 5}
+{"ts": "2026-10-26T10:16:05", "axis": null, "tier": "ddg", "backend": "web", "query": "x", "filters": {"type": "web"}, "n_requested": 5, "n_returned": 5, "n_kept": 5}
+{"ts": "2026-10-26T10:18:34", "axis": null, "tier": "ddg", "backend": "web", "query": "x", "filters": {"type": "web"}, "n_requested": 5, "n_returned": 5, "n_kept": 5}

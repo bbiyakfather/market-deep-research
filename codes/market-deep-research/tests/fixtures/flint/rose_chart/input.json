@@ -1,0 +1,68 @@
+{
+  "title": "Rose with gap (padAngle)",
+  "description": "Departments with angle padding between slices",
+  "chartType": "Rose Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Department": "Engineering",
+          "Score": 70
+        },
+        {
+          "Department": "Sales",
+          "Score": 71
+        },
+        {
+          "Department": "Marketing",
+          "Score": 76
+        },
+        {
+          "Department": "HR",
+          "Score": 98
+        },
+        {
+          "Department": "Finance",
+          "Score": 56
+        },
+        {
+          "Department": "Legal",
+          "Score": 80
+        },
+        {
+          "Department": "Operations",
+          "Score": 61
+        },
+        {
+          "Department": "Support",
+          "Score": 79
+        }
+      ]
+    },
+    "semantic_types": {
+      "Department": "Department",
+      "Score": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Rose Chart",
+      "encodings": {
+        "x": {
+          "field": "Department"
+        },
+        "y": {
+          "field": "Score"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      },
+      "chartProperties": {
+        "padAngle": 0.03
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

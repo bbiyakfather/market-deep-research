@@ -11,6 +11,8 @@ fetch.py 가 깨끗한 본문을 확보하면, 서브에이전트(LLM=extractor)
 | `api_response` | JSON/API | {endpoint,param,json_hash} | 선택 |
 | `negative_search` | "제재 0건" 등 부정 사실 + **반박검색** | {query, 조회범위} | 선택(조회 결과 요지) |
 | `calculation` | 파생수치(시장규모=수량×ASP·CAGR·환산) | {inputs, formula} | 선택(계산식) |
+| (공통) `span` | clean 원문 행 좌표(선택) | `span:{clean,line,end[,t]}` — locator 는 원문서 좌표, span 은 `_sources/<sha12>_clean.txt` 행(`split("
+")` 기준). `python scripts/span_tools.py find <work_dir> <sha12> "<verbatim>"` 로 확정 | `…` 줄임은 조각 순서 대조 |
 
 ## PDF 파싱 (fitz)
 - 텍스트: `page.get_text()`. 표: `page.find_tables()` → cell 좌표로 row/col locator.
@@ -29,6 +31,11 @@ v1 코어(ddgs/DDG/SearXNG/arXiv/SEC) 외.
        "https://www.reddit.com/r/{sub}/hot.json?limit=10"
   yt-dlp --dump-json "URL"          # 메타 / --write-auto-sub 로 자막
   ```
+
+## OpenAlex 서지 레시피 (`fetch.py` 로 JSON 수신, 새 어댑터 없음)
+- 연도별 건수: `https://api.openalex.org/works?filter=title_and_abstract.search:"검색식"&group_by=publication_year`. 기관 상위 N·국가 비중·토픽도 `group_by=authorships.institutions.id|authorships.countries|primary_topic.id` 로 같은 방식.
+- 말할 수 있는 것은 **건수·비중·CAGR** 뿐이다. 검색식·조회일·건수를 search-log 에 적고, 색인 범위가 해마다 넓어졌을 수 있으니 "색인 기준 증가" 단서를 1줄 붙인다.
+- 예산제: 키 없이 일 $0.10, 무료 키 일 $1, 단건 조회는 무료 (2026-10-26 저장소 문서 기재값 — 약관 재확인).
 
 ## 무료 공공 MCP Phase0 (있으면 1차소스)
 - `opendart-*`(DART 공시·재무), `kosis-*`(국가통계), `korean-patent-search`(KIPRIS),

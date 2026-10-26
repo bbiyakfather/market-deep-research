@@ -277,6 +277,11 @@ def validate_evidence(ev: dict, schema: dict | None = None, work: WorkPaths | No
         _check_enum(ev["source_role"], "source_role", enums, "evidence.source_role")
     if ev["type"] == "text_quote" and not ev.get("verbatim"):
         raise ValidationError(f"{eid}: text_quote 는 verbatim 필수")
+    sp = ev.get("span")   # 신규 선택 필드라 레거시 완화 없이 항상 형태 검증(1<=line<=end)
+    if isinstance(sp, dict) and "line" in sp:
+        line, end = sp["line"], sp.get("end", sp["line"])
+        if not (type(line) is int and type(end) is int and 1 <= line <= end):
+            raise ValidationError(f"{eid}: span 은 1 <= line <= end 정수여야 함: {line!r}..{end!r}")
     if ev.get("capture"):
         violation = check_capture_path(ev["capture"], work)
         if violation:

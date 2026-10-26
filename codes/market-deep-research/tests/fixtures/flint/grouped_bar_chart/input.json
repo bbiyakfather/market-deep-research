@@ -1,0 +1,65 @@
+{
+  "title": "N(8)×Q (8 pts)",
+  "description": "No group field — fallback to simple bar",
+  "chartType": "Grouped Bar Chart",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Category": "Laptop",
+          "Value": 297
+        },
+        {
+          "Category": "Phone",
+          "Value": 378
+        },
+        {
+          "Category": "Tablet",
+          "Value": 48
+        },
+        {
+          "Category": "Desktop",
+          "Value": 911
+        },
+        {
+          "Category": "Monitor",
+          "Value": 351
+        },
+        {
+          "Category": "Keyboard",
+          "Value": 316
+        },
+        {
+          "Category": "Mouse",
+          "Value": 34
+        },
+        {
+          "Category": "Headphones",
+          "Value": 62
+        }
+      ]
+    },
+    "semantic_types": {
+      "Category": "Category",
+      "Value": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Grouped Bar Chart",
+      "encodings": {
+        "x": {
+          "field": "Category"
+        },
+        "y": {
+          "field": "Value"
+        }
+      },
+      "baseSize": {
+        "width": 400,
+        "height": 300
+      }
+    },
+    "options": {
+      "addTooltips": true
+    }
+  }
+}

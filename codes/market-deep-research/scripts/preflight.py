@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 HARD_PY = ["fitz"]
-SOFT_PY = ["curl_cffi", "trafilatura", "openpyxl", "yt_dlp", "ddgs"]
+SOFT_PY = ["curl_cffi", "trafilatura", "openpyxl", "yt_dlp", "ddgs", "vl_convert"]  # vl_convert: make_chart SVG 렌더(없으면 사이드카만)
 
 _CHROME_CANDIDATES = [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
@@ -84,6 +84,8 @@ def _fmt(report: dict) -> str:
         if soft_miss:
             lines.append(f"  ⚠ SOFT 누락(해당 계층 건너뜀): {', '.join(soft_miss)}")
             lines.append("    설치: pip install curl_cffi trafilatura  (+선택 yt-dlp)")
+            if "vl_convert" in soft_miss:
+                lines.append("    차트 SVG 렌더: pip install vl-convert-python")
     return "\n".join(lines)
 
 

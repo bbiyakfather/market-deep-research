@@ -43,11 +43,11 @@ description: >-
 [1]  병렬 조사 ─ 조사원 에이전트 팬아웃(sonnet·background·에이전트별 임시폴더)
 [E]  확장→수렴 ─ EXPAND 리드 dedup → 후속워커 → 수렴까지 반복        【v3-A】
 [G1] join 게이트 ─ raw 보존 · 스키마검증 등재 · 무출처 즉시 discarded
-[2]  팀리드 재검증 ─ ★전건 원문 재열람 → verify_event(by=lead)
+[2]  팀리드 재검증 ─ ★전건 원문 재열람 → verify_event(by=lead) + span_tools.py 로 verbatim 행 확정(span)
 [Bx] 반박·claim-graph ─ high-risk 주장: 독립그룹·반박검색·기본소스·시간증거  【v3-B】
 [G2] 증빙 게이트 ─ confirmed 전건 source_capture(핵심수치 필수)
 [3]  보고서 작성 ─ 고객 report.md(11부) + 내부 audit 번들 동시
-[G3] verify_facts + manifest ─ 실패 0 · 무태그·단위 차단(세그먼트 결박) · 해시 고정
+[G3] verify_facts + manifest ─ 실패 0 · 무태그·단위 차단(세그먼트 결박) · 해시 고정 · [span불일치]·[도판값불일치] 차단
 [G5c]실행코드 검증 ─ 계산·상충 주장 스크립트 실증(CONFIRMED/REFUTED)   【v3-G5】
 [4]  render_pdf ─ GitHub 스타일 오프라인 PDF
 [4b] 재봉인 ─ extend-only(기존 항목 불변 확인 실패 시 거부=G3 복귀, 렌더 산출물만 추가, G3 기준선 해시 대조)
@@ -56,13 +56,13 @@ description: >-
 ```
 
 ### [G0] preflight + 요구사항 확정
-- 목적: `python scripts/preflight.py` 의존성 점검 → §0 독자·목표(`reader-goal.md`) 최선행 확정 → 조사유형·범위·**축별 충분조건**·승인 목차를 `audit/research-plan.md` 에 기록, `audit/intent-diff.md` 개시 【v3-D】.
+- 목적: `python scripts/preflight.py` 의존성 점검 → §0 독자·목표(`reader-goal.md`) 최선행 확정 → 조사유형·범위·**축별 충분조건**(기술동향 기본값 표·용어 확장표는 `research-plan.md`)·승인 목차를 `audit/research-plan.md` 에 기록, `audit/intent-diff.md` 개시 【v3-D】.
 - 절대 규칙: **승인 전 팬아웃 금지**. §0 은 승인 후 동결(교체는 intent-diff `현행 메시지:` 줄). 기관·기업이면 `entity-identity.md` 동일성 게이트 선통과, 경쟁이 핵심이면 `competitive-positioning.md`, BM 명제(과금·수요기업·이전 조건)가 핵심이거나 독자 유형이 A/B/C 이면 `business-model.md`(§0·§1·§5 분야 행 + 해당 독자 §, G3 직전 §6).
 - 영수증: `gates.py record G0 <work_dir> --evidence "..." --refs <고정 산출물만>` → `check G0`. → `verification-gates.md` §G0 · `research-plan.md`
 
 ### [1] 병렬 조사 → [E] 확장·수렴
 - 조사 분할: **기관·기업**=대상 2~3개/에이전트(entity-identity 선고정, 대상별 축=일반현황/사업현황/재무실적 전건 조사) · **기술동향**=축분할(기술요소·플레이어·시장·정책 + 교차검증1) · **산업동향**=밸류체인 + 통계(KOSIS/DART/KIPRIS 기존 스킬 조합) + 해외 · **기술사업화 실사**=축분할(기술성·권리성·시장성·사업성, 5부 공급·수요 이중매핑은 별도).
-- 워커는 `_research/<agent>/` 에만 쓰고 대장은 기록하지 않는다(읽기전용). 【v3-F】 스폰 첫 줄은 `0. 독자·목표`. 반환 마커 6종·스폰 계약은 `agent-briefs.md`.
+- 워커는 `_research/<agent>/` 에만 쓰고 대장은 기록하지 않는다(읽기전용). 검색은 `search.py --axis <축>` 으로 호출해 `audit/search-log.jsonl` 에 전건 기록(2부 커버리지 선언의 근거). 【v3-F】 스폰 첫 줄은 `0. 독자·목표`. 반환 마커 6종·스폰 계약은 `agent-briefs.md`.
 - **확장수렴 루프**: 팀리드가 EXPAND 리드를 `AXIS` 필드 기준으로 `audit/expansion-log.md` 에 축별 집계(dedup, 미확인 리드 포함) → 새 리드마다 후속 워커 즉시 스폰. **루프 수렴조건**(G0 에서 사용자와 합의하는 **축별 충분조건**과는 별개 개념 — 전자는 이 루프 자체의 정지조건, 후자는 워커에게 전달되는 조사 깊이 기준): **축별 잔여 리드 각 0**(한 축이라도 잔여 리드가 남으면 미수렴), 또는 연속 2웨이브 무신규, 또는 깊이캡(기본 3회/12명, `research-plan.md` 확정값이 있으면 그 값 우선) 도달(도달 시 사용자에 연장 문의). 드롭 리드는 로깅.
 
 ### [G1] join + 수집 게이트
@@ -80,7 +80,7 @@ description: >-
 
 ### [3] 보고서 작성
 - `report.md`(11부·`report-format.md`)와 `audit/` 동시 작성. 납품 원고는 분리(`mdr-hwpx/references/deliverable-rules.md`, 관점·말투 `reader-goal.md`)하고 재작성 뒤 **의미 대조 검수**(단정 강화·주체 바뀜·방향 반전). 요약·각 장·10부 권고가 '독자의 결정'에 답하는지 점검(`reader-goal.md` 운용 규칙 3), 금지 서술 grep 0건.
-- 도판 `image-research.md` · 수치는 그림 기본, 표로 남기면 형식 matrix/A/B 와 캡션 태그 `visual-first.md` §2b(`visual_audit.py` 미결 0건 = G4 조건).
+- 도판 `image-research.md`(자작 차트는 `make_chart.py --engine flint` — 내장 flint-py 17종, 사이드카 `.vl.json` 이 G3 값 대조 대상) · 수치는 그림 기본, 표로 남기면 형식 matrix/A/B 와 캡션 태그 `visual-first.md` §2b(`visual_audit.py` 미결 0건 = G4 조건).
 
 ### [G3] verify_facts + manifest (실패 0)
 - `verify_calculations.py`·`verify_claims.py` 는 G3 가 자동 호출. 근거의 인용·출처·캡처를 바꾸면 그 문장을 다시 검토한다(`claim-review.md`).

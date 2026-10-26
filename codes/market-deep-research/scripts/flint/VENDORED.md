@@ -1,0 +1,48 @@
+출처: https://github.com/microsoft/flint-chart (packages/flint-py/flint, MIT License)
+커밋: a794557384adcc3293a77043f6b9aff1c33d152c / 복사일: 2026-10-26
+수정 금지 — 변경은 scripts/make_chart.py 래퍼에서만 한다(업스트림 추적용).
+
+## 파일 sha256 (복사 시점 원본과 바이트 동일 확인, 2026-10-26; tests/test_flint_vendored.py 가 대조)
+6be68aa4af76e3090fd5960602786d6453c8a28ae1151d8c84ea7d45e0fd02bf *./__init__.py
+d0582e1cce97415a4d056556a0378e83a928b8a582ef4ed02a2c24b564efaf2b *./core/__init__.py
+e84004c57928d4d63010e497d99f43bd6648d4c635fab44aa93093be3400f02e *./core/color_decisions.py
+628d4c40cce0bbc3b0a7869119c2f2b893db529a98bbcba81e8fd0d89cb41866 *./core/compute_layout.py
+f32ac92087f156dec98a8e42dee9e34c0b838e30d95c36cadcbea1864ce12fe3 *./core/decisions.py
+b2ce7c900af7f72392a24e4481101b6c683aa1f0bc260d50450546aa6453c8dc *./core/encoding_actions.py
+c2f66fcc24655c508727b261ac83a86012cfcf204daacd5fb41b8645f8a0fdaf *./core/encoding_overrides.py
+dc6457b6dec597bbfe6720ae37c9ac0bbee7836476d579e93ac7666e68b63129 *./core/field_semantics.py
+4da5240687ff3debe09f186341797999f8173a3d609483e7e3d5d1eee6e98420 *./core/filter_overflow.py
+44d4dee22425b0933ec71e63ac0ba49e55b642e79fc84e1b017524f6a6d05cff *./core/js_date.py
+80243416c81a504a08599601f6a292f97ee694bfe2134d2b080295f042289d23 *./core/resolve_semantics.py
+2347c7cc7c24e202b2f801993796f11a0af8806c0fb04ddbd0e824fe12218cda *./core/semantic_types.py
+1a2c74b08783b144cec2c841b4a19340a523e684ccb1aad5a1d28cdbc102c3d4 *./core/type_registry.py
+0ca8f514c3f9c4981e8b3d2c6300dec14434f73f01a57199e01cc6e24ec35381 *./core/types.py
+499a8d552a8990f6d110db370448fbc5d64b5d0175243235042e4c6424d78da0 *./vegalite/__init__.py
+b7b79f3e30721090e72bef37a5a2c10e57a6c2bd0eb6ab623e14ad4fe76f2636 *./vegalite/assemble.py
+90237b640e69a85307985072f58e47d9295070c76c439a9983d704a4a02ec372 *./vegalite/instantiate_spec.py
+df9e581edf94f3115ef588ed50fbf29edb6ccdb03e492710227fbb1dc3dafd75 *./vegalite/templates/__init__.py
+84a8831154a4d366cbae7a554c3aa704eb1c798f55db8ed3c6f3df1ed8f29222 *./vegalite/templates/area.py
+712fd5644898ef16b1383d8eaf9f573d89056096897c26f898ac46f885b37cc5 *./vegalite/templates/bar.py
+ccf42aa7507e002a60f1a40935934cbe15c058886f6d26e660f461098129ca90 *./vegalite/templates/bar_table.py
+d65224c7b510f2b3dd931fb9d0d5bd654bdbe83a9d4f86d09168ba3fb5dc8998 *./vegalite/templates/bullet.py
+92ee1c770dac96a0a6f358132625a1f14bdb08f5c01a956fe43d68ecac00c911 *./vegalite/templates/bump.py
+daa11159d97fea923a6504b3e07b2201102cae57d25ca7e14a2785926ddb8823 *./vegalite/templates/candlestick.py
+6965eb91751174f982e7ea5b90fefe12b69e862f4518ee2b8f2e772bad8038c4 *./vegalite/templates/connected_scatter.py
+868c920a48d3cd0e1e691bbe258a1dc882746312b35aab2f0651a647423fbe7e *./vegalite/templates/density.py
+149b02cb3dbbf354f43d34381abd3498f7755ca1b5c817bbe31463f22476c729 *./vegalite/templates/ecdf.py
+e592bd2750ae30a23c86f62d9be6e1b53363da50c41a12b97cd224b5cfd8862b *./vegalite/templates/gantt.py
+b98d83bedaa55d02f575b961f7e1ebc60cc5d90d79154e8a2cf29292126ce458 *./vegalite/templates/geo_lookup.py
+0e43517f36e8f4afbd8e98944cd9f0a3bb243a5f6d1d1b79d6e75d5ef7987e18 *./vegalite/templates/jitter.py
+64a742f603e1df9612b12171da3c300d79bb496b3648cf07251a19c0dcbdef8c *./vegalite/templates/kpi_card.py
+efa0d6889043028bdceead3ecf6c4fdc0ae83f9d7bf3490d2e51d5a06a46ce59 *./vegalite/templates/line.py
+78497459e38b9549e6286469a588132722503e1ae7f57296ae4073ce851c9509 *./vegalite/templates/lollipop.py
+511899f96e646187b13ff6cf49b4f4931464360a9c97fb9b75201b7226baa831 *./vegalite/templates/map.py
+88d8a3cd5dbd9d38bde1726ee0315baa443c31ff19fb76f8ccc681765a57d993 *./vegalite/templates/pie.py
+7ffda5437740d0bf0a466b8743cebb6218a35111b8a9bf15e57b276d064dade7 *./vegalite/templates/radar.py
+019c495abb80d17165c041591b6219f9c14b8e1192c87cb85963896ea0d21e3c *./vegalite/templates/range_area.py
+7179893bc170468b03b5f60ab389b94bbc7a7e90066ddef1893dbf77aabd479e *./vegalite/templates/rose.py
+0887a9f81f125aebc48e7ed50c1b8b4a137c97e7564b470251a0787a0c3ab969 *./vegalite/templates/scatter.py
+cda0f752c7985e9558c014d577b18e5bb947e559dad23d84515554083bac88be *./vegalite/templates/slope.py
+dfd402eadb3b2d3003690e590997d1ed95358484cb3343ed16f0d942fce0f8ac *./vegalite/templates/utils.py
+375ad4ab567461eb140133105d499ea81a552588e8e5a91d040e3890bc343c41 *./vegalite/templates/violin.py
+8a0b44ea509de14c78987a64fcbb09d1554732b967e350a8867c4639b1ff8605 *./vegalite/templates/waterfall.py
